@@ -1,0 +1,17 @@
+{
+  "id": "real_smtp_mailer",
+  "name": "Gmail SMTP SSL 465 Dispatcher",
+  "category": "INFRASTRUCTURE",
+  "icon": "\u2709\ufe0f",
+  "triggers": [
+    "invia mail",
+    "spedisci email",
+    "posta",
+    "comunicazione"
+  ],
+  "version": "2.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.5,
+  "description": "Consegna certificata email reali tramite smtp.gmail.com:465 SSL con credenziali crittografate."
+}

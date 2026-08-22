@@ -1,0 +1,17 @@
+{
+  "id": "subito_lead_hunter",
+  "name": "Subito & FB Lead Hunter",
+  "category": "MARKETPLACE",
+  "icon": "\ud83d\udecd\ufe0f",
+  "triggers": [
+    "subito",
+    "annunci",
+    "marketplace",
+    "leads"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.5,
+  "description": "Scraping concorrenti e intercettazione lead compravendita attrezzature."
+}

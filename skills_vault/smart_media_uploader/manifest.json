@@ -1,0 +1,18 @@
+{
+  "id": "smart_media_uploader",
+  "name": "Smart Media & Video Dispatch Engine",
+  "version": "1.0.0",
+  "category": "MEDIA",
+  "icon": "\ud83c\udfac",
+  "triggers": [
+    "video",
+    "upload",
+    "pubblica",
+    "youtube",
+    "tiktok",
+    "shorts",
+    "clip"
+  ],
+  "description": "Pipeline di elaborazione media automatica: formattazione 9:16 per Shorts/TikTok, estrazione frame copertina e preparazione pubblicazione.",
+  "entrypoint": "skill.py"
+}

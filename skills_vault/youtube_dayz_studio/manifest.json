@@ -1,0 +1,20 @@
+{
+  "id": "youtube_dayz_studio",
+  "name": "YouTube DayZ Content & SEO Forge",
+  "category": "MEDIA_STUDIO",
+  "icon": "\ud83c\udfac",
+  "triggers": [
+    "youtube",
+    "video",
+    "titolo",
+    "tag",
+    "seo",
+    "thumbnail",
+    "copertina"
+  ],
+  "version": "1.1.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 1.2,
+  "description": "Generatore metadati ad alto CTR per YouTube, tag SEO DayZ style e script per Devlog."
+}

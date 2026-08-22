@@ -1,0 +1,18 @@
+{
+  "id": "n8n_nervous_system",
+  "name": "n8n Reactive Automation Hub",
+  "category": "NERVOUS_SYSTEM",
+  "icon": "\u2699\ufe0f",
+  "triggers": [
+    "n8n",
+    "workflow",
+    "automazione",
+    "webhook",
+    "flusso"
+  ],
+  "version": "1.5.0",
+  "runner": "n8n",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.9,
+  "description": "Orchestratore reattivo di 15+ flussi webhook, trigger temporizzati e notifiche Telegram."
+}

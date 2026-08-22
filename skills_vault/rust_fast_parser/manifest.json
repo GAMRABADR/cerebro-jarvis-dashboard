@@ -1,0 +1,19 @@
+{
+  "id": "rust_fast_parser",
+  "name": "Rust Sub-Millisecond Event Core",
+  "category": "RUST_ACCELERATOR",
+  "icon": "\ud83e\udd80",
+  "triggers": [
+    "rust",
+    "velocita",
+    "benchmark",
+    "parse",
+    "performance",
+    "accelerator"
+  ],
+  "version": "3.0.0",
+  "runner": "rust",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.1,
+  "description": "Motore Rust compilato a zero overhead per streaming eventi, parsing log e broadcast sinaptico < 1ms."
+}

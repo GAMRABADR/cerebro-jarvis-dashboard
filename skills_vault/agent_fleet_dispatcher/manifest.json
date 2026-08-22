@@ -1,0 +1,18 @@
+{
+  "id": "agent_fleet_dispatcher",
+  "name": "Autonomous Agent Fleet Dispatcher",
+  "version": "1.0.0",
+  "category": "ORCHESTRATION",
+  "icon": "\ud83e\udd16",
+  "triggers": [
+    "agenti",
+    "flotta",
+    "dispatch",
+    "bot",
+    "task",
+    "lavoro",
+    "operai"
+  ],
+  "description": "Coordina e invia ordini di lavoro autonomi alla flotta di bot Telegram e agenti Zero.",
+  "entrypoint": "skill.py"
+}

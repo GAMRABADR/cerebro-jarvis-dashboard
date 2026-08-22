@@ -1,0 +1,20 @@
+{
+  "id": "ue5_game_ops",
+  "name": "Unreal Engine 5.8 & Steamworks Ops",
+  "category": "GAME_DEV",
+  "icon": "\ud83c\udfae",
+  "triggers": [
+    "steam",
+    "ue5",
+    "unreal",
+    "devlog",
+    "patch",
+    "game",
+    "wiki"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.8,
+  "description": "Gestisce Steamworks AppID 2886940, changelog patch, Wiki di gioco e logica Unreal Engine 5.8."
+}

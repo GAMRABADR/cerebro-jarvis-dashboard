@@ -1,0 +1,17 @@
+{
+  "id": "smart_git_multi_sync",
+  "name": "Smart Git Multi-Repo Sync & Auto-Backup",
+  "version": "1.0.0",
+  "category": "INFRASTRUCTURE",
+  "icon": "\ud83d\udd04",
+  "triggers": [
+    "sync",
+    "git",
+    "backup",
+    "repo",
+    "salva",
+    "aggiorna repo"
+  ],
+  "description": "Sincronizza e fa backup intelligente di tutti i repository dell'ecosistema (cerebro-jarvis, Agente-0, siti-web, traslochiwork).",
+  "entrypoint": "skill.py"
+}

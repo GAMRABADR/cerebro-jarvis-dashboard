@@ -1,0 +1,19 @@
+{
+  "id": "traslochi_funnel",
+  "name": "Pietro Traslochi & BadrExpress CRM",
+  "category": "BUSINESS_CRM",
+  "icon": "\ud83d\ude9a",
+  "triggers": [
+    "preventivo",
+    "trasloco",
+    "sgombero",
+    "mq",
+    "scale",
+    "carico"
+  ],
+  "version": "1.2.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.4,
+  "description": "Funnel automatico preventivi: calcolo tariffe base/scale, invio email cliente e dispatch operai."
+}
