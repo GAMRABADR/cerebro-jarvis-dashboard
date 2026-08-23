@@ -1,0 +1,17 @@
+{
+  "id": "system_health_diagnostic",
+  "name": "System Health & Resource Diagnostic",
+  "category": "INFRASTRUCTURE",
+  "icon": "\u26a1",
+  "triggers": [
+    "diagnostica",
+    "risorse",
+    "health",
+    "sistema"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.5,
+  "description": "Analisi in tempo reale di CPU, RAM, Thread attivi e integrit\u00e0 database SQLite."
+}

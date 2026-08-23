@@ -1,0 +1,17 @@
+{
+  "id": "screen_omnivision",
+  "name": "Screen OmniVision & Visual OCR",
+  "version": "1.0.0",
+  "category": "VISION",
+  "icon": "\ud83d\udc41\ufe0f",
+  "triggers": [
+    "guarda",
+    "schermo",
+    "screenshot",
+    "leggi schermo",
+    "ocr",
+    "analizza immagine"
+  ],
+  "description": "Cattura istantanea dello schermo o della finestra attiva con analisi visiva Gemini 3.7 Flash.",
+  "entrypoint": "skill.py"
+}

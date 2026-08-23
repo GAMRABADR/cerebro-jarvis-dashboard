@@ -1,0 +1,19 @@
+{
+  "id": "autonomous_web_browser",
+  "name": "Autonomous Web Browser & Live Reader",
+  "version": "1.0.0",
+  "category": "INTELLIGENCE",
+  "icon": "\ud83c\udf10",
+  "triggers": [
+    "naviga",
+    "apri sito",
+    "leggi link",
+    "cerca su internet",
+    "cerca online",
+    "browser",
+    "google",
+    "leggi url"
+  ],
+  "description": "Navigazione web autonoma in tempo reale, lettura ed estrazione pulita di contenuti da qualsiasi URL e ricerca live su DuckDuckGo/Google.",
+  "entrypoint": "skill.py"
+}

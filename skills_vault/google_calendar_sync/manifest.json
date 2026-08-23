@@ -1,0 +1,17 @@
+{
+  "id": "google_calendar_sync",
+  "name": "Google Calendar & Agenda Sync",
+  "version": "1.0.0",
+  "category": "ORGANIZATION",
+  "icon": "\ud83d\udcc5",
+  "triggers": [
+    "agenda",
+    "calendario",
+    "impegno",
+    "promemoria",
+    "appuntamento",
+    "evento"
+  ],
+  "description": "Sincronizzazione impegni e cantieri con il calendario SQLite Hermes e notifica promemoria Telegram.",
+  "entrypoint": "skill.py"
+}

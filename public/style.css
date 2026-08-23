@@ -648,6 +648,117 @@ html, body {
   display: block;
 }
 
+/* ── VPS Live Telemetry HUD Bar under 3D Hologram ─────────────── */
+.vps-live-telemetry-hud {
+  background: rgba(4, 16, 28, 0.65);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.05);
+}
+
+.vlth-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vlth-title {
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #00f0ff;
+  letter-spacing: 0.5px;
+}
+
+.vlth-badge {
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  color: #00ff9f;
+  background: rgba(0, 255, 159, 0.12);
+  border: 1px solid rgba(0, 255, 159, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.vlth-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.vlth-card {
+  background: rgba(2, 10, 20, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.vlth-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.vlth-lbl {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  font-family: var(--font-hud);
+}
+
+.vlth-val {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-hud);
+}
+
+.vlth-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vlth-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.vlth-status-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
+  padding-top: 6px;
+  font-family: var(--font-hud);
+  font-size: 0.64rem;
+  color: #94a3b8;
+}
+
+.vlth-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vsi-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00ff9f;
+  box-shadow: 0 0 6px #00ff9f;
+}
+
 .panel-header {
   display: flex;
   align-items: center;

@@ -854,4 +854,40 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } catch (e) {}
+
+  // ── LIVE VPS TELEMETRY UPDATER ────────────────────────────
+  async function updateVpsTelemetry() {
+    try {
+      const res = await fetch(API + '/api/telemetry/vps');
+      const d = await res.json();
+      if (d && d.status === 'SUCCESS') {
+        const cpuVal = document.getElementById('vps-cpu-val');
+        const cpuBar = document.getElementById('vps-cpu-bar');
+        const ramVal = document.getElementById('vps-ram-val');
+        const ramBar = document.getElementById('vps-ram-bar');
+        const latVal = document.getElementById('vps-latency-val');
+        const tunVal = document.getElementById('vps-tunnels-val');
+        const botVal = document.getElementById('vps-bots-val');
+
+        if (cpuVal) cpuVal.textContent = d.cpu_usage + '%';
+        if (cpuBar) {
+          cpuBar.style.width = Math.min(100, Math.max(5, d.cpu_usage)) + '%';
+          cpuBar.style.background = d.cpu_usage > 75 ? '#ff0055' : (d.cpu_usage > 45 ? '#ffb703' : '#00ff9f');
+        }
+
+        if (ramVal) ramVal.textContent = d.ram_usage + '%';
+        if (ramBar) {
+          ramBar.style.width = Math.min(100, Math.max(5, d.ram_usage)) + '%';
+          ramBar.style.background = d.ram_usage > 85 ? '#ff0055' : '#00d4ff';
+        }
+
+        if (latVal) latVal.textContent = d.latency_ms + 'ms';
+        if (tunVal) tunVal.textContent = (d.active_tunnels || 3) + '/3 ACTIVE';
+        if (botVal) botVal.textContent = (d.active_bots || 7) + ' ONLINE';
+      }
+    } catch (e) {}
+  }
+
+  updateVpsTelemetry();
+  setInterval(updateVpsTelemetry, 3000);
 });

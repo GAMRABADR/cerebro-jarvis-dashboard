@@ -225,34 +225,35 @@
             <canvas id="synapseCanvas" class="synapse-canvas"></canvas>
           </div>
 
-          <!-- AGENT UTILIZATION & WORKLOAD TELEMETRY BARS -->
-          <div class="agent-telemetry-section">
-            <div class="ats-header">📊 TELEMETRIA UTILIZZO AGENTI & CARICO VPS</div>
-            <div class="ats-grid" id="agent-telemetry-grid">
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">🎮 AG-EBGStudio (UE5.8)</span><span class="ati-val">82%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:82%; background:#00d4ff;"></div></div>
+          <!-- ORACLE VPS REAL-TIME HARDWARE & CONNECTOME TELEMETRY HUD -->
+          <div class="vps-live-telemetry-hud" id="vps-live-telemetry-hud">
+            <div class="vlth-header">
+              <span class="vlth-title">⚡ ORACLE CLOUD VPS TELEMETRY</span>
+              <span class="vlth-badge" id="vps-host-badge">92.4.233.42 · UBUNTU</span>
+            </div>
+            
+            <div class="vlth-metrics-grid">
+              <div class="vlth-card">
+                <div class="vlth-card-top">
+                  <span class="vlth-lbl">🖥️ CPU LOAD</span>
+                  <span class="vlth-val" id="vps-cpu-val">4.2%</span>
+                </div>
+                <div class="vlth-track"><div class="vlth-fill" id="vps-cpu-bar" style="width: 4.2%; background:#00ff9f;"></div></div>
               </div>
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">📬 AG-MailMaster (Vault)</span><span class="ati-val">44%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:44%; background:#10b981;"></div></div>
+              
+              <div class="vlth-card">
+                <div class="vlth-card-top">
+                  <span class="vlth-lbl">🧠 RAM USAGE</span>
+                  <span class="vlth-val" id="vps-ram-val">34.8%</span>
+                </div>
+                <div class="vlth-track"><div class="vlth-fill" id="vps-ram-bar" style="width: 34.8%; background:#00d4ff;"></div></div>
               </div>
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">📢 AG-SocialMedia (YT/Mkt)</span><span class="ati-val">68%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:68%; background:#f59e0b;"></div></div>
-              </div>
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">⚖️ AG-LegalVault (Preventivi)</span><span class="ati-val">38%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:38%; background:#eab308;"></div></div>
-              </div>
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">📡 AG-WebIntel (Angle Gap)</span><span class="ati-val">91%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:91%; background:#a855f7;"></div></div>
-              </div>
-              <div class="at-item">
-                <div class="ati-top"><span class="ati-name">🤖 AG-AgenteZero (Code Box)</span><span class="ati-val">54%</span></div>
-                <div class="ati-bar"><div class="ati-fill" style="width:54%; background:#ec4899;"></div></div>
-              </div>
+            </div>
+
+            <div class="vlth-status-strip">
+              <div class="vlth-stat-item"><span class="vsi-dot online"></span> RUST: <strong id="vps-latency-val">0.12ms</strong></div>
+              <div class="vlth-stat-item"><span class="vsi-dot online"></span> TUNNELS: <strong id="vps-tunnels-val">3/3 ACTIVE</strong></div>
+              <div class="vlth-stat-item"><span class="vsi-dot online"></span> BOTS: <strong id="vps-bots-val">7 ONLINE</strong></div>
             </div>
           </div>
           

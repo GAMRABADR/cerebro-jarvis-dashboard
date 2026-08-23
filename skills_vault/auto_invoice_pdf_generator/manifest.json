@@ -1,0 +1,15 @@
+{
+  "id": "auto_invoice_pdf_generator",
+  "name": "Auto Invoice PDF Generator",
+  "version": "1.0.0",
+  "category": "BUSINESS",
+  "icon": "\ud83d\udcd1",
+  "triggers": [
+    "fattura pdf",
+    "genera pdf",
+    "preventivo pdf",
+    "documento pdf"
+  ],
+  "description": "Generatore di PDF vettoriali professionali per fatture e preventivi con logo EBGStudio e calcolo IVA.",
+  "entrypoint": "skill.py"
+}

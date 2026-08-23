@@ -1,0 +1,16 @@
+{
+  "id": "steam_community_radar",
+  "name": "Steam & Game Community Radar",
+  "version": "1.0.0",
+  "category": "GAMING",
+  "icon": "\ud83c\udfae",
+  "triggers": [
+    "radar dayz",
+    "radar rust",
+    "steam news",
+    "patch notes spia",
+    "concorrenza"
+  ],
+  "description": "Monitoraggio automatico delle patch notes e changelog di giochi survival concorrenti (DayZ, Rust, SCUM).",
+  "entrypoint": "skill.py"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "smart_data_scraper",
+  "name": "Smart Web & Lead Data Scraper",
+  "version": "1.0.0",
+  "category": "INTELLIGENCE",
+  "icon": "\ud83d\udd77\ufe0f",
+  "triggers": [
+    "scrape",
+    "estrai",
+    "lead",
+    "prezzo",
+    "cerca dati",
+    "web scraper"
+  ],
+  "description": "Estrazione intelligente e pulizia dati web, lead generation e analisi prezzi di mercato.",
+  "entrypoint": "skill.py"
+}

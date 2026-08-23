@@ -1,0 +1,15 @@
+{
+  "id": "youtube_data_publisher",
+  "name": "YouTube Data 1-Click AutoPublisher",
+  "version": "1.0.0",
+  "category": "MEDIA",
+  "icon": "\ud83d\ude80",
+  "triggers": [
+    "carica su youtube",
+    "pubblica video",
+    "youtube upload",
+    "deploy clip"
+  ],
+  "description": "Caricamento automatico video con packaging metadati completi sul canale YouTube ufficiale EBGStudio.",
+  "entrypoint": "skill.py"
+}

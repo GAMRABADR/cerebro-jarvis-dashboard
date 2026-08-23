@@ -1,0 +1,19 @@
+{
+  "id": "windows_system_commander",
+  "name": "Windows System Commander",
+  "version": "1.0.0",
+  "category": "SYSTEM",
+  "icon": "\ud83c\udf9b\ufe0f",
+  "triggers": [
+    "volume",
+    "apri app",
+    "chiudi",
+    "spegni",
+    "unreal",
+    "obs",
+    "chrome",
+    "sistema"
+  ],
+  "description": "Controllo rapido delle applicazioni Windows, volume audio, comandi terminale e workstation.",
+  "entrypoint": "skill.py"
+}

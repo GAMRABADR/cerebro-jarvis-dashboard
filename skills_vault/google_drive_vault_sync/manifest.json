@@ -1,0 +1,16 @@
+{
+  "id": "google_drive_vault_sync",
+  "name": "Google Drive Vault & Cloud Backup Sync",
+  "version": "1.0.0",
+  "category": "STORAGE",
+  "icon": "\u2601\ufe0f",
+  "triggers": [
+    "google drive",
+    "drive",
+    "salva su drive",
+    "backup cloud",
+    "cloud sync"
+  ],
+  "description": "Sincronizzazione automatica su Google Drive di fatture PDF, snapshot di database SQLite e file di progetto.",
+  "entrypoint": "skill.py"
+}
