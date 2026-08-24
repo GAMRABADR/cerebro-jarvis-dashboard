@@ -1,0 +1,17 @@
+{
+  "id": "ytdlp_ffmpeg_studio",
+  "name": "yt-dlp & FFmpeg Media Studio Engine",
+  "version": "1.0.0",
+  "category": "MEDIA",
+  "icon": "\ud83c\udfac",
+  "triggers": [
+    "scarica video",
+    "yt-dlp",
+    "ffmpeg taglia",
+    "estrai audio mp3",
+    "crea youtube short",
+    "clip gameplay"
+  ],
+  "description": "Download video ad alta velocit\u00e0, conversione audio FFmpeg, taglio automatico a 60 FPS e automazione clip per YouTube e TikTok.",
+  "entrypoint": "skill.py"
+}

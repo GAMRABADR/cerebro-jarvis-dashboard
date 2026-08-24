@@ -1,0 +1,21 @@
+{
+  "id": "windows_file_commander",
+  "name": "Windows File Commander & System Clock",
+  "version": "1.0.0",
+  "category": "SYSTEM",
+  "icon": "\ud83d\uddc2\ufe0f",
+  "triggers": [
+    "che ora e",
+    "che ore sono",
+    "ora esatta",
+    "esplora cartella",
+    "elenca file",
+    "cerca file",
+    "riordina cartella",
+    "copia file",
+    "sposta file",
+    "pulisci download"
+  ],
+  "description": "Orologio live di sistema (Imola), esplorazione file system Windows, copia/sposta/rinomina file e riordino intelligente cartelle.",
+  "entrypoint": "skill.py"
+}

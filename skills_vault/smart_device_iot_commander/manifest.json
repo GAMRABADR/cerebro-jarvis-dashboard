@@ -1,0 +1,20 @@
+{
+  "id": "smart_device_iot_commander",
+  "name": "Smart Device, Phone & IoT Commander",
+  "version": "1.0.0",
+  "category": "IOT",
+  "icon": "\ud83d\udcf1",
+  "triggers": [
+    "trova il mio telefono",
+    "fai squillare il telefono",
+    "dove e il cellulare",
+    "squilla telefono",
+    "scansiona wifi",
+    "scansiona bluetooth",
+    "infrarossi",
+    "accendi clima",
+    "telecomando ir"
+  ],
+  "description": "Controllo smartphone (trova telefono, suoneria emergenza via KDE Connect/ADB/Webhook), scansione radar dispositivi Wi-Fi/Bluetooth e comandi Infrarossi/RF.",
+  "entrypoint": "skill.py"
+}

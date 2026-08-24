@@ -1,0 +1,17 @@
+{
+  "id": "crawl4ai_web_crawler",
+  "name": "Crawl4AI & Jina Neural Web Scraper",
+  "version": "1.0.0",
+  "category": "SCRAPING",
+  "icon": "\ud83d\udd77\ufe0f",
+  "triggers": [
+    "crawl",
+    "estrai pagina",
+    "scarica sito",
+    "leggi url",
+    "scraping web",
+    "jina reader"
+  ],
+  "description": "Crawler web open-source con pulizia markdown per LLM, estrazione contenuti senza pubblicit\u00e0 e proxy Jina Reader ultra-veloce.",
+  "entrypoint": "skill.py"
+}

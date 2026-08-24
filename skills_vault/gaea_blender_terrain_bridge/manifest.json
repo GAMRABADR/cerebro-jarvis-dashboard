@@ -1,0 +1,16 @@
+{
+  "id": "gaea_blender_terrain_bridge",
+  "name": "Gaea & Blender Terrain Bridge for UE5.8",
+  "version": "1.0.0",
+  "category": "GAMEDEV",
+  "icon": "\ud83c\udfd4\ufe0f",
+  "triggers": [
+    "crea terreno gaea",
+    "gaea heightmap",
+    "blender terrain",
+    "landscape ue5",
+    "terreno dayz"
+  ],
+  "description": "Pipeline automatica per generare mappe procedurali in QuadSpinner Gaea, rifinirle in Blender ed esportare LOD per EBGS MMO UE5.8.",
+  "entrypoint": "skill.py"
+}

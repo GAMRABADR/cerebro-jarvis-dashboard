@@ -1,18 +1,28 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-//  CEREBRO MASTER SUITE · 3D BIO-NEURAL CORTEX & 4-HUB CONTROLLER v14.0 PRO
+//  CEREBRO MASTER SUITE · 3D BIO-NEURAL CORTEX & 4-HUB CONTROLLER v15.0 PRO
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const API = '';
 let currentAudio = null;
 let isBusy = false;
+let isRecording = false;
 let audioUnlocked = false;
 let currentMasterView = 'jarvis';
 let kanbanLanesData = {};
 let bioCortex = null;
+let ambientPlexus = null;
+let audioCtx = null;
+let microphoneStream = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let animFrameId = null;
+let oscAnimFrame = null;
+let neuralMessageQueue = [];
+
 let liveTunnels = {
-  jarvis: 'https://stored-october-pope-marina.trycloudflare.com',
-  n8n: 'https://transmit-whats-impressive-eugene.trycloudflare.com',
-  agente0: 'https://analysts-depend-creatures-borders.trycloudflare.com'
+  jarvis: 'https://eb.badrexpress.com',
+  n8n: 'https://n8n.badrexpress.com',
+  agente0: 'https://agent0.badrexpress.com'
 };
 
 async function loadTunnelsConfig() {
@@ -27,6 +37,42 @@ async function loadTunnelsConfig() {
     }
   } catch (e) {}
 }
+
+let currentInspectedSkill = null;
+
+window.showSkillDetailModal = function(node) {
+  currentInspectedSkill = node;
+  const titleEl = document.getElementById('msd-title');
+  const catEl = document.getElementById('msd-cat');
+  const idEl = document.getElementById('msd-id');
+  const descEl = document.getElementById('msd-desc');
+  const cmdEl = document.getElementById('msd-cmd');
+
+  if (titleEl) titleEl.textContent = `⚡ ${node.label || node.id}`;
+  if (catEl) catEl.textContent = `${node.category} · OFFICIAL ARSENAL`;
+  if (idEl) idEl.textContent = `ID: ${node.id || node.key} | ENGINE: skills_vault/${node.id || node.key}`;
+  if (descEl) descEl.textContent = node.description || `Skill ufficiale ${node.label} integrata nell'ecosistema CEREBRO JARVIS.`;
+  if (cmdEl) cmdEl.value = node.command || `JARVIS, esegui ${node.label}`;
+
+  openModal('modal-skill-detail');
+};
+
+window.executeCurrentInspectedSkill = function() {
+  if (!currentInspectedSkill) return;
+  const cmd = currentInspectedSkill.command || `JARVIS, esegui ${currentInspectedSkill.label}`;
+  closeModal('modal-skill-detail');
+  sendCommand(cmd);
+};
+
+window.openModal = function(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.add('active');
+};
+
+window.closeModal = function(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.remove('active');
+};
 
 function openN8nFull() {
   if (liveTunnels.n8n) window.open(liveTunnels.n8n, '_blank');
@@ -58,329 +104,175 @@ function switchMasterView(view) {
     if (btn) btn.classList.toggle('active', h === view);
   });
 
+  const titles = {
+    'jarvis': 'ECOSISTEMA: ONLINE · CEREBRO CORE',
+    'kanban': 'HERMES MISSION CONTROL (L5 AUTONOMOUS)',
+    'agente0': 'AGENTE ZERO NEURAL DOCK',
+    'n8n': 'N8N INTEGRATION ENGINE'
+  };
+  const statEl = document.getElementById('master-status');
+  if (statEl) statEl.textContent = titles[view] || 'ECOSISTEMA: ONLINE';
+
   if (view === 'kanban') refreshKanban();
-  if (view === 'agente0' && bioCortex) bioCortex.pulseNeuron('agente0');
-  if (view === 'n8n' && bioCortex) bioCortex.pulseNeuron('n8n');
+  if (view === 'n8n') reloadN8nFrame();
+  if (view === 'agente0') reloadAgente0Frame();
 }
-
-// Global action trigger for 3D Cortex inspector
-window.triggerNeuronAction = function(id) {
-  if (id === 'sgomberi') openSgomberoModal();
-  else if (id === 'mkt') openMarketplaceModal();
-  else if (id === 'hermes') { switchMasterView('kanban'); launchLevel5Pipeline(); }
-  else if (id === 'agente0') switchMasterView('agente0');
-  else if (id === 'n8n') switchMasterView('n8n');
-  else if (id === 'ebgs' || id === 'steam') sendQuick('JARVIS, verifica build e patch notes di EBGS Steamworks');
-  else if (id === 'vault') queryVault('bustepaghe');
-  else sendQuick(`JARVIS, attiva il neurone ${id} e procedi.`);
-};
-
-// ── SGOMBERI & TRASLOCHI WIZARD ──────────────────────────────────
-async function openSgomberoModal() {
-  const details = prompt('Descrivi il locale o gli oggetti da sgomberare:\n(Es: "Soggiorno con divano 3 posti, parete attrezzata, tavolo 6 sedie, 4 scatoloni")', 'Sgombero appartamento 3 locali con mobili in legno ed elettrodomestici');
-  if (!details) return;
-
-  const floor = parseInt(prompt('A quale piano si trova il locale? (Es: 0, 1, 2, 3, 4)', '2') || '1', 10);
-  const has_elevator = confirm('È presente l\'ascensore o montacarichi utilizzabile per il trasloco? (OK = SÌ, Annulla = NO)');
-  const sq_meters = parseInt(prompt('Metratura indicativa in mq:', '60') || '50', 10);
-  const distance_km = parseInt(prompt('Distanza di trasporto/ecocentro in km:', '15') || '10', 10);
-
-  if (bioCortex) bioCortex.pulseNeuron('sgomberi');
-  setReactorState('processing', 'PREVENTIVO', 'CALCOLO IN CORSO');
-  document.getElementById('resp-tag').textContent = 'CALCOLO PREVENTIVO';
-  document.getElementById('resp-body').textContent = 'Calcolo preventivo sgombero e stima volumetrica in corso con l\'Agente Preventivatore...';
-
-  try {
-    const r = await fetch(API + '/api/workflow/quote', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({details, floor, has_elevator, sq_meters, distance_km})
-    });
-    const d = await r.json();
-    document.getElementById('resp-body').textContent = d.quote_text || 'Preventivo calcolato.';
-    addEvent('ai', `📋 Preventivo generato da ${d.model}`);
-
-    if (bioCortex) bioCortex.addSynapseNode(`Sgombero P.${floor}`, '#eab308', `Piano ${floor} (~${sq_meters}mq)`, d.quote_text.slice(0, 100));
-
-    await fetch(API + '/api/kanban/add', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        title: `Preventivo Sgombero: Piano ${floor} (~${sq_meters}mq)`,
-        description: details.slice(0, 80),
-        assignee: 'AG-LegalVault',
-        lane: 'ready'
-      })
-    });
-    refreshKanban();
-    switchMasterView('jarvis');
-  } catch (e) {
-    document.getElementById('resp-body').textContent = `Errore preventivo: ${e.message}`;
-  }
-}
-
-// ── MARKETPLACE AUTO-SELLER WIZARD ───────────────────────────────
-async function openMarketplaceModal() {
-  const item = prompt('Descrivi l\'oggetto che vuoi stimare e mettere in vendita:\n(Es: "Sedia da gaming Secretlab Titan 2022 nera in pelle, perfetta")', 'Sedia da gaming Secretlab Titan nera in tessuto');
-  if (!item) return;
-
-  const condition = prompt('Condizione dell\'oggetto:\n(Nuovo sigillato, Come nuovo, Ottime condizioni, Usato garantito)', 'Ottime condizioni');
-  const platforms = prompt('Piattaforme su cui pubblicare:\n(Subito.it, Facebook Marketplace, eBay, Vinted)', 'Subito & Facebook Marketplace');
-
-  if (bioCortex) bioCortex.pulseNeuron('mkt');
-  setReactorState('processing', 'VALUTAZIONE', 'STIMA PREZZO & COPY');
-  document.getElementById('resp-tag').textContent = 'ANALISI MARKETPLACE';
-  document.getElementById('resp-body').textContent = 'Analisi prezzi di mercato e generazione annuncio persuasivo in corso...';
-
-  try {
-    const r = await fetch(API + '/api/workflow/marketplace', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({item, condition, platforms})
-    });
-    const d = await r.json();
-    document.getElementById('resp-body').textContent = d.listing_text || 'Annuncio generato.';
-    addEvent('ai', `🏷️ Inserzione Marketplace generata da ${d.model}`);
-
-    if (bioCortex) bioCortex.addSynapseNode(item.slice(0, 15), '#f59e0b', 'Articolo in Vendita', d.listing_text.slice(0, 100));
-
-    await fetch(API + '/api/kanban/add', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        title: `Vendita: ${item.slice(0, 40)}`,
-        description: `Stima e copy per ${platforms}`,
-        assignee: 'AG-SocialMedia',
-        lane: 'ready'
-      })
-    });
-    refreshKanban();
-    switchMasterView('jarvis');
-  } catch (e) {
-    document.getElementById('resp-body').textContent = `Errore marketplace: ${e.message}`;
-  }
-}
-
-// ── HERMES KANBAN ENGINE ─────────────────────────────────────────
-async function refreshKanban() {
-  try {
-    const r = await fetch(API + '/api/kanban');
-    if (!r.ok) return;
-    const d = await r.json();
-    kanbanLanesData = d.lanes || {};
-    renderKanbanLanes(kanbanLanesData);
-  } catch (e) {}
-}
-
-function timeAgo(ts) {
-  const diff = Math.floor(Date.now() / 1000) - ts;
-  if (diff < 60) return 'JUST NOW';
-  if (diff < 3600) return `${Math.floor(diff / 60)}M AGO`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
-  return `${Math.floor(diff / 86400)}D AGO`;
-}
-
-function renderKanbanLanes(lanes) {
-  const laneNames = ['triage', 'todo', 'ready', 'in_progress', 'blocked', 'done'];
-  const filterText = (document.getElementById('kanban-filter')?.value || '').toLowerCase();
-  const filterAssignee = document.getElementById('filter-assignee')?.value || 'ALL';
-
-  laneNames.forEach(lane => {
-    const container = document.getElementById(`cards-${lane}`);
-    if (!container) return;
-
-    const cards = (lanes[lane] || []).filter(c => {
-      const matchText = !filterText || c.title.toLowerCase().includes(filterText) || c.id.toLowerCase().includes(filterText);
-      const matchAssignee = filterAssignee === 'ALL' || c.assignee === filterAssignee;
-      return matchText && matchAssignee;
-    });
-
-    const countBadge = document.getElementById(`count-${lane}`);
-    if (countBadge) countBadge.textContent = cards.length;
-
-    if (cards.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:20px; color:#475569; font-size:0.65rem;">- NO TASKS -</div>`;
-      return;
-    }
-
-    container.innerHTML = cards.map(c => `
-      <div class="k-card" onclick="cardDetails('${c.id}')">
-        <div class="kc-top">
-          <span class="kc-id">${c.id}</span>
-          ${c.dependencies ? `<span style="font-size:0.58rem; color:#a855f7; border:1px solid #a855f7; padding:1px 3px; border-radius:2px;">🔗 Waits: ${c.dependencies}</span>` : ''}
-          <span class="kc-time">${timeAgo(c.created_at)}</span>
-        </div>
-        <div class="kc-title">${c.title}</div>
-        ${c.description ? `<div class="kc-desc">${c.description}</div>` : ''}
-        ${c.result ? `<div class="kc-result"><b>✓ Output:</b> ${c.result}</div>` : ''}
-        <div class="kc-bottom">
-          <span class="kc-assignee">${c.assignee}</span>
-          <div class="kc-actions">
-            ${lane !== 'ready' && lane !== 'in_progress' && lane !== 'done' ? `<button class="kc-btn" onclick="event.stopPropagation(); moveTask('${c.id}', 'ready')">➔ Ready</button>` : ''}
-            ${lane === 'ready' ? `<button class="kc-btn" onclick="event.stopPropagation(); moveTask('${c.id}', 'in_progress')">▶️ Run</button>` : ''}
-            ${lane !== 'done' ? `<button class="kc-btn" onclick="event.stopPropagation(); moveTask('${c.id}', 'done')">✓ Done</button>` : ''}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  });
-}
-
-function filterKanbanCards() { renderKanbanLanes(kanbanLanesData); }
-
-async function moveTask(taskId, newLane) {
-  try {
-    const r = await fetch(API + '/api/kanban/move', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({task_id: taskId, lane: newLane})
-    });
-    const d = await r.json();
-    kanbanLanesData = d.lanes;
-    renderKanbanLanes(kanbanLanesData);
-    if (bioCortex) bioCortex.pulseNeuron('hermes');
-  } catch (e) {}
-}
-
-async function openNewTaskModal() {
-  const title = prompt('Inserisci il Titolo del nuovo Task per Hermes:');
-  if (!title) return;
-  const assignee = prompt('Assegna ad Agente:\n(AG-EBGStudio, AG-MailMaster, AG-SocialMedia, AG-LegalVault, AG-WebIntel, UNASSIGNED)', 'AG-EBGStudio');
-
-  try {
-    const r = await fetch(API + '/api/kanban/add', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({title, assignee: assignee || 'UNASSIGNED', lane: 'ready'})
-    });
-    const d = await r.json();
-    kanbanLanesData = d.lanes;
-    renderKanbanLanes(kanbanLanesData);
-    if (bioCortex) bioCortex.addSynapseNode(title.slice(0, 15), '#00d4ff', `Task ${assignee}`, title);
-  } catch (e) {}
-}
-
-async function launchLevel5Pipeline() {
-  const topic = prompt('Inserisci il Topic per la Pipeline Level 5 (Parallel + DAG Gap Analysis):', 'EBGS Unreal Engine 5.8 Survival MMO');
-  if (!topic) return;
-
-  if (bioCortex) {
-    bioCortex.pulseNeuron('hermes');
-    bioCortex.pulseNeuron('ebgs');
-  }
-
-  alert('🚀 PIPELINE LEVEL 5 AVVIATA!\n\n1. T1 (AG-WebIntel) e T2 (AG-SocialMedia) in parallelo.\n2. T3 (Analyst) calcola l\'Angle Gap.\n3. T4 (Writer) produce i Concept Video!');
-
-  try {
-    const r = await fetch(API + '/api/kanban/level5', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({topic})
-    });
-    const d = await r.json();
-    kanbanLanesData = d.lanes;
-    renderKanbanLanes(kanbanLanesData);
-    if (bioCortex) bioCortex.addSynapseNode('Angle Gap UE5', '#a855f7', 'Analisi Gap Competitor', topic);
-
-    let pollCount = 0;
-    const interval = setInterval(async () => {
-      await refreshKanban();
-      pollCount++;
-      if (pollCount > 8) clearInterval(interval);
-    }, 2500);
-  } catch (e) {
-    alert(`Errore pipeline: ${e.message}`);
-  }
-}
-
-function cardDetails(id) {
-  for (const lane of Object.values(kanbanLanesData)) {
-    const found = lane.find(c => c.id === id);
-    if (found) {
-      alert(`📋 DETTAGLI TASK HERMES [${found.id}]\n\nTitolo: ${found.title}\nAssegnato a: ${found.assignee}\nColonna: ${found.lane.toUpperCase()}\n\nRisultato: ${found.result || 'In attesa di completamento'}`);
-      return;
-    }
-  }
-}
-
-// ── AUDIO & CEREBRO JARVIS ENGINE ────────────────────────────────
-let audioCtx = null;
-let analyser = null;
-let microphoneStream = null;
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
-let animFrameId = null;
 
 function initAudioContext() {
-  if (audioCtx) return;
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioUnlocked = true;
-  } catch (e) {}
-}
-
-window.addEventListener('click', initAudioContext, { once: true });
-window.addEventListener('touchstart', initAudioContext, { once: true });
-window.addEventListener('keydown', initAudioContext, { once: true });
-
-function playSound(type) {
-  try {
-    initAudioContext();
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-
-    if (type === 'start') {
-      osc.frequency.setValueAtTime(450, now);
-      osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      osc.start(now); osc.stop(now + 0.08);
-    } else if (type === 'end') {
-      osc.frequency.setValueAtTime(900, now);
-      osc.frequency.exponentialRampToValueAtTime(450, now + 0.08);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      osc.start(now); osc.stop(now + 0.08);
-    }
-  } catch (e) {}
-}
-
-function startVuMeter(stream) {
-  initAudioContext();
-  if (!audioCtx) return;
-
-  const source = audioCtx.createMediaStreamSource(stream);
-  analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 64;
-  source.connect(analyser);
-
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-  const vuBar = document.getElementById('vu-meter-bar');
-  const vuText = document.getElementById('vu-meter-val');
-
-  function renderVu() {
-    if (!isRecording) return;
-    analyser.getByteFrequencyData(dataArray);
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-    const avg = sum / dataArray.length;
-    const pct = Math.min(100, Math.round((avg / 128) * 100));
-
-    if (vuBar) vuBar.style.width = `${pct}%`;
-    if (vuText) vuText.textContent = `${pct}%`;
-    animFrameId = requestAnimationFrame(renderVu);
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
   }
-  renderVu();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
 }
 
+// ── NEURAL MESSAGE QUEUE CONTROLLER (GESTIONE / ELIMINAZIONE CODA) ──
+function updateQueueUI() {
+  const badge = document.getElementById('queue-badge');
+  const countEl = document.getElementById('queue-count');
+  const countTray = document.getElementById('queue-count-tray');
+  const tray = document.getElementById('neural-queue-tray');
+  const itemsList = document.getElementById('queue-items-list');
+
+  if (countEl) countEl.textContent = neuralMessageQueue.length;
+  if (countTray) countTray.textContent = neuralMessageQueue.length;
+
+  if (badge) {
+    if (neuralMessageQueue.length > 0) badge.classList.remove('hidden');
+    else badge.classList.add('hidden');
+  }
+
+  if (itemsList) {
+    itemsList.innerHTML = '';
+    neuralMessageQueue.forEach((msg, idx) => {
+      const item = document.createElement('div');
+      item.className = 'nqt-item';
+      item.innerHTML = `
+        <span class="nqt-item-num">#${idx + 1}</span>
+        <span class="nqt-item-text" title="${msg}">${msg}</span>
+        <button class="nqt-item-del" onclick="deleteQueuedItem(${idx})" title="Elimina questo messaggio">✕</button>
+      `;
+      itemsList.appendChild(item);
+    });
+  }
+
+  if (tray && neuralMessageQueue.length === 0) {
+    tray.classList.add('hidden');
+  }
+}
+
+window.toggleQueueTray = function() {
+  const tray = document.getElementById('neural-queue-tray');
+  if (tray) tray.classList.toggle('hidden');
+};
+
+window.clearMessageQueue = function() {
+  const count = neuralMessageQueue.length;
+  neuralMessageQueue = [];
+  updateQueueUI();
+  addEvent('sys', `🗑️ Coda messaggi annullata e svuotata (${count} messaggi rimossi).`);
+};
+
+window.deleteQueuedItem = function(index) {
+  if (index >= 0 && index < neuralMessageQueue.length) {
+    const removed = neuralMessageQueue.splice(index, 1);
+    updateQueueUI();
+    addEvent('sys', `🗑️ Messaggio rimosso dalla coda: "${removed[0].slice(0, 24)}..."`);
+  }
+};
+
+window.stopJarvisVoice = function() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  isBusy = false;
+  setReactorState('', 'READY', 'IN ATTESA');
+  if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
+  const wf = document.getElementById('waveform');
+  if (wf) wf.classList.remove('active');
+  addEvent('sys', '⏹️ Voce di JARVIS interrotta su richiesta.');
+  processNextQueuedMessage();
+};
+
+async function processNextQueuedMessage() {
+  if (neuralMessageQueue.length > 0 && !isBusy) {
+    const nextMsg = neuralMessageQueue.shift();
+    updateQueueUI();
+    addEvent('sys', `⚡ [DEQUEUE]: Elaborazione messaggio in coda...`);
+    await executeCommandPipeline(nextMsg);
+  }
+}
+
+// ── REAL-TIME AUDIO OSCILLOSCOPE EQUALIZER ───────────────────────
+function animateOscilloscope(analyser) {
+  const bars = document.querySelectorAll('.osc-bar');
+  if (!bars || bars.length === 0) return;
+
+  const dataArray = new Uint8Array(analyser ? analyser.frequencyBinCount : 32);
+
+  function draw() {
+    if (analyser) {
+      analyser.getByteFrequencyData(dataArray);
+    }
+    let sum = 0;
+    for (let i = 0; i < bars.length; i++) {
+      const idx = analyser ? Math.floor((i / bars.length) * (dataArray.length / 2)) : 0;
+      const val = analyser ? dataArray[idx] : 0;
+      sum += val;
+      const height = Math.max(3, (val / 255) * 24);
+      bars[i].style.height = `${height}px`;
+
+      if (val > 130) {
+        bars[i].style.background = 'linear-gradient(to top, #00f0ff, #00ff9f)';
+        bars[i].style.boxShadow = '0 0 8px #00ff9f';
+      } else {
+        bars[i].style.background = 'linear-gradient(to top, #00d4ff, #00ff9f)';
+        bars[i].style.boxShadow = 'none';
+      }
+    }
+
+    const avg = Math.round((sum / (bars.length * 255)) * 100);
+    const vuVal = document.getElementById('vu-meter-val');
+    if (vuVal) {
+      if (isRecording) vuVal.textContent = `${avg}% · ASCOLTO VOCE`;
+      else if (currentAudio) vuVal.textContent = `${avg}% · VOCE JARVIS`;
+      else vuVal.textContent = `0% · IDLE`;
+    }
+
+    if (isRecording || currentAudio) {
+      oscAnimFrame = requestAnimationFrame(draw);
+    } else {
+      for (let i = 0; i < bars.length; i++) { bars[i].style.height = '3px'; }
+    }
+  }
+
+  if (oscAnimFrame) cancelAnimationFrame(oscAnimFrame);
+  draw();
+}
+
+// ── VOICE RECORDING WITH BARGE-IN & CONVERSATIONAL COURTESY ──────
 async function startRecording() {
-  if (isBusy || isRecording) return;
   initAudioContext();
+
+  // BARGE-IN: If E.B. is speaking, interrupt immediately with courteous etiquette!
+  if (currentAudio) {
+    wasInterrupted = true;
+    currentAudio.pause();
+    currentAudio = null;
+    isBusy = false;
+    const wf = document.getElementById('waveform');
+    if (wf) wf.classList.remove('active');
+    setReactorState('', 'READY', 'IN ATTESA');
+    if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
+    // Track barge-in event to DNA Vault in background
+    fetch(API + '/api/dna/bargein-event', {method: 'POST'}).catch(() => {});
+  }
+
+  if (isRecording) return;
+
 
   try {
     if (!microphoneStream) {
@@ -395,9 +287,7 @@ async function startRecording() {
     };
 
     mediaRecorder.onstop = async () => {
-      cancelAnimationFrame(animFrameId);
-      const vuBar = document.getElementById('vu-meter-bar');
-      if (vuBar) vuBar.style.width = '0%';
+      if (oscAnimFrame) cancelAnimationFrame(oscAnimFrame);
 
       const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
       audioChunks = [];
@@ -441,10 +331,19 @@ async function startRecording() {
     playSound('start');
 
     const btn = document.getElementById('mic-btn');
+    const micWrapper = document.getElementById('discord-mic-wrapper');
     if (btn) btn.classList.add('active');
+    if (micWrapper) micWrapper.classList.add('speaking');
     setReactorState('speaking', 'LISTEN', 'ASCOLTO ATTIVO');
-    startVuMeter(microphoneStream);
-    if (bioCortex) bioCortex.pulseNeuron('badr');
+
+    // Hook microphone to Oscilloscope Analyser
+    if (audioCtx && microphoneStream) {
+      const source = audioCtx.createMediaStreamSource(microphoneStream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      animateOscilloscope(analyser);
+    }
   } catch (e) {
     addEvent('err', 'Accesso al microfono negato.');
   }
@@ -457,9 +356,29 @@ function stopRecording() {
     isRecording = false;
     playSound('end');
     const btn = document.getElementById('mic-btn');
+    const micWrapper = document.getElementById('discord-mic-wrapper');
     if (btn) btn.classList.remove('active');
+    if (micWrapper) micWrapper.classList.remove('speaking');
   } catch (e) {}
 }
+
+// ── DYNAMIC COLLAPSIBLE TACTICAL ACTION DOCK CONTROLLER ─────────────
+window.toggleActionDock = function() {
+  const dock = document.getElementById('dynamic-action-dock');
+  if (!dock) return;
+  dock.classList.toggle('collapsed');
+  const isCollapsed = dock.classList.contains('collapsed');
+  localStorage.setItem('jarvis_action_dock_collapsed', isCollapsed ? 'true' : 'false');
+};
+
+// Restore dock state on boot
+(function initActionDock() {
+  const saved = localStorage.getItem('jarvis_action_dock_collapsed');
+  const dock = document.getElementById('dynamic-action-dock');
+  if (dock && saved === 'true') {
+    dock.classList.add('collapsed');
+  }
+})();
 
 let voiceHotkey = localStorage.getItem('jarvis_voice_hotkey') || 'Control+Space';
 
@@ -479,22 +398,24 @@ function setCustomHotkey() {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-    if (e.key === 'Enter' && !e.shiftKey) return;
-  }
+  if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
   const parts = voiceHotkey.split('+');
-  let match = true;
-  if (parts.includes('Control') && !e.ctrlKey) match = false;
-  if (parts.includes('Alt') && !e.altKey) match = false;
-  if (parts.includes('Shift') && !e.shiftKey) match = false;
-  if (parts.includes('Win') && !e.metaKey) match = false;
+  const needsCtrl = parts.includes('Control');
+  const needsAlt = parts.includes('Alt');
+  const needsShift = parts.includes('Shift');
   const mainKey = parts[parts.length - 1].toLowerCase();
-  if (mainKey === 'space' && e.code !== 'Space') match = false;
-  else if (mainKey !== 'space' && e.key.toLowerCase() !== mainKey) match = false;
 
-  if (match) {
+  const ctrlOk = needsCtrl ? (e.ctrlKey || e.metaKey) : true;
+  const altOk = needsAlt ? e.altKey : true;
+  const shiftOk = needsShift ? e.shiftKey : true;
+
+  let match = false;
+  if (mainKey === 'space' && e.code === 'Space') match = true;
+  else if (e.key.toLowerCase() === mainKey) match = true;
+
+  if (ctrlOk && altOk && shiftOk && match && !isRecording) {
     e.preventDefault();
-    if (!isRecording) startRecording();
+    startRecording();
   }
 });
 
@@ -532,18 +453,203 @@ function addEvent(type, msg) {
 
 function setReactorState(state, label, sub) {
   const core = document.getElementById('reactor-core');
-  const txt = document.getElementById('core-text');
-  const sub_ = document.getElementById('core-sub');
-  if (core) core.className = 'reactor-core' + (state ? ` ${state}` : '');
-  if (txt && label) txt.textContent = label;
-  if (sub_ && sub) sub_.textContent = sub;
+  const sphere = document.getElementById('jarvis-sphere');
+  const accRing = document.getElementById('accretion-ring');
+  const arSub = document.getElementById('ar-sub');
+  const arWidget = document.getElementById('arc-reactor-widget');
+
+  if (sphere) {
+    sphere.className = 'black-hole-sphere' + (state ? ` ${state}` : '');
+  }
+  if (accRing) {
+    accRing.className = 'accretion-ring' + (state === 'processing' ? ' fast' : '');
+  }
+  if (arSub) {
+    arSub.textContent = `● ${label || 'READY'}`;
+    arSub.style.color = state === 'speaking' ? '#00f0ff' : (state === 'processing' ? '#ffaa00' : '#00ff9f');
+  }
+  if (arWidget) {
+    arWidget.style.filter = state === 'speaking' ? 'drop-shadow(0 0 12px #00f0ff)' : 'none';
+  }
 }
+
+// ── FLOATING TOOL RUN HUD CARD — AUTO-FADE 4.5s + HOVER PAUSE ──────────────
+let _toolCardTimer = null;
+window.showToolRun = function(toolName, message, latency = "0.04s") {
+  const card = document.getElementById('tool-run-card');
+  const title = document.getElementById('trc-title');
+  const body = document.getElementById('trc-main');
+  const time = document.getElementById('trc-time');
+  if (!card || !title || !body) return;
+
+  title.textContent = `TOOL RUN · ${toolName.toUpperCase()}`;
+  body.textContent = message;
+  if (time) time.textContent = `⚡ ${latency} LATENCY`;
+
+  // Show card (reset any previous fade-out)
+  card.style.opacity = '1';
+  card.style.transform = 'translateY(0) scale(1)';
+  card.style.pointerEvents = 'all';
+  card.classList.remove('hidden', 'fade-out-card');
+
+  // Clear previous timer
+  if (_toolCardTimer) clearTimeout(_toolCardTimer);
+
+  // Auto-dismiss after 4.5s
+  _toolCardTimer = setTimeout(() => {
+    _autoFadeToolCard();
+  }, 4500);
+
+  // Hover = pause timer
+  card.onmouseenter = () => { if (_toolCardTimer) clearTimeout(_toolCardTimer); };
+  card.onmouseleave = () => {
+    if (_toolCardTimer) clearTimeout(_toolCardTimer);
+    _toolCardTimer = setTimeout(_autoFadeToolCard, 2000);
+  };
+  // Touch-hold on mobile = pause timer (tap = dismiss)
+  card.ontouchstart = (e) => { if (_toolCardTimer) clearTimeout(_toolCardTimer); };
+  card.ontouchend = (e) => {
+    if (_toolCardTimer) clearTimeout(_toolCardTimer);
+    _toolCardTimer = setTimeout(_autoFadeToolCard, 2000);
+  };
+};
+
+function _autoFadeToolCard() {
+  const card = document.getElementById('tool-run-card');
+  if (!card) return;
+  card.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(-8px) scale(0.97)';
+  card.style.pointerEvents = 'none';
+  setTimeout(() => { card.classList.add('hidden'); card.style.transition = ''; }, 850);
+}
+
+window.closeToolCard = function() { _autoFadeToolCard(); if (_toolCardTimer) clearTimeout(_toolCardTimer); };
+
+
+// ── GRAPH PHYSICS CONTROLLER ─────────────────────────────────────────
+window.updateGraphPhysics = function() {
+  const repelSlider = document.getElementById('repel-slider');
+  const linkSlider = document.getElementById('link-slider');
+  const repelVal = document.getElementById('repel-val');
+  const linkVal = document.getElementById('link-val');
+
+  const repel = repelSlider ? parseInt(repelSlider.value) : 160;
+  const link = linkSlider ? parseInt(linkSlider.value) : 90;
+
+  if (repelVal) repelVal.textContent = repel;
+  if (linkVal) linkVal.textContent = link;
+
+  if (window.bioCortexInstance && typeof window.bioCortexInstance.setPhysics === 'function') {
+    window.bioCortexInstance.setPhysics(repel, link);
+  }
+};
+
+// ── E.B. PERSONALITY & SETTINGS DRAWER CONTROLLER ────────────────────
+let currentPersonality = 'jarvis';
+let wasInterrupted = false;
+
+window.toggleSettingsDrawer = function() {
+  const drawer = document.getElementById('settings-drawer');
+  const backdrop = document.getElementById('settings-backdrop');
+  if (drawer && backdrop) {
+    drawer.classList.toggle('open');
+    backdrop.classList.toggle('open');
+  }
+};
+
+window.switchEBMood = async function(mode) {
+  currentPersonality = mode;
+  // Update chips in cockpit
+  document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
+  const activeChip = document.getElementById(`chip-${mode}`);
+  if (activeChip) activeChip.classList.add('active');
+
+  // Update cards in drawer
+  document.querySelectorAll('.sds-mood-card').forEach(c => c.classList.remove('active'));
+  const activeCard = document.getElementById(`sd-mood-${mode}`);
+  if (activeCard) activeCard.classList.add('active');
+
+  // Update 3D BioCortex theme colors
+  if (window.bioCortexInstance && typeof window.bioCortexInstance.setPersonalityTheme === 'function') {
+    window.bioCortexInstance.setPersonalityTheme(mode);
+  }
+
+  // Update status label
+  const statusEl = document.getElementById('hud-status');
+  if (statusEl) {
+    const titles = {
+      'jarvis': 'MODALITÀ J.A.R.V.I.S. · ONLINE',
+      'military': 'MODALITÀ TATTICA MILITARE · ATTIVA',
+      'architect': 'MODALITÀ SENIOR ARCHITECT · ATTIVA',
+      'friendly': 'MODALITÀ AMICHEVOLE · ATTIVA'
+    };
+    statusEl.textContent = titles[mode] || 'SISTEMA NEURALE SUB-SECOND ONLINE';
+  }
+
+  // Send to backend
+  try {
+    await fetch(API + '/api/settings/personality', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({personality: mode})
+    });
+  } catch (e) {}
+};
+
+window.saveAutofillProfile = async function() {
+  const payload = {
+    full_name: document.getElementById('af-fullname')?.value || '',
+    email: document.getElementById('af-email')?.value || '',
+    phone: document.getElementById('af-phone')?.value || '',
+    company: document.getElementById('af-company')?.value || '',
+    city: document.getElementById('af-city')?.value || '',
+    notes: document.getElementById('af-notes')?.value || ''
+  };
+  try {
+    const r = await fetch(API + '/api/autofill/profile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    alert('✅ Profilo Autofill salvato con successo nel Vault SQLite!');
+  } catch (e) {
+    alert('Errore nel salvataggio: ' + e);
+  }
+};
+
+window.loadUserSettings = async function() {
+  try {
+    const r = await fetch(API + '/api/settings');
+    if (r.ok) {
+      const d = await r.json();
+      if (d.current_personality) {
+        switchEBMood(d.current_personality);
+      }
+      if (d.autofill_profile) {
+        const p = d.autofill_profile;
+        if (document.getElementById('af-fullname')) document.getElementById('af-fullname').value = p.full_name || '';
+        if (document.getElementById('af-email')) document.getElementById('af-email').value = p.email || '';
+        if (document.getElementById('af-phone')) document.getElementById('af-phone').value = p.phone || '';
+        if (document.getElementById('af-company')) document.getElementById('af-company').value = p.company || '';
+        if (document.getElementById('af-city')) document.getElementById('af-city').value = p.city || '';
+        if (document.getElementById('af-notes')) document.getElementById('af-notes').value = p.notes || '';
+      }
+      if (d.behavioral_dna) {
+        const dna = d.behavioral_dna;
+        if (document.getElementById('dna-interrupts')) document.getElementById('dna-interrupts').textContent = dna.interrupt_count || 0;
+        if (document.getElementById('dna-interactions')) document.getElementById('dna-interactions').textContent = dna.total_interactions || 42;
+      }
+    }
+  } catch (e) {}
+};
 
 async function speak(text) {
   const wf = document.getElementById('waveform');
   if (wf) wf.classList.add('active');
-  setReactorState('speaking', 'SPEAK', 'JARVIS PARLA');
-  if (window.connectomeEngine) window.connectomeEngine.setSpeaking(true);
+  setReactorState('speaking', 'SPEAK', 'E.B. PARLA');
+  if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(true);
   initAudioContext();
 
   try {
@@ -560,96 +666,181 @@ async function speak(text) {
       currentAudio = new Audio('data:audio/mp3;base64,' + d.audio_base64);
       currentAudio.crossOrigin = 'anonymous';
 
-      // Connect to Stark Armor HUD DSP Filter if AudioContext is available
       if (audioCtx) {
         try {
           const source = audioCtx.createMediaElementSource(currentAudio);
-          
-          // 1. High-Pass Filter (Helmet clarity > 130Hz)
-          const highpass = audioCtx.createBiquadFilter();
-          highpass.type = 'highpass';
-          highpass.frequency.setValueAtTime(135, audioCtx.currentTime);
-
-          // 2. Peaking Resonator (Iconic 3.2kHz crystal metallic timbre)
-          const peak = audioCtx.createBiquadFilter();
-          peak.type = 'peaking';
-          peak.frequency.setValueAtTime(3200, audioCtx.currentTime);
-          peak.Q.setValueAtTime(2.2, audioCtx.currentTime);
-          peak.gain.setValueAtTime(4.0, audioCtx.currentTime);
-
-          // 3. Dynamics Compressor (Cinematic Marvel Dialogue)
-          const comp = audioCtx.createDynamicsCompressor();
-          comp.threshold.setValueAtTime(-16, audioCtx.currentTime);
-          comp.knee.setValueAtTime(10, audioCtx.currentTime);
-          comp.ratio.setValueAtTime(4.5, audioCtx.currentTime);
-          comp.attack.setValueAtTime(0.003, audioCtx.currentTime);
-          comp.release.setValueAtTime(0.2, audioCtx.currentTime);
-
           const speakerAnalyser = audioCtx.createAnalyser();
           speakerAnalyser.fftSize = 64;
-
-          source.connect(highpass);
-          highpass.connect(peak);
-          peak.connect(comp);
-          comp.connect(speakerAnalyser);
+          source.connect(speakerAnalyser);
           speakerAnalyser.connect(audioCtx.destination);
-
-          if (window.connectomeEngine) window.connectomeEngine.setAudioAnalyser(speakerAnalyser);
-        } catch (dspErr) {
-          // If already connected, default output
-        }
+          animateOscilloscope(speakerAnalyser);
+        } catch (e) {}
       }
 
       currentAudio.onended = () => {
         if (wf) wf.classList.remove('active');
         setReactorState('', 'READY', 'IN ATTESA');
-        if (window.connectomeEngine) window.connectomeEngine.setAudioAnalyser(null);
+        if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
         isBusy = false;
-        document.getElementById('send-btn').disabled = false;
+        processNextQueuedMessage();
       };
       currentAudio.play().catch(() => {});
     } else {
       if (wf) wf.classList.remove('active');
       setReactorState('', 'READY', 'IN ATTESA');
-      if (window.connectomeEngine) window.connectomeEngine.setSpeaking(false);
+      if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
       isBusy = false;
-      document.getElementById('send-btn').disabled = false;
+      processNextQueuedMessage();
     }
   } catch (e) {
     if (wf) wf.classList.remove('active');
     setReactorState('', 'READY', 'IN ATTESA');
-    if (window.connectomeEngine) window.connectomeEngine.setSpeaking(false);
+    if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
     isBusy = false;
-    document.getElementById('send-btn').disabled = false;
+    processNextQueuedMessage();
   }
 }
 
+
+// ── COMMAND INGESTION WITH DYNAMIC ZOOM & QUEUE ──────────────────
+window.sendQuick = function(text) {
+  if (!text) return;
+  document.getElementById('prompt-input').value = text;
+  sendCommand(text);
+};
+
 async function sendCommand(prompt) {
-  if (!prompt || !prompt.trim() || isBusy) return;
+  if (!prompt || !prompt.trim()) return;
+  const text = prompt.trim();
+  document.getElementById('prompt-input').value = '';
+
+  if (isBusy) {
+    // Queue message during speaking or processing
+    neuralMessageQueue.push(text);
+    updateQueueUI();
+    addEvent('sys', `📥 Messaggio in coda (${neuralMessageQueue.length}): "${text.slice(0, 32)}..."`);
+    return;
+  }
+
+  await executeCommandPipeline(text);
+}
+
+// ── CYBERPUNK LIVE SKILLS ACTIVITY MATRIX CONTROLLER ─────────────
+function highlightSkillActivityHUD(category, skillKey) {
+  const catMap = {
+    'BUSINESS_SGOMBERI': 'biz',
+    'GAME_DEV': 'game',
+    'LTM_MEMORY': 'ltm',
+    'API_INFRASTRUCTURE': 'vps',
+    'VOICE_DEVOPS': 'voice',
+    'MARKETPLACE': 'market',
+    'WEB_RESEARCH': 'web',
+    'AUTONOMOUS_FLEET': 'fleet'
+  };
+  const key = catMap[category] || 'biz';
+  const row = document.getElementById(`sah-${key}`);
+  const led = document.getElementById(`sah-led-${key}`);
+  const fill = document.getElementById(`sah-bar-${key}`);
+  const statusEl = document.getElementById('sah-overall-status');
+  
+  if (row) {
+    row.classList.add('active-firing');
+    setTimeout(() => row.classList.remove('active-firing'), 6500);
+  }
+  if (led) {
+    led.classList.add('active');
+    setTimeout(() => led.classList.remove('active'), 6500);
+  }
+  if (fill) {
+    fill.style.width = '100%';
+    setTimeout(() => fill.style.width = '75%', 6500);
+  }
+  if (statusEl && skillKey) {
+    statusEl.textContent = `DISPATCHING: ${skillKey.toUpperCase()}`;
+    statusEl.style.color = '#00ff9f';
+    setTimeout(() => {
+      statusEl.textContent = 'ALL SYSTEMS ONLINE';
+      statusEl.style.color = '#00ff9f';
+    }, 6500);
+  }
+}
+
+async function executeCommandPipeline(prompt) {
   isBusy = true;
   initAudioContext();
-  document.getElementById('send-btn').disabled = true;
-  document.getElementById('prompt-input').value = '';
 
   const model = document.getElementById('model-select').value;
   addEvent('usr', prompt);
   setReactorState('processing', 'PROC', 'NEURAL THINKING');
-  if (window.connectomeEngine) window.connectomeEngine.setThinking(true);
+
+  // ── PRECISE INTENT & SKILL KEY DETECTION ──
+  let targetCategory = 'LTM_MEMORY';
+  let targetSkill = 'hermes_memory';
+  const pLower = prompt.toLowerCase();
+
+  if (pLower.includes('lead') || pLower.includes('clienti') || pLower.includes('preventiv') || pLower.includes('quanto costa') || pLower.includes('trasloc') || pLower.includes('sgomber') || pLower.includes('fattur') || pLower.includes('pietro') || pLower.includes('badrexpress')) {
+    targetCategory = 'BUSINESS_SGOMBERI';
+    targetSkill = (pLower.includes('lead') || pLower.includes('clienti')) ? 'leads_and_quotes_tracker' : (pLower.includes('fattur') ? 'auto_invoice_pdf_generator' : 'traslochi_funnel');
+  } else if (pLower.includes('game') || pLower.includes('ue5') || pLower.includes('unreal') || pLower.includes('steam') || pLower.includes('lumen') || pLower.includes('chaos') || pLower.includes('blender') || pLower.includes('gaea') || pLower.includes('shader')) {
+    targetCategory = 'GAME_DEV';
+    targetSkill = pLower.includes('steam') ? 'steam_pipeline' : 'ue5_game_ops';
+  } else if (pLower.includes('vendi') || pLower.includes('marketplace') || pLower.includes('prezzo') || pLower.includes('valuta') || pLower.includes('usato') || pLower.includes('subito') || pLower.includes('annuncio')) {
+    targetCategory = 'MARKETPLACE';
+    targetSkill = 'marketplace_seller_and_evaluator';
+  } else if (pLower.includes('chiama') || pLower.includes('telefono') || pLower.includes('whatsapp') || pLower.includes('messaggio a') || pLower.includes('voce') || pLower.includes('audio')) {
+    targetCategory = 'VOICE_DEVOPS';
+    targetSkill = 'phone_call_and_whatsapp_dispatcher';
+  } else if (pLower.includes('meteo') || pLower.includes('tempo fa') || pLower.includes('traffico') || pLower.includes('strada') || pLower.includes('tratta') || pLower.includes('naviga') || pLower.includes('internet') || pLower.includes('cerca') || pLower.includes('notizie') || pLower.includes('google') || pLower.includes('sito')) {
+    targetCategory = 'WEB_RESEARCH';
+    targetSkill = (pLower.includes('meteo') || pLower.includes('traffico')) ? 'meteo_and_traffic_intelligence' : 'autonomous_web_browser';
+  } else if (pLower.includes('agente') || pLower.includes('hermes') || pLower.includes('kanban') || pLower.includes('sync') || pLower.includes('tokio') || pLower.includes('rust')) {
+    targetCategory = 'AUTONOMOUS_FLEET';
+    targetSkill = pLower.includes('kanban') ? 'hermes_kanban' : 'agente_zero_vps';
+  } else if (pLower.includes('audit') || pLower.includes('kali') || pLower.includes('porte') || pLower.includes('porta') || pLower.includes('diagnostica rete') || pLower.includes('scansione') || pLower.includes('ping') || pLower.includes('dns') || pLower.includes('traceroute')) {
+    targetCategory = 'API_INFRASTRUCTURE';
+    targetSkill = 'network_audit_diagnostics';
+  } else if (pLower.includes('vps') || pLower.includes('n8n') || pLower.includes('cloud') || pLower.includes('tunnel') || pLower.includes('oracle') || pLower.includes('docker') || pLower.includes('telemetria')) {
+    targetCategory = 'API_INFRASTRUCTURE';
+    targetSkill = pLower.includes('n8n') ? 'n8n_workflows' : 'oracle_vps_monitor';
+  } else if (pLower.includes('email') || pLower.includes('posta') || pLower.includes('invia cv') || pLower.includes('curriculum') || pLower.includes('triage') || pLower.includes('inbox')) {
+    targetCategory = 'BUSINESS_SGOMBERI';
+    targetSkill = (pLower.includes('invia') || pLower.includes('cv')) ? 'real_smtp_mailer' : 'autonomous_email_triage';
+  }
+
+  if (window.bioCortexInstance) {
+    window.bioCortexInstance.igniteSkill(targetSkill, targetCategory);
+  }
+  highlightSkillActivityHUD(targetCategory, targetSkill);
+
   document.getElementById('resp-tag').textContent = 'PROCESSING';
   document.getElementById('resp-body').textContent = '...';
-
-  if (bioCortex) bioCortex.pulseNeuron('badr');
 
   try {
     const r = await fetch(API + '/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt, model})
+      body: JSON.stringify({prompt, model, persona: currentPersonality})
     });
-    if (window.connectomeEngine) window.connectomeEngine.setThinking(false);
+    if (window.bioCortexInstance) window.bioCortexInstance.setThinking(false);
     const d = await r.json();
-    const reply = d.response || 'Nessuna risposta.';
+    let reply = d.response || 'Nessuna risposta.';
     const modelUsed = d.model_used || model;
+
+    if (d.current_personality && d.current_personality !== currentPersonality) {
+      switchEBMood(d.current_personality);
+    }
+
+    // Prepend courteous transition if user interrupted E.B.
+    if (wasInterrupted) {
+      const courtesies = {
+        'jarvis': 'Sì, stavo concludendo, ma vai pure Badr, dimmi tutto!\n\n',
+        'military': 'Interruzione registrata. Avanti con la priorità, Comandante.\n\n',
+        'architect': 'Interruzione rilevata. In ascolto per nuovo input dati.\n\n',
+        'friendly': 'Tranquillo Badr, dimmi pure tutto, sono tutt\'orecchi!\n\n'
+      };
+      reply = (courtesies[currentPersonality] || '') + reply;
+      wasInterrupted = false;
+    }
 
     document.getElementById('resp-body').textContent = '';
     let i = 0;
@@ -660,34 +851,16 @@ async function sendCommand(prompt) {
     }, 10);
 
     addEvent('ai', reply.slice(0, 140) + (reply.length > 140 ? '…' : ''));
-    document.getElementById('hud-status').textContent = `[${modelUsed}]`;
-
-    if (bioCortex) bioCortex.addSynapseNode(prompt.slice(0, 14), '#00d4ff', 'Query Utente', prompt);
+    document.getElementById('hud-status').textContent = `[${modelUsed} · ${currentPersonality.toUpperCase()}]`;
 
     await speak(reply);
+
   } catch (e) {
     document.getElementById('resp-body').textContent = `[ERRORE]: ${e.message}`;
     addEvent('err', e.message);
     setReactorState('', 'ERROR', 'ERRORE RETE');
     isBusy = false;
-    document.getElementById('send-btn').disabled = false;
-  }
-}
-
-async function queryVault(cat) {
-  addEvent('sys', `Query Vault: ${cat}...`);
-  if (bioCortex) bioCortex.pulseNeuron('vault');
-  try {
-    const r = await fetch(API + `/api/vault/${cat}`);
-    const d = await r.json();
-    if (d.items && d.items.length) {
-      document.getElementById('resp-body').textContent = `📁 VAULT [${cat.toUpperCase()}]:\n\n` + d.items.join('\n');
-      addEvent('ok', `Vault: ${d.items.length} record caricati.`);
-    } else {
-      document.getElementById('resp-body').textContent = `Nessun record trovato per ${cat}.`;
-    }
-  } catch (e) {
-    addEvent('err', `Errore query: ${e.message}`);
+    processNextQueuedMessage();
   }
 }
 
@@ -698,127 +871,184 @@ function clearLog() {
 }
 
 function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
-  const target = document.getElementById('tab-' + tabId);
-  if (target) target.classList.add('active');
+  const tabs = ['hubs', 'biz', 'game', 'vault', 'fleet'];
+  tabs.forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.classList.toggle('active', t === tabId);
+  });
+  document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tabId));
+  });
 }
 
-let ambientPlexus = null;
-
-function openModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-
-function closeModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.remove('active');
-}
-
-async function submitSendEmail() {
-  const to = document.getElementById('email-to').value.trim();
-  const subject = document.getElementById('email-subject').value.trim();
-  const body = document.getElementById('email-body').value.trim();
-
-  if (!to || !subject || !body) {
-    alert('Compila tutti i campi dell\'email.');
-    return;
-  }
-
-  addEvent('sys', `Invio email a ${to}...`);
-  if (ambientPlexus) ambientPlexus.setThinking(true);
-
+function playSound(type) {
+  if (!audioCtx) return;
   try {
-    const r = await fetch(API + '/api/mail/send', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({to, subject, body})
-    });
-    const d = await r.json();
-    if (d.status === 'SENT') {
-      closeModal('modal-send-email');
-      addEvent('ok', `Email inviata con successo a ${to} (ID: ${d.email_id})`);
-      speak(`Email inviata con successo al destinatario ${to}, Signore. La ricevuta è archiviata nel Vault.`);
-    }
-  } catch (e) {
-    addEvent('err', `Errore invio email: ${e.message}`);
-  } finally {
-    if (ambientPlexus) ambientPlexus.setThinking(false);
-  }
-}
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-async function executeLiveSift() {
-  const query = document.getElementById('sift-query').value.trim();
-  const resContainer = document.getElementById('sift-results');
-  resContainer.innerHTML = '<div style="color:#00d4ff; font-size:0.8rem; padding:8px;">Scansione in corso...</div>';
-
-  try {
-    const r = await fetch(API + `/api/mail/search?q=${encodeURIComponent(query)}`);
-    const d = await r.json();
-    if (d.emails && d.emails.length) {
-      resContainer.innerHTML = d.emails.map(em => `
-        <div style="background:#020810; border:1px solid rgba(0,212,255,0.25); border-radius:4px; padding:10px;">
-          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#00ff88; font-weight:700;">
-            <span>${em.sender}</span>
-            <span>${em.category} · ${em.amount > 0 ? em.amount + ' €' : 'DOC'}</span>
-          </div>
-          <div style="font-weight:600; font-size:0.85rem; color:#fff; margin:4px 0;">${em.subject}</div>
-          <div style="font-size:0.75rem; color:#94a3b8;">${em.body.slice(0, 130)}...</div>
-        </div>
-      `).join('');
+    if (type === 'start') {
+      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
     } else {
-      resContainer.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem; padding:8px;">Nessuna email trovata per questo criterio.</div>';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(330, audioCtx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
     }
-  } catch (e) {
-    resContainer.innerHTML = `<div style="color:#ef4444; font-size:0.8rem; padding:8px;">Errore ricerca: ${e.message}</div>`;
+  } catch (e) {}
+}
+
+async function refreshKanban() {
+  try {
+    const r = await fetch(API + '/api/kanban');
+    const d = await r.json();
+    kanbanLanesData = d.lanes || {};
+    renderKanbanLanes(kanbanLanesData);
+  } catch (e) {}
+}
+
+function renderKanbanLanes(lanes) {
+  const laneNames = ['triage', 'todo', 'ready', 'in_progress', 'blocked', 'done'];
+  const filterText = (document.getElementById('kanban-filter')?.value || '').toLowerCase();
+  const filterAssignee = document.getElementById('filter-assignee')?.value || 'ALL';
+
+  laneNames.forEach(lane => {
+    const container = document.getElementById(`cards-${lane}`);
+    if (!container) return;
+
+    const cards = (lanes[lane] || []).filter(c => {
+      const matchText = !filterText || c.title.toLowerCase().includes(filterText) || c.id.toLowerCase().includes(filterText);
+      const matchAssignee = filterAssignee === 'ALL' || c.assignee === filterAssignee;
+      return matchText && matchAssignee;
+    });
+
+    const countBadge = document.getElementById(`count-${lane}`);
+    if (countBadge) countBadge.textContent = cards.length;
+
+    if (cards.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:20px; color:#475569; font-size:0.65rem;">- NO TASKS -</div>`;
+      return;
+    }
+
+    container.innerHTML = cards.map(c => `
+      <div class="k-card">
+        <div class="kc-top">
+          <span class="kc-id">${c.id}</span>
+          <span class="kc-time">${timeAgo(c.created_at)}</span>
+        </div>
+        <div class="kc-title">${c.title}</div>
+        ${c.description ? `<div class="kc-desc">${c.description}</div>` : ''}
+        <div class="kc-bottom">
+          <span class="kc-assignee">${c.assignee}</span>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60) return 'JUST NOW';
+  if (diff < 3600) return `${Math.floor(diff / 60)}M AGO`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
+  return `${Math.floor(diff / 86400)}D AGO`;
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
   }
 }
 
-function calcPrevTotal() {
-  const mq = parseFloat(document.getElementById('prev-mq').value) || 0;
-  const piano = parseFloat(document.getElementById('prev-piano').value) || 0;
-  const asc = parseFloat(document.getElementById('prev-asc').value) || 0;
-  const smalt = parseFloat(document.getElementById('prev-smalt').value) || 0;
-
-  const base = mq * 8.0;
-  const total = base + piano + asc + smalt;
-  const display = document.getElementById('prev-totale-display');
-  if (display) display.textContent = total.toLocaleString('it-IT', {minimumFractionDigits: 2}) + ' € + IVA';
-  return total;
-}
-
-async function submitPreventivo() {
-  const mq = document.getElementById('prev-mq').value;
-  const total = calcPrevTotal();
-  closeModal('modal-preventivo');
-  
-  const prompt = `JARVIS, registra formalmente il preventivo per lo sgombero di un immobile da ${mq} mq. Totale calcolato: ${total}€ + IVA.`;
-  sendCommand(prompt);
-}
-
+// ── DOM READY INITIALIZER ────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  updateHotkeyDisplay();
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 850;
+  if (isMobile) {
+    const hkEl = document.getElementById('hotkey-display');
+    if (hkEl) hkEl.textContent = 'Tocca Nucleo 🧠 o Mic 🎙️';
+  } else {
+    updateHotkeyDisplay();
+  }
+
   refreshKanban();
   loadTunnelsConfig();
+  loadUserSettings();
 
-  // Initialize Hollywood Ambient Neural Plexus
-  if (window.HollywoodNeuralPlexus) {
-    ambientPlexus = new window.HollywoodNeuralPlexus('ambient-synapse-bg');
+  // Register PWA Service Worker (Native App on Mobile/Desktop)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   }
 
-  // Initialize 3D Bio-Neural Cortex Laboratory
-  if (window.BioNeural3DCortex) {
-    bioCortex = new window.BioNeural3DCortex('synapseCanvas', 'synapseCanvasWrapper');
+
+
+  // Initialize Supreme 3D Bio-Neural Connectome at Center
+  if (window.initBioNeuralCortex) {
+    bioCortex = window.initBioNeuralCortex('synapseCanvas');
+  }
+
+  // ── TAP-TO-TALK ON NUCLEUS (CANVAS CENTER) — RISOLVE MOBILE ──────────
+  const canvas = document.getElementById('synapseCanvas');
+  if (canvas) {
+    let _coreHeld = false;
+    let _coreTapTimer = null;
+
+    const _isNearCenter = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const radius = Math.min(rect.width, rect.height) * 0.18; // 18% of smaller dim = nucleus area
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dist = Math.sqrt((clientX - cx) ** 2 + (clientY - cy) ** 2);
+      return dist < radius;
+    };
+
+    const _startCoreTalk = () => {
+      _coreHeld = true;
+      // Emit shockwave pulse via CSS class on canvas wrapper
+      const stage = document.getElementById('cerebro-core');
+      if (stage) { stage.classList.add('core-active'); }
+      // Update Arc Reactor
+      const arSub = document.getElementById('ar-sub');
+      if (arSub) { arSub.textContent = '● TAP-TO-TALK'; arSub.style.color = '#00ff9f'; }
+      startRecording();
+    };
+    const _stopCoreTalk = () => {
+      _coreHeld = false;
+      const stage = document.getElementById('cerebro-core');
+      if (stage) { stage.classList.remove('core-active'); }
+      stopRecording();
+    };
+
+    // Desktop: click on nucleus area
+    canvas.addEventListener('mousedown', (e) => { if (_isNearCenter(e)) { e.stopPropagation(); _startCoreTalk(); } });
+    canvas.addEventListener('mouseup', () => { if (_coreHeld) _stopCoreTalk(); });
+    // Mobile: touch on nucleus area
+    canvas.addEventListener('touchstart', (e) => {
+      if (_isNearCenter(e)) { e.preventDefault(); e.stopPropagation(); _startCoreTalk(); }
+    }, { passive: false });
+    canvas.addEventListener('touchend', (e) => {
+      if (_coreHeld) { e.preventDefault(); _stopCoreTalk(); }
+    }, { passive: false });
   }
 
   const micBtn = document.getElementById('mic-btn');
   if (micBtn) {
-    micBtn.addEventListener('mousedown', startRecording);
-    micBtn.addEventListener('mouseup', stopRecording);
-    micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
-    micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
+    micBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleRecording();
+    });
   }
 
   const sendBtn = document.getElementById('send-btn');
@@ -834,6 +1064,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ── MODEL SELECTOR POPULATION FROM /api/status ────────────────────
   try {
     const r = await fetch(API + '/api/status');
     const d = await r.json();
@@ -890,4 +1121,107 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   updateVpsTelemetry();
   setInterval(updateVpsTelemetry, 3000);
+
+  // ── MODEL CREDITS LIVE TICKER ─────────────────────────────────
+  async function updateModelCreditsBar() {
+    try {
+      const r = await fetch(API + '/api/model-credits');
+      const d = await r.json();
+      if (!d) return;
+      const bar = document.getElementById('model-credits-bar');
+      if (bar) {
+        const groqPct = Math.round(((14400 - (d.groq_daily_count || 0)) / 14400) * 100);
+        const geminiPct = Math.round(((1500 - (d.gemini_daily_count || 0)) / 1500) * 100);
+        bar.innerHTML = `
+          <span class="mcb-item" title="Groq LPU Llama 70B Free Tier">⚡ Groq <strong>${d.groq_daily_count || 0}/14400</strong></span>
+          <div class="mcb-track"><div class="mcb-fill groq" style="width:${groqPct}%"></div></div>
+          <span class="mcb-item" title="Gemini 2.0 Flash Free Tier">✨ Gemini <strong>${d.gemini_daily_count || 0}/1500</strong></span>
+          <div class="mcb-track"><div class="mcb-fill gemini" style="width:${geminiPct}%"></div></div>
+          <span class="mcb-item" title="Ollama Locale — Illimitato">🖥️ Locale <strong>∞</strong></span>
+        `;
+      }
+    } catch (e) {}
+  }
+  updateModelCreditsBar();
+  setInterval(updateModelCreditsBar, 30000);
+
+  // ── FRESHNESS SENTINEL — Colora nodi del grafo ogni 45s ──────
+  async function updateFreshnessSentinel() {
+    try {
+      const r = await fetch(API + '/api/skills/freshness-matrix');
+      const d = await r.json();
+      if (d && d.freshness_matrix && window.bioCortexInstance) {
+        window.bioCortexInstance.applyFreshnessMatrix(d.freshness_matrix);
+      }
+    } catch (e) {}
+  }
+  updateFreshnessSentinel();
+  setInterval(updateFreshnessSentinel, 45000);
+
+  // ── E.B. NEURAL EVOLUTION MATRIX CONTROLLER ──────────────────
+  async function updateEvolutionMatrix() {
+    try {
+      const r = await fetch(API + '/api/evolution/matrix');
+      const d = await r.json();
+      if (d && d.status === 'SUCCESS') {
+        const lvlEl = document.getElementById('eeh-lvl-val');
+        const rankEl = document.getElementById('eeh-rank');
+        const fillEl = document.getElementById('eeh-bar-fill');
+        const xpValEl = document.getElementById('eeh-xp-val');
+        const skillsEl = document.getElementById('eeh-skills-val');
+        const n8nEl = document.getElementById('eeh-n8n-val');
+        const iqEl = document.getElementById('eeh-iq-val');
+        const fluxEl = document.getElementById('eeh-flux-val');
+
+        if (lvlEl) lvlEl.textContent = d.evolution_level;
+        if (rankEl) rankEl.textContent = d.rank_title;
+        if (fillEl) fillEl.style.width = d.xp_percent + '%';
+        if (xpValEl) xpValEl.textContent = d.xp_percent + '%';
+        if (skillsEl) skillsEl.textContent = d.total_skills;
+        if (n8nEl) n8nEl.textContent = d.n8n_workflows;
+        if (iqEl) iqEl.textContent = d.quantum_iq;
+        if (fluxEl) fluxEl.textContent = d.tachyon_flux + '%';
+
+        // Adapt 3D Cortex Physics & Scale dynamically!
+        if (window.bioCortexInstance && typeof window.bioCortexInstance.setEvolutionScale === 'function') {
+          window.bioCortexInstance.setEvolutionScale(d.cortex_scale, d.tachyon_flux);
+        }
+      }
+    } catch (e) {}
+  }
+  updateEvolutionMatrix();
+  setInterval(updateEvolutionMatrix, 8000);
+
+  // Global Neural Surge Trigger
+  window.triggerNeuralSurge = function() {
+    playSound('start');
+    if (window.bioCortexInstance) {
+      if (typeof window.bioCortexInstance.emitNucleusShockwave === 'function') {
+        window.bioCortexInstance.emitNucleusShockwave();
+      }
+      // Light up all nodes for 3 seconds
+      if (window.bioCortexInstance.nodes) {
+        window.bioCortexInstance.nodes.forEach(n => {
+          n._freshnessColor = '#00ff9f';
+          n._freshnessAlpha = 1.0;
+        });
+      }
+    }
+    const stage = document.getElementById('cerebro-core');
+    if (stage) {
+      stage.classList.add('core-active');
+      setTimeout(() => stage.classList.remove('core-active'), 2500);
+    }
+    showToolRun('E.B. NEURAL OVERCHARGE', '⚡ Impulso Quantistico distribuito su tutti i 40 Nodi e 18 Flussi N8N! Efficienza al 100%.', '0.001s');
+  };
+
+  // ── SHOW WELCOME TOOL CARD (AUTO-FADE 4.5s) ──────────────────
+  setTimeout(() => {
+    showToolRun('CEREBRO JARVIS v4.1', '🧠 Ecosistema Neurale Online · N8N Router Attivo · 40 Skill in Monitoraggio · Tocca il Nucleo per Parlare!', '0.01s');
+  }, 800);
 });
+
+
+
+
+

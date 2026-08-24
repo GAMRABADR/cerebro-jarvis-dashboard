@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio"],
+      "env": {},
+      "description": "Accesso nativo al file system del workspace, asset UE5 e codice sorgente"
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\cerebro-jarvis-dashboard\\hermes_ltm_memory.db"],
+      "env": {},
+      "description": "Query SQL in linguaggio naturale sui database di memoria, mail e kanban"
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-git", "--repository", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio"],
+      "env": {},
+      "description": "Controllo versioni Git, commit, branch e diff del repository"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "env": {},
+      "description": "Browser automation per estrazione annunci Subito, Facebook e portali protetti"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {},
+      "description": "Motore di Deep Reasoning per risolvere problemi architetturali complessi di UE5 e logistica"
+    },
+    "docker-vps": {
+      "command": "python",
+      "args": ["-m", "docker_mcp_bridge", "--host", "92.4.233.42"],
+      "env": {},
+      "description": "Controllo container Docker n8n, FFmpeg e Agente Zero sulla VPS Oracle"
+    }
+  }
+}

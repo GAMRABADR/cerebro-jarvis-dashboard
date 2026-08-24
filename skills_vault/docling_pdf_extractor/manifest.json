@@ -1,0 +1,16 @@
+{
+  "id": "docling_pdf_extractor",
+  "name": "IBM Docling & PDF Document Intelligence",
+  "version": "1.0.0",
+  "category": "DOCUMENT_AI",
+  "icon": "\ud83d\udcd1",
+  "triggers": [
+    "estrai pdf",
+    "leggi fattura pdf",
+    "docling",
+    "estrai tabelle pdf",
+    "analizza contratto"
+  ],
+  "description": "Motore di estrazione visiva per documenti, fatture, contratti e visure con ricostruzione perfetta di tabelle e testo in Markdown.",
+  "entrypoint": "skill.py"
+}

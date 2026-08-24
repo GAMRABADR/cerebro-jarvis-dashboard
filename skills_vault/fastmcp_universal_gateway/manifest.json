@@ -1,0 +1,17 @@
+{
+  "id": "fastmcp_universal_gateway",
+  "name": "FastMCP Universal Protocol Gateway",
+  "version": "1.0.0",
+  "category": "GATEWAY",
+  "icon": "\ud83d\udd0c",
+  "triggers": [
+    "mcp",
+    "fastmcp",
+    "connetti tool",
+    "server mcp",
+    "protocollo context",
+    "mcp tool"
+  ],
+  "description": "Gateway Model Context Protocol universale per collegare istantaneamente JARVIS a server MCP (PostgreSQL, GitHub, Notion, Slack, SQLite).",
+  "entrypoint": "skill.py"
+}

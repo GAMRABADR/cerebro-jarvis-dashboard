@@ -1,0 +1,15 @@
+{
+  "id": "facebook_marketplace_messenger_bot",
+  "name": "Facebook Marketplace & Messenger Bot",
+  "version": "1.0.0",
+  "category": "SOCIAL",
+  "icon": "\ud83d\udcf1",
+  "triggers": [
+    "facebook marketplace",
+    "messaggio messenger",
+    "rispondi su facebook",
+    "annuncio facebook sgomberi"
+  ],
+  "description": "Bot per intercettare richieste su Facebook Messenger e Marketplace e calcolare preventivi istantanei.",
+  "entrypoint": "skill.py"
+}

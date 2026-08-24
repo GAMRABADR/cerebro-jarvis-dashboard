@@ -1,0 +1,5 @@
+@echo off
+title JARVIS CLOUDFLARE PERMANENT TUNNEL (jarvis.badrexpress.com)
+echo [JARVIS] Avvio Cloudflare Named Tunnel su jarvis.badrexpress.com...
+cloudflared.exe tunnel run --token eyJhIjoiYzQ4YjA0ZGViODA1NzcwM2EyODQ5ZTZmOWY5ZWVmNjkiLCJ0IjoiZjFlNjQ4YWYtMGU0Yi00YWVjLWE1N2EtZmYzZmYxZGFiZjc3IiwicyI6Ik1qbGpZemt6WXpVdFl6VXpOaTAwTXpWa0xUaG1Nell0TWpBM09UVTRNRGhrTUdFMSJ9
+pause

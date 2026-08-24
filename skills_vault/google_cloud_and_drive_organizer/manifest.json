@@ -1,0 +1,17 @@
+{
+  "id": "google_cloud_and_drive_organizer",
+  "name": "Google Cloud & Drive Organizer",
+  "version": "1.0.0",
+  "category": "CLOUD",
+  "icon": "\u2601\ufe0f",
+  "triggers": [
+    "organizza cloud",
+    "organizza google drive",
+    "salva su cloud",
+    "salva su drive",
+    "backup cloud",
+    "cartelle drive"
+  ],
+  "description": "Strutturazione tassonomica delle cartelle Google Cloud e Drive, salvataggio snapshot database e riordino file aziendali.",
+  "entrypoint": "skill.py"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "autonomous_email_triage",
+  "name": "Autonomous Email Triage & AI Classifier",
+  "version": "1.0.0",
+  "category": "TRIAGE",
+  "icon": "\ud83d\udce7",
+  "triggers": [
+    "triage email",
+    "leggi posta",
+    "categorizza email",
+    "controlla le mail",
+    "triage",
+    "posta in arrivo"
+  ],
+  "description": "Lettura IMAP SSL 993, classificazione AI automatica con tassonomia AG-*, schedulazione 2 volte al giorno o a comando e dispatch multi-bot.",
+  "entrypoint": "skill.py"
+}

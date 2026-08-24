@@ -3,24 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CEREBRO JARVIS · 3D BIO-NEURAL SYNAPSE MASTER SUITE v14.0</title>
-  <link rel="stylesheet" href="style.css">
+  <title>E.B. SUPREME AI · 3D BIO-NEURAL CONNECTOME v5.0</title>
+  <link rel="stylesheet" href="style.css?v=105.0">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="theme-color" content="#00ff9f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="E.B. AI">
+
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="hud-scanlines"></div>
-  <!-- ── HOLLYWOOD AMBIENT SYNAPSE BACKGROUND CANVAS ── -->
-  <canvas id="ambient-synapse-bg" class="ambient-synapse-canvas"></canvas>
 
   <!-- ── MASTER 4-HUB VIEW TOGGLE TOP BAR ────────────────────── -->
   <div class="master-view-bar">
     <div class="mv-left">
-      <span class="mv-logo">⚡ CEREBRO JARVIS</span>
-      <span class="mv-tag">3D BIO-NEURAL CORTEX LAB v14.0</span>
+      <span class="mv-logo">⚡ E.B. SUPREME AI</span>
+      <span class="mv-tag">3D BIO-NEURAL CONNECTOME v5.0</span>
     </div>
     <div class="mv-center">
-      <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">⚡ CEREBRO JARVIS</button>
+      <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">⚡ E.B. CORE</button>
       <button class="view-switch-btn" id="btn-view-kanban" onclick="switchMasterView('kanban')">📋 HERMES KANBAN (L5)</button>
       <button class="view-switch-btn" id="btn-view-agente0" onclick="switchMasterView('agente0')">🤖 AGENTE ZERO</button>
       <button class="view-switch-btn" id="btn-view-n8n" onclick="switchMasterView('n8n')">⚙️ N8N WORKFLOWS</button>
@@ -33,23 +39,25 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       VIEW 1: CEREBRO JARVIS SUPREME TACTICAL HUD (DEFAULT VIEW!)
+       VIEW 1: E.B. SUPREME TACTICAL HUD (DEFAULT VIEW!)
        ═══════════════════════════════════════════════════════════════ -->
   <div class="jarvis-workspace active" id="view-jarvis">
     <div class="hud-container">
       <header class="top-bar">
         <div class="tb-left">
-          <span class="hud-logo">⚡ CEREBRO JARVIS TECHNOLOGY</span>
-          <span class="hud-sublogo">BIO-SYNAPSE MATRIX · v14.0 PRO</span>
+          <span class="hud-logo">⚡ E.B. SUPREME AI ARCHITECTURE</span>
+          <span class="hud-sublogo">BIO-SYNAPSE MATRIX · v5.0 SCIENTIFIC CORE</span>
         </div>
         <div class="tb-center">
           <span class="status-indicator live"></span>
           <span class="status-label" id="hud-status">SISTEMA NEURALE SUB-SECOND ONLINE</span>
         </div>
         <div class="tb-right">
-          <button class="hotkey-btn" onclick="setCustomHotkey()">🎙️ TASTO VOCALE: <span id="hotkey-display">Ctrl + Spazio</span> ⚙️</button>
+          <button class="settings-drawer-btn" onclick="toggleSettingsDrawer()" title="Apri Impostazioni, Umori e Profilo Autofill">⚙️ SETTINGS & MOODS</button>
+          <button class="hotkey-btn" onclick="setCustomHotkey()">🎙️ TASTO VOCALE: <span id="hotkey-display">Ctrl + Spazio</span></button>
         </div>
       </header>
+
 
       <main class="main-grid">
         
@@ -144,85 +152,276 @@
             </div>
           </div>
 
-          <!-- TAB 5: AGENT FLEET -->
-          <div class="tab-content" id="tab-fleet">
-            <div class="agent-fleet-container" id="agent-fleet-list"></div>
+          <!-- CYBERPUNK LIVE SKILLS & TOOLS HUD ACTIVITY MATRIX -->
+          <div class="skills-activity-hud" id="skills-activity-hud">
+            <div class="sah-header">
+              <span class="sah-title">⚡ LIVE SKILLS & TOOLS MATRIX</span>
+              <span class="sah-status" id="sah-overall-status">ALL SYSTEMS ONLINE</span>
+            </div>
+            <div class="sah-grid">
+              <div class="sah-row" id="sah-biz" data-cat="BUSINESS_SGOMBERI">
+                <span class="sah-cat">🚛 TRASLOCHI & BIZ</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-biz" style="width: 82%;"></div></div>
+                <span class="sah-count" id="sah-cnt-biz">12 TOOLS</span>
+                <span class="sah-led" id="sah-led-biz"></span>
+              </div>
+              <div class="sah-row" id="sah-game" data-cat="GAME_DEV">
+                <span class="sah-cat">🎮 GAME DEV UE5</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-game" style="width: 70%;"></div></div>
+                <span class="sah-count" id="sah-cnt-game">12 TOOLS</span>
+                <span class="sah-led" id="sah-led-game"></span>
+              </div>
+              <div class="sah-row" id="sah-ltm" data-cat="LTM_MEMORY">
+                <span class="sah-cat">🧠 LTM VAULT</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-ltm" style="width: 88%;"></div></div>
+                <span class="sah-count" id="sah-cnt-ltm">9 TOOLS</span>
+                <span class="sah-led" id="sah-led-ltm"></span>
+              </div>
+              <div class="sah-row" id="sah-vps" data-cat="API_INFRASTRUCTURE">
+                <span class="sah-cat">⚡ CLOUD VPS & N8N</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-vps" style="width: 95%;"></div></div>
+                <span class="sah-count" id="sah-cnt-vps">9 TOOLS</span>
+                <span class="sah-led active" id="sah-led-vps"></span>
+              </div>
+              <div class="sah-row" id="sah-voice" data-cat="VOICE_DEVOPS">
+                <span class="sah-cat">🎙️ VOICE & IOT</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-voice" style="width: 75%;"></div></div>
+                <span class="sah-count" id="sah-cnt-voice">8 TOOLS</span>
+                <span class="sah-led" id="sah-led-voice"></span>
+              </div>
+              <div class="sah-row" id="sah-market" data-cat="MARKETPLACE">
+                <span class="sah-cat">🏷️ MARKETPLACE</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-market" style="width: 60%;"></div></div>
+                <span class="sah-count" id="sah-cnt-market">6 TOOLS</span>
+                <span class="sah-led" id="sah-led-market"></span>
+              </div>
+              <div class="sah-row" id="sah-web" data-cat="WEB_RESEARCH">
+                <span class="sah-cat">🌐 LIVE WEB AI</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-web" style="width: 85%;"></div></div>
+                <span class="sah-count" id="sah-cnt-web">6 TOOLS</span>
+                <span class="sah-led" id="sah-led-web"></span>
+              </div>
+              <div class="sah-row" id="sah-fleet" data-cat="AUTONOMOUS_FLEET">
+                <span class="sah-cat">🤖 AGENTE ZERO FLEET</span>
+                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-fleet" style="width: 90%;"></div></div>
+                <span class="sah-count" id="sah-cnt-fleet">6 TOOLS</span>
+                <span class="sah-led active" id="sah-led-fleet"></span>
+              </div>
+            </div>
           </div>
 
           <div class="model-select-wrapper">
             <label for="model-select" class="ms-label">🧠 MOTORE NEURALE (CATEGORIZZATO):</label>
             <select id="model-select" class="ms-dropdown">
-              <option value="auto">⚡ Modalità Auto Intelligence (Sub-Second)</option>
+              <optgroup label="── AUTO ROUTER ──">
+                <option value="auto" selected>⚡ Auto Intelligence Router (N8N Cascade Free-First)</option>
+              </optgroup>
+              <optgroup label="── TIER 1: FREE TIER (0€ · Ultra-Fast) ──">
+                <option value="groq-llama70b">⚡ Groq LPU · Llama 3.3 70B Versatile</option>
+                <option value="groq-qwen32b">⚡ Groq LPU · Qwen 2.5 32B Coder</option>
+                <option value="gemini-flash">✨ Gemini 2.0 Flash (Sub-200ms)</option>
+                <option value="gemini-flash-8b">✨ Gemini 1.5 Flash 8B (Ultra-Light)</option>
+              </optgroup>
+              <optgroup label="── TIER 2: LOCALE PC (∞ Illimitato) ──">
+                <option value="ollama-qwen7b">🖥️ Ollama Locale · Qwen 2.5 7B-Instruct</option>
+                <option value="ollama-llama3b">🖥️ Ollama Locale · Llama 3.2 3B Light</option>
+              </optgroup>
+              <optgroup label="── TIER 3: DEEP REASONING ──">
+                <option value="gemini-pro">🧠 Gemini 2.0 Pro Experimental (Thinking)</option>
+                <option value="gemini-1.5-pro">🧠 Gemini 1.5 Pro (2M Context)</option>
+                <option value="qwen-27b">🧠 Groq · Qwen3.6 27B (Deep Reasoning)</option>
+              </optgroup>
+              <optgroup label="── TIER 4: VPS HERETIC (Oracle Cloud) ──">
+                <option value="vps-heretic-14b">🛡️ VPS Heretic · Qwen 14B Uncensored</option>
+                <option value="agente-zero">🤖 Agente Zero Master Fleet Engine</option>
+              </optgroup>
             </select>
+          </div>
+
+          <!-- MODEL CREDITS LIVE BAR (N8N FREE-TIER USAGE TRACKER) -->
+          <div class="model-credits-bar" id="model-credits-bar">
+            <span class="mcb-item">⚡ Groq <strong>0/14400</strong></span>
+            <div class="mcb-track"><div class="mcb-fill groq" style="width:100%"></div></div>
+            <span class="mcb-item">✨ Gemini <strong>0/1500</strong></span>
+            <div class="mcb-track"><div class="mcb-fill gemini" style="width:100%"></div></div>
+            <span class="mcb-item">🖥️ Locale <strong>∞</strong></span>
+          </div>
+
+
+          <!-- KNOWLEDGE GRAPH PHYSICS & FORCE SLIDERS (STILE VIDEO CLAUDE JARVIS) -->
+          <div class="physics-controls-box">
+            <div class="pc-header"><span class="pc-icon">⚙️</span> FORCES & KNOWLEDGE GRAPH</div>
+            <div class="pc-row">
+              <span class="pc-label">Repel Force:</span>
+              <input type="range" id="repel-slider" min="50" max="300" value="160" class="pc-slider" oninput="updateGraphPhysics()">
+              <span class="pc-val" id="repel-val">160</span>
+            </div>
+            <div class="pc-row">
+              <span class="pc-label">Link Length:</span>
+              <input type="range" id="link-slider" min="30" max="200" value="90" class="pc-slider" oninput="updateGraphPhysics()">
+              <span class="pc-val" id="link-val">90</span>
+            </div>
           </div>
         </section>
 
         <!-- CENTER PANEL -->
         <section class="panel-box center-panel">
-          <div class="reactor-wrapper">
-            <div class="compass-ring">
-              <svg viewBox="0 0 300 300" class="compass-svg">
-                <circle cx="150" cy="150" r="145" class="c-outer"/>
-                <circle cx="150" cy="150" r="125" class="c-mid"/>
-                <circle cx="150" cy="150" r="105" class="c-inner"/>
-                <g id="degree-marks"></g>
-                <text x="150" y="24" class="c-cardinal">N</text>
-                <text x="282" y="155" class="c-cardinal">E</text>
-                <text x="150" y="288" class="c-cardinal">S</text>
-                <text x="18" y="155" class="c-cardinal">W</text>
-              </svg>
-            </div>
-            <div class="reactor-glow"></div>
-            <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="ring r4"></div>
-
-            <div class="cerebro-sphere-wrapper" id="cerebro-core">
-              <div class="accretion-ring" id="accretion-ring"></div>
-              <div class="black-hole-sphere" id="jarvis-sphere">
-                <span class="sphere-label">CEREBRO</span>
+          <!-- CLEAN HOLOGRAPHIC 3D CONNECTOME & GARGANTUA BLACK HOLE STAGE -->
+          <div class="holographic-cortex-stage" id="cerebro-core">
+            
+            <!-- E.B. NEURAL EVOLUTION & COGNITIVE CAPACITY MATRIX HUD (SLEEK TOP PILL) -->
+            <div class="eb-evolution-hud" id="eb-evolution-hud">
+              <div class="eeh-badge">
+                <span class="eeh-lvl-tag">LVL</span>
+                <span class="eeh-lvl-val" id="eeh-lvl-val">40</span>
+              </div>
+              <div class="eeh-info">
+                <div class="eeh-rank" id="eeh-rank">APEX AUTONOMOUS ARCHITECT</div>
+                <div class="eeh-bar-wrapper">
+                  <div class="eeh-bar-fill" id="eeh-bar-fill" style="width: 80%;"></div>
+                </div>
+              </div>
+              <div class="eeh-metrics">
+                <div class="eeh-m-item" title="Skill Ufficiali Attive nella Vault">
+                  <span class="eeh-m-icon">🧩</span>
+                  <span class="eeh-m-val" id="eeh-skills-val">41</span>
+                  <span class="eeh-m-lbl">SKILLS</span>
+                </div>
+                <div class="eeh-m-item" title="Flussi N8N Attivi su VPS">
+                  <span class="eeh-m-icon">🔄</span>
+                  <span class="eeh-m-val" id="eeh-n8n-val">20</span>
+                  <span class="eeh-m-lbl">N8N</span>
+                </div>
+                <div class="eeh-m-item" title="Indice di Intelligenza Computazionale Quantistica">
+                  <span class="eeh-m-icon">⚡</span>
+                  <span class="eeh-m-val" id="eeh-iq-val">417.5</span>
+                  <span class="eeh-m-lbl">IQ</span>
+                </div>
+                <button class="eeh-surge-btn" onclick="triggerNeuralSurge()" title="Invia impulso quantistico a tutti i nodi">⚡ SURGE</button>
               </div>
             </div>
-            <!-- Compatibility shim: app.js setReactorState() targets these IDs (hidden) -->
-            <div id="reactor-core" style="display:none;">
-              <span id="core-text">READY</span>
-              <span id="core-sub">IN ATTESA</span>
+
+            <canvas id="synapseCanvas" class="synapse-canvas-master"></canvas>
+
+            <!-- FLOATING TOOL RUN HUD CARD (TOP-RIGHT AUTO-FADE) -->
+            <div class="tool-run-hud-card" id="tool-run-card">
+              <div class="trc-header">
+                <span class="trc-status-dot"></span>
+                <span class="trc-title" id="trc-title">TOOL RUN · E.B. SENTINEL</span>
+                <button class="trc-close" onclick="closeToolCard()" title="Chiudi notifica">✕</button>
+              </div>
+              <div class="trc-body" id="trc-body">
+                <p class="trc-main" id="trc-main">Sincronizzazione completata: 41 skill attive.</p>
+              </div>
+              <div class="trc-footer">
+                <span class="trc-time" id="trc-time">⚡ 0.01s LATENCY</span>
+                <button class="trc-ack-btn" onclick="closeToolCard()">Got it</button>
+              </div>
             </div>
 
-            <div class="waveform" id="waveform">
-              <div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div>
-              <div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div>
-              <div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div>
-            </div>
+            <div id="jarvis-sphere" style="display:none;"><span class="sphere-label">E.B.</span></div>
+            <div id="reactor-core" style="display:none;"><span id="core-text">READY</span><span id="core-sub">IN ATTESA</span></div>
+            <div id="accretion-ring" style="display:none;"></div>
+            <div class="waveform" id="waveform" style="display:none;"><div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div></div>
           </div>
 
+          <!-- RESPONSE BOX (SCIENTIFIC GLASSMORPHISM) -->
           <div class="response-box">
-            <div class="resp-header"><span class="resp-title">JARVIS NEURAL SYNTHESIS</span><span class="resp-tag" id="resp-tag">STANDBY</span></div>
-            <div class="resp-body" id="resp-body">Pronto a ricevere ordini, Direttore Badr. Il Cortex 3D Bio-Neurale ruota a destra. Clicca sui pulsanti in alto per passare a Hermes, Agente Zero o n8n.</div>
+            <div class="resp-header">
+              <span class="resp-title">⚡ E.B. NEURAL SYNTHESIS</span>
+              <span class="resp-tag" id="resp-tag">STANDBY</span>
+            </div>
+            <div class="resp-body" id="resp-body">Pronto a ricevere ordini, Ingegner Badr. Il Connectome 3D Bio-Neurale è attivo al centro con trasmissione sinaptica ad impulsi. Invia un comando vocale o tocca il microfono.</div>
           </div>
 
-          <div class="vu-meter-container">
-            <span class="vu-label">🎙️ DECIBEL METER:</span>
-            <div class="vu-track"><div class="vu-fill" id="vu-meter-bar"></div></div>
-            <span class="vu-val" id="vu-meter-val">0%</span>
+          <!-- QUICK MOOD SWITCHER BAR -->
+          <div class="quick-mood-bar" id="quick-mood-bar">
+            <span class="qmb-label">🎭 MOOD:</span>
+            <button class="mood-chip active" id="chip-jarvis" onclick="switchEBMood('jarvis')">⚡ JARVIS</button>
+            <button class="mood-chip" id="chip-military" onclick="switchEBMood('military')">🛡️ MILITARE</button>
+            <button class="mood-chip" id="chip-architect" onclick="switchEBMood('architect')">🔬 ARCHITECT</button>
+            <button class="mood-chip" id="chip-friendly" onclick="switchEBMood('friendly')">😄 SIMPATICO</button>
           </div>
 
-          <div class="input-container">
-            <button class="mic-btn" id="mic-btn" title="Tieni premuto per parlare (o usa Ctrl + Spazio)">🎙️</button>
-            <input type="text" id="prompt-input" class="prompt-input" placeholder="Comanda JARVIS... (es: 'Preventivo sgombero 3 piano', 'Vendi Playstation 5', 'Apri Agente Zero')" autocomplete="off">
-            <button class="send-btn" id="send-btn">INVIA</button>
+          <!-- HIGH-TECH NEON AUDIO OSCILLOSCOPE SPECTRUM -->
+          <div class="audio-oscilloscope-container">
+            <div class="osc-header">
+              <span class="osc-title">🎙️ NEURAL AUDIO SPECTRUM & DECIBEL MATRIX</span>
+              <span class="osc-val" id="vu-meter-val">0% · IDLE</span>
+            </div>
+            <div class="osc-equalizer-bars" id="osc-equalizer-bars">
+              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
+              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
+              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
+              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
+            </div>
+          </div>
+
+          <!-- DYNAMIC COLLAPSIBLE TACTICAL ACTION DOCK (PULSANTI A SCOMPARSA) -->
+          <div class="dynamic-action-dock" id="dynamic-action-dock">
+            <div class="dad-toggle-bar" onclick="toggleActionDock()" title="Mostra/Nascondi scorciatoie rapide dinamiche">
+              <span class="dad-icon">⚡</span>
+              <span class="dad-title">TACTICAL ACTION DOCK</span>
+              <span class="dad-chevron" id="dad-chevron">▲</span>
+            </div>
+            <div class="dad-content-pills" id="dad-pills">
+              <button class="dad-pill pill-lead" onclick="sendQuick('E.B., trova clienti a Imola')">🕷️ Lead Imola</button>
+              <button class="dad-pill pill-lead" onclick="sendQuick('E.B., cerca traslochi a Bologna')">👥 Lead Bologna</button>
+              <button class="dad-pill pill-voice" onclick="sendQuick('E.B., invia messaggio WhatsApp a 3405566778 dicendo il preventivo è approvato')">💬 WhatsApp 1-Click</button>
+              <button class="dad-pill pill-guard" onclick="sendQuick('E.B., esegui un audit di rete sul server 92.4.233.42')">🛡️ Kali Audit Rete</button>
+              <button class="dad-pill pill-quote" onclick="openModal('modal-preventivo')">🚚 Preventivo 60mq</button>
+              <button class="dad-pill pill-util" onclick="sendQuick('E.B., che tempo fa a Imola e che ore sono?')">🌦️ Meteo & Ora</button>
+            </div>
+          </div>
+
+
+          <!-- INTERACTIVE NEURAL MESSAGE QUEUE TRAY (GESTIONE & ELIMINAZIONE CODA) -->
+          <div id="neural-queue-tray" class="neural-queue-tray hidden">
+            <div class="nqt-header">
+              <span class="nqt-title">📥 CODA MESSAGGI ATTIVA (<span id="queue-count-tray">0</span>)</span>
+              <div class="nqt-actions">
+                <button class="nqt-btn-stop" onclick="stopJarvisVoice()" title="Interrompi voce JARVIS">⏹️ STOP VOCE</button>
+                <button class="nqt-btn-clear" onclick="clearMessageQueue()" title="Cancella tutta la coda">🗑️ SVUOTA TUTTO</button>
+              </div>
+            </div>
+            <div class="nqt-items" id="queue-items-list"></div>
+          </div>
+
+          <!-- DISCORD-STYLE ULTRA-RESPONSIVE INPUT CONTAINER -->
+          <div class="input-container discord-input-container">
+            <div id="queue-badge" class="queue-badge hidden" onclick="toggleQueueTray()" title="Clicca per gestire o eliminare i messaggi in coda">
+              📥 CODA (<span id="queue-count">0</span>) <span class="qb-del-icon">✕</span>
+            </div>
+
+            <!-- DISCORD STYLE MIC BUTTON WITH VOICE RING -->
+            <div class="discord-mic-wrapper" id="discord-mic-wrapper">
+              <div class="discord-voice-ring" id="discord-voice-ring"></div>
+              <button class="mic-btn discord-mic-btn" id="mic-btn" title="Tocca per parlare (Tap-to-Talk) o tieni premuto (Discord VAD)">
+                <span class="mic-icon-main">🎙️</span>
+                <div class="discord-mini-bars" id="discord-mini-bars">
+                  <span class="d-bar"></span><span class="d-bar"></span><span class="d-bar"></span>
+                </div>
+              </button>
+            </div>
+
+            <div class="prompt-input-wrapper">
+              <input type="text" id="prompt-input" class="prompt-input" placeholder="Comanda JARVIS... (tocca 🎙️ o scrivi)" autocomplete="off">
+              <div class="input-glow-bar"></div>
+            </div>
+
+            <button class="send-btn" id="send-btn">
+              <span>INVIA</span>
+              <span class="send-shortcut">↵</span>
+            </button>
           </div>
         </section>
 
-        <!-- RIGHT PANEL: 3D ROTATING BIO-NEURAL CORTEX LAB & AGENT TELEMETRY -->
+        <!-- RIGHT PANEL: ORACLE VPS TELEMETRY & EVENT STREAM -->
         <section class="panel-box right-panel">
           <div class="panel-header">
-            <span class="ph-icon">🔬</span>
-            <span class="ph-title">3D BIO-NEURAL CORTEX LAB</span>
-            <span style="font-size:0.6rem; color:#00ff88; margin-left:auto;">● 360° ROTATION</span>
-          </div>
-          
-          <!-- 3D VERTICAL ROTATING CORTEX CANVAS -->
-          <div class="synapse-canvas-wrapper" id="synapseCanvasWrapper">
-            <canvas id="synapseCanvas" class="synapse-canvas"></canvas>
+            <span class="ph-icon">⚡</span>
+            <span class="ph-title">ORACLE CLOUD VPS TELEMETRY</span>
+            <span style="font-size:0.6rem; color:#00ff88; margin-left:auto;">● 92.4.233.42</span>
           </div>
 
           <!-- ORACLE VPS REAL-TIME HARDWARE & CONNECTOME TELEMETRY HUD -->
@@ -355,7 +554,7 @@
       </div>
     </div>
     <div class="embed-frame-wrapper">
-      <iframe id="agente0-frame" src="https://analysts-depend-creatures-borders.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" title="Agente Zero Official UI"></iframe>
+      <iframe id="agente0-frame" src="https://fashion-provincial-fun-though.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" title="Agente Zero Official UI"></iframe>
     </div>
   </div>
 
@@ -379,13 +578,47 @@
         </div>
         <button class="h-btn primary" style="background:#10b981; color:#fff; font-weight:700; padding:8px 16px; font-size:0.8rem;" onclick="openN8nFull()">↗️ APRI N8N WEB APP COMPLETA</button>
       </div>
-      <iframe id="n8n-frame" src="https://transmit-whats-impressive-eugene.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" style="flex:1;" title="n8n Official Graphical Workspace"></iframe>
+      <iframe id="n8n-frame" src="https://system-roses-wrestling-lawsuit.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" style="flex:1;" title="n8n Official Graphical Workspace"></iframe>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
        INTERACTIVE TACTICAL MODALS
        ═══════════════════════════════════════════════════════════════ -->
+  <!-- MODAL SKILL INSPECTOR DETAIL -->
+  <div class="hud-modal-overlay" id="modal-skill-detail">
+    <div class="hud-modal-card" style="max-width: 520px; border-color: #00ff9f;">
+      <div class="hmc-header">
+        <span class="hmc-title" id="msd-title" style="color:#00ff9f;">⚡ SKILL INSPECTOR HUD</span>
+        <button class="hmc-close" onclick="closeModal('modal-skill-detail')">✕</button>
+      </div>
+      <div class="hmc-form">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,255,159,0.08); padding:8px 12px; border-radius:4px; border:1px solid rgba(0,255,159,0.2);">
+          <div>
+            <div style="font-family:var(--font-hud); font-size:0.75rem; color:#00ff9f; font-weight:700;" id="msd-cat">CATEGORY</div>
+            <div style="font-family:var(--font-mono); font-size:0.68rem; color:#94a3b8;" id="msd-id">skill_id</div>
+          </div>
+          <span style="background:rgba(0,255,159,0.2); color:#00ff9f; padding:2px 8px; border-radius:3px; font-family:var(--font-mono); font-size:0.65rem; font-weight:700;">● ONLINE 120 FPS</span>
+        </div>
+
+        <div class="hmc-field">
+          <label class="hmc-label">DESCRIZIONE TATTICA & FUNZIONALITÀ:</label>
+          <p id="msd-desc" style="font-size:0.8rem; color:#e2e8f0; line-height:1.45; margin:0; background:rgba(255,255,255,0.04); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.08);"></p>
+        </div>
+
+        <div class="hmc-field">
+          <label class="hmc-label">COMANDO VOCALE RAPIDO COLLEGATO:</label>
+          <input type="text" id="msd-cmd" class="hmc-input" readonly style="color:#00f0ff; font-family:var(--font-mono); cursor:pointer;" onclick="this.select()">
+        </div>
+
+        <div class="hmc-actions">
+          <button class="h-btn secondary" onclick="closeModal('modal-skill-detail')">CHIUDI</button>
+          <button class="h-btn primary" id="msd-btn-exec" onclick="executeCurrentInspectedSkill()">🚀 ESEGUI ORA CON JARVIS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 1: INVIA EMAIL RAPIDA -->
   <div class="hud-modal-overlay" id="modal-send-email">
     <div class="hud-modal-card">
@@ -488,7 +721,127 @@
     </div>
   </div>
 
-  <script src="synaptic_3d_lab.js"></script>
-  <script src="app.js"></script>
+  <!-- ═══════════════════════════════════════════════════════════════
+       E.B. SETTINGS & PERSONALITY CONTROL DRAWER (DESKTOP & MOBILE)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="settings-drawer-backdrop" id="settings-backdrop" onclick="toggleSettingsDrawer()"></div>
+  <aside class="settings-drawer" id="settings-drawer">
+    <div class="sd-header">
+      <div class="sd-title-box">
+        <span class="sd-icon">⚙️</span>
+        <span class="sd-title">E.B. CONTROL CENTER & DNA</span>
+      </div>
+      <button class="sd-close-btn" onclick="toggleSettingsDrawer()">✕</button>
+    </div>
+
+    <div class="sd-content">
+      <!-- SECTION 1: PERSONALITY / MOOD SELECTION -->
+      <div class="sd-section">
+        <div class="sds-title">🎭 PERSONALITÀ & TONO CONVERSAZIONALE</div>
+        <div class="sds-grid-moods">
+          <div class="sds-mood-card active" id="sd-mood-jarvis" onclick="switchEBMood('jarvis')">
+            <span class="sd-mc-icon">⚡</span>
+            <div class="sd-mc-info">
+              <span class="sd-mc-name">J.A.R.V.I.S. (Iron Man)</span>
+              <span class="sd-mc-desc">Brillante, elegante, ironico, impeccabile</span>
+            </div>
+          </div>
+          <div class="sds-mood-card" id="sd-mood-military" onclick="switchEBMood('military')">
+            <span class="sd-mc-icon">🛡️</span>
+            <div class="sd-mc-info">
+              <span class="sd-mc-name">Tattico Militare</span>
+              <span class="sd-mc-desc">Conciso, codici operativi, zero chiacchiere</span>
+            </div>
+          </div>
+          <div class="sds-mood-card" id="sd-mood-architect" onclick="switchEBMood('architect')">
+            <span class="sd-mc-icon">🔬</span>
+            <div class="sd-mc-info">
+              <span class="sd-mc-name">Senior Architect</span>
+              <span class="sd-mc-desc">Ingegneristico, metriche, dettagli tecnici</span>
+            </div>
+          </div>
+          <div class="sds-mood-card" id="sd-mood-friendly" onclick="switchEBMood('friendly')">
+            <span class="sd-mc-icon">😄</span>
+            <div class="sd-mc-info">
+              <span class="sd-mc-name">Amichevole & Simpatico</span>
+              <span class="sd-mc-desc">Caloroso, colloquiale, battute e supporto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: AUTOFILL PROFILE (BROWSER ACTION AGENT) -->
+      <div class="sd-section">
+        <div class="sds-title">🌐 PROFILO AUTOFILL (COMPILAZIONE FORM AUTOMATICA)</div>
+        <div class="sds-form-grid">
+          <div class="sds-input-group">
+            <label>Nome Completo:</label>
+            <input type="text" id="af-fullname" value="Badr El Ouariti" class="sds-input">
+          </div>
+          <div class="sds-input-group">
+            <label>Email Ufficiale:</label>
+            <input type="email" id="af-email" value="badraudi@gmail.com" class="sds-input">
+          </div>
+          <div class="sds-input-group">
+            <label>Telefono / Cellulare:</label>
+            <input type="tel" id="af-phone" value="3400000000" class="sds-input">
+          </div>
+          <div class="sds-input-group">
+            <label>Azienda / Brand:</label>
+            <input type="text" id="af-company" value="EBGStudio / Pietro Traslochi" class="sds-input">
+          </div>
+          <div class="sds-input-group">
+            <label>Città Operativa:</label>
+            <input type="text" id="af-city" value="Imola / Bologna" class="sds-input">
+          </div>
+          <div class="sds-input-group">
+            <label>Note Automatiche:</label>
+            <input type="text" id="af-notes" value="Richiesta ufficiale da ecosistema E.B." class="sds-input">
+          </div>
+        </div>
+        <button class="sds-save-btn" onclick="saveAutofillProfile()">💾 SALVA PROFILO NEL VAULT</button>
+      </div>
+
+      <!-- SECTION 3: BEHAVIORAL DNA STATS -->
+      <div class="sd-section">
+        <div class="sds-title">🧬 STATISTICHE DNA DIGITALE & RAPPORT</div>
+        <div class="sds-dna-stats">
+          <div class="sds-dna-item">
+            <span class="sdi-label">Interruzioni Registrate:</span>
+            <span class="sdi-val" id="dna-interrupts">0</span>
+          </div>
+          <div class="sds-dna-item">
+            <span class="sdi-label">Interazioni Totali:</span>
+            <span class="sdi-val" id="dna-interactions">42</span>
+          </div>
+          <div class="sds-dna-item">
+            <span class="sdi-label">Grado di Sincronia:</span>
+            <span class="sdi-val neon-green">100% PERFETTO</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: 3D GRAPH PHYSICS & SOUND FX -->
+      <div class="sd-section">
+        <div class="sds-title">🔬 AUDIO-REACTIVE 3D & FISICA GRAFO</div>
+        <div class="sds-toggle-row">
+          <span>Risonanza Vocale 3D (FFT a 60 FPS):</span>
+          <input type="checkbox" id="toggle-fft" checked class="sds-checkbox" onchange="toggleAudioReactivity(this.checked)">
+        </div>
+        <div class="sds-toggle-row">
+          <span>Micro Sound FX Scientifici:</span>
+          <input type="checkbox" id="toggle-sfx" checked class="sds-checkbox">
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="synaptic_3d_lab.js?v=105.0"></script>
+  <script src="app.js?v=105.0"></script>
 </body>
 </html>
+
+
+
+
+

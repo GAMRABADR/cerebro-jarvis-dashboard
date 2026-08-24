@@ -1,0 +1,16 @@
+{
+  "id": "logistics_maps_route_optimizer",
+  "name": "Google Maps & Logistics Route Optimizer",
+  "version": "1.0.0",
+  "category": "LOGISTICS",
+  "icon": "\ud83d\uddfa\ufe0f",
+  "triggers": [
+    "calcola percorso",
+    "distanza trasloco",
+    "pedaggio autostrada",
+    "km da imola a",
+    "costo carburante trasloco"
+  ],
+  "description": "Calcolo chilometrico, tempi di guida, pedaggi autostradali e stima costo trasferta con Google Maps per Pietro Traslochi.",
+  "entrypoint": "skill.py"
+}

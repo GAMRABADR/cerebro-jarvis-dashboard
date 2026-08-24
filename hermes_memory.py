@@ -28,6 +28,10 @@ def init_memory():
         )
     """)
     conn.commit()
+    
+    # Sync FTS
+    c.execute("INSERT INTO memories_fts(memories_fts) VALUES('rebuild')")
+    conn.commit()
     conn.close()
 
     # Seed essential ecosystem memories if empty
@@ -52,10 +56,9 @@ def seed_ecosystem_memories():
         try:
             c.execute("INSERT OR IGNORE INTO memories (category, topic, fact, importance, created_at, last_accessed) VALUES (?,?,?,?,?,?)",
                       (cat, topic, fact, imp, now, now))
-            c.execute("INSERT OR IGNORE INTO memories_fts (topic, fact, category) VALUES (?,?,?)",
-                      (topic, fact, cat))
         except Exception:
             pass
+    c.execute("INSERT INTO memories_fts(memories_fts) VALUES('rebuild')")
     conn.commit()
     conn.close()
 
@@ -72,6 +75,7 @@ def store_memory(category, topic, fact, importance=5):
                 last_accessed = ?,
                 importance = MAX(importance, ?)
         """, (category, topic, fact, importance, now, now, now, importance))
+        c.execute("INSERT INTO memories_fts(memories_fts) VALUES('rebuild')")
         conn.commit()
         sync_to_markdown_vault()
         return True
@@ -81,44 +85,74 @@ def store_memory(category, topic, fact, importance=5):
     finally:
         conn.close()
 
-def search_memory(query, limit=4):
+ITALIAN_STOPWORDS = {
+    "il", "lo", "la", "i", "gli", "le", "un", "uno", "una", "di", "a", "da", "in", "con",
+    "su", "per", "tra", "fra", "e", "ed", "o", "che", "dove", "come", "cosa", "quando",
+    "perche", "chi", "abbiamo", "nostro", "nostri", "nostra", "nostre", "sono", "sei",
+    "mio", "mia", "tuo", "tua", "si", "no", "jarvis", "agente", "dimmi", "quale", "quali"
+}
+
+RUST_BRIDGE_URL = "http://127.0.0.1:9000"
+
+def search_memory(query, limit=5, category=None):
     if not query or not query.strip():
         return []
     
+    # 1. Ultra-fast Rust Tokio In-Memory Retrieval (< 50 microseconds)
+    try:
+        payload = {"query": query, "limit": limit}
+        if category:
+            payload["category"] = category
+        r = requests.post(f"{RUST_BRIDGE_URL}/api/memory/search", json=payload, timeout=0.15)
+        if r.status_code == 200:
+            res_json = r.json()
+            if res_json.get("status") == "SUCCESS" and res_json.get("results"):
+                return res_json["results"]
+    except Exception:
+        pass
+
+    # 2. Local SQLite FTS5 fallback
     clean_words = re.findall(r'\w+', query.lower())
-    if not clean_words:
+    keywords = [w for w in clean_words if w not in ITALIAN_STOPWORDS and len(w) > 2]
+    
+    if not keywords:
+        keywords = clean_words[:3]
+    if not keywords:
         return []
     
     conn = sqlite3.connect(MEMORY_DB)
     c = conn.cursor()
     
-    # Try exact FTS search first
-    fts_query = " OR ".join(clean_words[:6])
-    results = []
+    fts_query = " OR ".join(keywords)
     try:
         c.execute("""
-            SELECT m.category, m.topic, m.fact, m.importance
+            SELECT m.category, m.topic, m.fact, m.importance, f.rank
             FROM memories_fts f
             JOIN memories m ON f.rowid = m.id
-            WHERE memories_fts MATCH ?
-            ORDER BY m.importance DESC, m.last_accessed DESC
+            WHERE f.memories_fts MATCH ?
+            ORDER BY f.rank
             LIMIT ?
         """, (fts_query, limit))
         results = [{"category": r[0], "topic": r[1], "fact": r[2], "importance": r[3]} for r in c.fetchall()]
-    except Exception:
+    except Exception as e:
+        print(f"[FTS Query Err]: {e}")
         # Fallback LIKE search
-        like_term = f"%{clean_words[0]}%"
-        c.execute("""
-            SELECT category, topic, fact, importance
-            FROM memories
-            WHERE fact LIKE ? OR topic LIKE ? OR category LIKE ?
-            ORDER BY importance DESC LIMIT ?
-        """, (like_term, like_term, like_term, limit))
-        results = [{"category": r[0], "topic": r[1], "fact": r[2], "importance": r[3]} for r in c.fetchall()]
+        for kw in keywords[:3]:
+            like_term = f"%{kw}%"
+            c.execute("""
+                SELECT category, topic, fact, importance
+                FROM memories
+                WHERE fact LIKE ? OR topic LIKE ? OR category LIKE ?
+                ORDER BY last_accessed DESC, importance DESC LIMIT ?
+            """, (like_term, like_term, like_term, limit))
+            for r in c.fetchall():
+                item = {"category": r[0], "topic": r[1], "fact": r[2], "importance": r[3]}
+                if item not in results:
+                    results.append(item)
     finally:
         conn.close()
     
-    return results
+    return results[:limit]
 
 def get_holographic_memory_context(prompt):
     relevant = search_memory(prompt, limit=5)

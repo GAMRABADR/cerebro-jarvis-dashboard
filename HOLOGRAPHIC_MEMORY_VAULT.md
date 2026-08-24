@@ -1,5 +1,5 @@
 # 🌌 HERMES AGENT & JARVIS · HOLOGRAPHIC LONG-TERM MEMORY VAULT
-*Ultima sincronizzazione automatica: 2026-08-23 02:44:12*
+*Ultima sincronizzazione automatica: 2026-08-25 00:03:45*
 
 Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, sincronizzata con SQLite Vector/FTS.
 
@@ -40,6 +40,10 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 ## 📂 Categoria: `SKILLS_ROUTING`
 
 - **Skill Devlog & Content Generator** `★★★★★`: Skill integrata per generare prompt immagini DayZ style, metadati SEO YouTube, changelog patch Steamworks, post Discord e notifiche push. *(Registrato: 2026-08-22 19:45:18)*
+
+## 📂 Categoria: `USER_DIRECTIVE`
+
+- **Direttiva & Preferenza Badr** `★★★★★`: abbiamo aggiunto un magazzino a Castel San Pietro per Pietro Traslochi *(Registrato: 2026-08-23 01:17:55)*
 
 ## 📂 Categoria: `USER_LEARNING`
 

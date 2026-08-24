@@ -1,0 +1,7 @@
+{
+  "name": "leads_and_quotes_tracker",
+  "display_name": "Leads & Preventivi Tracker Live",
+  "category": "BUSINESS_SGOMBERI",
+  "description": "Monitoraggio in tempo reale dei preventivi e lead acquisiti sui portali PietroTraslochi.com e BadrExpress.com.",
+  "version": "1.0.0"
+}

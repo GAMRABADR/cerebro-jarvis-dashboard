@@ -1,0 +1,18 @@
+{
+  "id": "usb_and_external_drive_manager",
+  "name": "USB & External Drive Manager",
+  "version": "1.0.0",
+  "category": "SYSTEM",
+  "icon": "\ud83d\udd0c",
+  "triggers": [
+    "leggi usb",
+    "esplora usb",
+    "chiavetta usb",
+    "cosa ce nella usb",
+    "backup su usb",
+    "scansiona unita",
+    "hard disk esterno"
+  ],
+  "description": "Scansione unita logiche e rimovibili (USB, SD, Hard Disk esterni), lettura file e backup automatico database su USB.",
+  "entrypoint": "skill.py"
+}

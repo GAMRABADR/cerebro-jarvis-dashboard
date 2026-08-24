@@ -1,0 +1,16 @@
+{
+  "id": "faster_whisper_voice_engine",
+  "name": "Faster-Whisper Sub-Second Transcriber",
+  "version": "1.0.0",
+  "category": "AUDIO",
+  "icon": "\ud83c\udf99\ufe0f",
+  "triggers": [
+    "trascrivi audio",
+    "whisper",
+    "nota vocale",
+    "trascrizione veloce",
+    "audio to text"
+  ],
+  "description": "Trascrizione vocale sub-second basata su Groq Whisper Turbo & Faster-Whisper locale con latenza di 0.2 secondi e zero consumo token.",
+  "entrypoint": "skill.py"
+}

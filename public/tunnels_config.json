@@ -1,5 +1,5 @@
 {
-  "jarvis": "https://seven-tommy-itunes-generally.trycloudflare.com",
+  "jarvis": "https://api.trycloudflare.com",
   "agente0": "http://92.4.233.42:50080",
   "n8n": "http://92.4.233.42:5678"
 }

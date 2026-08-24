@@ -1,0 +1,9 @@
+{
+  "name": "EB_LeadQualityGuard",
+  "category": "BUSINESS_CRM",
+  "version": "1.0.0",
+  "description": "Sistema di validazione e certificazione anti-fake dei lead (Email MX DNS check, Telefono HLR/Regex, Geocoding Nominatim e Score di Qualità 0-100).",
+  "author": "Ingegner Badr & JARVIS CEREBRO AI",
+  "command_example": "JARVIS, valida il lead Mario Rossi mario@gmail.com 3401234567 da Imola a Bologna",
+  "dependencies": ["requests", "urllib"]
+}

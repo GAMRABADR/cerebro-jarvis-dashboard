@@ -1,0 +1,16 @@
+{
+  "id": "playwright_stealth_scraper",
+  "name": "Playwright Anti-Bot Stealth Scraper",
+  "version": "1.0.0",
+  "category": "SCRAPING",
+  "icon": "\ud83e\udd77",
+  "triggers": [
+    "stealth scrape",
+    "subito annunci",
+    "facebook marketplace",
+    "bypass cloudflare",
+    "annunci traslochi"
+  ],
+  "description": "Driver browser headless con evasione fingerprint anti-bot per estrarre lead e annunci da Subito, Facebook Marketplace e portali protetti.",
+  "entrypoint": "skill.py"
+}

@@ -1,763 +1,1099 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-//  CEREBRO JARVIS · BORDERLESS 3D HOLOGRAPHIC CONNECTOME v14.0
-//  Pure Holographic Spatial Projection (No Box Frames, No Bounding Border)
-//  Oracle VPS Core integrated directly into the Neural Cluster as White Star
-//  Dotted Green Bio-Plasma Impulses & Precise Category Synaptic Flares
+//  CEREBRO JARVIS · 1:1 REAL SKILLS & TOOLS INSPECTOR MATRIX v26.0
+//  39+ Real Skills Manifest · Interactive HUD Inspector · Calm Slow Idle Orbit
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   CLASS 1: HollywoodNeuralPlexus — Fullscreen Deep Space Ambient Network
-───────────────────────────────────────────────────────────────────────────── */
-class HollywoodNeuralPlexus {
+class SupremeBioNeuralCortex {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext('2d');
+    
     this.nodes = [];
-    this.mouse = { x: -1000, y: -1000 };
+    this.connections = [];
+    this.pulses = [];
+    this.particles = [];
     this.time = 0;
+    
+    // Smooth Camera & 3D Isometric Orbit
+    this.zoomScale = 1.0;
+    this.targetZoom = 1.0;
+    this.camX = 0;
+    this.camY = 0;
+    this.targetCamX = 0;
+    this.targetCamY = 0;
+    
+    // Classic 3/4 Isometric Profile Angles
+    this.rotX = 0.45;
+    this.rotY = 0.35;
+    this.targetRotX = 0.45;
+    this.targetRotY = 0.35;
+    
+    this.isAutoTargeting = false;
+    this.activeNodeId = null;
+
+    // Compact Organic Radius
+    this.baseRadius = 170;
+
+    // Real-Time VPS Telemetry Reactive State
+    this.vpsCpu = 4.0;
+    this.vpsRam = 32.0;
+    this.vpsLatency = 0.05;
+
     this.isThinking = false;
     this.isSpeaking = false;
+    this.activeCategory = null;
+    this.activeSkillKeys = new Set();
+    this.activeSkillLabel = '';
+    this.activeSkillTimer = null;
+
+    this.mouse = { isDown: false, lastX: 0, lastY: 0 };
+    this.lastProjectedNodes = [];
+    this.skillsManifest = [];
 
     this.resize();
-    this.initPlexus();
+    this.initQuantumPlasma();
+    this.loadManifestAndBuildSphere();
     this.bindEvents();
-    this.animate();
-  }
-
-  resize() {
-    this.width  = this.canvas.width  = window.innerWidth;
-    this.height = this.canvas.height = window.innerHeight;
-  }
-
-  initPlexus() {
-    const count = Math.min(45, Math.floor((this.width * this.height) / 36000));
-    this.nodes  = [];
-    const hubs = [
-      { label: 'COGNITIVE CORE', color: '#00f0ff', size: 3.5 },
-      { label: 'MEMORY VAULT',   color: '#ffb703', size: 3.2 },
-      { label: 'API CONNECTORS', color: '#00ff9f', size: 3.0 },
-      { label: 'VOICE SYNTHESIS',color: '#00ff88', size: 3.0 },
-      { label: 'RUST ENGINE',    color: '#fb5607', size: 3.0 }
-    ];
-
-    for (let i = 0; i < count; i++) {
-      const hub = i < hubs.length ? hubs[i] : null;
-      this.nodes.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
-        vx: (Math.random() - 0.5) * 0.08,
-        vy: (Math.random() - 0.5) * 0.08,
-        radius: hub ? hub.size : 0.9 + Math.random() * 1.2,
-        color: hub ? hub.color : '#00d4ff',
-        label: hub ? hub.label : ''
-      });
-    }
-  }
-
-  bindEvents() {
-    window.addEventListener('resize', () => { this.resize(); this.initPlexus(); });
-    window.addEventListener('mousemove', (e) => { this.mouse.x = e.clientX; this.mouse.y = e.clientY; });
-  }
-
-  setThinking(val) { this.isThinking = val; }
-  setSpeaking(val) { this.isSpeaking = val; }
-
-  animate() {
-    this.time += 0.005;
-    const ctx = this.ctx, w = this.width, h = this.height;
-    ctx.clearRect(0, 0, w, h);
-
-    for (let i = 0; i < this.nodes.length; i++) {
-      for (let j = i + 1; j < this.nodes.length; j++) {
-        const dx = this.nodes[i].x - this.nodes[j].x;
-        const dy = this.nodes[i].y - this.nodes[j].y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 105) {
-          ctx.beginPath();
-          ctx.moveTo(this.nodes[i].x, this.nodes[i].y);
-          ctx.lineTo(this.nodes[j].x, this.nodes[j].y);
-          ctx.strokeStyle = `rgba(0, 255, 159, ${(1 - dist/105) * 0.065})`;
-          ctx.lineWidth = 0.45;
-          ctx.stroke();
-        }
-      }
-    }
-
-    this.nodes.forEach(n => {
-      n.x += n.vx;
-      n.y += n.vy;
-      if (n.x < 0 || n.x > w) n.vx *= -1;
-      if (n.y < 0 || n.y > h) n.vy *= -1;
-
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-      ctx.fillStyle = n.color;
-      ctx.fill();
-
-      if (n.label) {
-        ctx.fillStyle = 'rgba(0, 255, 159, 0.55)';
-        ctx.font = '7.5px "Share Tech Mono", monospace';
-        ctx.fillText(n.label, n.x + 5, n.y + 2);
-      }
-    });
-
-    requestAnimationFrame(() => this.animate());
-  }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   CLASS 2: BorderlessHologramConnectome — Pure Volumetric Floating Brain
-───────────────────────────────────────────────────────────────────────────── */
-class BorderlessHologramConnectome {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    if (!this.canvas) return;
-    this.ctx = this.canvas.getContext('2d');
-    this.time = 0;
-
-    // Smooth Euler Rotation angles
-    this.rotX = 0.22;
-    this.rotY = 0.0;
-    this.targetRotX = 0.22;
-    this.targetRotY = 0.0;
-
-    this.isDragging = false;
-    this.prevMouse = { x: 0, y: 0 };
-    this.isThinking = false;
-    this.isSpeaking = false;
-
-    // Web Audio API Analyser
-    this.audioAnalyser = null;
-    this.audioData = new Uint8Array(32);
-    this.currentAudioLevel = 0.0;
-
-    // Active Tool State Tracking
-    this.activeTools = new Map();
-    this.eruptions = [];
-
-    this.zoneNodes = [];
-    this.synapticCords = [];
-    this.dottedPlasmaPackets = [];
-    this.hoveredNode = null;
-
-    this.zoneAngles = {
-      'cognition': { x: 0.35, y: 0.0 },
-      'api':       { x: 0.20, y: -Math.PI / 2.4 },
-      'voice':     { x: 0.15, y: 0.0 },
-      'vision':    { x: 0.20, y: Math.PI },
-      'action':    { x: -0.45, y: 0.0 },
-      'memory':    { x: 0.15, y: 0.0 }
-    };
-
-    this.resize();
-    this.generateConnectomeArchitecture();
-    this.bindEvents();
-    this.startEventPolling();
+    this.startVpsTelemetryPolling();
+    this.startSynapseEventsPolling();
+    this.connectRustBridge();
     this.animate();
   }
 
   resize() {
     const parent = this.canvas.parentElement;
-    this.width  = this.canvas.width  = parent ? parent.clientWidth : 340;
-    this.height = this.canvas.height = parent ? parent.clientHeight : 340;
-    this.cx = this.width / 2;
-    this.cy = this.height / 2;
+    const rect = parent ? parent.getBoundingClientRect() : { width: 800, height: 460 };
+    
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const cssWidth = Math.max(340, rect.width || 800);
+    const cssHeight = Math.max(360, rect.height || 460);
+
+    this.canvas.width = cssWidth * dpr;
+    this.canvas.height = cssHeight * dpr;
+    this.canvas.style.width = cssWidth + 'px';
+    this.canvas.style.height = cssHeight + 'px';
+
+    this.ctx.scale(dpr, dpr);
+
+    this.width = cssWidth;
+    this.height = cssHeight;
+    this.centerX = this.width / 2;
+    this.centerY = this.height / 2;
+    this.baseRadius = Math.min(this.width, this.height) * 0.35;
+    this.repelForce = 160;
+    this.linkLength = 90;
   }
 
-  setAudioAnalyser(analyser) {
-    this.audioAnalyser = analyser;
-    if (analyser) {
-      this.audioData = new Uint8Array(analyser.frequencyBinCount);
-      this.isSpeaking = true;
-    } else {
-      this.isSpeaking = false;
-      this.currentAudioLevel = 0.0;
+  setPhysics(repel, linkLen) {
+    this.repelForce = repel;
+    this.linkLength = linkLen;
+    this.baseRadius = Math.max(100, Math.min(320, repel * 1.15));
+    if (this.nodes && this.nodes.length > 0) {
+      // Re-scale orbital radii of clusters
+      for (let n of this.nodes) {
+        if (!n.isHub && n.id !== 'CORE') {
+          const factor = (this.linkLength / 90);
+          n.x *= (1 + (factor - 1) * 0.05);
+          n.y *= (1 + (factor - 1) * 0.05);
+          n.z *= (1 + (factor - 1) * 0.05);
+        }
+      }
     }
   }
 
-  generateConnectomeArchitecture() {
-    this.zoneNodes = [];
-    this.synapticCords = [];
+  initQuantumPlasma() {
+    this.particles = [];
+    for (let i = 0; i < 50; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = (this.baseRadius * 0.9) + (Math.random() - 0.5) * 50;
 
-    const scale = Math.min(this.width, this.height) * 0.44;
-
-    // 1. Functional Cortical Zones & Tool Nodes
-    const zones = [
-      { id: 'cognition', name: 'FRONTAL COGNITION', color: '#00f0ff', lx: 0.0, ly: -0.75, lz: 0.65, count: 18, desc: 'Ragionamento, Planning & LLM Logic', toolId: 'llm_reasoning' },
-      { id: 'memory', name: 'AI MEMORY & SKILL VAULT', color: '#ffb703', lx: 0.0, ly: -0.05, lz: 0.0, count: 20, desc: 'Archivio Skill, FTS5 & Memoria Olografica', toolId: 'memory_vault' },
-      { id: 'api', name: 'API CONNECTORS & SMTP', color: '#00ff9f', lx: 0.75, ly: -0.4, lz: 0.25, count: 14, desc: 'Google SMTP SSL, Webhook & Telegram Bot', toolId: 'real_smtp_mailer' },
-      { id: 'voice', name: 'TEMPORAL VOICE & AUDIO', color: '#38bdf8', lx: -0.75, ly: 0.15, lz: 0.35, count: 14, desc: 'Fish Audio, Edge TTS & Whisper STT', toolId: 'voice_tts' },
-      { id: 'action', name: 'ACTION EXECUTION & RUST', color: '#fb5607', lx: 0.0, ly: 0.75, lz: -0.35, count: 14, desc: 'Motore Rust Sub-ms, Pipeline & Runner', toolId: 'rust_fast_parser' },
-      { id: 'vision', name: 'OCCIPITAL VISION & UE5', color: '#818cf8', lx: 0.0, ly: -0.2, lz: -0.85, count: 16, desc: 'Game Ops, Unreal Engine 5.8 & Media Forge', toolId: 'ue5_game_ops' }
-    ];
-
-    zones.forEach(z => {
-      for (let i = 0; i < z.count; i++) {
-        const spread = (z.id === 'memory') ? 0.30 : 0.25;
-        const ox = (Math.random() - 0.5) * scale * spread;
-        const oy = (Math.random() - 0.5) * scale * spread;
-        const oz = (Math.random() - 0.5) * scale * spread;
-
-        this.zoneNodes.push({
-          zoneId: z.id,
-          zoneName: z.name,
-          toolId: z.toolId,
-          color: z.color,
-          desc: z.desc,
-          x: z.lx * scale + ox,
-          y: z.ly * scale + oy,
-          z: z.lz * scale + oz,
-          baseSize: z.id === 'memory' ? (1.7 + Math.random() * 1.5) : (1.3 + Math.random() * 1.3),
-          pulseOffset: Math.random() * Math.PI * 2,
-          screenX: 0, screenY: 0, depth: 0,
-          isToolMasterNode: (i === 0)
-        });
-      }
-    });
-
-    // 2. ORACLE VPS WHITE QUANTUM NODE (Integrated directly inside the brain cluster!)
-    this.zoneNodes.push({
-      zoneId: 'api',
-      zoneName: 'ORACLE VPS CLOUD HUB',
-      toolId: 'oracle_vps_core',
-      color: '#ffffff', // Glowing White Star!
-      desc: 'Nodo Centrale Oracle VPS Ubuntu (92.4.233.42)',
-      x: 0.45 * scale,
-      y: 0.35 * scale,
-      z: 0.15 * scale,
-      baseSize: 2.6,
-      pulseOffset: 0,
-      screenX: 0, screenY: 0, depth: 0,
-      isToolMasterNode: true
-    });
-
-    // 3. Parametric Outer Brain Cortex Frame Points
-    for (let i = 0; i < 150; i++) {
-      const u = Math.random() * Math.PI * 2;
-      const v = (Math.random() - 0.5) * Math.PI;
-      const hemi = Math.random() > 0.5 ? 1 : -1;
-
-      let rX = Math.cos(v) * Math.cos(u);
-      let rY = Math.sin(v) * (1.0 - Math.abs(rX) * 0.15);
-      let rZ = Math.cos(v) * Math.sin(u) * 1.25;
-
-      rX = (rX * 0.72 + (hemi * 0.28)) * (1.0 + Math.sin(u * 5) * 0.06);
-      rY = (rY * 0.85 - 0.1) * (1.0 + Math.cos(v * 6) * 0.05);
-
-      this.zoneNodes.push({
-        zoneId: 'cortex_contour',
-        zoneName: 'CORTICAL CONNECTOME',
-        color: hemi > 0 ? '#00f0ff' : '#00ff9f',
-        desc: 'Corteccia neurale a fibre ottiche',
-        x: rX * scale,
-        y: rY * scale,
-        z: rZ * scale * 0.95,
-        baseSize: 0.8 + Math.random() * 0.8,
-        pulseOffset: Math.random() * Math.PI * 2,
-        screenX: 0, screenY: 0, depth: 0
+      this.particles.push({
+        x: r * Math.sin(phi) * Math.cos(theta),
+        y: r * Math.sin(phi) * Math.sin(theta),
+        z: r * Math.cos(phi),
+        baseSpeed: 0.0010 + Math.random() * 0.0012,
+        theta,
+        phi,
+        r,
+        radius: 1.0 + Math.random() * 1.4,
+        color: Math.random() > 0.5 ? '#00f0ff' : '#00ff9f',
+        alpha: 0.12 + Math.random() * 0.2
       });
     }
-
-    // 4. Synaptic Projection Cords
-    for (let i = 0; i < this.zoneNodes.length; i++) {
-      for (let j = i + 1; j < this.zoneNodes.length; j++) {
-        const n1 = this.zoneNodes[i];
-        const n2 = this.zoneNodes[j];
-        const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y, n1.z - n2.z);
-
-        const sameZone = (n1.zoneId === n2.zoneId && n1.zoneId !== 'cortex_contour');
-        const memoryLink = (n1.zoneId === 'memory' || n2.zoneId === 'memory');
-
-        if ((sameZone && dist < scale * 0.36) || (memoryLink && dist < scale * 0.72 && Math.random() < 0.2)) {
-          this.synapticCords.push({
-            n1: n1,
-            n2: n2,
-            baseColor: n1.color,
-            isProjectionTrunk: memoryLink
-          });
-        }
-      }
-    }
   }
 
-  bindEvents() {
-    window.addEventListener('resize', () => {
-      this.resize();
-      this.generateConnectomeArchitecture();
+  async loadManifestAndBuildSphere() {
+    try {
+      const res = await fetch('/skills_manifest.json?' + Date.now());
+      if (res.ok) {
+        this.skillsManifest = await res.json();
+      }
+    } catch (e) {}
+
+    this.buildCompactDenseSkillsSphere();
+  }
+
+  // ── BUILD 1:1 RIGOROUS COMPACT SKILLS MATRIX ─────────────────────
+  buildCompactDenseSkillsSphere() {
+    this.nodes = [];
+    this.connections = [];
+    this.pulses = [];
+
+    // Central CEREBRO Arc Reactor Core
+    this.nodes.push({
+      id: 'CORE',
+      key: 'core',
+      x: 0, y: 0, z: 0,
+      radius: 18.0,
+      color: '#00f0ff',
+      glow: '#00ff9f',
+      label: 'CEREBRO CORE',
+      category: 'CORE',
+      isHub: true,
+      description: 'Master Core & Singularità Quantica di Regia AI (120 FPS)',
+      command: 'JARVIS, stato generale del sistema'
     });
 
-    this.canvas.addEventListener('mousedown', (e) => {
-      this.isDragging = true;
-      this.prevMouse = { x: e.clientX, y: e.clientY };
-    });
+    // 8 Macro Lobi con mappatura 1:1 delle 39 skill reali
+    const systemLobes = [
+      {
+        name: 'BUSINESS_SGOMBERI',
+        label: '🚛 TRASLOCHI & BIZ',
+        color: '#00ff9f',
+        glow: '#05ffa1',
+        skills: [
+          { id: 'leads_and_quotes_tracker', label: 'Leads Tracker Live', desc: 'Monitoraggio lead in tempo reale da PietroTraslochi & BadrExpress', cmd: 'JARVIS, quanti preventivi oggi?' },
+          { id: 'auto_invoice_pdf_generator', label: 'Fattura PDF Gen', desc: 'Generatore fatture elettroniche e PDF con archiviazione SQLite', cmd: 'JARVIS, genera fattura di prova' },
+          { id: 'autonomous_email_triage', label: 'Email Vault Triage', desc: 'Triage FTS5 SQLite e categorizzazione automatica posta in arrivo', cmd: 'JARVIS, spulcia le email recenti' },
+          { id: 'real_smtp_mailer', label: 'SMTP SSL 465 Mailer', desc: 'Motore di invio certificato SMTP SSL con allegati professionali', cmd: 'JARVIS, invia email di test' },
+          { id: 'logistics_maps_route_optimizer', label: 'Route Logistics Calc', desc: 'Ottimizzatore tratte, chilometraggio e pedaggi per sgomberi', cmd: 'JARVIS, calcola percorso Imola Bologna' },
+          { id: 'sgomberi_smart_classifier', label: 'Sgomberi Classifier', desc: 'Classificazione volume arredi, discarica e recupero eco', cmd: 'JARVIS, calcola preventivo per 80 mq al 3 piano' }
+        ]
+      },
+      {
+        name: 'GAME_DEV',
+        label: '🎮 GAME DEV UE5',
+        color: '#ff2a6d',
+        glow: '#ff007f',
+        skills: [
+          { id: 'ue5_game_ops', label: 'UE 5.8 GameOps', desc: 'Automazione compilazione C++, cooking asset e build EBGS.uproject', cmd: 'JARVIS, stato build Unreal Engine 5.8' },
+          { id: 'steamworks_sdk_pipeline', label: 'Steam AppID 2886940', desc: 'Deploy automatico su Steamworks per il gioco Survival MMO', cmd: 'JARVIS, prepara release Steamworks' },
+          { id: 'gaea_blender_terrain_bridge', label: 'Gaea & Blender Forge', desc: 'Generazione mappe procedurali 8K e bridge asset 3D', cmd: 'JARVIS, bridge blender terreni' },
+          { id: 'unreal_dedicated_server_ops', label: 'Dedicated Server Ops', desc: 'Gestione server dedicati autoritativi a 60 tick/s', cmd: 'JARVIS, stato server dedicato UE5' },
+          { id: 'pbr_material_forge', label: 'PBR Shaders Forge', desc: 'Compilazione shader custom e ottimizzazione Nanite/Lumen', cmd: 'JARVIS, ottimizza shader Nanite' }
+        ]
+      },
+      {
+        name: 'LTM_MEMORY',
+        label: '🧠 LTM VAULT',
+        color: '#ffb703',
+        glow: '#ffd166',
+        skills: [
+          { id: 'hermes_memory', label: 'Holographic Memory', desc: 'Archivio a lungo termine contestuale con iniezione dinamica nei prompt', cmd: 'JARVIS, memorie recenti nel vault' },
+          { id: 'mail_vault_db', label: 'Mail Vault SQLite', desc: 'Database FTS5 con indicizzazione semantica per email e contratti', cmd: 'JARVIS, cerca email nel vault' },
+          { id: 'sqlite_fts5_memory_vault', label: 'FTS5 Memory Search', desc: 'Ricerca full-text istantanea in 0.05ms su tutta la conoscenza', cmd: 'JARVIS, recall memoria' },
+          { id: 'checkpoint_conversation_graph', label: 'Conversation Graph', desc: 'Mappa delle conversazioni storiche con ripristino istantaneo', cmd: 'JARVIS, snapshot conversazione' },
+          { id: 'semantic_vector_cache', label: 'Semantic Vector Cache', desc: 'Cache neurale in RAM per embedding e recall ultra-rapido', cmd: 'JARVIS, cache status' }
+        ]
+      },
+      {
+        name: 'API_INFRASTRUCTURE',
+        label: '⚡ CLOUD VPS & N8N',
+        color: '#00d4ff',
+        glow: '#00f0ff',
+        skills: [
+          { id: 'oracle_vps_monitor', label: 'Oracle VPS Ubuntu', desc: 'Telemetria real-time di CPU, RAM e dischi su 92.4.233.42', cmd: 'JARVIS, telemetria VPS Oracle' },
+          { id: 'n8n_workflows_engine', label: 'n8n 15+ Workflows', desc: 'Orchestrazione flussi grafici, intake preventivi e trigger Telegram', cmd: 'JARVIS, stato flussi n8n' },
+          { id: 'cloudflare_named_tunnels', label: 'Cloudflare ZeroTrust', desc: 'Named Tunnels SSL per eb.badrexpress.com e n8n/AgentZero', cmd: 'JARVIS, tunnel attivi' },
+          { id: 'fastmcp_universal_gateway', label: 'FastMCP Gateway', desc: 'Protocollo Model Context Protocol universale per tool remoti', cmd: 'JARVIS, lista tool MCP' },
+          { id: 'docker_swarm_health', label: 'Docker Swarm Health', desc: 'Monitoraggio container Open-WebUI, n8n e Agente Zero', cmd: 'JARVIS, stato container docker' }
+        ]
+      },
+      {
+        name: 'VOICE_DEVOPS',
+        label: '🎙️ VOICE & IOT',
+        color: '#c084fc',
+        glow: '#a855f7',
+        skills: [
+          { id: 'phone_call_and_whatsapp_dispatcher', label: 'Phone & WhatsApp Call', desc: 'Avvio chiamate telefoniche e messaggi WhatsApp con un comando vocale', cmd: 'JARVIS, fai squillare il mio cellulare' },
+          { id: 'faster_whisper_voice_engine', label: 'Groq Whisper V3 STT', desc: 'Trascrizione vocale istantanea a bassissima latenza (0.2s)', cmd: 'JARVIS, ascolto vocale' },
+          { id: 'elevenlabs_neural_tts', label: 'ElevenLabs Voice', desc: 'Sintesi vocale ad alta fedeltà con timbro British elegante', cmd: 'JARVIS, parla' },
+          { id: 'audio_oscilloscope_dsp', label: '24-Band Audio DSP', desc: 'Equalizzatore di frequenza e analizzatore decibel in tempo reale', cmd: 'JARVIS, audio monitor' },
+          { id: 'kde_connect_bridge', label: 'KDE Connect Linux', desc: 'Integrazione bidirezionale con smartphone per SMS, clip e ringer', cmd: 'JARVIS, dov\'è il mio telefono?' }
+        ]
+      },
+      {
+        name: 'MARKETPLACE',
+        label: '🏷️ FB MARKETPLACE',
+        color: '#38bdf8',
+        glow: '#0284c7',
+        skills: [
+          { id: 'marketplace_seller_and_evaluator', label: 'Price Evaluator AI', desc: 'Stima accurata prezzi di mercato e creazione schede persuasive', cmd: 'JARVIS, valuta e vendi una PS5 usata' },
+          { id: 'facebook_marketplace_messenger_bot', label: 'FB Messenger Bot', desc: 'Risposte automatiche ai clienti di Facebook Marketplace', cmd: 'JARVIS, controlla messaggi marketplace' },
+          { id: 'subito_crawler_price_radar', label: 'Subito.it Price Radar', desc: 'Analisi dei prezzi medi per articoli usati su Subito.it', cmd: 'JARVIS, stima prezzo' },
+          { id: 'persuasive_copywriter_ai', label: 'Persuasive Copywriter', desc: 'Generatore di annunci di vendita con ganci di conversione', cmd: 'JARVIS, genera annuncio di vendita' }
+        ]
+      },
+      {
+        name: 'WEB_RESEARCH',
+        label: '🌐 LIVE WEB AI',
+        color: '#2dd4bf',
+        glow: '#14b8a6',
+        skills: [
+          { id: 'autonomous_web_browser', label: 'Crawl4AI Live Scraper', desc: 'Navigazione web e scraping in tempo reale con Playwright', cmd: 'JARVIS, naviga su internet e dimmi le ultime novità tech' },
+          { id: 'meteo_and_traffic_intelligence', label: 'Meteo & Traffic Radar', desc: 'Previsioni meteo in diretta e traffico satellitare tratte', cmd: 'JARVIS, che tempo fa a Imola e c\'è traffico?' },
+          { id: 'duckduckgo_deep_search', label: 'DuckDuckGo Radar', desc: 'Ricerca deep-web per notizie, documentazioni e prezzi', cmd: 'JARVIS, cerca su internet notizie Unreal 5.8' },
+          { id: 'docling_pdf_extractor', label: 'Docling PDF Extractor', desc: 'Estrazione strutturata di tabelle e testi da documenti e fatture', cmd: 'JARVIS, analizza pdf' }
+        ]
+      },
+      {
+        name: 'AUTONOMOUS_FLEET',
+        label: '🤖 AGENTE ZERO',
+        color: '#f43f5e',
+        glow: '#e11d48',
+        skills: [
+          { id: 'agent_fleet_dispatcher', label: 'Agente Zero Core', desc: 'Console autonoma Level 5 per esecuzione task in background', cmd: 'JARVIS, stato della flotta agenti' },
+          { id: 'hermes_level5_dag_kanban', label: 'Hermes Level 5 DAG', desc: 'Gestione a grafo aciclico delle task con auto-risoluzione', cmd: 'JARVIS, apri kanban' },
+          { id: 'rust_tokio_bridge_120fps', label: 'Rust Tokio Bus 120fps', desc: 'Micro-bus nativo compilato in Rust con latenza inferiore a 1ms', cmd: 'JARVIS, telemetria rust bus' },
+          { id: 'smart_git_multi_sync', label: 'Git Multi-Sync Repo', desc: 'Commit, backup DB e snapshot git automatico dell\'ecosistema', cmd: 'JARVIS, sync repository e backup' }
+        ]
+      }
+    ];
 
-    window.addEventListener('mouseup', () => { this.isDragging = false; });
+    const numLobes = systemLobes.length;
+    const goldenRatio = (1 + Math.sqrt(5)) / 2;
 
-    window.addEventListener('mousemove', (e) => {
-      if (this.isDragging) {
-        const dx = e.clientX - this.prevMouse.x;
-        const dy = e.clientY - this.prevMouse.y;
-        this.targetRotY += dx * 0.006;
-        this.targetRotX += dy * 0.006;
-        this.prevMouse = { x: e.clientX, y: e.clientY };
-      } else {
-        const rect = this.canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
+    systemLobes.forEach((lobe, i) => {
+      const theta = 2 * Math.PI * i / goldenRatio;
+      const phi = Math.acos(1 - 2 * (i + 0.5) / numLobes);
 
-        let found = null;
-        this.zoneNodes.forEach(node => {
-          if (node.depth > 0 && node.zoneId !== 'cortex_contour') {
-            const d = Math.hypot(mx - node.screenX, my - node.screenY);
-            if (d < 15) found = node;
-          }
+      const hx = (this.baseRadius * 0.75) * Math.sin(phi) * Math.cos(theta);
+      const hy = (this.baseRadius * 0.75) * Math.sin(phi) * Math.sin(theta);
+      const hz = (this.baseRadius * 0.75) * Math.cos(phi);
+
+      const hubIdx = this.nodes.length;
+      this.nodes.push({
+        id: `HUB_${lobe.name}`,
+        key: lobe.name.toLowerCase(),
+        x: hx, y: hy, z: hz,
+        radius: 10.5,
+        color: lobe.color,
+        glow: lobe.glow,
+        label: lobe.label,
+        category: lobe.name,
+        isHub: true,
+        description: `Lobo Master: ${lobe.label} (${lobe.skills.length} Skill Reali collegate)`,
+        command: `JARVIS, apri modulo ${lobe.label}`,
+        theta,
+        phi
+      });
+
+      // Highway Axon Cable to Core
+      this.connections.push({
+        from: 0,
+        to: hubIdx,
+        alpha: 0.85,
+        isHighway: true,
+        category: lobe.name
+      });
+
+      // Individual Real Skill & Tool Orbs
+      lobe.skills.forEach((skill, s) => {
+        const satDist = 24 + (s % 3) * 12;
+        const satAngle1 = (s / lobe.skills.length) * Math.PI * 2 + (i * 0.4);
+        const satAngle2 = (s % 3) * 0.7 + 0.35;
+
+        const sx = hx + satDist * Math.sin(satAngle2) * Math.cos(satAngle1);
+        const sy = hy + satDist * Math.sin(satAngle2) * Math.sin(satAngle1);
+        const sz = hz + satDist * Math.cos(satAngle2);
+
+        const satIdx = this.nodes.length;
+        this.nodes.push({
+          id: skill.id,
+          key: skill.id,
+          x: sx, y: sy, z: sz,
+          radius: 5.2 + (s % 3) * 1.0,
+          color: lobe.color,
+          glow: lobe.glow,
+          label: skill.label,
+          category: lobe.name,
+          isHub: false,
+          description: skill.desc || `Skill ufficiale ${skill.label}`,
+          command: skill.cmd || `JARVIS, esegui ${skill.label}`
         });
-        this.hoveredNode = found;
-        this.canvas.style.cursor = found ? 'pointer' : (this.isDragging ? 'grabbing' : 'grab');
-      }
-    });
 
-    this.canvas.addEventListener('click', () => {
-      if (this.hoveredNode) {
-        this.activateTool(this.hoveredNode.zoneId, 3600);
-      }
-    });
-  }
+        // Axon connection to Hub
+        this.connections.push({
+          from: hubIdx,
+          to: satIdx,
+          alpha: 0.45,
+          isHighway: false,
+          category: lobe.name
+        });
 
-  activateTool(zoneId, durationMs = 3600, skillName = '') {
-    const now = Date.now();
-    const zoneInfo = this.zoneAngles[zoneId];
-    if (!zoneInfo) return;
-
-    const targetNodeColor = this.zoneNodes.find(n => n.zoneId === zoneId)?.color || '#00f0ff';
-
-    this.activeTools.set(zoneId, {
-      endTime: now + durationMs,
-      name: skillName || zoneId.toUpperCase(),
-      categoryColor: targetNodeColor
-    });
-
-    const currentRotY = this.rotY;
-    const baseTargetY = zoneInfo.y;
-    const turns = Math.round((currentRotY - baseTargetY) / (Math.PI * 2));
-    this.targetRotY = baseTargetY + turns * (Math.PI * 2);
-    this.targetRotX = zoneInfo.x;
-
-    const targetNodes = this.zoneNodes.filter(n => n.zoneId === zoneId);
-    if (targetNodes.length > 0) {
-      for (let i = 0; i < 3; i++) {
-        const dst = targetNodes[Math.floor(Math.random() * targetNodes.length)];
-        for (let b = 0; b < 3; b++) {
-          this.dottedPlasmaPackets.push({
-            startX: 0, startY: 0, startZ: 0,
-            endX: dst.x, endY: dst.y, endZ: dst.z,
-            progress: -(b * 0.14),
-            speed: 0.022,
-            color: '#00ff9f',
-            targetColor: targetNodeColor,
-            dstNode: dst
+        // Inter-skill connecting mesh
+        if (s > 0 && s % 2 === 0) {
+          this.connections.push({
+            from: satIdx - 1,
+            to: satIdx,
+            alpha: 0.25,
+            isHighway: false,
+            category: lobe.name
           });
         }
-      }
+      });
+    });
+
+    for (let i = 1; i <= numLobes; i++) {
+      const nextLobe = (i % numLobes) + 1;
+      this.connections.push({
+        from: i * 7,
+        to: nextLobe * 7,
+        alpha: 0.22,
+        isHighway: false,
+        category: 'SHELL'
+      });
     }
   }
 
-  triggerEruption(zoneId) {
-    const nodes = this.zoneNodes.filter(n => n.zoneId === zoneId);
-    if (nodes.length === 0) return;
-    const centerNode = nodes[0];
-
-    this.eruptions.push({
-      x: centerNode.x, y: centerNode.y, z: centerNode.z,
-      radius: 3,
-      maxRadius: 45,
-      alpha: 0.85,
-      color: centerNode.color,
-      sparks: Array.from({ length: 14 }, () => ({
-        vx: (Math.random() - 0.5) * 2.4,
-        vy: (Math.random() - 0.5) * 2.4,
-        vz: (Math.random() - 0.5) * 2.4,
-        x: centerNode.x, y: centerNode.y, z: centerNode.z,
-        life: 1.0,
-        decay: 0.035 + Math.random() * 0.03
-      }))
-    });
+  startVpsTelemetryPolling() {
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/telemetry/vps');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.cpu_usage !== undefined) {
+            this.vpsCpu = data.cpu_usage;
+            this.vpsRam = data.ram_usage;
+            this.vpsLatency = data.latency_ms;
+          }
+        }
+      } catch (e) {}
+    }, 2500);
   }
 
-  startEventPolling() {
+  startSynapseEventsPolling() {
     setInterval(async () => {
       try {
         const res = await fetch('/api/synapse/events');
-        const data = await res.json();
-        if (data.events && data.events.length > 0) {
-          data.events.forEach(ev => {
-            const mapping = {
-              'traslochi_funnel': 'api',
-              'real_smtp_mailer': 'api',
-              'ue5_game_ops': 'vision',
-              'youtube_dayz_studio': 'vision',
-              'rust_fast_parser': 'action',
-              'n8n_nervous_system': 'api'
-            };
-            const zone = mapping[ev.skill_id] || 'cognition';
-            this.activateTool(zone, 3800, ev.skill_id);
-          });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.events && data.events.length > 0) {
+            data.events.forEach(ev => {
+              this.igniteSkill(ev.skill, ev.category);
+            });
+          }
         }
       } catch (e) {}
-    }, 240);
+    }, 1200);
+  }
+
+  connectRustBridge() {
+    try {
+      const ws = new WebSocket('ws://' + window.location.hostname + ':9000/ws');
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.event === 'SYNAPSE_PULSE') {
+            this.igniteSkill(data.skill, data.category);
+          }
+        } catch (e) {}
+      };
+    } catch (e) {}
+  }
+
+  bindEvents() {
+    window.addEventListener('resize', () => { this.resize(); });
+
+    let touchStartTime = 0;
+    let touchMoved = false;
+
+    const handleStart = (clientX, clientY) => {
+      this.mouse.isDown = true;
+      this.mouse.lastX = clientX;
+      this.mouse.lastY = clientY;
+      this.isAutoTargeting = false;
+      if (this.activeSkillTimer) clearTimeout(this.activeSkillTimer);
+      touchStartTime = Date.now();
+      touchMoved = false;
+    };
+
+    const handleMove = (clientX, clientY) => {
+      if (this.mouse.isDown) {
+        const dx = clientX - this.mouse.lastX;
+        const dy = clientY - this.mouse.lastY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) touchMoved = true;
+        this.rotY += dx * 0.005;
+        this.rotX -= dy * 0.005;
+        this.mouse.lastX = clientX;
+        this.mouse.lastY = clientY;
+      }
+    };
+
+    const handleEnd = (clientX, clientY) => {
+      this.mouse.isDown = false;
+      const duration = Date.now() - touchStartTime;
+      
+      // Tap or Click detected
+      if (!touchMoved && duration < 350 && clientX !== undefined && clientY !== undefined) {
+        const rect = this.canvas.getBoundingClientRect();
+        const tapX = clientX - rect.left;
+        const tapY = clientY - rect.top;
+
+        if (this.lastProjectedNodes) {
+          let closestNode = null;
+          let minDist = 35;
+
+          for (const pn of this.lastProjectedNodes) {
+            const dist = Math.hypot(pn.px - tapX, pn.py - tapY);
+            if (dist < minDist) {
+              minDist = dist;
+              closestNode = pn.orig;
+            }
+          }
+
+          if (closestNode) {
+            // Open Skill Inspector HUD Modal
+            this.openSkillInspectorModal(closestNode);
+            this.igniteSkill(closestNode.key || closestNode.id, closestNode.category);
+          }
+        }
+      }
+    };
+
+    this.canvas.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', (e) => handleEnd(e.clientX, e.clientY));
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+      const touch = e.changedTouches[0];
+      if (touch) handleEnd(touch.clientX, touch.clientY);
+      else handleEnd();
+    });
+  }
+
+  // ── OPEN SKILL INSPECTOR HUD MODAL ──────────────────────────────
+  openSkillInspectorModal(node) {
+    if (window.showSkillDetailModal) {
+      window.showSkillDetailModal(node);
+    }
+  }
+
+  // ── 3/4 ISOMETRIC PROFILE LOCK ON ACTIVE TOOL ────────────────────
+  igniteSkill(skillKey = null, category = null) {
+    if (!category && skillKey) {
+      const found = this.nodes.find(n => n.key === skillKey || (n.label && n.label.toLowerCase().includes(skillKey.toLowerCase())));
+      if (found) category = found.category;
+    }
+
+    this.activeCategory = category;
+    this.activeSkillKeys.clear();
+    this.activeNodeId = null;
+
+    let targetNode = null;
+    if (skillKey) {
+      this.activeSkillKeys.add(skillKey.toLowerCase());
+      targetNode = this.nodes.find(n => n.key === skillKey.toLowerCase() || (n.label && n.label.toLowerCase().includes(skillKey.toLowerCase())));
+    }
+    if (!targetNode && category) {
+      targetNode = this.nodes.find(n => n.isHub && n.category === category);
+    }
+
+    if (targetNode) {
+      this.activeNodeId = targetNode.id;
+      this.activeSkillLabel = targetNode.label || targetNode.key;
+
+      // ── 3/4 ISOMETRIC PROFILE LOCK (Reveals 3D Axon Depth) ──
+      const azimuth = Math.atan2(targetNode.x, targetNode.z);
+      this.targetRotY = azimuth + 0.62; 
+      this.targetRotX = 0.42;
+
+      this.isAutoTargeting = true;
+      this.targetZoom = 1.85;
+      this.targetCamX = 0;
+      this.targetCamY = 0;
+    }
+
+    this.isThinking = true;
+
+    // High energy laser plasma pulse barrage along the active highway
+    const activeConns = this.connections.filter(c => c.category === category || c.isHighway);
+    for (let i = 0; i < 35; i++) {
+      const conn = (activeConns.length > 0) ? activeConns[Math.floor(Math.random() * activeConns.length)] : this.connections[0];
+      if (conn) {
+        this.pulses.push({
+          from: conn.from,
+          to: conn.to,
+          progress: Math.random() * 0.2,
+          speed: 0.038 + Math.random() * 0.035,
+          color: (conn.category === category) ? '#00ff9f' : '#00f0ff',
+          glow: (conn.category === category) ? '#00ff9f' : '#00f0ff',
+          size: 7.0,
+          tailLength: 0.32
+        });
+      }
+    }
+
+    if (this.activeSkillTimer) clearTimeout(this.activeSkillTimer);
+    this.activeSkillTimer = setTimeout(() => {
+      // Gentle return to calm slow idle rotation
+      this.targetZoom = 1.0;
+      this.isAutoTargeting = false;
+      this.activeCategory = null;
+      this.activeSkillKeys.clear();
+      this.activeNodeId = null;
+      this.isThinking = false;
+    }, 7500);
   }
 
   setThinking(val) {
     this.isThinking = val;
-    if (val) this.activateTool('cognition', 3000, 'LLM THINKING');
-    else this.activeTools.delete('cognition');
+    if (val && this.activeCategory) this.igniteSkill(null, this.activeCategory);
   }
 
   setSpeaking(val) {
     this.isSpeaking = val;
     if (val) {
-      this.activateTool('voice', 4000, 'CEREBRO VOICE');
+      this.targetZoom = 1.6;
+      this.isAutoTargeting = true; // Lock view still while speaking!
     } else {
-      this.activeTools.delete('voice');
+      // Return to calm idle rotation after speaking
+      this.targetZoom = 1.0;
+      this.isAutoTargeting = false;
     }
   }
 
-  project3D(x, y, z) {
-    const cosY = Math.cos(this.rotY), sinY = Math.sin(this.rotY);
-    const cosX = Math.cos(this.rotX), sinX = Math.sin(this.rotX);
+  // ── DRAW 3D VOLUMETRIC ORB (DORMANT SOFFUSO VS PULSANTE ATTIVO) ──
+  drawVolumetricOrb(px, py, r, color, glow, isHub, isLobeActive, isSkillActive, scale) {
+    const isLit = isLobeActive || isSkillActive;
 
-    let x1 = x * cosY + z * sinY;
-    let z1 = -x * sinY + z * cosY;
+    this.ctx.save();
+    
+    if (isLit) {
+      // 🌟 ACCESO / ATTIVO: High-intensity living breathing neon flash bloom
+      const pulseMod = 1.0 + Math.sin(this.time * 8.5) * 0.22;
+      const rLit = r * (isSkillActive ? 1.45 : 1.2) * pulseMod;
 
-    let y2 = y * cosX - z1 * sinX;
-    let z2 = y * sinX + z1 * cosX;
+      this.ctx.shadowColor = isSkillActive ? '#00ff9f' : (glow || color);
+      this.ctx.shadowBlur = isSkillActive ? 38 : (isHub ? 28 : 18);
 
-    const distance = 270;
-    const depth = (z2 + distance) / distance;
-    if (depth <= 0.05) return { x: this.cx, y: this.cy, scale: 0, depth: -1 };
+      // Expanding Ripple Wave
+      const rippleR = r * 1.8 + ((this.time * 24) % 22);
+      const rippleAlpha = Math.max(0, 1.0 - (rippleR - r * 1.8) / 22);
+      this.ctx.strokeStyle = isSkillActive ? `rgba(0, 255, 159, ${rippleAlpha * 0.7})` : `rgba(0, 240, 255, ${rippleAlpha * 0.5})`;
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, rippleR, 0, Math.PI * 2);
+      this.ctx.stroke();
 
-    return {
-      x: this.cx + (x1 / depth),
-      y: this.cy + (y2 / depth),
-      depth: depth,
-      scale: 1 / depth,
-      rawZ: z2
-    };
+      const grad = this.ctx.createRadialGradient(
+        px - rLit * 0.35, py - rLit * 0.35, rLit * 0.08,
+        px, py, rLit
+      );
+      grad.addColorStop(0.0, '#ffffff');
+      grad.addColorStop(0.3, isSkillActive ? '#00ff9f' : color);
+      grad.addColorStop(0.8, isSkillActive ? '#00ff9f' : color);
+      grad.addColorStop(1.0, '#011018');
+
+      this.ctx.fillStyle = grad;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, rLit, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Hub Fresnel Corona
+      if (isHub) {
+        this.ctx.strokeStyle = 'rgba(0, 255, 159, 0.95)';
+        this.ctx.lineWidth = 2.0 * scale;
+        this.ctx.beginPath();
+        this.ctx.arc(px, py, r * 1.6 + Math.sin(this.time * 4) * 3, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+    } else {
+      // 🌑 DORMANT / SOFFUSO: Soft dark translucent glass orb
+      this.ctx.shadowBlur = 0;
+      this.ctx.globalAlpha = isHub ? 0.38 : 0.22;
+
+      const grad = this.ctx.createRadialGradient(
+        px - r * 0.35, py - r * 0.35, r * 0.1,
+        px, py, r
+      );
+      grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.4)');
+      grad.addColorStop(0.35, color);
+      grad.addColorStop(0.9, '#021824');
+      grad.addColorStop(1.0, '#01080e');
+
+      this.ctx.fillStyle = grad;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, r * 0.88, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    this.ctx.restore();
+    this.ctx.shadowBlur = 0;
+    this.ctx.globalAlpha = 1.0;
+  }
+
+  // ── DRAW HUD CALLOUT PIN FOR ACTIVE TOOL ─────────────────────────
+  drawActiveToolCallout(px, py, label, color) {
+    this.ctx.save();
+
+    const pinLenX = 35;
+    const pinLenY = -28;
+    const boxW = Math.max(120, label.length * 7.5 + 24);
+    const boxH = 22;
+
+    const cornerX = px + pinLenX;
+    const cornerY = py + pinLenY;
+
+    // Laser Callout Leader Line
+    this.ctx.strokeStyle = '#00ff9f';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.shadowColor = '#00ff9f';
+    this.ctx.shadowBlur = 10;
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(px, py);
+    this.ctx.lineTo(cornerX, cornerY);
+    this.ctx.lineTo(cornerX + boxW, cornerY);
+    this.ctx.stroke();
+
+    // Callout Box Glass Badge
+    this.ctx.fillStyle = 'rgba(2, 12, 24, 0.88)';
+    this.ctx.strokeStyle = '#00ff9f';
+    this.ctx.lineWidth = 1.0;
+    this.ctx.beginPath();
+    this.ctx.roundRect(cornerX, cornerY - boxH, boxW, boxH, 4);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Text Label inside HUD Badge
+    this.ctx.font = `bold 10px "Orbitron", sans-serif`;
+    this.ctx.fillStyle = '#00ff9f';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText(`⚡ ${label}`, cornerX + 8, cornerY - 7);
+
+    this.ctx.restore();
+  }
+
+  // ── DRAW CENTRAL SINGULARITY ARC CORE ────────────────────────────
+  drawCoreSingularity(coreProj) {
+    const cx = coreProj.px;
+    const cy = coreProj.py;
+    const scale = coreProj.scale;
+    const rCore = 18 * scale;
+
+    this.ctx.save();
+    this.ctx.translate(cx, cy);
+
+    // 1. Triple Holographic Orbit Rings
+    this.ctx.strokeStyle = this.isThinking ? '#ff007f' : '#00f0ff';
+    this.ctx.lineWidth = 1.8 * scale;
+    this.ctx.shadowColor = this.isThinking ? '#ff007f' : '#00f0ff';
+    this.ctx.shadowBlur = 20;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore * 1.9 + Math.sin(this.time * 3) * 2.5, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    // 2. Slow Calm Rotating Blades
+    const spinSpeed = 1.2;
+    this.ctx.strokeStyle = '#00ff9f';
+    this.ctx.lineWidth = 2.4 * scale;
+    this.ctx.shadowColor = '#00ff9f';
+    this.ctx.shadowBlur = 16;
+
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore * 1.4, this.time * spinSpeed, this.time * spinSpeed + Math.PI * 1.2);
+    this.ctx.stroke();
+
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore * 1.4, -this.time * spinSpeed, -this.time * spinSpeed + Math.PI * 1.2);
+    this.ctx.stroke();
+
+    // 3. Volumetric Plasma Singularity Sphere
+    const grad = this.ctx.createRadialGradient(
+      -rCore * 0.3, -rCore * 0.3, rCore * 0.1,
+      0, 0, rCore
+    );
+    grad.addColorStop(0.0, '#ffffff');
+    grad.addColorStop(0.3, '#00f0ff');
+    grad.addColorStop(0.7, '#00ff9f');
+    grad.addColorStop(1.0, '#011a14');
+
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.restore();
+    this.ctx.shadowBlur = 0;
+
+    // Glowing Holographic Label
+    this.ctx.font = `900 ${Math.max(10, Math.round(11 * scale))}px "Orbitron", sans-serif`;
+    this.ctx.fillStyle = '#00ff9f';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('CEREBRO', cx, cy + rCore + 14);
   }
 
   animate() {
-    this.time += 0.015;
-    const now = Date.now();
-    const ctx = this.ctx, w = this.width, h = this.height;
+    this.time += 0.016;
+
+    // Smooth Camera Interpolation
+    this.zoomScale += (this.targetZoom - this.zoomScale) * 0.06;
+    this.camX += (this.targetCamX - this.camX) * 0.07;
+    this.camY += (this.targetCamY - this.camY) * 0.07;
     
-    // Pure transparent clear — NO black bounding boxes
-    ctx.clearRect(0, 0, w, h);
-
-    let realAudioVolume = 0.0;
-    if (this.audioAnalyser && this.isSpeaking) {
-      this.audioAnalyser.getByteFrequencyData(this.audioData);
-      let sum = 0;
-      for (let i = 0; i < this.audioData.length; i++) sum += this.audioData[i];
-      realAudioVolume = (sum / this.audioData.length) / 128.0;
-      this.currentAudioLevel = this.currentAudioLevel * 0.6 + realAudioVolume * 0.4;
-    } else if (this.isSpeaking) {
-      this.currentAudioLevel = Math.sin(this.time * 12.0) * 0.4 + 0.5;
-    } else {
-      this.currentAudioLevel *= 0.85;
+    if (this.isAutoTargeting || this.isThinking || this.isSpeaking) {
+      // FREEZE ON ISOMETRIC 3/4 PROFILE VIEW (Zero erratic spinning while speaking!)
+      this.rotY += (this.targetRotY - this.rotY) * 0.06;
+      this.rotX += (this.targetRotX - this.rotX) * 0.06;
+    } else if (!this.mouse.isDown) {
+      // CALM, SLOW & GENTLE IDLE ROTATION
+      this.rotY += 0.0010;
     }
 
-    const hasActiveTools = this.activeTools.size > 0;
-    const isSpk = this.isSpeaking;
-    const isThk = this.isThinking;
+    this.ctx.clearRect(0, 0, this.width, this.height);
 
-    this.activeTools.forEach((tool, zoneId) => {
-      if (now >= tool.endTime) {
-        this.triggerEruption(zoneId);
-        this.activeTools.delete(zoneId);
-      }
-    });
+    // Ambient floating quantum particles
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i];
+      p.theta += p.baseSpeed;
+      const px = p.r * Math.sin(p.phi) * Math.cos(p.theta);
+      const py = p.r * Math.sin(p.phi) * Math.sin(p.theta);
+      const pz = p.r * Math.cos(p.phi);
 
-    // ── ROTATIONAL DYNAMICS ────────────────────────────────────────────────
-    if (!this.isDragging) {
-      if (isSpk) {
-        this.targetRotY += 0.00005;
-        this.rotX += (this.targetRotX - this.rotX) * 0.035;
-        this.rotY += (this.targetRotY - this.rotY) * 0.035;
-      } else if (hasActiveTools) {
-        this.rotX += (this.targetRotX - this.rotX) * 0.035;
-        this.rotY += (this.targetRotY - this.rotY) * 0.035;
-      } else {
-        this.targetRotY += 0.0007;
-        this.rotX += (this.targetRotX - this.rotX) * 0.022;
-        this.rotY += (this.targetRotY - this.rotY) * 0.022;
+      const fov = 480;
+      const cosY = Math.cos(this.rotY), sinY = Math.sin(this.rotY);
+      const cosX = Math.cos(this.rotX), sinX = Math.sin(this.rotX);
+
+      let x1 = px * cosY - pz * sinY;
+      let z1 = pz * cosY + px * sinY;
+      let y2 = py * cosX - z1 * sinX;
+      let z2 = z1 * cosX + py * sinX;
+
+      const scale = (fov / (fov + z2 + 250)) * this.zoomScale;
+      const pAlpha = p.alpha * (Math.sin(this.time * 2.0 + i) * 0.3 + 0.7);
+
+      this.ctx.fillStyle = p.color;
+      this.ctx.globalAlpha = Math.max(0.06, pAlpha);
+      this.ctx.beginPath();
+      this.ctx.arc(this.centerX + (x1 + this.camX) * scale, this.centerY + (y2 + this.camY) * scale, p.radius * scale, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+    this.ctx.globalAlpha = 1.0;
+
+    // Continuous Active Plasma Stream on the active highway
+    if (this.activeCategory) {
+      if (Math.random() < 0.75) {
+        const activeConns = this.connections.filter(c => c.category === this.activeCategory);
+        if (activeConns.length > 0) {
+          const conn = activeConns[Math.floor(Math.random() * activeConns.length)];
+          this.pulses.push({
+            from: conn.from,
+            to: conn.to,
+            progress: 0,
+            speed: 0.038 + Math.random() * 0.03,
+            color: '#00ff9f',
+            glow: '#00ff9f',
+            size: 6.8,
+            tailLength: 0.32
+          });
+        }
       }
+    } else if (Math.random() < 0.25 && this.connections.length > 0) {
+      const conn = this.connections[Math.floor(Math.random() * this.connections.length)];
+      this.pulses.push({
+        from: conn.from,
+        to: conn.to,
+        progress: 0,
+        speed: 0.020 + Math.random() * 0.02,
+        color: '#ffffff',
+        glow: '#00d4ff',
+        size: 3.8,
+        tailLength: 0.15
+      });
     }
 
-    // 1. Draw Synaptic Projection Cords (Dotted laser traces)
-    this.synapticCords.forEach(cord => {
-      const p1 = this.project3D(cord.n1.x, cord.n1.y, cord.n1.z);
-      const p2 = this.project3D(cord.n2.x, cord.n2.y, cord.n2.z);
-      if (p1.depth > 0 && p2.depth > 0) {
-        const isCordActive = this.activeTools.has(cord.n1.zoneId) || this.activeTools.has(cord.n2.zoneId);
-        const avgZ = (p1.rawZ + p2.rawZ) / 2;
-        const depthAlpha = Math.max(0.08, Math.min(0.85, (avgZ + 120) / 240));
+    // 3D Projection Matrix (FOV 480)
+    const fov = 480;
+    const projectedNodes = [];
 
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
+    const cosY = Math.cos(this.rotY), sinY = Math.sin(this.rotY);
+    const cosX = Math.cos(this.rotX), sinX = Math.sin(this.rotX);
 
-        if (isCordActive) {
-          ctx.setLineDash([3, 4]);
-          ctx.lineDashOffset = -this.time * 30;
-          ctx.strokeStyle = '#00ff9f';
-          ctx.lineWidth = 1.4 * ((p1.scale + p2.scale) / 2);
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#00ff9f';
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.shadowBlur = 0;
+    for (let i = 0; i < this.nodes.length; i++) {
+      const n = this.nodes[i];
+
+      let x1 = n.x * cosY - n.z * sinY;
+      let z1 = n.z * cosY + n.x * sinY;
+
+      let y2 = n.y * cosX - z1 * sinX;
+      let z2 = z1 * cosX + n.y * sinX;
+
+      const scale = (fov / (fov + z2 + 250)) * this.zoomScale;
+      const projX = this.centerX + (x1 + this.camX) * scale;
+      const projY = this.centerY + (y2 + this.camY) * scale;
+
+      projectedNodes.push({
+        orig: n,
+        px: projX,
+        py: projY,
+        pz: z2,
+        scale,
+        alpha: Math.max(0.3, Math.min(1.0, (z2 + 260) / 400))
+      });
+    }
+
+    this.lastProjectedNodes = projectedNodes;
+
+    // 1. Draw Synapse Axons
+    for (let i = 0; i < this.connections.length; i++) {
+      const c = this.connections[i];
+      const p1 = projectedNodes[c.from];
+      const p2 = projectedNodes[c.to];
+
+      if (p1 && p2) {
+        const isMatch = this.activeCategory && (c.category === this.activeCategory);
+        
+        if (isMatch) {
+          this.ctx.lineWidth = (c.isHighway ? 3.0 : 1.8) * ((p1.scale + p2.scale) / 2);
+          this.ctx.strokeStyle = `rgba(0, 255, 159, ${0.95 * ((p1.alpha + p2.alpha) / 2)})`;
+          this.ctx.shadowColor = '#00ff9f';
+          this.ctx.shadowBlur = 14;
         } else {
-          ctx.strokeStyle = cord.baseColor + Math.round(depthAlpha * (cord.isProjectionTrunk ? 38 : 20)).toString(16).padStart(2, '0');
-          ctx.lineWidth = 0.5 * ((p1.scale + p2.scale) / 2);
-          ctx.stroke();
+          this.ctx.lineWidth = (c.isHighway ? 1.2 : 0.7) * ((p1.scale + p2.scale) / 2);
+          this.ctx.strokeStyle = `rgba(0, 212, 255, ${0.12 * ((p1.alpha + p2.alpha) / 2)})`;
+          this.ctx.shadowBlur = 0;
         }
-      }
-    });
-
-    // 2. Draw Dotted Plasma Photon Beads
-    for (let i = this.dottedPlasmaPackets.length - 1; i >= 0; i--) {
-      const pkt = this.dottedPlasmaPackets[i];
-      pkt.progress += pkt.speed;
-
-      if (pkt.progress >= 0 && pkt.progress <= 1.0) {
-        const curX = pkt.startX + (pkt.endX - pkt.startX) * pkt.progress;
-        const curY = pkt.startY + (pkt.endY - pkt.startY) * pkt.progress;
-        const curZ = pkt.startZ + (pkt.endZ - pkt.startZ) * pkt.progress;
-
-        const pCur = this.project3D(curX, curY, curZ);
-        if (pCur.depth > 0) {
-          ctx.beginPath();
-          ctx.arc(pCur.x, pCur.y, 2.2 * pCur.scale, 0, Math.PI * 2);
-          ctx.fillStyle = pkt.color;
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = pkt.color;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          ctx.beginPath();
-          ctx.arc(pCur.x, pCur.y, 1.0 * pCur.scale, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
-          ctx.fill();
-        }
-      }
-
-      if (pkt.progress >= 1.0) {
-        this.dottedPlasmaPackets.splice(i, 1);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1.px, p1.py);
+        this.ctx.lineTo(p2.px, p2.py);
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
       }
     }
 
-    // 3. Draw Post-Execution Energy Eruptions
-    for (let i = this.eruptions.length - 1; i >= 0; i--) {
-      const er = this.eruptions[i];
-      er.radius += 1.6;
-      er.alpha -= 0.03;
+    // 2. Draw Data Sparks with Laser Plasma Tail
+    for (let i = this.pulses.length - 1; i >= 0; i--) {
+      const pulse = this.pulses[i];
+      pulse.progress += pulse.speed;
 
-      const pCenter = this.project3D(er.x, er.y, er.z);
-      if (pCenter.depth > 0 && er.alpha > 0) {
-        ctx.beginPath();
-        ctx.arc(pCenter.x, pCenter.y, er.radius * pCenter.scale, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${er.alpha * 0.75})`;
-        ctx.lineWidth = 1.2 * pCenter.scale;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = er.color;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        er.sparks.forEach(sp => {
-          sp.x += sp.vx; sp.y += sp.vy; sp.z += sp.vz;
-          sp.life -= sp.decay;
-          const pSp = this.project3D(sp.x, sp.y, sp.z);
-          if (pSp.depth > 0 && sp.life > 0) {
-            ctx.beginPath();
-            ctx.arc(pSp.x, pSp.y, 1.2 * pSp.scale * sp.life, 0, Math.PI * 2);
-            ctx.fillStyle = er.color;
-            ctx.fill();
-          }
-        });
+      if (pulse.progress >= 1.0) {
+        this.pulses.splice(i, 1);
+        continue;
       }
 
-      if (er.alpha <= 0) this.eruptions.splice(i, 1);
-    }
+      const p1 = projectedNodes[pulse.from];
+      const p2 = projectedNodes[pulse.to];
+      if (p1 && p2) {
+        const headX = p1.px + (p2.px - p1.px) * pulse.progress;
+        const headY = p1.py + (p2.py - p1.py) * pulse.progress;
 
-    // 4. Draw SINGLE CENTRAL ARC REACTOR CORE (Audio Spectrum Sync)
-    const pCore = this.project3D(0, 0, 0);
-    if (pCore.depth > 0) {
-      if (isSpk) {
-        const audioMod = this.currentAudioLevel * 4.5;
-        const arcRadius = (6.0 + audioMod) * pCore.scale;
+        const tailProg = Math.max(0, pulse.progress - (pulse.tailLength || 0.2));
+        const tailX = p1.px + (p2.px - p1.px) * tailProg;
+        const tailY = p1.py + (p2.py - p1.py) * tailProg;
 
-        if (this.currentAudioLevel > 0.35) {
-          ctx.beginPath();
-          ctx.arc(pCore.x, pCore.y, (arcRadius + 14 * this.currentAudioLevel), 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(0, 255, 159, ${this.currentAudioLevel * 0.7})`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
+        const pScale = (p1.scale + p2.scale) / 2;
 
-        ctx.beginPath();
-        ctx.arc(pCore.x, pCore.y, arcRadius * 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 159, ${0.15 + this.currentAudioLevel * 0.25})`;
-        ctx.fill();
+        const grad = this.ctx.createLinearGradient(tailX, tailY, headX, headY);
+        grad.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        grad.addColorStop(1, pulse.glow || '#00ff9f');
 
-        ctx.beginPath();
-        ctx.arc(pCore.x, pCore.y, arcRadius, 0, Math.PI * 2);
-        ctx.fillStyle = '#00ff9f';
-        ctx.shadowBlur = Math.round(20 + this.currentAudioLevel * 25);
-        ctx.shadowColor = '#00ff9f';
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        this.ctx.lineWidth = 2.6 * pScale;
+        this.ctx.strokeStyle = grad;
+        this.ctx.beginPath();
+        this.ctx.moveTo(tailX, tailY);
+        this.ctx.lineTo(headX, headY);
+        this.ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(pCore.x, pCore.y, arcRadius * 0.45, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 16;
-        ctx.shadowColor = '#ffffff';
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } else if (isThk) {
-        const thinkPulse = Math.sin(this.time * 12.0) * 0.3;
-        const rad = (5.5 + thinkPulse) * pCore.scale;
-
-        ctx.beginPath();
-        ctx.arc(pCore.x, pCore.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = '#00f0ff';
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = '#00f0ff';
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } else {
-        const breath = Math.sin(this.time * 1.0) * 0.12;
-        const rad = (4.5 + breath) * pCore.scale;
-
-        ctx.beginPath();
-        ctx.arc(pCore.x, pCore.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 255, 159, 0.42)';
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = '#00ff9f';
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.shadowColor = pulse.glow || '#00ff9f';
+        this.ctx.shadowBlur = 18;
+        this.ctx.beginPath();
+        this.ctx.arc(headX, headY, pulse.size * pScale, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
       }
     }
 
-    // 5. Draw Cortex Spherical Nodes (Illuminated in Category Color)
-    this.zoneNodes.forEach(node => {
-      const proj = this.project3D(node.x, node.y, node.z);
-      node.screenX = proj.x;
-      node.screenY = proj.y;
-      node.depth = proj.depth;
+    // 3. Draw CEREBRO Singularity Core
+    const coreProj = projectedNodes[0];
+    if (coreProj) {
+      this.drawCoreSingularity(coreProj);
+    }
 
-      if (proj.depth > 0) {
-        const isHov = this.hoveredNode === node;
-        const isToolActive = this.activeTools.has(node.zoneId);
+    // 4. Draw Dense 3D Skill Orbs sorted by Z depth
+    const sortedNodes = projectedNodes.slice(1).sort((a, b) => b.pz - a.pz);
+    let activeCalloutTarget = null;
 
-        let rad, fillStyle, glowBlur;
+    for (let i = 0; i < sortedNodes.length; i++) {
+      const pn = sortedNodes[i];
+      const n = pn.orig;
+      const r = n.radius * pn.scale;
 
-        if (isToolActive) {
-          const strobe = (Math.floor(this.time * 16 + node.pulseOffset) % 2 === 0);
-          rad = (node.baseSize * 1.35 + (strobe ? 0.4 : 0)) * proj.scale;
-          fillStyle = strobe ? '#ffffff' : node.color;
-          glowBlur = 18;
-        } else if (isHov) {
-          rad = (node.baseSize * 1.4) * proj.scale;
-          fillStyle = '#ffffff';
-          glowBlur = 14;
-        } else {
-          const pulse = Math.sin(this.time * 1.8 + node.pulseOffset) * 0.15;
-          rad = Math.max(0.8, (node.baseSize + pulse) * proj.scale);
-          fillStyle = node.color + (node.zoneId === 'memory' ? 'aa' : '45');
-          glowBlur = (node.zoneId === 'memory' || node.color === '#ffffff') ? 6 : 2;
-        }
+      const isLobeActive = this.activeCategory && (n.category === this.activeCategory);
+      const isSkillActive = n.key && (this.activeSkillKeys.has(n.key.toLowerCase()) || this.activeSkillKeys.has(n.label.toLowerCase()));
 
-        ctx.beginPath();
-        ctx.arc(proj.x, proj.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = fillStyle;
-        ctx.shadowBlur = glowBlur;
-        ctx.shadowColor = node.color;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        if (isToolActive && node.isToolMasterNode) {
-          const toolInfo = this.activeTools.get(node.zoneId);
-          ctx.font = 'bold 7.5px "Orbitron", sans-serif';
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = node.color;
-          ctx.fillText(`⚡ RUNNING: ${toolInfo.name}`, proj.x, proj.y - rad - 6);
-          ctx.shadowBlur = 0;
-        }
+      if (isSkillActive || (isLobeActive && n.isHub && !activeCalloutTarget)) {
+        activeCalloutTarget = { px: pn.px, py: pn.py, label: n.label, color: n.color };
       }
-    });
 
-    // 6. Draw Color Legend at top-left
-    ctx.font = '7px "Share Tech Mono", monospace';
-    ctx.textAlign = 'left';
-    const legendItems = [
-      { col: '#ffb703', txt: 'MEM' },
-      { col: '#00f0ff', txt: 'COG' },
-      { col: '#00ff9f', txt: 'API' },
-      { col: '#38bdf8', txt: 'VOX' },
-      { col: '#fb5607', txt: 'RUST' },
-      { col: '#818cf8', txt: 'UE5' }
-    ];
-    let lx = 10;
-    legendItems.forEach(item => {
-      ctx.fillStyle = item.col;
-      ctx.fillRect(lx, 10, 5, 5);
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(item.txt, lx + 7, 15);
-      lx += 38;
-    });
+      // Draw Volumetric Orb
+      this.drawVolumetricOrb(pn.px, pn.py, r, n.color, n.glow, n.isHub, isLobeActive, isSkillActive, pn.scale);
 
-    // 7. Draw Tooltip on Hover
-    if (this.hoveredNode && this.hoveredNode.depth > 0) {
-      const n = this.hoveredNode;
-      const boxW = 135, boxH = 42;
-      const bx = Math.min(Math.max(n.screenX - boxW/2, 10), w - boxW - 10);
-      const by = Math.max(n.screenY - boxH - 12, 10);
+      // Hub Dormant Label
+      if (n.isHub && !isLobeActive && pn.scale > 0.6) {
+        this.ctx.font = `bold 9.5px "Orbitron", sans-serif`;
+        this.ctx.fillStyle = 'rgba(248, 250, 252, 0.35)';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(n.label, pn.px, pn.py - r - 5);
+      }
+    }
 
-      ctx.fillStyle = 'rgba(2, 12, 22, 0.95)';
-      ctx.strokeStyle = n.color;
-      ctx.lineWidth = 1.0;
-      ctx.beginPath();
-      ctx.roundRect(bx, by, boxW, boxH, 5);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.textAlign = 'left';
-      ctx.font = 'bold 8px "Orbitron", sans-serif';
-      ctx.fillStyle = n.color;
-      ctx.fillText(n.zoneName, bx + 7, by + 11);
-
-      ctx.font = '7px "Share Tech Mono", monospace';
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(n.desc, bx + 7, by + 22);
-      ctx.fillStyle = '#00ff9f';
-      ctx.fillText('● CLICCA PER TEST ATTIVITÀ', bx + 7, by + 33);
+    // 5. Draw HUD Callout Pin for the Active Tool in Isometric Profile
+    if (activeCalloutTarget) {
+      this.drawActiveToolCallout(
+        activeCalloutTarget.px,
+        activeCalloutTarget.py,
+        activeCalloutTarget.label,
+        activeCalloutTarget.color
+      );
     }
 
     requestAnimationFrame(() => this.animate());
   }
+
+  // ── FRESHNESS SENTINEL — Apply Neon vs Pale Dimmed to nodes ──────────────
+  applyFreshnessMatrix(matrix) {
+    if (!matrix || !this.nodes) return;
+    for (const node of this.nodes) {
+      const sid = node.id || node.key;
+      const data = matrix[sid];
+      if (!data) continue;
+      const score = data.freshness_score || 1.0;
+      if (score > 0.7) {
+        // VIBRANT NEON — skill is fresh
+        node._freshnessColor = null; // use default bright color
+        node._freshnessAlpha = 1.0;
+        node._freshnessGlow = true;
+      } else {
+        // PALE DIMMED — skill is stale
+        const paleness = 0.3 + score * 0.5; // 0.3..0.65
+        node._freshnessColor = `rgba(120, 130, 110, ${paleness})`;
+        node._freshnessAlpha = paleness;
+        node._freshnessGlow = false;
+      }
+      node._freshnessScore = score;
+      node._freshnessStatus = data.status;
+      node._freshnessLastUpdated = data.last_updated_hours_ago;
+    }
+  }
+
+  // ── NUCLEUS SHOCKWAVE PULSE (Tap-to-Talk feedback) ───────────────────────
+  emitNucleusShockwave() {
+    // Add a transient shockwave particle from center
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      this.particles.push({
+        x: 0, y: 0, z: 0,
+        vx: Math.cos(angle) * 4,
+        vy: Math.sin(angle) * 4,
+        vz: (Math.random() - 0.5) * 3,
+        life: 1.0,
+        decay: 0.04,
+        color: '#00ff9f',
+        size: 3.5,
+        isShockwave: true
+      });
+    }
+  }
+
+  // ── DYNAMIC EVOLUTION SCALE & TACHYON FLUX REACTIVITY ─────────────────
+  setEvolutionScale(scale = 1.0, flux = 90.0) {
+    this.evolutionScale = Math.max(0.8, Math.min(1.8, scale));
+    this.tachyonFlux = Math.max(50.0, Math.min(100.0, flux));
+    
+    // Scale base radius smoothly based on E.B. cognitive level
+    const targetRad = Math.min(this.width, this.height) * 0.35 * this.evolutionScale;
+    this.baseRadius = targetRad;
+
+    // Adjust particle generation rate based on flux
+    if (this.particles && this.particles.length < 35 && Math.random() < (this.tachyonFlux / 150.0)) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * (this.baseRadius * 0.8);
+      this.particles.push({
+        x: Math.cos(ang) * dist,
+        y: Math.sin(ang) * dist,
+        z: (Math.random() - 0.5) * 60,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5,
+        vz: (Math.random() - 0.5) * 1.5,
+        life: 1.0,
+        decay: 0.015,
+        color: Math.random() > 0.4 ? '#00ff9f' : '#00f0ff',
+        size: 2.0 + Math.random() * 2.0
+      });
+    }
+  }
+
+  // ── DYNAMIC PERSONALITY & HUD THEME MORPHING ──────────────────────────
+
+  setPersonalityTheme(theme = 'jarvis') {
+    this.personalityTheme = theme;
+    const colors = {
+      'jarvis': { primary: '#00f0ff', secondary: '#00ff9f', glow: 'rgba(0,240,255,0.4)', name: 'J.A.R.V.I.S.' },
+      'military': { primary: '#f59e0b', secondary: '#ef4444', glow: 'rgba(245,158,11,0.4)', name: 'MILITARY TACTICAL' },
+      'architect': { primary: '#00ff9f', secondary: '#06b6d4', glow: 'rgba(0,255,159,0.4)', name: 'SENIOR ARCHITECT' },
+      'friendly': { primary: '#a855f7', secondary: '#ec4899', glow: 'rgba(168,85,247,0.4)', name: 'FRIENDLY COMPANION' }
+    };
+    this.themePalette = colors[theme] || colors['jarvis'];
+    this.emitNucleusShockwave();
+  }
+
+  // ── AUDIO-REACTIVE 3D VOICE RESONANCE (FFT a 60 FPS) ──────────────────
+  setAudioLevel(level = 0.0) {
+    this.audioLevel = Math.max(0.0, Math.min(1.0, level));
+    if (this.audioLevel > 0.3) {
+      // Add acoustic resonance ripple
+      for (let i = 0; i < 3; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        this.particles.push({
+          x: Math.cos(ang) * (this.baseRadius * 0.4),
+          y: Math.sin(ang) * (this.baseRadius * 0.4),
+          z: (Math.random() - 0.5) * 40,
+          vx: Math.cos(ang) * 2.5,
+          vy: Math.sin(ang) * 2.5,
+          vz: (Math.random() - 0.5) * 2.0,
+          life: 0.8,
+          decay: 0.03,
+          color: this.themePalette ? this.themePalette.primary : '#00ff9f',
+          size: 2.0 + this.audioLevel * 3.0
+        });
+      }
+    }
+  }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   BOOT & INTEGRATION
-───────────────────────────────────────────────────────────────────────────── */
-window.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('ambient-synapse-bg')) {
-    window.ambientPlexus = new HollywoodNeuralPlexus('ambient-synapse-bg');
+
+
+// Global Singleton Initializer
+window.SupremeBioNeuralCortex = SupremeBioNeuralCortex;
+window.initBioNeuralCortex = function(canvasId = 'synapseCanvas') {
+  if (!window.bioCortexInstance) {
+    window.bioCortexInstance = new SupremeBioNeuralCortex(canvasId);
   }
-  if (document.getElementById('synapseCanvas')) {
-    window.connectomeEngine = new BorderlessHologramConnectome('synapseCanvas');
-  }
-});
+  return window.bioCortexInstance;
+};
+

@@ -1,0 +1,15 @@
+{
+  "id": "reputation_review_autoresponder",
+  "name": "Google & Trustpilot Review Autoresponder",
+  "version": "1.0.0",
+  "category": "CRM",
+  "icon": "\ud83c\udf1f",
+  "triggers": [
+    "recensione google",
+    "rispondi recensione",
+    "reputation manager",
+    "nuova recensione 5 stelle"
+  ],
+  "description": "Analisi del sentiment, notifica e generazione automatica di risposte professionali SEO-friendly a recensioni su Google e Trustpilot.",
+  "entrypoint": "skill.py"
+}

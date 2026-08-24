@@ -1,0 +1,7 @@
+{
+  "name": "phone_call_and_whatsapp_dispatcher",
+  "display_name": "Chiamate & WhatsApp Dispatcher",
+  "category": "VOICE_DEVOPS",
+  "description": "Avvio di chiamate telefoniche e invio messaggi WhatsApp a contatti in rubrica tramite KDE Connect e Webhooks.",
+  "version": "1.0.0"
+}

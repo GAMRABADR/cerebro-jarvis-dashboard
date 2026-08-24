@@ -1,0 +1,322 @@
+[
+  {
+    "id": "EB_lead_quality_guard",
+    "name": "EB_LeadQualityGuard",
+    "category": "BUSINESS_CRM",
+    "description": "Sistema di validazione e certificazione anti-fake dei lead (Email MX DNS check, Telefono HLR/Regex, Geocoding Nominatim e Score di Qualità 0-100).",
+    "version": "1.0.0",
+    "command": "JARVIS, valida il lead Mario Rossi mario@gmail.com 3401234567 da Imola a Bologna"
+  },
+  {
+    "id": "agent_fleet_dispatcher",
+    "name": "Autonomous Agent Fleet Dispatcher",
+    "category": "ORCHESTRATION",
+    "description": "Coordina e invia ordini di lavoro autonomi alla flotta di bot Telegram e agenti Zero.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui agent_fleet_dispatcher"
+  },
+  {
+    "id": "auto_invoice_pdf_generator",
+    "name": "Auto Invoice PDF Generator",
+    "category": "BUSINESS",
+    "description": "Generatore di PDF vettoriali professionali per fatture e preventivi con logo EBGStudio e calcolo IVA.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui auto_invoice_pdf_generator"
+  },
+  {
+    "id": "autonomous_email_triage",
+    "name": "Autonomous Email Triage & AI Classifier",
+    "category": "TRIAGE",
+    "description": "Lettura IMAP SSL 993, classificazione AI automatica con tassonomia AG-*, schedulazione 2 volte al giorno o a comando e dispatch multi-bot.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui autonomous_email_triage"
+  },
+  {
+    "id": "autonomous_web_browser",
+    "name": "Autonomous Web Browser & Live Reader",
+    "category": "INTELLIGENCE",
+    "description": "Navigazione web autonoma in tempo reale, lettura ed estrazione pulita di contenuti da qualsiasi URL e ricerca live su DuckDuckGo/Google.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui autonomous_web_browser"
+  },
+  {
+    "id": "crawl4ai_web_crawler",
+    "name": "Crawl4AI & Jina Neural Web Scraper",
+    "category": "SCRAPING",
+    "description": "Crawler web open-source con pulizia markdown per LLM, estrazione contenuti senza pubblicità e proxy Jina Reader ultra-veloce.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui crawl4ai_web_crawler"
+  },
+  {
+    "id": "docling_pdf_extractor",
+    "name": "IBM Docling & PDF Document Intelligence",
+    "category": "DOCUMENT_AI",
+    "description": "Motore di estrazione visiva per documenti, fatture, contratti e visure con ricostruzione perfetta di tabelle e testo in Markdown.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui docling_pdf_extractor"
+  },
+  {
+    "id": "facebook_marketplace_messenger_bot",
+    "name": "Facebook Marketplace & Messenger Bot",
+    "category": "SOCIAL",
+    "description": "Bot per intercettare richieste su Facebook Messenger e Marketplace e calcolare preventivi istantanei.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui facebook_marketplace_messenger_bot"
+  },
+  {
+    "id": "faster_whisper_voice_engine",
+    "name": "Faster-Whisper Sub-Second Transcriber",
+    "category": "AUDIO",
+    "description": "Trascrizione vocale sub-second basata su Groq Whisper Turbo & Faster-Whisper locale con latenza di 0.2 secondi e zero consumo token.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui faster_whisper_voice_engine"
+  },
+  {
+    "id": "fastmcp_universal_gateway",
+    "name": "FastMCP Universal Protocol Gateway",
+    "category": "GATEWAY",
+    "description": "Gateway Model Context Protocol universale per collegare istantaneamente JARVIS a server MCP (PostgreSQL, GitHub, Notion, Slack, SQLite).",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui fastmcp_universal_gateway"
+  },
+  {
+    "id": "gaea_blender_terrain_bridge",
+    "name": "Gaea & Blender Terrain Bridge for UE5.8",
+    "category": "GAMEDEV",
+    "description": "Pipeline automatica per generare mappe procedurali in QuadSpinner Gaea, rifinirle in Blender ed esportare LOD per EBGS MMO UE5.8.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui gaea_blender_terrain_bridge"
+  },
+  {
+    "id": "google_calendar_sync",
+    "name": "Google Calendar & Agenda Sync",
+    "category": "ORGANIZATION",
+    "description": "Sincronizzazione impegni e cantieri con il calendario SQLite Hermes e notifica promemoria Telegram.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui google_calendar_sync"
+  },
+  {
+    "id": "google_cloud_and_drive_organizer",
+    "name": "Google Cloud & Drive Organizer",
+    "category": "CLOUD",
+    "description": "Strutturazione tassonomica delle cartelle Google Cloud e Drive, salvataggio snapshot database e riordino file aziendali.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui google_cloud_and_drive_organizer"
+  },
+  {
+    "id": "google_drive_vault_sync",
+    "name": "Google Drive Vault & Cloud Backup Sync",
+    "category": "STORAGE",
+    "description": "Sincronizzazione automatica su Google Drive di fatture PDF, snapshot di database SQLite e file di progetto.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui google_drive_vault_sync"
+  },
+  {
+    "id": "leads_and_quotes_tracker",
+    "name": "leads_and_quotes_tracker",
+    "category": "BUSINESS_SGOMBERI",
+    "description": "Monitoraggio in tempo reale dei preventivi e lead acquisiti sui portali PietroTraslochi.com e BadrExpress.com.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui leads_and_quotes_tracker"
+  },
+  {
+    "id": "logistics_maps_route_optimizer",
+    "name": "Google Maps & Logistics Route Optimizer",
+    "category": "LOGISTICS",
+    "description": "Calcolo chilometrico, tempi di guida, pedaggi autostradali e stima costo trasferta con Google Maps per Pietro Traslochi.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui logistics_maps_route_optimizer"
+  },
+  {
+    "id": "marketplace_seller_and_evaluator",
+    "name": "marketplace_seller_and_evaluator",
+    "category": "BUSINESS_SGOMBERI",
+    "description": "Valutazione di mercato, stima del prezzo ottimale e generazione inserzioni persuasive pronte per Facebook Marketplace e Subito.it.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui marketplace_seller_and_evaluator"
+  },
+  {
+    "id": "meteo_and_traffic_intelligence",
+    "name": "meteo_and_traffic_intelligence",
+    "category": "VOICE_DEVOPS",
+    "description": "Previsioni meteo in tempo reale, viabilità, tempi di percorrenza e calcolo traffico per tratte di trasloco.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui meteo_and_traffic_intelligence"
+  },
+  {
+    "id": "n8n_nervous_system",
+    "name": "n8n Reactive Automation Hub",
+    "category": "NERVOUS_SYSTEM",
+    "description": "Orchestratore reattivo di 15+ flussi webhook, trigger temporizzati e notifiche Telegram.",
+    "version": "1.5.0",
+    "command": "JARVIS, esegui n8n_nervous_system"
+  },
+  {
+    "id": "phone_call_and_whatsapp_dispatcher",
+    "name": "phone_call_and_whatsapp_dispatcher",
+    "category": "VOICE_DEVOPS",
+    "description": "Avvio di chiamate telefoniche e invio messaggi WhatsApp a contatti in rubrica tramite KDE Connect e Webhooks.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui phone_call_and_whatsapp_dispatcher"
+  },
+  {
+    "id": "playwright_stealth_scraper",
+    "name": "Playwright Anti-Bot Stealth Scraper",
+    "category": "SCRAPING",
+    "description": "Driver browser headless con evasione fingerprint anti-bot per estrarre lead e annunci da Subito, Facebook Marketplace e portali protetti.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui playwright_stealth_scraper"
+  },
+  {
+    "id": "real_smtp_mailer",
+    "name": "Gmail SMTP SSL 465 Dispatcher",
+    "category": "INFRASTRUCTURE",
+    "description": "Consegna certificata email reali tramite smtp.gmail.com:465 SSL con credenziali crittografate.",
+    "version": "2.0.0",
+    "command": "JARVIS, esegui real_smtp_mailer"
+  },
+  {
+    "id": "reputation_review_autoresponder",
+    "name": "Google & Trustpilot Review Autoresponder",
+    "category": "CRM",
+    "description": "Analisi del sentiment, notifica e generazione automatica di risposte professionali SEO-friendly a recensioni su Google e Trustpilot.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui reputation_review_autoresponder"
+  },
+  {
+    "id": "rust_fast_parser",
+    "name": "Rust Sub-Millisecond Event Core",
+    "category": "RUST_ACCELERATOR",
+    "description": "Motore Rust compilato a zero overhead per streaming eventi, parsing log e broadcast sinaptico < 1ms.",
+    "version": "3.0.0",
+    "command": "JARVIS, esegui rust_fast_parser"
+  },
+  {
+    "id": "screen_omnivision",
+    "name": "Screen OmniVision & Visual OCR",
+    "category": "VISION",
+    "description": "Cattura istantanea dello schermo o della finestra attiva con analisi visiva Gemini 3.7 Flash.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui screen_omnivision"
+  },
+  {
+    "id": "smart_data_scraper",
+    "name": "Smart Web & Lead Data Scraper",
+    "category": "INTELLIGENCE",
+    "description": "Estrazione intelligente e pulizia dati web, lead generation e analisi prezzi di mercato.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui smart_data_scraper"
+  },
+  {
+    "id": "smart_device_iot_commander",
+    "name": "Smart Device, Phone & IoT Commander",
+    "category": "IOT",
+    "description": "Controllo smartphone (trova telefono, suoneria emergenza via KDE Connect/ADB/Webhook), scansione radar dispositivi Wi-Fi/Bluetooth e comandi Infrarossi/RF.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui smart_device_iot_commander"
+  },
+  {
+    "id": "smart_git_multi_sync",
+    "name": "Smart Git Multi-Repo Sync & Auto-Backup",
+    "category": "INFRASTRUCTURE",
+    "description": "Sincronizza e fa backup intelligente di tutti i repository dell'ecosistema (cerebro-jarvis, Agente-0, siti-web, traslochiwork).",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui smart_git_multi_sync"
+  },
+  {
+    "id": "smart_media_uploader",
+    "name": "Smart Media & Video Dispatch Engine",
+    "category": "MEDIA",
+    "description": "Pipeline di elaborazione media automatica: formattazione 9:16 per Shorts/TikTok, estrazione frame copertina e preparazione pubblicazione.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui smart_media_uploader"
+  },
+  {
+    "id": "steam_community_radar",
+    "name": "Steam & Game Community Radar",
+    "category": "GAMING",
+    "description": "Monitoraggio automatico delle patch notes e changelog di giochi survival concorrenti (DayZ, Rust, SCUM).",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui steam_community_radar"
+  },
+  {
+    "id": "subito_lead_hunter",
+    "name": "Subito & FB Lead Hunter",
+    "category": "MARKETPLACE",
+    "description": "Scraping concorrenti e intercettazione lead compravendita attrezzature.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui subito_lead_hunter"
+  },
+  {
+    "id": "system_health_diagnostic",
+    "name": "System Health & Resource Diagnostic",
+    "category": "INFRASTRUCTURE",
+    "description": "Analisi in tempo reale di CPU, RAM, Thread attivi e integrità database SQLite.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui system_health_diagnostic"
+  },
+  {
+    "id": "traslochi_funnel",
+    "name": "Pietro Traslochi & BadrExpress CRM",
+    "category": "BUSINESS_CRM",
+    "description": "Funnel automatico preventivi: calcolo tariffe base/scale, invio email cliente e dispatch operai.",
+    "version": "1.2.0",
+    "command": "JARVIS, esegui traslochi_funnel"
+  },
+  {
+    "id": "ue5_game_ops",
+    "name": "Unreal Engine 5.8 & Steamworks Ops",
+    "category": "GAME_DEV",
+    "description": "Gestisce Steamworks AppID 2886940, changelog patch, Wiki di gioco e logica Unreal Engine 5.8.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui ue5_game_ops"
+  },
+  {
+    "id": "usb_and_external_drive_manager",
+    "name": "USB & External Drive Manager",
+    "category": "SYSTEM",
+    "description": "Scansione unita logiche e rimovibili (USB, SD, Hard Disk esterni), lettura file e backup automatico database su USB.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui usb_and_external_drive_manager"
+  },
+  {
+    "id": "windows_file_commander",
+    "name": "Windows File Commander & System Clock",
+    "category": "SYSTEM",
+    "description": "Orologio live di sistema (Imola), esplorazione file system Windows, copia/sposta/rinomina file e riordino intelligente cartelle.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui windows_file_commander"
+  },
+  {
+    "id": "windows_system_commander",
+    "name": "Windows System Commander",
+    "category": "SYSTEM",
+    "description": "Controllo rapido delle applicazioni Windows, volume audio, comandi terminale e workstation.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui windows_system_commander"
+  },
+  {
+    "id": "youtube_data_publisher",
+    "name": "YouTube Data 1-Click AutoPublisher",
+    "category": "MEDIA",
+    "description": "Caricamento automatico video con packaging metadati completi sul canale YouTube ufficiale EBGStudio.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui youtube_data_publisher"
+  },
+  {
+    "id": "youtube_dayz_studio",
+    "name": "YouTube DayZ Content & SEO Forge",
+    "category": "MEDIA_STUDIO",
+    "description": "Generatore metadati ad alto CTR per YouTube, tag SEO DayZ style e script per Devlog.",
+    "version": "1.1.0",
+    "command": "JARVIS, esegui youtube_dayz_studio"
+  },
+  {
+    "id": "ytdlp_ffmpeg_studio",
+    "name": "yt-dlp & FFmpeg Media Studio Engine",
+    "category": "MEDIA",
+    "description": "Download video ad alta velocità, conversione audio FFmpeg, taglio automatico a 60 FPS e automazione clip per YouTube e TikTok.",
+    "version": "1.0.0",
+    "command": "JARVIS, esegui ytdlp_ffmpeg_studio"
+  }
+]

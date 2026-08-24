@@ -1,0 +1,15 @@
+{
+  "name": "network_audit_diagnostics",
+  "display_name": "Network Audit & Diagnostic Sentinel (Kali Sandbox)",
+  "category": "API_INFRASTRUCTURE",
+  "description": "Orchestrazione on-demand del container Kali Sandbox per audit di rete difensivi, verifica porte aperte, diagnostica DNS e test di raggiungibilita sui propri server.",
+  "version": "1.0.0",
+  "triggers": [
+    "audit rete",
+    "porte aperte",
+    "diagnostica server",
+    "test dns",
+    "verifica infrastruttura",
+    "kali audit"
+  ]
+}

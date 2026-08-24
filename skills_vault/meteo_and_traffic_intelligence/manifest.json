@@ -1,0 +1,7 @@
+{
+  "name": "meteo_and_traffic_intelligence",
+  "display_name": "Meteo Live & Traffico Tratte Logistica",
+  "category": "VOICE_DEVOPS",
+  "description": "Previsioni meteo in tempo reale, viabilit\u00e0, tempi di percorrenza e calcolo traffico per tratte di trasloco.",
+  "version": "1.0.0"
+}
