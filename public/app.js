@@ -398,8 +398,11 @@ function setCustomHotkey() {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
+  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+  const targetTag = (e.target && e.target.tagName || '').toLowerCase();
+  if (['input', 'textarea'].includes(tag) || ['input', 'textarea'].includes(targetTag)) return;
   const parts = voiceHotkey.split('+');
+
   const needsCtrl = parts.includes('Control');
   const needsAlt = parts.includes('Alt');
   const needsShift = parts.includes('Shift');
@@ -549,7 +552,74 @@ window.updateGraphPhysics = function() {
 let currentPersonality = 'jarvis';
 let wasInterrupted = false;
 
+window.toggleLeftWing = function() {
+  const dock = document.getElementById('left-tactical-dock');
+  const restoreBtn = document.getElementById('restore-left-btn');
+  const grid = document.querySelector('.main-grid');
+  if (dock && grid) {
+    dock.classList.toggle('collapsed');
+    const isCollapsed = dock.classList.contains('collapsed');
+    if (restoreBtn) restoreBtn.style.display = isCollapsed ? 'block' : 'none';
+    grid.classList.toggle('left-collapsed', isCollapsed);
+    setTimeout(() => { if (window.bioCortexInstance) window.bioCortexInstance.resize(); }, 150);
+  }
+};
+
+window.toggleRightWing = function() {
+  const dock = document.getElementById('right-telemetry-dock');
+  const restoreBtn = document.getElementById('restore-right-btn');
+  const grid = document.querySelector('.main-grid');
+  if (dock && grid) {
+    dock.classList.toggle('collapsed');
+    const isCollapsed = dock.classList.contains('collapsed');
+    if (restoreBtn) restoreBtn.style.display = isCollapsed ? 'block' : 'none';
+    grid.classList.toggle('right-collapsed', isCollapsed);
+    setTimeout(() => { if (window.bioCortexInstance) window.bioCortexInstance.resize(); }, 150);
+  }
+};
+
+window.openLeadRadarModal = function() {
+  openModal('modal-lead-radar');
+  loadLeadRadar();
+};
+
+window.loadLeadRadar = async function() {
+  const container = document.getElementById('lead-radar-list');
+  if (!container) return;
+  container.innerHTML = '<div style="color:#00f0ff; text-align:center; padding:15px; font-family:var(--font-hud);">⚡ Scansione Lead Vault SQLite in corso...</div>';
+  try {
+    const res = await fetch('/api/leads/radar');
+    const data = await res.json();
+    if (data.status === 'SUCCESS' && data.leads && data.leads.length > 0) {
+      container.innerHTML = data.leads.map(l => `
+        <div class="lead-card-item">
+          <div class="lci-top">
+            <span class="lci-name">${l.name}</span>
+            <span class="lci-badge">🛡️ ${l.status}</span>
+          </div>
+          <div class="lci-details">
+            <span>📍 <strong>${l.city}</strong></span>
+            <span>🚛 ${l.service} (${l.volume_mq} mq)</span>
+            <span>💰 Stima: <strong>€${l.budget.toFixed(2)}</strong></span>
+            <span>📅 ${l.date}</span>
+          </div>
+          <div style="font-size:0.68rem; color:#cbd5e1; font-style:italic;">"${l.notes || ''}"</div>
+          <div class="lci-actions">
+            <a href="tel:${l.phone.replace(/\\s+/g, '')}" class="lci-btn call">📞 Chiama (${l.phone})</a>
+            <a href="https://wa.me/${l.phone.replace(/[^0-9]/g, '')}" target="_blank" class="lci-btn wa">💬 WhatsApp</a>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:15px;">Nessun lead recente trovato.</div>';
+    }
+  } catch (e) {
+    container.innerHTML = `<div style="color:#ef4444; text-align:center; padding:15px;">Errore caricamento radar: ${e.message}</div>`;
+  }
+};
+
 window.toggleSettingsDrawer = function() {
+
   const drawer = document.getElementById('settings-drawer');
   const backdrop = document.getElementById('settings-backdrop');
   if (drawer && backdrop) {
@@ -810,10 +880,16 @@ async function executeCommandPipeline(prompt) {
   if (window.bioCortexInstance) {
     window.bioCortexInstance.igniteSkill(targetSkill, targetCategory);
   }
+  if (window.projectSynapseTo) {
+    window.projectSynapseTo('.response-box', '#00ff9f');
+  }
   highlightSkillActivityHUD(targetCategory, targetSkill);
 
   document.getElementById('resp-tag').textContent = 'PROCESSING';
-  document.getElementById('resp-body').textContent = '...';
+  const respEl = document.getElementById('resp-body');
+  if (respEl) {
+    respEl.innerHTML = `<div class="chat-msg user-msg"><span class="c-tag">👤 BADR:</span> ${prompt.replace(/</g, '&lt;')}</div><div class="chat-msg ai-msg"><span class="c-tag">⚡ E.B.:</span> <span id="ai-live-stream">⚡ Elaborazione quantistica in corso...</span></div>`;
+  }
 
   try {
     const r = await fetch(API + '/api/chat', {
@@ -842,13 +918,17 @@ async function executeCommandPipeline(prompt) {
       wasInterrupted = false;
     }
 
-    document.getElementById('resp-body').textContent = '';
-    let i = 0;
-    const typeInterval = setInterval(() => {
-      document.getElementById('resp-body').textContent += reply[i] || '';
-      i++;
-      if (i >= reply.length) clearInterval(typeInterval);
-    }, 10);
+    const liveStream = document.getElementById('ai-live-stream');
+    if (liveStream) {
+      liveStream.textContent = '';
+      let i = 0;
+      const typeInterval = setInterval(() => {
+        liveStream.textContent += reply[i] || '';
+        i++;
+        if (i >= reply.length) clearInterval(typeInterval);
+        if (respEl) respEl.scrollTop = respEl.scrollHeight;
+      }, 8);
+    }
 
     addEvent('ai', reply.slice(0, 140) + (reply.length > 140 ? '…' : ''));
     document.getElementById('hud-status').textContent = `[${modelUsed} · ${currentPersonality.toUpperCase()}]`;
@@ -856,12 +936,15 @@ async function executeCommandPipeline(prompt) {
     await speak(reply);
 
   } catch (e) {
-    document.getElementById('resp-body').textContent = `[ERRORE]: ${e.message}`;
+    if (respEl) {
+      respEl.innerHTML = `<div class="chat-msg user-msg"><span class="c-tag">👤 BADR:</span> ${prompt.replace(/</g, '&lt;')}</div><div class="chat-msg ai-msg" style="border-left-color:#ff0055;"><span class="c-tag" style="color:#ff0055;">⚠️ ERRORE:</span> ${e.message}</div>`;
+    }
     addEvent('err', e.message);
     setReactorState('', 'ERROR', 'ERRORE RETE');
     isBusy = false;
     processNextQueuedMessage();
   }
+
 }
 
 function sendQuick(text) { sendCommand(text); }
@@ -996,6 +1079,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (window.initBioNeuralCortex) {
     bioCortex = window.initBioNeuralCortex('synapseCanvas');
   }
+
+  // ── ATTACH DYNAMIC SYNAPTIC LASER BEAMS TO HUD BUTTONS ─────────────
+  document.querySelectorAll('.cmd-tile, .dad-pill, .tab-btn, .mood-chip').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      if (window.projectSynapseTo) window.projectSynapseTo(el);
+    });
+    el.addEventListener('touchstart', () => {
+      if (window.projectSynapseTo) window.projectSynapseTo(el);
+      if (navigator.vibrate) navigator.vibrate(20);
+    }, { passive: true });
+  });
+
 
   // ── TAP-TO-TALK ON NUCLEUS (CANVAS CENTER) — RISOLVE MOBILE ──────────
   const canvas = document.getElementById('synapseCanvas');

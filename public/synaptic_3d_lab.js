@@ -47,12 +47,16 @@ class SupremeBioNeuralCortex {
     this.activeSkillLabel = '';
     this.activeSkillTimer = null;
 
-    this.mouse = { isDown: false, lastX: 0, lastY: 0 };
+    this.mouse = { isDown: false, lastX: 0, lastY: 0, hoverX: 0, hoverY: 0 };
     this.lastProjectedNodes = [];
     this.skillsManifest = [];
+    this.activeSynapticBeams = [];
+    this.matrixColumns = [];
 
     this.resize();
+
     this.initQuantumPlasma();
+    this.initMatrixQuantumStream();
     this.loadManifestAndBuildSphere();
     this.bindEvents();
     this.startVpsTelemetryPolling();
@@ -60,6 +64,7 @@ class SupremeBioNeuralCortex {
     this.connectRustBridge();
     this.animate();
   }
+
 
   resize() {
     const parent = this.canvas.parentElement;
@@ -125,6 +130,161 @@ class SupremeBioNeuralCortex {
       });
     }
   }
+
+  initMatrixQuantumStream() {
+    this.matrixColumns = [];
+    const glyphs = '0123456789ABCDEFλΨ∇ΔΩΣΦ4175TOKIO92423342SYNAPSERUSTL5EB';
+    const colCount = Math.floor(this.width / 24);
+    for (let i = 0; i < colCount; i++) {
+      this.matrixColumns.push({
+        x: i * 24 + 12,
+        y: Math.random() * this.height,
+        speed: 0.6 + Math.random() * 1.4,
+        char: glyphs[Math.floor(Math.random() * glyphs.length)],
+        chars: Array.from({ length: 6 }, () => glyphs[Math.floor(Math.random() * glyphs.length)]),
+        nextSwitch: Math.random() * 30
+      });
+    }
+  }
+
+  drawMatrixQuantumStream() {
+    if (!this.matrixColumns || this.matrixColumns.length === 0) return;
+    this.ctx.save();
+    this.ctx.font = '9px "Share Tech Mono", monospace';
+    
+    for (let col of this.matrixColumns) {
+      col.y += col.speed;
+      if (col.y > this.height + 60) {
+        col.y = -20;
+        col.speed = 0.6 + Math.random() * 1.4;
+      }
+      col.nextSwitch--;
+      if (col.nextSwitch <= 0) {
+        const glyphs = '0123456789ABCDEFλΨ∇ΔΩΣΦ4175TOKIO92423342SYNAPSERUSTL5EB';
+        col.char = glyphs[Math.floor(Math.random() * glyphs.length)];
+        col.chars.unshift(col.char);
+        col.chars.pop();
+        col.nextSwitch = 15 + Math.random() * 25;
+      }
+
+      // Draw vertical trail
+      for (let i = 0; i < col.chars.length; i++) {
+        const alpha = Math.max(0.02, (1.0 - (i / col.chars.length)) * 0.11);
+        const yPos = col.y - (i * 12);
+        if (yPos > 0 && yPos < this.height) {
+          this.ctx.fillStyle = i === 0 ? `rgba(0, 255, 159, ${alpha * 2.2})` : `rgba(0, 240, 255, ${alpha})`;
+          this.ctx.fillText(col.chars[i], col.x, yPos);
+        }
+      }
+    }
+    this.ctx.restore();
+  }
+
+  drawEulerGimbalRings() {
+    this.ctx.save();
+    this.ctx.translate(this.centerX, this.centerY);
+    
+    // Euler Angle 3D Rotation Matrix for Gimbal Rings
+    const cosY = Math.cos(this.rotY * 0.8), sinY = Math.sin(this.rotY * 0.8);
+    const cosX = Math.cos(this.rotX * 0.8), sinX = Math.sin(this.rotX * 0.8);
+    
+    // Outer Gimbal Ring 1 (Azimuth 360° Compass)
+    const r1 = this.baseRadius * 1.25;
+    this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.16)';
+    this.ctx.lineWidth = 1.0;
+    this.ctx.setLineDash([4, 8]);
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, r1, 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+
+    // Degree tick marks on outer ring
+    this.ctx.font = '8px "Share Tech Mono", monospace';
+    this.ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+    for (let deg = 0; deg < 360; deg += 30) {
+      const rad = (deg * Math.PI) / 180 + this.time * 0.05;
+      const x1 = Math.cos(rad) * (r1 - 4);
+      const y1 = Math.sin(rad) * (r1 - 4);
+      const x2 = Math.cos(rad) * (r1 + 4);
+      const y2 = Math.sin(rad) * (r1 + 4);
+      this.ctx.beginPath();
+      this.ctx.moveTo(x1, y1);
+      this.ctx.lineTo(x2, y2);
+      this.ctx.stroke();
+      if (deg % 90 === 0) {
+        this.ctx.fillText(`${deg}°`, Math.cos(rad) * (r1 + 14) - 6, Math.sin(rad) * (r1 + 14) + 3);
+      }
+    }
+
+    // Inner Gimbal Ring 2 (Pitch Ladder / Tilt Axis)
+    const r2 = this.baseRadius * 0.95;
+    this.ctx.strokeStyle = 'rgba(0, 255, 159, 0.22)';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, 0, r2, r2 * Math.abs(cosX), (this.rotY * 0.5), 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    // Inner Gimbal Ring 3 (Roll Axis)
+    const r3 = this.baseRadius * 0.65;
+    this.ctx.strokeStyle = 'rgba(245, 158, 11, 0.18)';
+    this.ctx.lineWidth = 0.8;
+    this.ctx.setLineDash([2, 6]);
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, 0, r3 * Math.abs(cosY), r3, (this.rotX * 0.5), 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+
+    // Central Pitch Ladder Horizon Crosshair
+    this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
+    this.ctx.lineWidth = 1.0;
+    this.ctx.beginPath();
+    this.ctx.moveTo(-40, 0); this.ctx.lineTo(-12, 0);
+    this.ctx.moveTo(12, 0); this.ctx.lineTo(40, 0);
+    this.ctx.moveTo(0, -40); this.ctx.lineTo(0, -12);
+    this.ctx.moveTo(0, 12); this.ctx.lineTo(0, 40);
+    this.ctx.stroke();
+
+    this.ctx.restore();
+  }
+
+  drawTacticalReticleLock() {
+    const tx = this.mouse.hoverX || (this.centerX + Math.cos(this.time * 0.5) * 80);
+    const ty = this.mouse.hoverY || (this.centerY + Math.sin(this.time * 0.5) * 60);
+
+    this.ctx.save();
+    this.ctx.translate(tx, ty);
+    
+    // Reticle brackets
+    this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+    this.ctx.lineWidth = 1.2;
+    const s = 14;
+    // Top-Left bracket
+    this.ctx.beginPath(); this.ctx.moveTo(-s, -s + 5); this.ctx.lineTo(-s, -s); this.ctx.lineTo(-s + 5, -s); this.ctx.stroke();
+    // Top-Right bracket
+    this.ctx.beginPath(); this.ctx.moveTo(s - 5, -s); this.ctx.lineTo(s, -s); this.ctx.lineTo(s, -s + 5); this.ctx.stroke();
+    // Bottom-Left bracket
+    this.ctx.beginPath(); this.ctx.moveTo(-s, s - 5); this.ctx.lineTo(-s, s); this.ctx.lineTo(-s + 5, s); this.ctx.stroke();
+    // Bottom-Right bracket
+    this.ctx.beginPath(); this.ctx.moveTo(s - 5, s); this.ctx.lineTo(s, s); this.ctx.lineTo(s, s - 5); this.ctx.stroke();
+
+    // Center dot
+    this.ctx.fillStyle = '#00ff9f';
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Telemetry Stamp
+    this.ctx.font = '7px "Share Tech Mono", monospace';
+    this.ctx.fillStyle = 'rgba(0, 240, 255, 0.75)';
+    const az = (Math.abs(Math.sin(this.time * 0.2)) * 360).toFixed(1);
+    const el = (Math.sin(this.time * 0.3) * 45).toFixed(1);
+    this.ctx.fillText(`AZ: ${az}°  EL: ${el}°`, s + 4, -4);
+    this.ctx.fillStyle = 'rgba(0, 255, 159, 0.75)';
+    this.ctx.fillText(`TARGET LOCK · 417.5 IQ`, s + 4, 6);
+
+    this.ctx.restore();
+  }
+
 
   async loadManifestAndBuildSphere() {
     try {
@@ -370,11 +530,31 @@ class SupremeBioNeuralCortex {
             this.vpsCpu = data.cpu_usage;
             this.vpsRam = data.ram_usage;
             this.vpsLatency = data.latency_ms;
+
+            // Update DOM SVG Circular Gauges (Jayse Hansen FUI)
+            const cpuArc = document.getElementById('svg-cpu-arc');
+            const ramArc = document.getElementById('svg-ram-arc');
+            const cpuVal = document.getElementById('vps-cpu-val');
+            const ramVal = document.getElementById('vps-ram-val');
+            const latVal = document.getElementById('vps-latency-val');
+
+            if (cpuArc) {
+              const off = Math.max(0, 201 - (201 * (this.vpsCpu / 100)));
+              cpuArc.style.strokeDashoffset = off;
+            }
+            if (ramArc) {
+              const off = Math.max(0, 201 - (201 * (this.vpsRam / 100)));
+              ramArc.style.strokeDashoffset = off;
+            }
+            if (cpuVal) cpuVal.textContent = `${this.vpsCpu.toFixed(1)}%`;
+            if (ramVal) ramVal.textContent = `${this.vpsRam.toFixed(1)}%`;
+            if (latVal) latVal.textContent = `< ${this.vpsLatency || 1.8}ms`;
           }
         }
       } catch (e) {}
     }, 2500);
   }
+
 
   startSynapseEventsPolling() {
     setInterval(async () => {
@@ -423,6 +603,10 @@ class SupremeBioNeuralCortex {
     };
 
     const handleMove = (clientX, clientY) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.mouse.hoverX = clientX - rect.left;
+      this.mouse.hoverY = clientY - rect.top;
+
       if (this.mouse.isDown) {
         const dx = clientX - this.mouse.lastX;
         const dy = clientY - this.mouse.lastY;
@@ -433,6 +617,7 @@ class SupremeBioNeuralCortex {
         this.mouse.lastY = clientY;
       }
     };
+
 
     const handleEnd = (clientX, clientY) => {
       this.mouse.isDown = false;
@@ -765,7 +950,14 @@ class SupremeBioNeuralCortex {
 
     this.ctx.clearRect(0, 0, this.width, this.height);
 
+    // 0. Deep Background Matrix Quantum Stream Layer
+    this.drawMatrixQuantumStream();
+
+    // 0b. Iron Man Euler Gimbal Rings & Pitch Ladder Horizon
+    this.drawEulerGimbalRings();
+
     // Ambient floating quantum particles
+
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
       p.theta += p.baseSpeed;
@@ -972,8 +1164,80 @@ class SupremeBioNeuralCortex {
       );
     }
 
+    // ── DRAW CONCENTRATED SYNAPTIC TARGET BEAMS (Iron Man Laser Arcs) ──
+    for (let i = this.activeSynapticBeams.length - 1; i >= 0; i--) {
+      const beam = this.activeSynapticBeams[i];
+      beam.life -= beam.decay;
+      if (beam.life <= 0) {
+        this.activeSynapticBeams.splice(i, 1);
+        continue;
+      }
+      
+      const startX = this.centerX;
+      const startY = this.centerY;
+      const endX = beam.targetX;
+      const endY = beam.targetY;
+      const alpha = beam.life;
+      
+      // Dynamic electric sine vibration
+      const midX = (startX + endX) / 2 + Math.sin(this.time * 12 + i) * 22;
+      const midY = (startY + endY) / 2 + Math.cos(this.time * 12 + i) * 22;
+
+      this.ctx.save();
+      // Outer glow
+      this.ctx.shadowColor = beam.color || '#00f0ff';
+      this.ctx.shadowBlur = 20;
+      this.ctx.strokeStyle = beam.color || '#00f0ff';
+      this.ctx.lineWidth = 4.0 * alpha;
+      this.ctx.beginPath();
+      this.ctx.moveTo(startX, startY);
+      this.ctx.quadraticCurveTo(midX, midY, endX, endY);
+      this.ctx.stroke();
+
+      // Core white laser beam
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 1.8 * alpha;
+      this.ctx.beginPath();
+      this.ctx.moveTo(startX, startY);
+      this.ctx.quadraticCurveTo(midX, midY, endX, endY);
+      this.ctx.stroke();
+
+      // Target reticle lock ring at target
+      this.ctx.strokeStyle = beam.color || '#00ff9f';
+      this.ctx.lineWidth = 2.0;
+      this.ctx.beginPath();
+      this.ctx.arc(endX, endY, (1.0 - alpha) * 14 + 6, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      this.ctx.restore();
+    }
+
+    // ── 6. DRAW TACTICAL RETICLE LOCK & AZIMUTH TELEMETRY ─────────────
+    this.drawTacticalReticleLock();
+
     requestAnimationFrame(() => this.animate());
   }
+
+
+  // ── PROJECT SYNAPTIC BEAM TO DOM ELEMENT (Interactive Beam) ────────
+  projectSynapticBeamToElement(selector, color = '#00ff9f') {
+    const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cRect = this.canvas.getBoundingClientRect();
+    const targetX = rect.left + rect.width / 2 - cRect.left;
+    const targetY = rect.top + rect.height / 2 - cRect.top;
+
+    this.activeSynapticBeams = [{
+      targetX,
+      targetY,
+      color: color || (this.themePalette ? this.themePalette.primary : '#00ff9f'),
+      life: 1.0,
+      decay: 0.022
+    }];
+    this.emitNucleusShockwave();
+  }
+
 
   // ── FRESHNESS SENTINEL — Apply Neon vs Pale Dimmed to nodes ──────────────
   applyFreshnessMatrix(matrix) {
@@ -1096,4 +1360,11 @@ window.initBioNeuralCortex = function(canvasId = 'synapseCanvas') {
   }
   return window.bioCortexInstance;
 };
+
+window.projectSynapseTo = function(selector, color) {
+  if (window.bioCortexInstance && typeof window.bioCortexInstance.projectSynapticBeamToElement === 'function') {
+    window.bioCortexInstance.projectSynapticBeamToElement(selector, color);
+  }
+};
+
 

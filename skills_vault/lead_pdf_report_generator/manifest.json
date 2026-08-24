@@ -1,0 +1,19 @@
+{
+  "id": "lead_pdf_report_generator",
+  "name": "Lead & Intelligence PDF Exporter",
+  "category": "BUSINESS_SGOMBERI",
+  "icon": "\ud83d\udcc4",
+  "triggers": [
+    "pdf",
+    "report",
+    "esporta",
+    "lista in pdf",
+    "stampa lista",
+    "scarica pdf"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 12.5,
+  "description": "Genera documenti PDF ad alta definizione dei clienti e lead verificati."
+}

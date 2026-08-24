@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E.B. SUPREME AI · 3D BIO-NEURAL CONNECTOME v5.0</title>
-  <link rel="stylesheet" href="style.css?v=105.0">
+  <title>E.B. SUPREME AI · STARK MATRIX HUD v7.2</title>
+  <link rel="stylesheet" href="style.css?v=109.0">
   <link rel="manifest" href="manifest.json">
+
+
+
 
   <meta name="theme-color" content="#00ff9f">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,8 +65,12 @@
       <main class="main-grid">
         
         <!-- LEFT PANEL -->
-        <section class="panel-box left-panel">
-          <div class="panel-header"><span class="ph-icon">⬡</span><span class="ph-title">TACTICAL COMMAND MATRIX</span></div>
+        <section class="panel-box left-panel" id="left-tactical-dock">
+          <div class="panel-header">
+            <span class="ph-icon">⬡</span>
+            <span class="ph-title">TACTICAL COMMAND MATRIX</span>
+            <button class="wing-toggle-btn" onclick="toggleLeftWing()" title="Riduci/Espandi Pannello Tattico">◀ HIDE</button>
+          </div>
           <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('hubs')">🌐 HUBS</button>
             <button class="tab-btn" onclick="switchTab('biz')">💼 BIZ</button>
@@ -97,6 +104,10 @@
           <!-- TAB 2: BUSINESS WORKFLOWS -->
           <div class="tab-content" id="tab-biz">
             <div class="cmd-matrix-grid">
+              <div class="cmd-tile vault-tile" onclick="openLeadRadarModal()" style="border-color: #00ff9f; background: rgba(0, 255, 159, 0.12);">
+                <span class="ct-code" style="color: #00ff9f;">🎯 LEAD RADAR 2026</span>
+                <span class="ct-desc">Clienti Verificati & 1-Click Call</span>
+              </div>
               <div class="cmd-tile vault-tile" onclick="openModal('modal-send-email')">
                 <span class="ct-code">✉️ INVIA EMAIL</span>
                 <span class="ct-desc">Dispatch Immediato & Log</span>
@@ -117,12 +128,9 @@
                 <span class="ct-code">📢 BROADCAST</span>
                 <span class="ct-desc">Notifica Discord Hub</span>
               </div>
-              <div class="cmd-tile" onclick="sendQuick('JARVIS, forgia una nuova skill per il nostro ecosistema.')">
-                <span class="ct-code">⚡ FORGIA SKILL</span>
-                <span class="ct-desc">Skill Generator n8n</span>
-              </div>
             </div>
           </div>
+
 
           <!-- TAB 3: GAME DEV -->
           <div class="tab-content" id="tab-game">
@@ -417,51 +425,70 @@
         </section>
 
         <!-- RIGHT PANEL: ORACLE VPS TELEMETRY & EVENT STREAM -->
-        <section class="panel-box right-panel">
+        <section class="panel-box right-panel" id="right-telemetry-dock">
           <div class="panel-header">
             <span class="ph-icon">⚡</span>
             <span class="ph-title">ORACLE CLOUD VPS TELEMETRY</span>
-            <span style="font-size:0.6rem; color:#00ff88; margin-left:auto;">● 92.4.233.42</span>
+            <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi Pannello Telemetria">HIDE ▶</button>
           </div>
 
-          <!-- ORACLE VPS REAL-TIME HARDWARE & CONNECTOME TELEMETRY HUD -->
+
+          <!-- ORACLE VPS REAL-TIME HARDWARE & CONNECTOME TELEMETRY HUD (JAYSE HANSEN CIRCULAR FUI) -->
           <div class="vps-live-telemetry-hud" id="vps-live-telemetry-hud">
             <div class="vlth-header">
-              <span class="vlth-title">⚡ ORACLE CLOUD VPS TELEMETRY</span>
+              <span class="vlth-title">🛰️ STARK ORBITAL TELEMETRY</span>
               <span class="vlth-badge" id="vps-host-badge">92.4.233.42 · UBUNTU</span>
             </div>
+
+            <!-- DUAL CIRCULAR SVG GAUGES -->
+            <div class="fui-gauges-row">
+              <div class="fui-gauge-box">
+                <svg class="fui-circle-svg" viewBox="0 0 80 80">
+                  <circle class="fui-bg-arc" cx="40" cy="40" r="32" />
+                  <circle class="fui-val-arc cpu" id="svg-cpu-arc" cx="40" cy="40" r="32" style="stroke-dasharray: 201; stroke-dashoffset: 190;" />
+                </svg>
+                <div class="fui-gauge-center">
+                  <span class="fgc-val" id="vps-cpu-val">4.2%</span>
+                  <span class="fgc-lbl">CPU</span>
+                </div>
+              </div>
+
+              <div class="fui-gauge-box">
+                <svg class="fui-circle-svg" viewBox="0 0 80 80">
+                  <circle class="fui-bg-arc" cx="40" cy="40" r="32" />
+                  <circle class="fui-val-arc ram" id="svg-ram-arc" cx="40" cy="40" r="32" style="stroke-dasharray: 201; stroke-dashoffset: 130;" />
+                </svg>
+                <div class="fui-gauge-center">
+                  <span class="fgc-val" id="vps-ram-val">34.8%</span>
+                  <span class="fgc-lbl">RAM</span>
+                </div>
+              </div>
+            </div>
             
-            <div class="vlth-metrics-grid">
-              <div class="vlth-card">
-                <div class="vlth-card-top">
-                  <span class="vlth-lbl">🖥️ CPU LOAD</span>
-                  <span class="vlth-val" id="vps-cpu-val">4.2%</span>
-                </div>
-                <div class="vlth-track"><div class="vlth-fill" id="vps-cpu-bar" style="width: 4.2%; background:#00ff9f;"></div></div>
-              </div>
-              
-              <div class="vlth-card">
-                <div class="vlth-card-top">
-                  <span class="vlth-lbl">🧠 RAM USAGE</span>
-                  <span class="vlth-val" id="vps-ram-val">34.8%</span>
-                </div>
-                <div class="vlth-track"><div class="vlth-fill" id="vps-ram-bar" style="width: 34.8%; background:#00d4ff;"></div></div>
-              </div>
+            <div class="vlth-metrics-grid" style="display:none;">
+              <div class="vlth-card"><div class="vlth-track"><div class="vlth-fill" id="vps-cpu-bar"></div></div></div>
+              <div class="vlth-card"><div class="vlth-track"><div class="vlth-fill" id="vps-ram-bar"></div></div></div>
             </div>
 
             <div class="vlth-status-strip">
-              <div class="vlth-stat-item"><span class="vsi-dot online"></span> RUST: <strong id="vps-latency-val">0.12ms</strong></div>
+              <div class="vlth-stat-item"><span class="vsi-dot online"></span> RUST: <strong id="vps-latency-val">&lt; 1.8ms</strong></div>
               <div class="vlth-stat-item"><span class="vsi-dot online"></span> TUNNELS: <strong id="vps-tunnels-val">3/3 ACTIVE</strong></div>
-              <div class="vlth-stat-item"><span class="vsi-dot online"></span> BOTS: <strong id="vps-bots-val">7 ONLINE</strong></div>
+              <div class="vlth-stat-item"><span class="vsi-dot online"></span> N8N: <strong id="vps-bots-val">21 FLOWS</strong></div>
             </div>
           </div>
+
           
           <div class="event-stream-header"><span>EVENT STREAM LOG</span><button class="clear-btn" onclick="clearLog()">SVUOTA</button></div>
           <div class="event-stream" id="event-stream"><div class="ev-line"><span class="ev-ts">00:00:00</span><span class="ev-type sys">SYS</span><span class="ev-msg">3D Bio-Neural Cortex Active</span></div></div>
         </section>
+
+        <!-- FLOATING WING RESTORE BUTTONS (WHEN COLLAPSED) -->
+        <button class="restore-wing-btn left-float" id="restore-left-btn" onclick="toggleLeftWing()" title="Espandi Dock Tattico">🎛️ TACTICAL DOCK</button>
+        <button class="restore-wing-btn right-float" id="restore-right-btn" onclick="toggleRightWing()" title="Espandi Telemetria">📊 TELEMETRY</button>
       </main>
     </div>
   </div>
+
 
   <!-- ═══════════════════════════════════════════════════════════════
        VIEW 2: HERMES AGENT MISSION CONTROL (LEVEL 5 DAG KANBAN)
@@ -836,10 +863,35 @@
     </div>
   </aside>
 
-  <script src="synaptic_3d_lab.js?v=105.0"></script>
-  <script src="app.js?v=105.0"></script>
+  <!-- ═══════════════════════════════════════════════════════════════
+       LEAD RADAR 2026 MODAL (VERIFIED CLIENTS & 1-CLICK CALL)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-lead-radar">
+    <div class="modal-box holo-modal" style="max-width: 720px;">
+      <div class="modal-header">
+        <span class="mh-title">🎯 RADAR CLIENTI & LEAD FRESCHI (2026)</span>
+        <button class="modal-close" onclick="closeModal('modal-lead-radar')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:8px;">
+          <span style="font-size:0.75rem; color:#00ff9f; font-family:var(--font-hud);">● SCRAPING ATTIVO: SUBITO, FB MARKETPLACE, PORTALI EBG</span>
+          <button class="h-btn primary" onclick="loadLeadRadar()">🔄 AGGIORNA LISTA</button>
+        </div>
+        <div class="lead-radar-list" id="lead-radar-list" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Injected via loadLeadRadar() in app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="synaptic_3d_lab.js?v=109.0"></script>
+  <script src="app.js?v=109.0"></script>
 </body>
 </html>
+
+
+
+
 
 
 
