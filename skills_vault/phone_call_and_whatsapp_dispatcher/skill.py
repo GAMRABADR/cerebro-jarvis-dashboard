@@ -71,7 +71,9 @@ def execute(params=None):
         }
 
     else: # Voice Call
-        tel_link = f"tel:{clean_num}"
+        num_no_plus = clean_num.lstrip('+')
+        wa_call_uri = f"whatsapp://send?phone={num_no_plus}"
+        wa_web_link = f"https://wa.me/{num_no_plus}"
         adb_called = False
 
         # 1. Trigger Direct Android GSM Call via ADB Local Gateway
@@ -82,17 +84,15 @@ def execute(params=None):
         except Exception:
             pass
 
-        # 2. Trigger Windows Phone Link / System Dialer
-        try:
-            subprocess.Popen(["cmd", "/c", "start", tel_link], shell=True)
-        except Exception:
-            pass
-
-        # 3. Trigger KDE Connect if available
-        try:
-            subprocess.Popen(["kdeconnect-cli", "--device", "auto", "--open", tel_link], shell=True)
-        except Exception:
-            pass
+        # 2. Trigger WhatsApp Desktop Direct instead of Microsoft Teams
+        if not adb_called:
+            try:
+                subprocess.Popen(["cmd", "/c", "start", wa_call_uri], shell=True)
+            except Exception:
+                try:
+                    subprocess.Popen(["cmd", "/c", "start", wa_web_link], shell=True)
+                except Exception:
+                    pass
 
         # 3. Trigger n8n Automated Voice Call Gateway
         n8n_triggered = False

@@ -1,0 +1,19 @@
+{
+  "name": "Wiki Real-Time Immutability Syncer",
+  "id": "wiki_realtime_syncer",
+  "category": "CORE_ARCHITECTURE",
+  "description": "Sincronizzazione in tempo reale su file PROJECT_MASTER_WIKI.md, SQLite WAL e webhook N8N.",
+  "version": "1.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "title",
+    "description",
+    "category"
+  ],
+  "outputs": [
+    "status",
+    "entry_hash",
+    "synced_files",
+    "timestamp"
+  ]
+}

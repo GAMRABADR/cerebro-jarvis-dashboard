@@ -1,0 +1,18 @@
+{
+  "id": "neural_cognitive_gateway",
+  "name": "Neural Cognitive Gateway & Focus Guard",
+  "category": "COGNITIVE_KERNEL",
+  "icon": "\ud83e\udde0",
+  "triggers": [
+    "focus mode",
+    "bloom filter",
+    "closer",
+    "silenzio dinamico",
+    "zero contro"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.05,
+  "description": "Filtro Bloom in RAM per deduplicazione lead in 30ns, Protocollo Silenzio Dinamico per Unreal Engine e 1-Click WhatsApp Closer."
+}

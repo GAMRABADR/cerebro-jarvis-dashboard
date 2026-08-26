@@ -1,0 +1,15 @@
+{
+  "id": "gameplay_viral_shorts_clipper",
+  "name": "Viral Shorts & TikTok Studio",
+  "category": "MEDIA_PRODUCTION",
+  "icon": "\ud83c\udfac",
+  "triggers": [
+    "crea clip",
+    "shorts",
+    "tiktok video",
+    "clip gioco",
+    "video virale"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

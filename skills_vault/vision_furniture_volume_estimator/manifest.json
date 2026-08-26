@@ -1,0 +1,17 @@
+{
+  "name": "Vision AI Furniture & Volume Estimator",
+  "id": "vision_furniture_volume_estimator",
+  "category": "BUSINESS_LOGISTICS",
+  "description": "Stima volumetrica in m\u00b3 per mobili, calcolo flotta furgoni e preventivo automatico.",
+  "version": "1.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "furniture_list",
+    "estimated_mq"
+  ],
+  "outputs": [
+    "total_volume_m3",
+    "recommended_vehicle",
+    "base_price_estimate_eur"
+  ]
+}

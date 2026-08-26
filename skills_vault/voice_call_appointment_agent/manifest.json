@@ -1,0 +1,13 @@
+{
+  "id": "voice_call_appointment_agent",
+  "name": "AI Voice Appointment Agent",
+  "category": "VOICE_TELEMETRY",
+  "icon": "\ud83c\udf99\ufe0f",
+  "triggers": [
+    "conferma appuntamento",
+    "chiama per sopralluogo",
+    "chiamata automatica"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

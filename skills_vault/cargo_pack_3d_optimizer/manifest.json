@@ -1,0 +1,20 @@
+{
+  "name": "3D Cargo Bin Packing & Van Space Optimizer",
+  "id": "cargo_pack_3d_optimizer",
+  "category": "LOGISTICS_ENGINEERING",
+  "description": "Algoritmo matematico di 3D Bin Packing per simulare e calcolare l ingombro dei mobili e disporli in modo ottimale nei furgoni aziendali (Fiat Ducato Maxi vs Iveco Daily 35q).",
+  "version": "2.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "items_list",
+    "total_volume_m3",
+    "selected_van"
+  ],
+  "outputs": [
+    "status",
+    "recommended_van",
+    "space_utilization_pct",
+    "trips_needed",
+    "packing_layers"
+  ]
+}

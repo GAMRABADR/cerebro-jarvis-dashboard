@@ -1,0 +1,15 @@
+{
+  "id": "ue5_steamworks_telemetry",
+  "name": "UE5 MMO Steamworks Telemetry",
+  "category": "GAMEDEV_OPS",
+  "icon": "\ud83c\udfae",
+  "triggers": [
+    "telemetria gioco",
+    "steamworks",
+    "server mmo",
+    "stato ue5",
+    "stato gioco"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

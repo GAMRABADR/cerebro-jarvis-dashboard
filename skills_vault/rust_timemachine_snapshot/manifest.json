@@ -1,0 +1,20 @@
+{
+  "name": "Rust Time-Machine Snapshot & Rollback Engine",
+  "id": "rust_timemachine_snapshot",
+  "category": "SYSTEM_RESILIENCE",
+  "description": "Cattura snapshot atomici delta del codice, database SQLite WAL e configurazioni su comando vocale o richiesta REST, con ripristino istantaneo in sub-second.",
+  "version": "2.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "action",
+    "snapshot_name",
+    "target_hash"
+  ],
+  "outputs": [
+    "status",
+    "snapshot_id",
+    "timestamp",
+    "git_commit_hash",
+    "saved_databases"
+  ]
+}

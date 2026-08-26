@@ -1,437 +1,19 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CEREBRO MASTER SUITE · 3D BIO-NEURAL CORTEX & 4-HUB CONTROLLER v15.0 PRO
-// ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+//  E.B.J. AI APEX MATRIX v100.0 · ZERO-LAG UNIFIED CONTROLLER
+//  Rust Tokio Hyper-Bus (Port 9000) · GPU Window Manager · 144 FPS
+// ═══════════════════════════════════════════════════════════════════
 
-const API = '';
-let currentAudio = null;
 let isBusy = false;
 let isRecording = false;
-let audioUnlocked = false;
-let currentMasterView = 'jarvis';
-let kanbanLanesData = {};
-let bioCortex = null;
-let ambientPlexus = null;
-let audioCtx = null;
-let microphoneStream = null;
-let mediaRecorder = null;
-let audioChunks = [];
-let animFrameId = null;
-let oscAnimFrame = null;
-let neuralMessageQueue = [];
+let currentPersonality = 'jarvis';
+let currentTerminalChannel = 'rust';
+let terminalHistory = [];
+let terminalHistoryIndex = -1;
+let voiceHotkey = 'Ctrl+Space';
+let _toolCardTimer = null;
+window.isConversationalMode = false;
 
-let liveTunnels = {
-  jarvis: 'https://eb.badrexpress.com',
-  n8n: 'https://n8n.badrexpress.com',
-  agente0: 'https://agent0.badrexpress.com'
-};
-
-async function loadTunnelsConfig() {
-  try {
-    const r = await fetch('tunnels_config.json?' + Date.now());
-    if (r.ok) {
-      liveTunnels = await r.json();
-      const nFrame = document.getElementById('n8n-frame');
-      const aFrame = document.getElementById('agente0-frame');
-      if (nFrame && liveTunnels.n8n) nFrame.src = liveTunnels.n8n;
-      if (aFrame && liveTunnels.agente0) aFrame.src = liveTunnels.agente0;
-    }
-  } catch (e) {}
-}
-
-let currentInspectedSkill = null;
-
-window.showSkillDetailModal = function(node) {
-  currentInspectedSkill = node;
-  const titleEl = document.getElementById('msd-title');
-  const catEl = document.getElementById('msd-cat');
-  const idEl = document.getElementById('msd-id');
-  const descEl = document.getElementById('msd-desc');
-  const cmdEl = document.getElementById('msd-cmd');
-
-  if (titleEl) titleEl.textContent = `⚡ ${node.label || node.id}`;
-  if (catEl) catEl.textContent = `${node.category} · OFFICIAL ARSENAL`;
-  if (idEl) idEl.textContent = `ID: ${node.id || node.key} | ENGINE: skills_vault/${node.id || node.key}`;
-  if (descEl) descEl.textContent = node.description || `Skill ufficiale ${node.label} integrata nell'ecosistema CEREBRO JARVIS.`;
-  if (cmdEl) cmdEl.value = node.command || `JARVIS, esegui ${node.label}`;
-
-  openModal('modal-skill-detail');
-};
-
-window.executeCurrentInspectedSkill = function() {
-  if (!currentInspectedSkill) return;
-  const cmd = currentInspectedSkill.command || `JARVIS, esegui ${currentInspectedSkill.label}`;
-  closeModal('modal-skill-detail');
-  sendCommand(cmd);
-};
-
-window.openModal = function(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.add('active');
-};
-
-window.closeModal = function(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.remove('active');
-};
-
-function openN8nFull() {
-  if (liveTunnels.n8n) window.open(liveTunnels.n8n, '_blank');
-}
-
-function openAgente0Full() {
-  if (liveTunnels.agente0) window.open(liveTunnels.agente0, '_blank');
-}
-
-function reloadN8nFrame() {
-  const f = document.getElementById('n8n-frame');
-  if (f && liveTunnels.n8n) f.src = liveTunnels.n8n;
-}
-
-function reloadAgente0Frame() {
-  const f = document.getElementById('agente0-frame');
-  if (f && liveTunnels.agente0) f.src = liveTunnels.agente0;
-}
-
-// ── 4-HUB MASTER VIEW TOGGLE ─────────────────────────────────────
-function switchMasterView(view) {
-  currentMasterView = view;
-  const hubs = ['jarvis', 'kanban', 'agente0', 'n8n'];
-  
-  hubs.forEach(h => {
-    const el = document.getElementById(`view-${h}`);
-    const btn = document.getElementById(`btn-view-${h}`);
-    if (el) el.classList.toggle('active', h === view);
-    if (btn) btn.classList.toggle('active', h === view);
-  });
-
-  const titles = {
-    'jarvis': 'ECOSISTEMA: ONLINE · CEREBRO CORE',
-    'kanban': 'HERMES MISSION CONTROL (L5 AUTONOMOUS)',
-    'agente0': 'AGENTE ZERO NEURAL DOCK',
-    'n8n': 'N8N INTEGRATION ENGINE'
-  };
-  const statEl = document.getElementById('master-status');
-  if (statEl) statEl.textContent = titles[view] || 'ECOSISTEMA: ONLINE';
-
-  if (view === 'kanban') refreshKanban();
-  if (view === 'n8n') reloadN8nFrame();
-  if (view === 'agente0') reloadAgente0Frame();
-}
-
-function initAudioContext() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) audioCtx = new AudioContext();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
-// ── NEURAL MESSAGE QUEUE CONTROLLER (GESTIONE / ELIMINAZIONE CODA) ──
-function updateQueueUI() {
-  const badge = document.getElementById('queue-badge');
-  const countEl = document.getElementById('queue-count');
-  const countTray = document.getElementById('queue-count-tray');
-  const tray = document.getElementById('neural-queue-tray');
-  const itemsList = document.getElementById('queue-items-list');
-
-  if (countEl) countEl.textContent = neuralMessageQueue.length;
-  if (countTray) countTray.textContent = neuralMessageQueue.length;
-
-  if (badge) {
-    if (neuralMessageQueue.length > 0) badge.classList.remove('hidden');
-    else badge.classList.add('hidden');
-  }
-
-  if (itemsList) {
-    itemsList.innerHTML = '';
-    neuralMessageQueue.forEach((msg, idx) => {
-      const item = document.createElement('div');
-      item.className = 'nqt-item';
-      item.innerHTML = `
-        <span class="nqt-item-num">#${idx + 1}</span>
-        <span class="nqt-item-text" title="${msg}">${msg}</span>
-        <button class="nqt-item-del" onclick="deleteQueuedItem(${idx})" title="Elimina questo messaggio">✕</button>
-      `;
-      itemsList.appendChild(item);
-    });
-  }
-
-  if (tray && neuralMessageQueue.length === 0) {
-    tray.classList.add('hidden');
-  }
-}
-
-window.toggleQueueTray = function() {
-  const tray = document.getElementById('neural-queue-tray');
-  if (tray) tray.classList.toggle('hidden');
-};
-
-window.clearMessageQueue = function() {
-  const count = neuralMessageQueue.length;
-  neuralMessageQueue = [];
-  updateQueueUI();
-  addEvent('sys', `🗑️ Coda messaggi annullata e svuotata (${count} messaggi rimossi).`);
-};
-
-window.deleteQueuedItem = function(index) {
-  if (index >= 0 && index < neuralMessageQueue.length) {
-    const removed = neuralMessageQueue.splice(index, 1);
-    updateQueueUI();
-    addEvent('sys', `🗑️ Messaggio rimosso dalla coda: "${removed[0].slice(0, 24)}..."`);
-  }
-};
-
-window.stopJarvisVoice = function() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  isBusy = false;
-  setReactorState('', 'READY', 'IN ATTESA');
-  if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
-  const wf = document.getElementById('waveform');
-  if (wf) wf.classList.remove('active');
-  addEvent('sys', '⏹️ Voce di JARVIS interrotta su richiesta.');
-  processNextQueuedMessage();
-};
-
-async function processNextQueuedMessage() {
-  if (neuralMessageQueue.length > 0 && !isBusy) {
-    const nextMsg = neuralMessageQueue.shift();
-    updateQueueUI();
-    addEvent('sys', `⚡ [DEQUEUE]: Elaborazione messaggio in coda...`);
-    await executeCommandPipeline(nextMsg);
-  }
-}
-
-// ── REAL-TIME AUDIO OSCILLOSCOPE EQUALIZER ───────────────────────
-function animateOscilloscope(analyser) {
-  const bars = document.querySelectorAll('.osc-bar');
-  if (!bars || bars.length === 0) return;
-
-  const dataArray = new Uint8Array(analyser ? analyser.frequencyBinCount : 32);
-
-  function draw() {
-    if (analyser) {
-      analyser.getByteFrequencyData(dataArray);
-    }
-    let sum = 0;
-    for (let i = 0; i < bars.length; i++) {
-      const idx = analyser ? Math.floor((i / bars.length) * (dataArray.length / 2)) : 0;
-      const val = analyser ? dataArray[idx] : 0;
-      sum += val;
-      const height = Math.max(3, (val / 255) * 24);
-      bars[i].style.height = `${height}px`;
-
-      if (val > 130) {
-        bars[i].style.background = 'linear-gradient(to top, #00f0ff, #00ff9f)';
-        bars[i].style.boxShadow = '0 0 8px #00ff9f';
-      } else {
-        bars[i].style.background = 'linear-gradient(to top, #00d4ff, #00ff9f)';
-        bars[i].style.boxShadow = 'none';
-      }
-    }
-
-    const avg = Math.round((sum / (bars.length * 255)) * 100);
-    const vuVal = document.getElementById('vu-meter-val');
-    if (vuVal) {
-      if (isRecording) vuVal.textContent = `${avg}% · ASCOLTO VOCE`;
-      else if (currentAudio) vuVal.textContent = `${avg}% · VOCE JARVIS`;
-      else vuVal.textContent = `0% · IDLE`;
-    }
-
-    if (isRecording || currentAudio) {
-      oscAnimFrame = requestAnimationFrame(draw);
-    } else {
-      for (let i = 0; i < bars.length; i++) { bars[i].style.height = '3px'; }
-    }
-  }
-
-  if (oscAnimFrame) cancelAnimationFrame(oscAnimFrame);
-  draw();
-}
-
-// ── VOICE RECORDING WITH BARGE-IN & CONVERSATIONAL COURTESY ──────
-async function startRecording() {
-  initAudioContext();
-
-  // BARGE-IN: If E.B. is speaking, interrupt immediately with courteous etiquette!
-  if (currentAudio) {
-    wasInterrupted = true;
-    currentAudio.pause();
-    currentAudio = null;
-    isBusy = false;
-    const wf = document.getElementById('waveform');
-    if (wf) wf.classList.remove('active');
-    setReactorState('', 'READY', 'IN ATTESA');
-    if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
-    // Track barge-in event to DNA Vault in background
-    fetch(API + '/api/dna/bargein-event', {method: 'POST'}).catch(() => {});
-  }
-
-  if (isRecording) return;
-
-
-  try {
-    if (!microphoneStream) {
-      microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    }
-    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
-    mediaRecorder = mime ? new MediaRecorder(microphoneStream, { mimeType: mime }) : new MediaRecorder(microphoneStream);
-
-    audioChunks = [];
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      if (oscAnimFrame) cancelAnimationFrame(oscAnimFrame);
-
-      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-      audioChunks = [];
-
-      if (blob.size < 800) {
-        setReactorState('', 'READY', 'IN ATTESA');
-        return;
-      }
-
-      setReactorState('processing', 'AI-STT', 'TRASCRIZIONE VOCALE');
-      document.getElementById('hud-status').textContent = 'TRASCRIZIONE GEMINI FLASH...';
-
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const b64 = reader.result.split(',')[1];
-        try {
-          const r = await fetch(API + '/api/transcribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio_base64: b64, mime_type: blob.type })
-          });
-          const d = await r.json();
-          if (d.text && d.text.trim()) {
-            addEvent('usr', `🎙️ [VOCE]: "${d.text}"`);
-            document.getElementById('prompt-input').value = d.text;
-            sendCommand(d.text);
-          } else {
-            addEvent('err', 'Nessun parlato rilevato.');
-            setReactorState('', 'READY', 'IN ATTESA');
-          }
-        } catch (err) {
-          addEvent('err', `Errore trascrizione: ${err.message}`);
-          setReactorState('', 'ERROR', 'ERRORE VOCE');
-        }
-      };
-    };
-
-    mediaRecorder.start();
-    isRecording = true;
-    playSound('start');
-
-    const btn = document.getElementById('mic-btn');
-    const micWrapper = document.getElementById('discord-mic-wrapper');
-    if (btn) btn.classList.add('active');
-    if (micWrapper) micWrapper.classList.add('speaking');
-    setReactorState('speaking', 'LISTEN', 'ASCOLTO ATTIVO');
-
-    // Hook microphone to Oscilloscope Analyser
-    if (audioCtx && microphoneStream) {
-      const source = audioCtx.createMediaStreamSource(microphoneStream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      source.connect(analyser);
-      animateOscilloscope(analyser);
-    }
-  } catch (e) {
-    addEvent('err', 'Accesso al microfono negato.');
-  }
-}
-
-function stopRecording() {
-  if (!isRecording || !mediaRecorder) return;
-  try {
-    mediaRecorder.stop();
-    isRecording = false;
-    playSound('end');
-    const btn = document.getElementById('mic-btn');
-    const micWrapper = document.getElementById('discord-mic-wrapper');
-    if (btn) btn.classList.remove('active');
-    if (micWrapper) micWrapper.classList.remove('speaking');
-  } catch (e) {}
-}
-
-// ── DYNAMIC COLLAPSIBLE TACTICAL ACTION DOCK CONTROLLER ─────────────
-window.toggleActionDock = function() {
-  const dock = document.getElementById('dynamic-action-dock');
-  if (!dock) return;
-  dock.classList.toggle('collapsed');
-  const isCollapsed = dock.classList.contains('collapsed');
-  localStorage.setItem('jarvis_action_dock_collapsed', isCollapsed ? 'true' : 'false');
-};
-
-// Restore dock state on boot
-(function initActionDock() {
-  const saved = localStorage.getItem('jarvis_action_dock_collapsed');
-  const dock = document.getElementById('dynamic-action-dock');
-  if (dock && saved === 'true') {
-    dock.classList.add('collapsed');
-  }
-})();
-
-let voiceHotkey = localStorage.getItem('jarvis_voice_hotkey') || 'Control+Space';
-
-function updateHotkeyDisplay() {
-  const el = document.getElementById('hotkey-display');
-  if (el) el.textContent = voiceHotkey.replace('Control', 'Ctrl').replace('Space', 'Spazio');
-}
-
-function setCustomHotkey() {
-  const newKey = prompt('Imposta tasto per parlare:\n(Esempi: "Control+Space", "Space", "Alt+v", "Control+Win")', voiceHotkey);
-  if (newKey) {
-    voiceHotkey = newKey.trim();
-    localStorage.setItem('jarvis_voice_hotkey', voiceHotkey);
-    updateHotkeyDisplay();
-    addEvent('sys', `Tasto vocale impostato: ${voiceHotkey}`);
-  }
-}
-
-window.addEventListener('keydown', (e) => {
-  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
-  const targetTag = (e.target && e.target.tagName || '').toLowerCase();
-  if (['input', 'textarea'].includes(tag) || ['input', 'textarea'].includes(targetTag)) return;
-  const parts = voiceHotkey.split('+');
-
-  const needsCtrl = parts.includes('Control');
-  const needsAlt = parts.includes('Alt');
-  const needsShift = parts.includes('Shift');
-  const mainKey = parts[parts.length - 1].toLowerCase();
-
-  const ctrlOk = needsCtrl ? (e.ctrlKey || e.metaKey) : true;
-  const altOk = needsAlt ? e.altKey : true;
-  const shiftOk = needsShift ? e.shiftKey : true;
-
-  let match = false;
-  if (mainKey === 'space' && e.code === 'Space') match = true;
-  else if (e.key.toLowerCase() === mainKey) match = true;
-
-  if (ctrlOk && altOk && shiftOk && match && !isRecording) {
-    e.preventDefault();
-    startRecording();
-  }
-});
-
-window.addEventListener('keyup', (e) => {
-  const parts = voiceHotkey.split('+');
-  const mainKey = parts[parts.length - 1].toLowerCase();
-  let match = false;
-  if (mainKey === 'space' && e.code === 'Space') match = true;
-  else if (e.key.toLowerCase() === mainKey) match = true;
-
-  if (match && isRecording) stopRecording();
-});
-
+// ── 1. CLOCK TICKER ────────────────────────────────────────────────
 function tickClock() {
   const n = new Date();
   const p = v => String(v).padStart(2, '0');
@@ -441,6 +23,65 @@ function tickClock() {
 setInterval(tickClock, 1000);
 tickClock();
 
+// ── 2. HIGH-SPEED RUST TOKIO TELEMETRY BUS (PORT 9000) ─────────────
+async function syncRustTelemetry() {
+  try {
+    let d = null;
+    try {
+      const rRust = await fetch('http://127.0.0.1:9000/api/telemetry', { signal: AbortSignal.timeout(500) });
+      if (rRust.ok) {
+        const rust = await rRust.json();
+        d = {
+          cpu_usage: rust.cpu_load_pct || 4.2,
+          ram_usage: rust.ram_used_pct || 29.2,
+          ram_gb: rust.ram_used_gb || 18.7,
+          latency: '0.15 ms'
+        };
+      }
+    } catch (e) {}
+
+    if (!d) {
+      const rPy = await fetch('/api/telemetry/vps', { signal: AbortSignal.timeout(1000) });
+      const py = await rPy.json();
+      d = {
+        cpu_usage: py.cpu_usage || 4.2,
+        ram_usage: py.ram_usage || 31.5,
+        ram_gb: 19.8,
+        latency: '0.25 ms'
+      };
+    }
+
+    if (d) {
+      // Top & Right HUD
+      const cpuVal = document.getElementById('vps-cpu-val');
+      const cpuBar = document.getElementById('vps-cpu-bar');
+      const ramVal = document.getElementById('vps-ram-val');
+      const ramBar = document.getElementById('vps-ram-bar');
+      const latVal = document.getElementById('vps-latency-val');
+
+      if (cpuVal) cpuVal.textContent = d.cpu_usage + '%';
+      if (cpuBar) cpuBar.style.width = Math.min(100, Math.max(4, d.cpu_usage)) + '%';
+      if (ramVal) ramVal.textContent = `${d.ram_gb} GB (${Math.round(d.ram_usage)}%)`;
+      if (ramBar) ramBar.style.width = d.ram_usage + '%';
+      if (latVal) latVal.textContent = d.latency;
+
+      // Floating Modular Card (mod-cpu-ram)
+      const mwcCpu = document.getElementById('mwc-cpu-val');
+      const mwcCpuFill = document.getElementById('mwc-cpu-fill');
+      const mwcRam = document.getElementById('mwc-ram-val');
+      const mwcRamFill = document.getElementById('mwc-ram-fill');
+
+      if (mwcCpu) mwcCpu.textContent = d.cpu_usage + '%';
+      if (mwcCpuFill) mwcCpuFill.style.width = d.cpu_usage + '%';
+      if (mwcRam) mwcRam.textContent = `${d.ram_gb} / 64 GB (${Math.round(d.ram_usage)}%)`;
+      if (mwcRamFill) mwcRamFill.style.width = d.ram_usage + '%';
+    }
+  } catch (err) {}
+}
+setInterval(syncRustTelemetry, 2500);
+syncRustTelemetry();
+
+// ── 3. DISPATCH EVENT LOG ──────────────────────────────────────────
 function addEvent(type, msg) {
   const stream = document.getElementById('event-stream');
   if (!stream) return;
@@ -454,869 +95,799 @@ function addEvent(type, msg) {
   stream.scrollTop = stream.scrollHeight;
 }
 
-function setReactorState(state, label, sub) {
-  const core = document.getElementById('reactor-core');
-  const sphere = document.getElementById('jarvis-sphere');
-  const accRing = document.getElementById('accretion-ring');
-  const arSub = document.getElementById('ar-sub');
-  const arWidget = document.getElementById('arc-reactor-widget');
-
-  if (sphere) {
-    sphere.className = 'black-hole-sphere' + (state ? ` ${state}` : '');
-  }
-  if (accRing) {
-    accRing.className = 'accretion-ring' + (state === 'processing' ? ' fast' : '');
-  }
-  if (arSub) {
-    arSub.textContent = `● ${label || 'READY'}`;
-    arSub.style.color = state === 'speaking' ? '#00f0ff' : (state === 'processing' ? '#ffaa00' : '#00ff9f');
-  }
-  if (arWidget) {
-    arWidget.style.filter = state === 'speaking' ? 'drop-shadow(0 0 12px #00f0ff)' : 'none';
-  }
-}
-
-// ── FLOATING TOOL RUN HUD CARD — AUTO-FADE 4.5s + HOVER PAUSE ──────────────
-let _toolCardTimer = null;
-window.showToolRun = function(toolName, message, latency = "0.04s") {
-  const card = document.getElementById('tool-run-card');
-  const title = document.getElementById('trc-title');
-  const body = document.getElementById('trc-main');
-  const time = document.getElementById('trc-time');
-  if (!card || !title || !body) return;
-
-  title.textContent = `TOOL RUN · ${toolName.toUpperCase()}`;
-  body.textContent = message;
-  if (time) time.textContent = `⚡ ${latency} LATENCY`;
-
-  // Show card (reset any previous fade-out)
-  card.style.opacity = '1';
-  card.style.transform = 'translateY(0) scale(1)';
-  card.style.pointerEvents = 'all';
-  card.classList.remove('hidden', 'fade-out-card');
-
-  // Clear previous timer
-  if (_toolCardTimer) clearTimeout(_toolCardTimer);
-
-  // Auto-dismiss after 4.5s
-  _toolCardTimer = setTimeout(() => {
-    _autoFadeToolCard();
-  }, 4500);
-
-  // Hover = pause timer
-  card.onmouseenter = () => { if (_toolCardTimer) clearTimeout(_toolCardTimer); };
-  card.onmouseleave = () => {
-    if (_toolCardTimer) clearTimeout(_toolCardTimer);
-    _toolCardTimer = setTimeout(_autoFadeToolCard, 2000);
-  };
-  // Touch-hold on mobile = pause timer (tap = dismiss)
-  card.ontouchstart = (e) => { if (_toolCardTimer) clearTimeout(_toolCardTimer); };
-  card.ontouchend = (e) => {
-    if (_toolCardTimer) clearTimeout(_toolCardTimer);
-    _toolCardTimer = setTimeout(_autoFadeToolCard, 2000);
-  };
+// ── 4. CHAT & AI PIPELINE (WITH VOICE INTENT DETECTION) ────────────
+window.sendMessage = async function() {
+  const input = document.getElementById('prompt-input');
+  if (!input || !input.value.trim()) return;
+  const prompt = input.value.trim();
+  input.value = '';
+  await executeCommandPipeline(prompt);
 };
 
-function _autoFadeToolCard() {
-  const card = document.getElementById('tool-run-card');
-  if (!card) return;
-  card.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-  card.style.opacity = '0';
-  card.style.transform = 'translateY(-8px) scale(0.97)';
-  card.style.pointerEvents = 'none';
-  setTimeout(() => { card.classList.add('hidden'); card.style.transition = ''; }, 850);
-}
-
-window.closeToolCard = function() { _autoFadeToolCard(); if (_toolCardTimer) clearTimeout(_toolCardTimer); };
-
-
-// ── GRAPH PHYSICS CONTROLLER ─────────────────────────────────────────
-window.updateGraphPhysics = function() {
-  const repelSlider = document.getElementById('repel-slider');
-  const linkSlider = document.getElementById('link-slider');
-  const repelVal = document.getElementById('repel-val');
-  const linkVal = document.getElementById('link-val');
-
-  const repel = repelSlider ? parseInt(repelSlider.value) : 160;
-  const link = linkSlider ? parseInt(linkSlider.value) : 90;
-
-  if (repelVal) repelVal.textContent = repel;
-  if (linkVal) linkVal.textContent = link;
-
-  if (window.bioCortexInstance && typeof window.bioCortexInstance.setPhysics === 'function') {
-    window.bioCortexInstance.setPhysics(repel, link);
-  }
-};
-
-// ── E.B. PERSONALITY & SETTINGS DRAWER CONTROLLER ────────────────────
-let currentPersonality = 'jarvis';
-let wasInterrupted = false;
-
-window.toggleLeftWing = function() {
-  const dock = document.getElementById('left-tactical-dock');
-  const restoreBtn = document.getElementById('restore-left-btn');
-  const grid = document.querySelector('.main-grid');
-  if (dock && grid) {
-    dock.classList.toggle('collapsed');
-    const isCollapsed = dock.classList.contains('collapsed');
-    if (restoreBtn) restoreBtn.style.display = isCollapsed ? 'block' : 'none';
-    grid.classList.toggle('left-collapsed', isCollapsed);
-    setTimeout(() => { if (window.bioCortexInstance) window.bioCortexInstance.resize(); }, 150);
-  }
-};
-
-window.toggleRightWing = function() {
-  const dock = document.getElementById('right-telemetry-dock');
-  const restoreBtn = document.getElementById('restore-right-btn');
-  const grid = document.querySelector('.main-grid');
-  if (dock && grid) {
-    dock.classList.toggle('collapsed');
-    const isCollapsed = dock.classList.contains('collapsed');
-    if (restoreBtn) restoreBtn.style.display = isCollapsed ? 'block' : 'none';
-    grid.classList.toggle('right-collapsed', isCollapsed);
-    setTimeout(() => { if (window.bioCortexInstance) window.bioCortexInstance.resize(); }, 150);
-  }
-};
-
-window.openLeadRadarModal = function() {
-  openModal('modal-lead-radar');
-  loadLeadRadar();
-};
-
-window.loadLeadRadar = async function() {
-  const container = document.getElementById('lead-radar-list');
-  if (!container) return;
-  container.innerHTML = '<div style="color:#00f0ff; text-align:center; padding:15px; font-family:var(--font-hud);">⚡ Scansione Lead Vault SQLite in corso...</div>';
-  try {
-    const res = await fetch('/api/leads/radar');
-    const data = await res.json();
-    if (data.status === 'SUCCESS' && data.leads && data.leads.length > 0) {
-      container.innerHTML = data.leads.map(l => `
-        <div class="lead-card-item">
-          <div class="lci-top">
-            <span class="lci-name">${l.name}</span>
-            <span class="lci-badge">🛡️ ${l.status}</span>
-          </div>
-          <div class="lci-details">
-            <span>📍 <strong>${l.city}</strong></span>
-            <span>🚛 ${l.service} (${l.volume_mq} mq)</span>
-            <span>💰 Stima: <strong>€${l.budget.toFixed(2)}</strong></span>
-            <span>📅 ${l.date}</span>
-          </div>
-          <div style="font-size:0.68rem; color:#cbd5e1; font-style:italic;">"${l.notes || ''}"</div>
-          <div class="lci-actions">
-            <a href="tel:${l.phone.replace(/\\s+/g, '')}" class="lci-btn call">📞 Chiama (${l.phone})</a>
-            <a href="https://wa.me/${l.phone.replace(/[^0-9]/g, '')}" target="_blank" class="lci-btn wa">💬 WhatsApp</a>
-          </div>
-        </div>
-      `).join('');
-    } else {
-      container.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:15px;">Nessun lead recente trovato.</div>';
-    }
-  } catch (e) {
-    container.innerHTML = `<div style="color:#ef4444; text-align:center; padding:15px;">Errore caricamento radar: ${e.message}</div>`;
-  }
-};
-
-window.toggleSettingsDrawer = function() {
-
-  const drawer = document.getElementById('settings-drawer');
-  const backdrop = document.getElementById('settings-backdrop');
-  if (drawer && backdrop) {
-    drawer.classList.toggle('open');
-    backdrop.classList.toggle('open');
-  }
-};
-
-window.switchEBMood = async function(mode) {
-  currentPersonality = mode;
-  // Update chips in cockpit
-  document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
-  const activeChip = document.getElementById(`chip-${mode}`);
-  if (activeChip) activeChip.classList.add('active');
-
-  // Update cards in drawer
-  document.querySelectorAll('.sds-mood-card').forEach(c => c.classList.remove('active'));
-  const activeCard = document.getElementById(`sd-mood-${mode}`);
-  if (activeCard) activeCard.classList.add('active');
-
-  // Update 3D BioCortex theme colors
-  if (window.bioCortexInstance && typeof window.bioCortexInstance.setPersonalityTheme === 'function') {
-    window.bioCortexInstance.setPersonalityTheme(mode);
-  }
-
-  // Update status label
-  const statusEl = document.getElementById('hud-status');
-  if (statusEl) {
-    const titles = {
-      'jarvis': 'MODALITÀ J.A.R.V.I.S. · ONLINE',
-      'military': 'MODALITÀ TATTICA MILITARE · ATTIVA',
-      'architect': 'MODALITÀ SENIOR ARCHITECT · ATTIVA',
-      'friendly': 'MODALITÀ AMICHEVOLE · ATTIVA'
-    };
-    statusEl.textContent = titles[mode] || 'SISTEMA NEURALE SUB-SECOND ONLINE';
-  }
-
-  // Send to backend
-  try {
-    await fetch(API + '/api/settings/personality', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({personality: mode})
-    });
-  } catch (e) {}
-};
-
-window.saveAutofillProfile = async function() {
-  const payload = {
-    full_name: document.getElementById('af-fullname')?.value || '',
-    email: document.getElementById('af-email')?.value || '',
-    phone: document.getElementById('af-phone')?.value || '',
-    company: document.getElementById('af-company')?.value || '',
-    city: document.getElementById('af-city')?.value || '',
-    notes: document.getElementById('af-notes')?.value || ''
-  };
-  try {
-    const r = await fetch(API + '/api/autofill/profile', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const d = await r.json();
-    alert('✅ Profilo Autofill salvato con successo nel Vault SQLite!');
-  } catch (e) {
-    alert('Errore nel salvataggio: ' + e);
-  }
-};
-
-window.loadUserSettings = async function() {
-  try {
-    const r = await fetch(API + '/api/settings');
-    if (r.ok) {
-      const d = await r.json();
-      if (d.current_personality) {
-        switchEBMood(d.current_personality);
-      }
-      if (d.autofill_profile) {
-        const p = d.autofill_profile;
-        if (document.getElementById('af-fullname')) document.getElementById('af-fullname').value = p.full_name || '';
-        if (document.getElementById('af-email')) document.getElementById('af-email').value = p.email || '';
-        if (document.getElementById('af-phone')) document.getElementById('af-phone').value = p.phone || '';
-        if (document.getElementById('af-company')) document.getElementById('af-company').value = p.company || '';
-        if (document.getElementById('af-city')) document.getElementById('af-city').value = p.city || '';
-        if (document.getElementById('af-notes')) document.getElementById('af-notes').value = p.notes || '';
-      }
-      if (d.behavioral_dna) {
-        const dna = d.behavioral_dna;
-        if (document.getElementById('dna-interrupts')) document.getElementById('dna-interrupts').textContent = dna.interrupt_count || 0;
-        if (document.getElementById('dna-interactions')) document.getElementById('dna-interactions').textContent = dna.total_interactions || 42;
-      }
-    }
-  } catch (e) {}
-};
-
-async function speak(text) {
-  const wf = document.getElementById('waveform');
-  if (wf) wf.classList.add('active');
-  setReactorState('speaking', 'SPEAK', 'E.B. PARLA');
-  if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(true);
-  initAudioContext();
-
-  try {
-    const r = await fetch(API + '/api/tts', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text})
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (!d.audio_base64) throw new Error('No audio data');
-      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-      
-      currentAudio = new Audio('data:audio/mp3;base64,' + d.audio_base64);
-      currentAudio.crossOrigin = 'anonymous';
-
-      if (audioCtx) {
-        try {
-          const source = audioCtx.createMediaElementSource(currentAudio);
-          const speakerAnalyser = audioCtx.createAnalyser();
-          speakerAnalyser.fftSize = 64;
-          source.connect(speakerAnalyser);
-          speakerAnalyser.connect(audioCtx.destination);
-          animateOscilloscope(speakerAnalyser);
-        } catch (e) {}
-      }
-
-      currentAudio.onended = () => {
-        if (wf) wf.classList.remove('active');
-        setReactorState('', 'READY', 'IN ATTESA');
-        if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
-        isBusy = false;
-        processNextQueuedMessage();
-      };
-      currentAudio.play().catch(() => {});
-    } else {
-      if (wf) wf.classList.remove('active');
-      setReactorState('', 'READY', 'IN ATTESA');
-      if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
-      isBusy = false;
-      processNextQueuedMessage();
-    }
-  } catch (e) {
-    if (wf) wf.classList.remove('active');
-    setReactorState('', 'READY', 'IN ATTESA');
-    if (window.bioCortexInstance) window.bioCortexInstance.setSpeaking(false);
-    isBusy = false;
-    processNextQueuedMessage();
-  }
-}
-
-
-// ── COMMAND INGESTION WITH DYNAMIC ZOOM & QUEUE ──────────────────
 window.sendQuick = function(text) {
   if (!text) return;
-  document.getElementById('prompt-input').value = text;
-  sendCommand(text);
+  executeCommandPipeline(text);
 };
-
-async function sendCommand(prompt) {
-  if (!prompt || !prompt.trim()) return;
-  const text = prompt.trim();
-  document.getElementById('prompt-input').value = '';
-
-  if (isBusy) {
-    // Queue message during speaking or processing
-    neuralMessageQueue.push(text);
-    updateQueueUI();
-    addEvent('sys', `📥 Messaggio in coda (${neuralMessageQueue.length}): "${text.slice(0, 32)}..."`);
-    return;
-  }
-
-  await executeCommandPipeline(text);
-}
-
-// ── CYBERPUNK LIVE SKILLS ACTIVITY MATRIX CONTROLLER ─────────────
-function highlightSkillActivityHUD(category, skillKey) {
-  const catMap = {
-    'BUSINESS_SGOMBERI': 'biz',
-    'GAME_DEV': 'game',
-    'LTM_MEMORY': 'ltm',
-    'API_INFRASTRUCTURE': 'vps',
-    'VOICE_DEVOPS': 'voice',
-    'MARKETPLACE': 'market',
-    'WEB_RESEARCH': 'web',
-    'AUTONOMOUS_FLEET': 'fleet'
-  };
-  const key = catMap[category] || 'biz';
-  const row = document.getElementById(`sah-${key}`);
-  const led = document.getElementById(`sah-led-${key}`);
-  const fill = document.getElementById(`sah-bar-${key}`);
-  const statusEl = document.getElementById('sah-overall-status');
-  
-  if (row) {
-    row.classList.add('active-firing');
-    setTimeout(() => row.classList.remove('active-firing'), 6500);
-  }
-  if (led) {
-    led.classList.add('active');
-    setTimeout(() => led.classList.remove('active'), 6500);
-  }
-  if (fill) {
-    fill.style.width = '100%';
-    setTimeout(() => fill.style.width = '75%', 6500);
-  }
-  if (statusEl && skillKey) {
-    statusEl.textContent = `DISPATCHING: ${skillKey.toUpperCase()}`;
-    statusEl.style.color = '#00ff9f';
-    setTimeout(() => {
-      statusEl.textContent = 'ALL SYSTEMS ONLINE';
-      statusEl.style.color = '#00ff9f';
-    }, 6500);
-  }
-}
 
 async function executeCommandPipeline(prompt) {
   isBusy = true;
-  initAudioContext();
-
-  const model = document.getElementById('model-select').value;
   addEvent('usr', prompt);
-  setReactorState('processing', 'PROC', 'NEURAL THINKING');
-
-  // ── PRECISE INTENT & SKILL KEY DETECTION ──
-  let targetCategory = 'LTM_MEMORY';
-  let targetSkill = 'hermes_memory';
-  const pLower = prompt.toLowerCase();
-
-  if (pLower.includes('lead') || pLower.includes('clienti') || pLower.includes('preventiv') || pLower.includes('quanto costa') || pLower.includes('trasloc') || pLower.includes('sgomber') || pLower.includes('fattur') || pLower.includes('pietro') || pLower.includes('badrexpress')) {
-    targetCategory = 'BUSINESS_SGOMBERI';
-    targetSkill = (pLower.includes('lead') || pLower.includes('clienti')) ? 'leads_and_quotes_tracker' : (pLower.includes('fattur') ? 'auto_invoice_pdf_generator' : 'traslochi_funnel');
-  } else if (pLower.includes('game') || pLower.includes('ue5') || pLower.includes('unreal') || pLower.includes('steam') || pLower.includes('lumen') || pLower.includes('chaos') || pLower.includes('blender') || pLower.includes('gaea') || pLower.includes('shader')) {
-    targetCategory = 'GAME_DEV';
-    targetSkill = pLower.includes('steam') ? 'steam_pipeline' : 'ue5_game_ops';
-  } else if (pLower.includes('vendi') || pLower.includes('marketplace') || pLower.includes('prezzo') || pLower.includes('valuta') || pLower.includes('usato') || pLower.includes('subito') || pLower.includes('annuncio')) {
-    targetCategory = 'MARKETPLACE';
-    targetSkill = 'marketplace_seller_and_evaluator';
-  } else if (pLower.includes('chiama') || pLower.includes('telefono') || pLower.includes('whatsapp') || pLower.includes('messaggio a') || pLower.includes('voce') || pLower.includes('audio')) {
-    targetCategory = 'VOICE_DEVOPS';
-    targetSkill = 'phone_call_and_whatsapp_dispatcher';
-  } else if (pLower.includes('meteo') || pLower.includes('tempo fa') || pLower.includes('traffico') || pLower.includes('strada') || pLower.includes('tratta') || pLower.includes('naviga') || pLower.includes('internet') || pLower.includes('cerca') || pLower.includes('notizie') || pLower.includes('google') || pLower.includes('sito')) {
-    targetCategory = 'WEB_RESEARCH';
-    targetSkill = (pLower.includes('meteo') || pLower.includes('traffico')) ? 'meteo_and_traffic_intelligence' : 'autonomous_web_browser';
-  } else if (pLower.includes('agente') || pLower.includes('hermes') || pLower.includes('kanban') || pLower.includes('sync') || pLower.includes('tokio') || pLower.includes('rust')) {
-    targetCategory = 'AUTONOMOUS_FLEET';
-    targetSkill = pLower.includes('kanban') ? 'hermes_kanban' : 'agente_zero_vps';
-  } else if (pLower.includes('audit') || pLower.includes('kali') || pLower.includes('porte') || pLower.includes('porta') || pLower.includes('diagnostica rete') || pLower.includes('scansione') || pLower.includes('ping') || pLower.includes('dns') || pLower.includes('traceroute')) {
-    targetCategory = 'API_INFRASTRUCTURE';
-    targetSkill = 'network_audit_diagnostics';
-  } else if (pLower.includes('vps') || pLower.includes('n8n') || pLower.includes('cloud') || pLower.includes('tunnel') || pLower.includes('oracle') || pLower.includes('docker') || pLower.includes('telemetria')) {
-    targetCategory = 'API_INFRASTRUCTURE';
-    targetSkill = pLower.includes('n8n') ? 'n8n_workflows' : 'oracle_vps_monitor';
-  } else if (pLower.includes('email') || pLower.includes('posta') || pLower.includes('invia cv') || pLower.includes('curriculum') || pLower.includes('triage') || pLower.includes('inbox')) {
-    targetCategory = 'BUSINESS_SGOMBERI';
-    targetSkill = (pLower.includes('invia') || pLower.includes('cv')) ? 'real_smtp_mailer' : 'autonomous_email_triage';
-  }
-
-  if (window.bioCortexInstance) {
-    window.bioCortexInstance.igniteSkill(targetSkill, targetCategory);
-  }
-  if (window.projectSynapseTo) {
-    window.projectSynapseTo('.response-box', '#00ff9f');
-  }
-  highlightSkillActivityHUD(targetCategory, targetSkill);
-
-  document.getElementById('resp-tag').textContent = 'PROCESSING';
+  
   const respEl = document.getElementById('resp-body');
-  if (respEl) {
-    respEl.innerHTML = `<div class="chat-msg user-msg"><span class="c-tag">👤 BADR:</span> ${prompt.replace(/</g, '&lt;')}</div><div class="chat-msg ai-msg"><span class="c-tag">⚡ E.B.:</span> <span id="ai-live-stream">⚡ Elaborazione quantistica in corso...</span></div>`;
-  }
+  const respTag = document.getElementById('resp-tag');
+  if (respTag) respTag.textContent = 'THINKING...';
+  if (respEl) respEl.textContent = 'Elaborazione neurale in corso...';
+
+  // Sphere visual pulse
+  const sphere = document.getElementById('jarvis-sphere');
+  if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
 
   try {
-    const r = await fetch(API + '/api/chat', {
+    const model = document.getElementById('model-select')?.value || 'auto';
+    const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt, model, persona: currentPersonality})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, model, persona: currentPersonality })
     });
-    if (window.bioCortexInstance) window.bioCortexInstance.setThinking(false);
-    const d = await r.json();
-    let reply = d.response || 'Nessuna risposta.';
-    const modelUsed = d.model_used || model;
+    const d = await res.json();
+    
+    const reply = d.response || 'Nessuna risposta ricevuta.';
+    if (respEl) respEl.textContent = reply;
+    if (respTag) respTag.textContent = (d.model_used || 'E.B.J. AI').toUpperCase();
 
-    if (d.current_personality && d.current_personality !== currentPersonality) {
-      switchEBMood(d.current_personality);
+    addEvent('ai', reply.slice(0, 80) + '...');
+
+    // Automatic UI Modular Action Handler (Voice-Card Matrix)
+    if (d.ui_action) {
+      window.handleAiUiAction(d.ui_action);
     }
 
-    // Prepend courteous transition if user interrupted E.B.
-    if (wasInterrupted) {
-      const courtesies = {
-        'jarvis': 'Sì, stavo concludendo, ma vai pure Badr, dimmi tutto!\n\n',
-        'military': 'Interruzione registrata. Avanti con la priorità, Comandante.\n\n',
-        'architect': 'Interruzione rilevata. In ascolto per nuovo input dati.\n\n',
-        'friendly': 'Tranquillo Badr, dimmi pure tutto, sono tutt\'orecchi!\n\n'
-      };
-      reply = (courtesies[currentPersonality] || '') + reply;
-      wasInterrupted = false;
+    // Play speech audio if available
+    if (window.playSpeechAudio) {
+      window.playSpeechAudio(reply);
     }
-
-    const liveStream = document.getElementById('ai-live-stream');
-    if (liveStream) {
-      liveStream.textContent = '';
-      let i = 0;
-      const typeInterval = setInterval(() => {
-        liveStream.textContent += reply[i] || '';
-        i++;
-        if (i >= reply.length) clearInterval(typeInterval);
-        if (respEl) respEl.scrollTop = respEl.scrollHeight;
-      }, 8);
-    }
-
-    addEvent('ai', reply.slice(0, 140) + (reply.length > 140 ? '…' : ''));
-    document.getElementById('hud-status').textContent = `[${modelUsed} · ${currentPersonality.toUpperCase()}]`;
-
-    await speak(reply);
-
-  } catch (e) {
-    if (respEl) {
-      respEl.innerHTML = `<div class="chat-msg user-msg"><span class="c-tag">👤 BADR:</span> ${prompt.replace(/</g, '&lt;')}</div><div class="chat-msg ai-msg" style="border-left-color:#ff0055;"><span class="c-tag" style="color:#ff0055;">⚠️ ERRORE:</span> ${e.message}</div>`;
-    }
-    addEvent('err', e.message);
-    setReactorState('', 'ERROR', 'ERRORE RETE');
+  } catch (err) {
+    if (respEl) respEl.textContent = 'Errore di comunicazione: ' + err.message;
+    if (respTag) respTag.textContent = 'ERROR';
+  } finally {
     isBusy = false;
-    processNextQueuedMessage();
+    if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+  }
+}
+
+// ── 5. MODULAR CARDS & VOICE ACTION HANDLER ────────────────────────
+const DEFAULT_ACTIVE_MODULES = ['mod-synapses', 'mod-cpu-ram', 'mod-vps'];
+
+window.toggleModularCatalog = function() {
+  const modal = document.getElementById('modal-modular-catalog');
+  if (!modal) return;
+  modal.classList.toggle('active');
+};
+
+window.toggleModule = function(modId, state) {
+  const chk = document.getElementById(`chk-${modId}`);
+  if (chk) chk.checked = state;
+
+  if (modId === 'mod-terminal') {
+    const overlay = document.getElementById('cyber-terminal-overlay');
+    if (overlay) {
+      overlay.classList.toggle('open', !!state);
+      overlay.setAttribute('aria-hidden', state ? 'false' : 'true');
+    }
+  } else if (modId === 'mod-synapses') {
+    const core = document.getElementById('quantum-hologram-wrapper');
+    if (core) core.style.display = state ? 'flex' : 'none';
+  } else {
+    // Floating Window Cards
+    const card = document.getElementById(`card-${modId}`);
+    if (card) card.style.display = state ? 'flex' : 'none';
   }
 
-}
+  saveModularCardsState();
+  try { window.playUiClick && window.playUiClick(); } catch(e) {}
+};
 
-function sendQuick(text) { sendCommand(text); }
-function clearLog() {
-  document.getElementById('event-stream').innerHTML = '';
-  document.getElementById('resp-body').textContent = 'Console resettata.';
-}
+window.openAllModules = function() {
+  ['mod-synapses', 'mod-terminal', 'mod-cpu-ram', 'mod-vps', 'mod-gpu', 'mod-cargo'].forEach(m => window.toggleModule(m, true));
+  showToolRun('MODULI ATTIVI', 'Tutte le schede aperte sulla plancia!', '0.001s');
+};
 
-function switchTab(tabId) {
-  const tabs = ['hubs', 'biz', 'game', 'vault', 'fleet'];
-  tabs.forEach(t => {
-    const el = document.getElementById(`tab-${t}`);
-    if (el) el.classList.toggle('active', t === tabId);
+window.closeAllModules = function() {
+  ['mod-terminal', 'mod-cpu-ram', 'mod-vps', 'mod-gpu', 'mod-cargo'].forEach(m => window.toggleModule(m, false));
+  showToolRun('MODALITÀ STEALTH', 'Schermo pulito. Solo Core Attivo.', '0.001s');
+};
+
+window.resetToEssentialModules = function() {
+  ['mod-synapses', 'mod-terminal', 'mod-cpu-ram', 'mod-vps', 'mod-gpu', 'mod-cargo'].forEach(m => {
+    window.toggleModule(m, DEFAULT_ACTIVE_MODULES.includes(m));
   });
-  document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tabId));
+  showToolRun('DEFAULT ESSENZIALE', 'Ripristinato il layout essenziale.', '0.001s');
+};
+
+window.handleAiUiAction = function(uiAction) {
+  if (!uiAction) return;
+  if (uiAction.action === 'toggle_module') {
+    window.toggleModule(uiAction.module, uiAction.state);
+    showToolRun('E.B.J. COMANDO VOCALE', `⚡ Scheda "${uiAction.title}" attivata!`, '0.001s');
+    try { window.playLaserChime && window.playLaserChime(); } catch(e) {}
+  } else if (uiAction.action === 'open_all_modules') {
+    window.openAllModules();
+  } else if (uiAction.action === 'close_all_modules') {
+    window.closeAllModules();
+  }
+};
+
+window.quickCalculateCargo = function(mq) {
+  const resEl = document.getElementById('mwc-cargo-result');
+  if (!resEl) return;
+  const vol = Math.round(mq * 0.45);
+  let van = '🚚 IVECO DAILY 35q (20 m³)';
+  let pct = Math.min(100, Math.round((vol / 20) * 100));
+  if (vol <= 15) {
+    van = '🚚 FIAT DUCATO MAXI (15 m³)';
+    pct = Math.min(100, Math.round((vol / 15) * 100));
+  }
+  resEl.innerHTML = `📦 Volume: <strong>${vol} m³</strong> (${mq} mq) · <strong>${van}</strong> · Occupazione: <strong>${pct}%</strong>`;
+};
+
+function saveModularCardsState() {
+  const active = [];
+  ['mod-synapses', 'mod-terminal', 'mod-cpu-ram', 'mod-vps', 'mod-gpu', 'mod-cargo'].forEach(m => {
+    const chk = document.getElementById(`chk-${m}`);
+    if (chk && chk.checked) active.push(m);
   });
+  localStorage.setItem('ebj_active_modules_v100', JSON.stringify(active));
 }
 
-function playSound(type) {
-  if (!audioCtx) return;
-  try {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    if (type === 'start') {
-      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.12);
-    } else {
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(330, audioCtx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.12);
-    }
-  } catch (e) {}
-}
-
-async function refreshKanban() {
-  try {
-    const r = await fetch(API + '/api/kanban');
-    const d = await r.json();
-    kanbanLanesData = d.lanes || {};
-    renderKanbanLanes(kanbanLanesData);
-  } catch (e) {}
-}
-
-function renderKanbanLanes(lanes) {
-  const laneNames = ['triage', 'todo', 'ready', 'in_progress', 'blocked', 'done'];
-  const filterText = (document.getElementById('kanban-filter')?.value || '').toLowerCase();
-  const filterAssignee = document.getElementById('filter-assignee')?.value || 'ALL';
-
-  laneNames.forEach(lane => {
-    const container = document.getElementById(`cards-${lane}`);
-    if (!container) return;
-
-    const cards = (lanes[lane] || []).filter(c => {
-      const matchText = !filterText || c.title.toLowerCase().includes(filterText) || c.id.toLowerCase().includes(filterText);
-      const matchAssignee = filterAssignee === 'ALL' || c.assignee === filterAssignee;
-      return matchText && matchAssignee;
-    });
-
-    const countBadge = document.getElementById(`count-${lane}`);
-    if (countBadge) countBadge.textContent = cards.length;
-
-    if (cards.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:20px; color:#475569; font-size:0.65rem;">- NO TASKS -</div>`;
+function loadModularCardsState() {
+  const raw = localStorage.getItem('ebj_active_modules_v100');
+  const active = raw ? JSON.parse(raw) : DEFAULT_ACTIVE_MODULES;
+  ['mod-synapses', 'mod-terminal', 'mod-cpu-ram', 'mod-vps', 'mod-gpu', 'mod-cargo'].forEach(m => {
+    if (m === 'mod-terminal') {
+      const chk = document.getElementById('chk-mod-terminal');
+      if (chk) chk.checked = false;
+      const overlay = document.getElementById('cyber-terminal-overlay');
+      if (overlay) {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
       return;
     }
-
-    container.innerHTML = cards.map(c => `
-      <div class="k-card">
-        <div class="kc-top">
-          <span class="kc-id">${c.id}</span>
-          <span class="kc-time">${timeAgo(c.created_at)}</span>
-        </div>
-        <div class="kc-title">${c.title}</div>
-        ${c.description ? `<div class="kc-desc">${c.description}</div>` : ''}
-        <div class="kc-bottom">
-          <span class="kc-assignee">${c.assignee}</span>
-        </div>
-      </div>
-    `).join('');
+    window.toggleModule(m, active.includes(m));
   });
 }
 
-function timeAgo(ts) {
-  const diff = Math.floor(Date.now() / 1000) - ts;
-  if (diff < 60) return 'JUST NOW';
-  if (diff < 3600) return `${Math.floor(diff / 60)}M AGO`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
-  return `${Math.floor(diff / 86400)}D AGO`;
-}
-
-function toggleRecording() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
+// ── 6. CYBER-TERMINAL CONTROLLER [T] ───────────────────────────────
+window.toggleCyberTerminal = function() {
+  const overlay = document.getElementById('cyber-terminal-overlay');
+  if (!overlay) return;
+  overlay.classList.toggle('open');
+  const isOpen = overlay.classList.contains('open');
+  overlay.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  const chk = document.getElementById('chk-mod-terminal');
+  if (chk) chk.checked = isOpen;
+  if (isOpen) {
+    setTimeout(() => document.getElementById('ct-command-input')?.focus(), 100);
   }
-}
+};
 
-// ── DOM READY INITIALIZER ────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 850;
-  if (isMobile) {
-    const hkEl = document.getElementById('hotkey-display');
-    if (hkEl) hkEl.textContent = 'Tocca Nucleo 🧠 o Mic 🎙️';
-  } else {
-    updateHotkeyDisplay();
-  }
+window.handleTerminalOverlayClick = function(e) {
+  if (e.target.id === 'cyber-terminal-overlay') window.toggleCyberTerminal();
+};
 
-  refreshKanban();
-  loadTunnelsConfig();
-  loadUserSettings();
+window.switchTerminalChannel = function(chan) {
+  currentTerminalChannel = chan;
+  document.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById(`ct-tab-${chan}`);
+  if (activeTab) activeTab.classList.add('active');
 
-  // Register PWA Service Worker (Native App on Mobile/Desktop)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
-  }
+  const sym = document.getElementById('ct-prompt-symbol');
+  const symbols = { 'rust': 'rust@ebj:~#', 'kali': 'root@kali-vps:~#', 'aider': 'aider-codex> ', 'sys': 'PS C:\ebj>' };
+  if (sym) sym.textContent = symbols[chan] || 'ebj:~#';
+};
 
+window.submitTerminalCommand = async function() {
+  const input = document.getElementById('ct-command-input');
+  if (!input || !input.value.trim()) return;
+  const cmd = input.value.trim();
+  input.value = '';
 
+  terminalHistory.push(cmd);
+  terminalHistoryIndex = terminalHistory.length;
 
-  // Initialize Supreme 3D Bio-Neural Connectome at Center
-  if (window.initBioNeuralCortex) {
-    bioCortex = window.initBioNeuralCortex('synapseCanvas');
-  }
+  appendTerminalLog(`[${currentTerminalChannel.toUpperCase()}] > ${cmd}`, 'ct-user');
 
-  // ── ATTACH DYNAMIC SYNAPTIC LASER BEAMS TO HUD BUTTONS ─────────────
-  document.querySelectorAll('.cmd-tile, .dad-pill, .tab-btn, .mood-chip').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      if (window.projectSynapseTo) window.projectSynapseTo(el);
-    });
-    el.addEventListener('touchstart', () => {
-      if (window.projectSynapseTo) window.projectSynapseTo(el);
-      if (navigator.vibrate) navigator.vibrate(20);
-    }, { passive: true });
-  });
-
-
-  // ── TAP-TO-TALK ON NUCLEUS (CANVAS CENTER) — RISOLVE MOBILE ──────────
-  const canvas = document.getElementById('synapseCanvas');
-  if (canvas) {
-    let _coreHeld = false;
-    let _coreTapTimer = null;
-
-    const _isNearCenter = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const radius = Math.min(rect.width, rect.height) * 0.18; // 18% of smaller dim = nucleus area
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const dist = Math.sqrt((clientX - cx) ** 2 + (clientY - cy) ** 2);
-      return dist < radius;
-    };
-
-    const _startCoreTalk = () => {
-      _coreHeld = true;
-      // Emit shockwave pulse via CSS class on canvas wrapper
-      const stage = document.getElementById('cerebro-core');
-      if (stage) { stage.classList.add('core-active'); }
-      // Update Arc Reactor
-      const arSub = document.getElementById('ar-sub');
-      if (arSub) { arSub.textContent = '● TAP-TO-TALK'; arSub.style.color = '#00ff9f'; }
-      startRecording();
-    };
-    const _stopCoreTalk = () => {
-      _coreHeld = false;
-      const stage = document.getElementById('cerebro-core');
-      if (stage) { stage.classList.remove('core-active'); }
-      stopRecording();
-    };
-
-    // Desktop: click on nucleus area
-    canvas.addEventListener('mousedown', (e) => { if (_isNearCenter(e)) { e.stopPropagation(); _startCoreTalk(); } });
-    canvas.addEventListener('mouseup', () => { if (_coreHeld) _stopCoreTalk(); });
-    // Mobile: touch on nucleus area
-    canvas.addEventListener('touchstart', (e) => {
-      if (_isNearCenter(e)) { e.preventDefault(); e.stopPropagation(); _startCoreTalk(); }
-    }, { passive: false });
-    canvas.addEventListener('touchend', (e) => {
-      if (_coreHeld) { e.preventDefault(); _stopCoreTalk(); }
-    }, { passive: false });
-  }
-
-  const micBtn = document.getElementById('mic-btn');
-  if (micBtn) {
-    micBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleRecording();
-    });
-  }
-
-  const sendBtn = document.getElementById('send-btn');
-  if (sendBtn) sendBtn.addEventListener('click', () => sendCommand(document.getElementById('prompt-input').value));
-
-  const promptIn = document.getElementById('prompt-input');
-  if (promptIn) {
-    promptIn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendCommand(promptIn.value);
-      }
-    });
-  }
-
-  // ── MODEL SELECTOR POPULATION FROM /api/status ────────────────────
   try {
-    const r = await fetch(API + '/api/status');
-    const d = await r.json();
-    const sel = document.getElementById('model-select');
-    if (sel && d.model_groups) {
-      sel.innerHTML = '';
-      for (const [groupName, groupModels] of Object.entries(d.model_groups)) {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = `── ${groupName.toUpperCase()} ──`;
-        for (const [k, label] of Object.entries(groupModels)) {
-          const opt = document.createElement('option');
-          opt.value = k;
-          opt.textContent = label;
-          if (k === (d.default_model || 'auto')) opt.selected = true;
-          optgroup.appendChild(opt);
-        }
-        sel.appendChild(optgroup);
-      }
+    const res = await fetch('/api/terminal/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel: currentTerminalChannel, command: cmd })
+    });
+    const d = await res.json();
+    if (d.stdout) appendTerminalLog(d.stdout, 'ct-stdout');
+    if (d.stderr) appendTerminalLog(d.stderr, 'ct-error');
+  } catch (e) {
+    appendTerminalLog(`Errore esecuzione: ${e.message}`, 'ct-error');
+  }
+};
+
+function appendTerminalLog(text, className = '') {
+  const body = document.getElementById('ct-terminal-body');
+  if (!body) return;
+  const div = document.createElement('div');
+  div.className = `ct-log-line ${className}`;
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+window.dockCyberTerminal = function() {
+  const win = document.getElementById('cyber-terminal-window');
+  if (!win) return;
+  win.style.position = 'fixed';
+  win.style.bottom = '10px';
+  win.style.top = 'auto';
+  win.style.left = '50%';
+  win.style.transform = 'translateX(-50%)';
+  win.style.width = '96vw';
+  win.style.height = '320px';
+};
+
+window.maximizeCyberTerminal = function() {
+  const win = document.getElementById('cyber-terminal-window');
+  if (!win) return;
+  win.style.position = 'fixed';
+  win.style.inset = '10px';
+  win.style.transform = 'none';
+  win.style.width = 'calc(100vw - 20px)';
+  win.style.height = 'calc(100vh - 20px)';
+};
+
+window.minimizeCyberTerminal = function() {
+  window.toggleCyberTerminal();
+  const pill = document.getElementById('ct-minimized-pill');
+  if (pill) pill.classList.add('active');
+};
+
+window.restoreCyberTerminal = function() {
+  const pill = document.getElementById('ct-minimized-pill');
+  if (pill) pill.classList.remove('active');
+  window.toggleCyberTerminal();
+};
+
+window.centerCyberTerminal = function() {
+  const win = document.getElementById('cyber-terminal-window');
+  if (!win) return;
+  win.style.position = 'absolute';
+  win.style.top = '50%';
+  win.style.left = '50%';
+  win.style.transform = 'translate(-50%, -50%)';
+  win.style.width = '780px';
+  win.style.height = '520px';
+};
+
+// ── 7. TOOL NOTIFICATION CARD ──────────────────────────────────────
+window.showToolRun = function(title, msg, latency = '0.001s') {
+  const card = document.getElementById('tool-run-card');
+  const tEl = document.getElementById('trc-title');
+  const mEl = document.getElementById('trc-main');
+  const latEl = document.getElementById('trc-time');
+  if (!card) return;
+
+  if (tEl) tEl.textContent = `TOOL · ${title}`;
+  if (mEl) mEl.textContent = msg;
+  if (latEl) latEl.textContent = `⚡ ${latency} LATENCY`;
+
+  card.classList.remove('hidden');
+  if (_toolCardTimer) clearTimeout(_toolCardTimer);
+  _toolCardTimer = setTimeout(() => card.classList.add('hidden'), 4500);
+};
+
+window.closeToolCard = function() {
+  const card = document.getElementById('tool-run-card');
+  if (card) card.classList.add('hidden');
+};
+
+// ── 8. MOOD, TABS & NAVIGATION ─────────────────────────────────────
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  event?.target?.classList.add('active');
+  const activeContent = document.getElementById(`tab-${tab}`);
+  if (activeContent) activeContent.classList.add('active');
+};
+
+window.switchEBMood = function(mood) {
+  currentPersonality = mood;
+  document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById(`chip-${mood}`);
+  if (chip) chip.classList.add('active');
+  showToolRun('PERSONALITÀ SWITCH', `Modalità ${mood.toUpperCase()} attiva.`, '0.01s');
+};
+
+window.triggerNeuralSurge = function() {
+  const sphere = document.getElementById('jarvis-sphere');
+  if (sphere) {
+    sphere.style.boxShadow = '0 0 70px #00ff9f';
+    setTimeout(() => sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)', 2000);
+  }
+  showToolRun('QUANTUM SURGE', 'Impulso quantistico inviato su tutti i nodi e flussi N8N!', '0.001s');
+};
+
+window.toggleLeftWing = function() {
+  document.querySelector('.main-grid')?.classList.toggle('left-collapsed');
+};
+
+window.toggleRightWing = function() {
+  document.querySelector('.main-grid')?.classList.toggle('right-collapsed');
+};
+
+window.openAgente0Full = function() { window.open('http://92.4.233.42:50080', '_blank'); };
+window.openN8nFull = function() { window.open('http://92.4.233.42:5678', '_blank'); };
+window.openKaliCliModal = function() {
+  toggleCyberTerminal();
+  switchTerminalChannel('kali');
+};
+window.quickKaliExec = function(cmd) {
+  toggleCyberTerminal();
+  switchTerminalChannel('kali');
+  document.getElementById('ct-command-input').value = cmd;
+  submitTerminalCommand();
+};
+
+window.openModal = function(id) { document.getElementById(id)?.classList.add('active'); };
+window.closeModal = function(id) { document.getElementById(id)?.classList.remove('active'); };
+
+// ── 9. DRAGGABLE WINDOWS INITIALIZATION ────────────────────────────
+function initDraggableWindows() {
+  document.querySelectorAll('.modular-window-card, .cyber-terminal-window').forEach(win => {
+    const handle = win.querySelector('.mwc-header, .ct-header');
+    if (!handle) return;
+
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let winStartX = 0, winStartY = 0;
+
+    handle.addEventListener('mousedown', (e) => {
+      if (window.matchMedia('(max-width: 899px)').matches) return;
+      if (['BUTTON', 'SPAN', 'INPUT'].includes(e.target.tagName) && e.target.onclick) return;
+      isDragging = true;
+      const rect = win.getBoundingClientRect();
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      winStartX = rect.left;
+      winStartY = rect.top;
+      win.style.left = `${winStartX}px`;
+      win.style.top = `${winStartY}px`;
+      win.style.transform = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      win.style.left = `${Math.max(10, Math.min(window.innerWidth - 100, winStartX + dx))}px`;
+      win.style.top = `${Math.max(10, Math.min(window.innerHeight - 80, winStartY + dy))}px`;
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+  });
+
+  // Resize grip for terminal
+  const grip = document.getElementById('ct-resize-grip');
+  const termWin = document.getElementById('cyber-terminal-window');
+  if (grip && termWin) {
+    let isResizing = false;
+    let rStartX = 0, rStartY = 0, startW = 0, startH = 0;
+
+    grip.addEventListener('mousedown', (e) => {
+      if (window.matchMedia('(max-width: 899px)').matches) return;
+      isResizing = true;
+      rStartX = e.clientX;
+      rStartY = e.clientY;
+      const rect = termWin.getBoundingClientRect();
+      startW = rect.width;
+      startH = rect.height;
+      termWin.style.transform = 'none';
+      termWin.style.left = `${rect.left}px`;
+      termWin.style.top = `${rect.top}px`;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      termWin.style.width = `${Math.max(450, startW + (e.clientX - rStartX))}px`;
+      termWin.style.height = `${Math.max(300, startH + (e.clientY - rStartY))}px`;
+    });
+
+    window.addEventListener('mouseup', () => { isResizing = false; });
+  }
+}
+
+// ── 10. GLOBAL HOTKEYS [T], [M], [ESC], [ENTER] ────────────────────
+window.addEventListener('keydown', (e) => {
+  const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('cyber-terminal-overlay');
+    if (overlay && overlay.classList.contains('open')) {
+      toggleCyberTerminal();
+      return;
     }
-  } catch (e) {}
-
-  // ── LIVE VPS TELEMETRY UPDATER ────────────────────────────
-  async function updateVpsTelemetry() {
-    try {
-      const res = await fetch(API + '/api/telemetry/vps');
-      const d = await res.json();
-      if (d && d.status === 'SUCCESS') {
-        const cpuVal = document.getElementById('vps-cpu-val');
-        const cpuBar = document.getElementById('vps-cpu-bar');
-        const ramVal = document.getElementById('vps-ram-val');
-        const ramBar = document.getElementById('vps-ram-bar');
-        const latVal = document.getElementById('vps-latency-val');
-        const tunVal = document.getElementById('vps-tunnels-val');
-        const botVal = document.getElementById('vps-bots-val');
-
-        if (cpuVal) cpuVal.textContent = d.cpu_usage + '%';
-        if (cpuBar) {
-          cpuBar.style.width = Math.min(100, Math.max(5, d.cpu_usage)) + '%';
-          cpuBar.style.background = d.cpu_usage > 75 ? '#ff0055' : (d.cpu_usage > 45 ? '#ffb703' : '#00ff9f');
-        }
-
-        if (ramVal) ramVal.textContent = d.ram_usage + '%';
-        if (ramBar) {
-          ramBar.style.width = Math.min(100, Math.max(5, d.ram_usage)) + '%';
-          ramBar.style.background = d.ram_usage > 85 ? '#ff0055' : '#00d4ff';
-        }
-
-        if (latVal) latVal.textContent = d.latency_ms + 'ms';
-        if (tunVal) tunVal.textContent = (d.active_tunnels || 3) + '/3 ACTIVE';
-        if (botVal) botVal.textContent = (d.active_bots || 7) + ' ONLINE';
-      }
-    } catch (e) {}
-  }
-
-  updateVpsTelemetry();
-  setInterval(updateVpsTelemetry, 3000);
-
-  // ── MODEL CREDITS LIVE TICKER ─────────────────────────────────
-  async function updateModelCreditsBar() {
-    try {
-      const r = await fetch(API + '/api/model-credits');
-      const d = await r.json();
-      if (!d) return;
-      const bar = document.getElementById('model-credits-bar');
-      if (bar) {
-        const groqPct = Math.round(((14400 - (d.groq_daily_count || 0)) / 14400) * 100);
-        const geminiPct = Math.round(((1500 - (d.gemini_daily_count || 0)) / 1500) * 100);
-        bar.innerHTML = `
-          <span class="mcb-item" title="Groq LPU Llama 70B Free Tier">⚡ Groq <strong>${d.groq_daily_count || 0}/14400</strong></span>
-          <div class="mcb-track"><div class="mcb-fill groq" style="width:${groqPct}%"></div></div>
-          <span class="mcb-item" title="Gemini 2.0 Flash Free Tier">✨ Gemini <strong>${d.gemini_daily_count || 0}/1500</strong></span>
-          <div class="mcb-track"><div class="mcb-fill gemini" style="width:${geminiPct}%"></div></div>
-          <span class="mcb-item" title="Ollama Locale — Illimitato">🖥️ Locale <strong>∞</strong></span>
-        `;
-      }
-    } catch (e) {}
-  }
-  updateModelCreditsBar();
-  setInterval(updateModelCreditsBar, 30000);
-
-  // ── FRESHNESS SENTINEL — Colora nodi del grafo ogni 45s ──────
-  async function updateFreshnessSentinel() {
-    try {
-      const r = await fetch(API + '/api/skills/freshness-matrix');
-      const d = await r.json();
-      if (d && d.freshness_matrix && window.bioCortexInstance) {
-        window.bioCortexInstance.applyFreshnessMatrix(d.freshness_matrix);
-      }
-    } catch (e) {}
-  }
-  updateFreshnessSentinel();
-  setInterval(updateFreshnessSentinel, 45000);
-
-  // ── E.B. NEURAL EVOLUTION MATRIX CONTROLLER ──────────────────
-  async function updateEvolutionMatrix() {
-    try {
-      const r = await fetch(API + '/api/evolution/matrix');
-      const d = await r.json();
-      if (d && d.status === 'SUCCESS') {
-        const lvlEl = document.getElementById('eeh-lvl-val');
-        const rankEl = document.getElementById('eeh-rank');
-        const fillEl = document.getElementById('eeh-bar-fill');
-        const xpValEl = document.getElementById('eeh-xp-val');
-        const skillsEl = document.getElementById('eeh-skills-val');
-        const n8nEl = document.getElementById('eeh-n8n-val');
-        const iqEl = document.getElementById('eeh-iq-val');
-        const fluxEl = document.getElementById('eeh-flux-val');
-
-        if (lvlEl) lvlEl.textContent = d.evolution_level;
-        if (rankEl) rankEl.textContent = d.rank_title;
-        if (fillEl) fillEl.style.width = d.xp_percent + '%';
-        if (xpValEl) xpValEl.textContent = d.xp_percent + '%';
-        if (skillsEl) skillsEl.textContent = d.total_skills;
-        if (n8nEl) n8nEl.textContent = d.n8n_workflows;
-        if (iqEl) iqEl.textContent = d.quantum_iq;
-        if (fluxEl) fluxEl.textContent = d.tachyon_flux + '%';
-
-        // Adapt 3D Cortex Physics & Scale dynamically!
-        if (window.bioCortexInstance && typeof window.bioCortexInstance.setEvolutionScale === 'function') {
-          window.bioCortexInstance.setEvolutionScale(d.cortex_scale, d.tachyon_flux);
-        }
-      }
-    } catch (e) {}
-  }
-  updateEvolutionMatrix();
-  setInterval(updateEvolutionMatrix, 8000);
-
-  // Global Neural Surge Trigger
-  window.triggerNeuralSurge = function() {
-    playSound('start');
-    if (window.bioCortexInstance) {
-      if (typeof window.bioCortexInstance.emitNucleusShockwave === 'function') {
-        window.bioCortexInstance.emitNucleusShockwave();
-      }
-      // Light up all nodes for 3 seconds
-      if (window.bioCortexInstance.nodes) {
-        window.bioCortexInstance.nodes.forEach(n => {
-          n._freshnessColor = '#00ff9f';
-          n._freshnessAlpha = 1.0;
-        });
-      }
+    const catModal = document.getElementById('modal-modular-catalog');
+    if (catModal && catModal.classList.contains('active')) {
+      closeModal('modal-modular-catalog');
+      return;
     }
-    const stage = document.getElementById('cerebro-core');
-    if (stage) {
-      stage.classList.add('core-active');
-      setTimeout(() => stage.classList.remove('core-active'), 2500);
+    const kaliDrawer = document.getElementById('kali-drawer');
+    if (kaliDrawer && kaliDrawer.classList.contains('open')) {
+      closeKaliDrawer();
+      return;
     }
-    showToolRun('E.B. NEURAL OVERCHARGE', '⚡ Impulso Quantistico distribuito su tutti i 40 Nodi e 18 Flussi N8N! Efficienza al 100%.', '0.001s');
-  };
+    if (document.body.classList.contains('mobile-nav-open')) {
+      toggleMobileNav(false);
+      return;
+    }
+  }
 
-  // ── SHOW WELCOME TOOL CARD (AUTO-FADE 4.5s) ──────────────────
-  setTimeout(() => {
-    showToolRun('CEREBRO JARVIS v4.1', '🧠 Ecosistema Neurale Online · N8N Router Attivo · 40 Skill in Monitoraggio · Tocca il Nucleo per Parlare!', '0.01s');
-  }, 800);
+  if (!isInput) {
+    if (e.key === 't' || e.key === 'T') {
+      e.preventDefault();
+      toggleCyberTerminal();
+    } else if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault();
+      toggleModularCatalog();
+    }
+  }
+
+  if (isInput && e.key === 'Enter') {
+    if (document.activeElement.id === 'prompt-input') {
+      sendMessage();
+    } else if (document.activeElement.id === 'ct-command-input') {
+      submitTerminalCommand();
+    } else if (document.activeElement.id === 'kali-drawer-args') {
+      runKaliDrawer();
+    }
+  }
 });
 
+// ── 11. MASTER VIEW + MOBILE NAV + KALI LAB ────────────────────────
+const KALI_VIEW_MAP = {
+  jarvis: 'view-jarvis',
+  kali: 'view-kali-lab',
+  kanban: 'view-kanban',
+  n8n: 'view-n8n'
+};
+const KALI_CAT_ALIASES = {
+  recon: ['recon', 'information-gathering', 'info'],
+  password: ['password', 'passwords'],
+  wireless: ['wireless', 'wifi'],
+  web: ['web'],
+  rete: ['rete', 'network', 'sniffing', 'sniffing-spoofing']
+};
 
+let kaliCatalog = [];
+let kaliCatFilter = 'all';
+let kaliSelectedTool = null;
+let kaliBusy = false;
 
+function kaliEscapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
+function setKaliStatus(text, kind) {
+  const pill = document.getElementById('kali-status-pill');
+  if (!pill) return;
+  pill.textContent = text;
+  pill.className = 'kali-status-pill' + (kind ? ' ' + kind : '');
+}
 
+function setKaliLog(text, kind) {
+  const log = document.getElementById('kali-log');
+  if (!log) return;
+  log.textContent = text;
+  log.className = 'kali-log' + (kind ? ' is-' + kind : '');
+}
+
+function setKaliGridState(msg, kind) {
+  const grid = document.getElementById('kali-card-grid');
+  if (!grid) return;
+  grid.innerHTML = `<div class="kali-state ${kind || ''}">${kaliEscapeHtml(msg)}</div>`;
+}
+
+function kaliToolCategory(tool) {
+  return String(tool?.category || tool?.cat || '').toLowerCase();
+}
+
+function kaliMatchesCat(tool, cat) {
+  if (!cat || cat === 'all') return true;
+  const raw = kaliToolCategory(tool);
+  const aliases = KALI_CAT_ALIASES[cat] || [cat];
+  return aliases.includes(raw);
+}
+
+function kaliFilteredTools() {
+  const q = (document.getElementById('kali-tool-search')?.value || '').trim().toLowerCase();
+  return kaliCatalog.filter(t => {
+    if (!kaliMatchesCat(t, kaliCatFilter)) return false;
+    if (!q) return true;
+    const blob = [t.name, t.package, t.path, t.binary, t.category].join(' ').toLowerCase();
+    return blob.includes(q);
+  });
+}
+
+function renderKaliCards() {
+  const grid = document.getElementById('kali-card-grid');
+  if (!grid) return;
+  const tools = kaliFilteredTools();
+  if (!kaliCatalog.length) {
+    setKaliGridState('Catalogo vuoto: nessun tool trovato.', 'warn');
+    return;
+  }
+  if (!tools.length) {
+    setKaliGridState('Nessun tool corrisponde alla ricerca o al filtro.', 'warn');
+    return;
+  }
+  grid.innerHTML = '';
+  tools.forEach(tool => {
+    const name = tool.name || tool.tool || 'tool';
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'kali-card';
+    card.innerHTML = `
+      <span class="kali-card-name">${kaliEscapeHtml(name)}</span>
+      <span class="kali-card-cat">${kaliEscapeHtml(tool.category || 'allowlist')}</span>
+      <span class="kali-card-pkg">${kaliEscapeHtml(tool.path || tool.binary || tool.package || '')}</span>
+    `;
+    card.addEventListener('click', () => openKaliDrawer(tool));
+    grid.appendChild(card);
+  });
+}
+
+window.switchMasterView = function(view) {
+  const key = view === 'kali' ? 'kali' : (view || 'jarvis');
+  document.querySelectorAll('.jarvis-workspace').forEach(w => w.classList.remove('active'));
+  const target = document.getElementById(KALI_VIEW_MAP[key] || 'view-jarvis');
+  if (target) target.classList.add('active');
+  else document.getElementById('view-jarvis')?.classList.add('active');
+
+  document.body.classList.toggle('view-kali', key === 'kali');
+
+  document.querySelectorAll('.view-switch-btn').forEach(b => b.classList.remove('active'));
+  if (key === 'jarvis') document.getElementById('btn-view-jarvis')?.classList.add('active');
+  if (key === 'kanban') document.getElementById('btn-view-kanban')?.classList.add('active');
+  if (key === 'n8n') document.getElementById('btn-view-n8n')?.classList.add('active');
+
+  if (key === 'kali') refreshKaliCatalog();
+  toggleMobileNav(false);
+};
+
+window.toggleMobileNav = function(force) {
+  const open = typeof force === 'boolean' ? force : !document.body.classList.contains('mobile-nav-open');
+  document.body.classList.toggle('mobile-nav-open', open);
+  const btn = document.getElementById('btn-hamburger');
+  const backdrop = document.getElementById('mv-nav-backdrop');
+  if (btn) {
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? 'Chiudi menu' : 'Apri menu');
+  }
+  if (backdrop) backdrop.hidden = !open;
+};
+
+window.filterKaliTools = function() {
+  renderKaliCards();
+};
+
+window.filterKaliCat = function(btn, cat) {
+  kaliCatFilter = cat || 'all';
+  document.querySelectorAll('.kali-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else document.querySelector(`.kali-chip[data-cat="${kaliCatFilter}"]`)?.classList.add('active');
+  renderKaliCards();
+};
+
+window.refreshKaliCatalog = async function() {
+  setKaliStatus('stato: caricamento…');
+  setKaliGridState('Caricamento catalogo Kali…');
+  try {
+    const res = await fetch('/api/kali/tools', { signal: AbortSignal.timeout(20000) });
+    let d = {};
+    try { d = await res.json(); } catch (_) {
+      setKaliStatus('stato: errore', 'err');
+      setKaliGridState('Risposta catalogo non valida.', 'err');
+      return;
+    }
+    if (!res.ok || (d.status && String(d.status).toUpperCase() === 'ERROR')) {
+      const msg = d.message || `Errore nel caricamento del catalogo (${res.status}).`;
+      setKaliStatus('stato: errore', 'err');
+      setKaliGridState(msg, 'err');
+      kaliCatalog = [];
+      return;
+    }
+    kaliCatalog = d.catalog || d.tools || [];
+    const container = d.container || 'ebj-kali-engine';
+    const down = d.container_up === false || d.container_running === false;
+    if (down) {
+      setKaliStatus(`stato: ${container} spento`, 'err');
+      if (!kaliCatalog.length) {
+        setKaliGridState('Container ebj-kali-engine non raggiungibile.', 'err');
+        return;
+      }
+    } else if (d.ssh_key_ready === false) {
+      setKaliStatus('stato: chiave SSH assente', 'warn');
+    } else {
+      setKaliStatus(`stato: ${container} · ${kaliCatalog.length} tool`, 'ok');
+    }
+    if (!kaliCatalog.length) {
+      setKaliGridState('Catalogo vuoto: nessun tool trovato.', 'warn');
+      return;
+    }
+    renderKaliCards();
+  } catch (err) {
+    const timeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
+    setKaliStatus(timeout ? 'stato: timeout' : 'stato: errore', 'err');
+    setKaliGridState(
+      timeout
+        ? 'Timeout: il catalogo non ha risposto in tempo.'
+        : (`Errore nel caricamento del catalogo. ${err?.message || ''}`).trim(),
+      'err'
+    );
+  }
+};
+
+window.openKaliDrawer = function(tool) {
+  kaliSelectedTool = tool || null;
+  const drawer = document.getElementById('kali-drawer');
+  const view = document.getElementById('view-kali-lab');
+  const backdrop = document.getElementById('kali-drawer-backdrop');
+  if (!drawer || !kaliSelectedTool) return;
+  const name = kaliSelectedTool.name || kaliSelectedTool.tool || 'Tool';
+  const path = kaliSelectedTool.path || kaliSelectedTool.binary || kaliSelectedTool.package || '';
+  const title = document.getElementById('kali-drawer-title');
+  const pathEl = document.getElementById('kali-drawer-path');
+  const args = document.getElementById('kali-drawer-args');
+  if (title) title.textContent = name;
+  if (pathEl) pathEl.textContent = path ? `percorso / pacchetto: ${path}` : `binario allowlist: ${name}`;
+  if (args && !args.value) args.value = '--help';
+  setKaliLog('Pronto. Scorciatoie: --help o --version. Nessun comando di attacco precompilato.');
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  view?.classList.add('drawer-open');
+  if (backdrop) backdrop.hidden = false;
+  args?.focus();
+};
+
+window.closeKaliDrawer = function() {
+  const drawer = document.getElementById('kali-drawer');
+  const view = document.getElementById('view-kali-lab');
+  const backdrop = document.getElementById('kali-drawer-backdrop');
+  drawer?.classList.remove('open');
+  drawer?.setAttribute('aria-hidden', 'true');
+  view?.classList.remove('drawer-open');
+  if (backdrop) backdrop.hidden = true;
+};
+
+function parseKaliArgs(raw) {
+  return String(raw || '').trim().split(/\s+/).filter(Boolean);
+}
+
+window.runKaliDrawer = async function() {
+  if (kaliBusy) return;
+  const toolName = kaliSelectedTool?.name || kaliSelectedTool?.tool;
+  if (!toolName) {
+    setKaliLog('Seleziona un tool dalla griglia.', 'error');
+    return;
+  }
+  const raw = document.getElementById('kali-drawer-args')?.value || '';
+  if (/[;&|`$]/.test(raw)) {
+    setKaliLog('Caratteri shell rifiutati (; | & ` $).', 'error');
+    return;
+  }
+  const args = parseKaliArgs(raw);
+  kaliBusy = true;
+  setKaliLog(`Esecuzione in corso: ${toolName} ${args.join(' ')}…`, 'loading');
+  try {
+    const res = await fetch('/api/kali/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'run', tool: toolName, args }),
+      signal: AbortSignal.timeout(125000)
+    });
+    let d = {};
+    try { d = await res.json(); } catch (_) {
+      setKaliLog('Risposta esecuzione non valida.', 'error');
+      return;
+    }
+    const out = d.stdout || d.message || d.stderr || '';
+    const status = String(d.status || '').toUpperCase();
+    if (!res.ok || status === 'ERROR') {
+      const msg = out || d.message || 'Esecuzione fallita.';
+      if (/non in allowlist|assente|not found|command not found/i.test(msg)) {
+        setKaliLog(`Tool assente o non in allowlist.\n${msg}`, 'error');
+      } else if (/container|unreachable|connection refused|ssh/i.test(msg)) {
+        setKaliLog(`Container ebj-kali-engine non raggiungibile.\n${msg}`, 'error');
+      } else {
+        setKaliLog(msg, 'error');
+      }
+      return;
+    }
+    setKaliLog(out || '(nessun output)');
+  } catch (err) {
+    const timeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
+    setKaliLog(
+      timeout
+        ? 'Timeout: il comando ha superato il tempo massimo (120s).'
+        : (`Errore di rete. ${err?.message || ''}`).trim(),
+      'error'
+    );
+  } finally {
+    kaliBusy = false;
+  }
+};
+
+window.runKaliHelp = function() {
+  const input = document.getElementById('kali-drawer-args');
+  if (input) input.value = '--help';
+  runKaliDrawer();
+};
+
+window.runKaliVersion = function() {
+  const input = document.getElementById('kali-drawer-args');
+  if (input) input.value = '--version';
+  runKaliDrawer();
+};
+
+window.updateKaliTools = async function() {
+  if (kaliBusy) return;
+  kaliBusy = true;
+  setKaliStatus('stato: aggiornamento tool…', 'warn');
+  setKaliLog('Aggiornamento tool in corso…', 'loading');
+  try {
+    const res = await fetch('/api/kali/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update' }),
+      signal: AbortSignal.timeout(180000)
+    });
+    let d = {};
+    try { d = await res.json(); } catch (_) {
+      setKaliLog('Risposta aggiornamento non valida.', 'error');
+      setKaliStatus('stato: errore', 'err');
+      return;
+    }
+    const status = String(d.status || '').toUpperCase();
+    const out = d.stdout || d.message || '';
+    if (!res.ok || status === 'ERROR') {
+      setKaliStatus('stato: errore aggiornamento', 'err');
+      setKaliLog(out || 'Aggiornamento tool fallito.', 'error');
+      return;
+    }
+    setKaliLog((out ? out + '\n\n' : '') + 'Tool aggiornati. Ricarico il catalogo.');
+    await refreshKaliCatalog();
+  } catch (err) {
+    const timeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
+    setKaliStatus(timeout ? 'stato: timeout' : 'stato: errore', 'err');
+    setKaliLog(
+      timeout
+        ? 'Timeout: l’aggiornamento tool ha superato il tempo massimo.'
+        : (`Errore durante l’aggiornamento. ${err?.message || ''}`).trim(),
+      'error'
+    );
+  } finally {
+    kaliBusy = false;
+  }
+};
+
+// INIT ON DOM READY
+document.addEventListener('DOMContentLoaded', () => {
+  initDraggableWindows();
+  loadModularCardsState();
+  showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
+});

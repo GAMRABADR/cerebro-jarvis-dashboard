@@ -1,0 +1,14 @@
+{
+  "id": "fleet_gps_eta_dispatcher",
+  "name": "Fleet GPS & ETA Closer",
+  "category": "LOGISTICS_TELEMETRY",
+  "icon": "\ud83d\ude9a",
+  "triggers": [
+    "eta",
+    "furgone in viaggio",
+    "traccia furgone",
+    "gps furgoni"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

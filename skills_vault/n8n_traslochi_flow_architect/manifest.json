@@ -1,0 +1,26 @@
+{
+  "name": "N8N Traslochi Complete Funnel & Contract Generator",
+  "id": "n8n_traslochi_flow_architect",
+  "category": "LOGISTICS_AUTOMATION",
+  "description": "Funnel automatico per intake preventivi trasloco, calcolo tariffe, generazione riepilogo/contratto formale con timbro EBGStudio / Pietro Traslochi e notifica Telegram immediata.",
+  "version": "3.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "client_name",
+    "phone",
+    "email",
+    "mq",
+    "piano_p",
+    "piano_a",
+    "ascensore",
+    "data_trasloco",
+    "citta"
+  ],
+  "outputs": [
+    "status",
+    "codice_pratica",
+    "preventivo_totale",
+    "contratto_generato",
+    "telegram_dispatched"
+  ]
+}

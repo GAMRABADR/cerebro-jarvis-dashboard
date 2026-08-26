@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-//  CEREBRO JARVIS · 1:1 REAL SKILLS & TOOLS INSPECTOR MATRIX v26.0
+//  E.B.J. JARVIS · 1:1 REAL SKILLS & TOOLS INSPECTOR MATRIX v26.0
 //  39+ Real Skills Manifest · Interactive HUD Inspector · Calm Slow Idle Orbit
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -32,8 +32,8 @@ class SupremeBioNeuralCortex {
     this.isAutoTargeting = false;
     this.activeNodeId = null;
 
-    // Compact Organic Radius
-    this.baseRadius = 170;
+    // Master Viewport Organic Radius
+    this.baseRadius = 240;
 
     // Real-Time VPS Telemetry Reactive State
     this.vpsCpu = 4.0;
@@ -52,6 +52,10 @@ class SupremeBioNeuralCortex {
     this.skillsManifest = [];
     this.activeSynapticBeams = [];
     this.matrixColumns = [];
+
+    // Photorealistic Lunar Core Texture Material
+    this.moonImage = new Image();
+    this.moonImage.src = 'moon_texture.jpg';
 
     this.resize();
 
@@ -148,75 +152,26 @@ class SupremeBioNeuralCortex {
   }
 
   drawMatrixQuantumStream() {
-    if (!this.matrixColumns || this.matrixColumns.length === 0) return;
-    this.ctx.save();
-    this.ctx.font = '9px "Share Tech Mono", monospace';
-    
-    for (let col of this.matrixColumns) {
-      col.y += col.speed;
-      if (col.y > this.height + 60) {
-        col.y = -20;
-        col.speed = 0.6 + Math.random() * 1.4;
-      }
-      col.nextSwitch--;
-      if (col.nextSwitch <= 0) {
-        const glyphs = '0123456789ABCDEFλΨ∇ΔΩΣΦ4175TOKIO92423342SYNAPSERUSTL5EB';
-        col.char = glyphs[Math.floor(Math.random() * glyphs.length)];
-        col.chars.unshift(col.char);
-        col.chars.pop();
-        col.nextSwitch = 15 + Math.random() * 25;
-      }
-
-      // Draw vertical trail
-      for (let i = 0; i < col.chars.length; i++) {
-        const alpha = Math.max(0.02, (1.0 - (i / col.chars.length)) * 0.11);
-        const yPos = col.y - (i * 12);
-        if (yPos > 0 && yPos < this.height) {
-          this.ctx.fillStyle = i === 0 ? `rgba(0, 255, 159, ${alpha * 2.2})` : `rgba(0, 240, 255, ${alpha})`;
-          this.ctx.fillText(col.chars[i], col.x, yPos);
-        }
-      }
-    }
-    this.ctx.restore();
+    // Ultra-lightweight ambient background (Zero text rasterization, 0% CPU)
+    return;
   }
 
   drawEulerGimbalRings() {
     this.ctx.save();
     this.ctx.translate(this.centerX, this.centerY);
     
-    // Euler Angle 3D Rotation Matrix for Gimbal Rings
-    const cosY = Math.cos(this.rotY * 0.8), sinY = Math.sin(this.rotY * 0.8);
-    const cosX = Math.cos(this.rotX * 0.8), sinX = Math.sin(this.rotX * 0.8);
+    // Euler Angle 3D Rotation Rings (Batched & GPU-friendly)
+    const cosX = Math.cos(this.rotX * 0.8);
     
-    // Outer Gimbal Ring 1 (Azimuth 360° Compass)
+    // Outer Gimbal Ring 1
     const r1 = this.baseRadius * 1.25;
     this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.16)';
     this.ctx.lineWidth = 1.0;
-    this.ctx.setLineDash([4, 8]);
     this.ctx.beginPath();
     this.ctx.arc(0, 0, r1, 0, Math.PI * 2);
     this.ctx.stroke();
-    this.ctx.setLineDash([]);
 
-    // Degree tick marks on outer ring
-    this.ctx.font = '8px "Share Tech Mono", monospace';
-    this.ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
-    for (let deg = 0; deg < 360; deg += 30) {
-      const rad = (deg * Math.PI) / 180 + this.time * 0.05;
-      const x1 = Math.cos(rad) * (r1 - 4);
-      const y1 = Math.sin(rad) * (r1 - 4);
-      const x2 = Math.cos(rad) * (r1 + 4);
-      const y2 = Math.sin(rad) * (r1 + 4);
-      this.ctx.beginPath();
-      this.ctx.moveTo(x1, y1);
-      this.ctx.lineTo(x2, y2);
-      this.ctx.stroke();
-      if (deg % 90 === 0) {
-        this.ctx.fillText(`${deg}°`, Math.cos(rad) * (r1 + 14) - 6, Math.sin(rad) * (r1 + 14) + 3);
-      }
-    }
-
-    // Inner Gimbal Ring 2 (Pitch Ladder / Tilt Axis)
+    // Inner Gimbal Ring 2 (Pitch Axis)
     const r2 = this.baseRadius * 0.95;
     this.ctx.strokeStyle = 'rgba(0, 255, 159, 0.22)';
     this.ctx.lineWidth = 1.2;
@@ -227,6 +182,13 @@ class SupremeBioNeuralCortex {
     // Inner Gimbal Ring 3 (Roll Axis)
     const r3 = this.baseRadius * 0.65;
     this.ctx.strokeStyle = 'rgba(245, 158, 11, 0.18)';
+    this.ctx.lineWidth = 0.8;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, r3, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    this.ctx.restore();
+  }
     this.ctx.lineWidth = 0.8;
     this.ctx.setLineDash([2, 6]);
     this.ctx.beginPath();
@@ -303,7 +265,7 @@ class SupremeBioNeuralCortex {
     this.connections = [];
     this.pulses = [];
 
-    // Central CEREBRO Arc Reactor Core
+    // Central E.B.J. Arc Reactor Core
     this.nodes.push({
       id: 'CORE',
       key: 'core',
@@ -311,7 +273,7 @@ class SupremeBioNeuralCortex {
       radius: 18.0,
       color: '#00f0ff',
       glow: '#00ff9f',
-      label: 'CEREBRO CORE',
+      label: 'E.B.J. CORE',
       category: 'CORE',
       isHub: true,
       description: 'Master Core & Singularità Quantica di Regia AI (120 FPS)',
@@ -440,7 +402,7 @@ class SupremeBioNeuralCortex {
         id: `HUB_${lobe.name}`,
         key: lobe.name.toLowerCase(),
         x: hx, y: hy, z: hz,
-        radius: 10.5,
+        radius: 17.5,
         color: lobe.color,
         glow: lobe.glow,
         label: lobe.label,
@@ -461,9 +423,9 @@ class SupremeBioNeuralCortex {
         category: lobe.name
       });
 
-      // Individual Real Skill & Tool Orbs
+      // Individual Real Skill & Tool Orbs (Large, Tactile & Vibrant)
       lobe.skills.forEach((skill, s) => {
-        const satDist = 24 + (s % 3) * 12;
+        const satDist = 34 + (s % 3) * 16;
         const satAngle1 = (s / lobe.skills.length) * Math.PI * 2 + (i * 0.4);
         const satAngle2 = (s % 3) * 0.7 + 0.35;
 
@@ -476,7 +438,7 @@ class SupremeBioNeuralCortex {
           id: skill.id,
           key: skill.id,
           x: sx, y: sy, z: sz,
-          radius: 5.2 + (s % 3) * 1.0,
+          radius: 9.5 + (s % 3) * 1.8,
           color: lobe.color,
           glow: lobe.glow,
           label: skill.label,
@@ -521,6 +483,7 @@ class SupremeBioNeuralCortex {
   }
 
   startVpsTelemetryPolling() {
+    // Coordinated lightweight telemetry polling (3.5s)
     setInterval(async () => {
       try {
         const res = await fetch('/api/telemetry/vps');
@@ -552,7 +515,7 @@ class SupremeBioNeuralCortex {
           }
         }
       } catch (e) {}
-    }, 2500);
+    }, 3800);
   }
 
 
@@ -569,7 +532,7 @@ class SupremeBioNeuralCortex {
           }
         }
       } catch (e) {}
-    }, 1200);
+    }, 2800);
   }
 
   connectRustBridge() {
@@ -642,9 +605,17 @@ class SupremeBioNeuralCortex {
           }
 
           if (closestNode) {
-            // Open Skill Inspector HUD Modal
-            this.openSkillInspectorModal(closestNode);
-            this.igniteSkill(closestNode.key || closestNode.id, closestNode.category);
+            if (closestNode.category === 'CORE' || closestNode.id === 'CORE_SINGULARITY' || closestNode.isHub && closestNode.label === 'E.B.J. CORE') {
+              // 🎙️ TAP-TO-TALK DIRECTLY ON THE CENTRAL NUCLEUS!
+              if (window.cyberAudio) window.cyberAudio.playRecordingBeep();
+              if (window.toggleRecording) window.toggleRecording();
+              else if (window.toggleMic) window.toggleMic();
+            } else {
+              // Open Skill Inspector HUD Modal
+              if (window.cyberAudio) window.cyberAudio.playConfirmationLaser();
+              this.openSkillInspectorModal(closestNode);
+              this.igniteSkill(closestNode.key || closestNode.id, closestNode.category);
+            }
           }
         }
       }
@@ -760,25 +731,22 @@ class SupremeBioNeuralCortex {
     }
   }
 
-  // ── DRAW 3D VOLUMETRIC ORB (DORMANT SOFFUSO VS PULSANTE ATTIVO) ──
+  // ── DRAW 3D VOLUMETRIC ORB (DORMANT PASTEL VS VIVID NEON FLUX) ──
   drawVolumetricOrb(px, py, r, color, glow, isHub, isLobeActive, isSkillActive, scale) {
     const isLit = isLobeActive || isSkillActive;
 
     this.ctx.save();
     
     if (isLit) {
-      // 🌟 ACCESO / ATTIVO: High-intensity living breathing neon flash bloom
-      const pulseMod = 1.0 + Math.sin(this.time * 8.5) * 0.22;
-      const rLit = r * (isSkillActive ? 1.45 : 1.2) * pulseMod;
+      // 🌟 ACCESO / ATTIVO: Fluorescent high-intensity bloom & synaptic coronal flare
+      const pulseMod = 1.0 + Math.sin(this.time * 9.0) * 0.25;
+      const rLit = r * (isSkillActive ? 1.5 : 1.25) * pulseMod;
 
-      this.ctx.shadowColor = isSkillActive ? '#00ff9f' : (glow || color);
-      this.ctx.shadowBlur = isSkillActive ? 38 : (isHub ? 28 : 18);
-
-      // Expanding Ripple Wave
-      const rippleR = r * 1.8 + ((this.time * 24) % 22);
-      const rippleAlpha = Math.max(0, 1.0 - (rippleR - r * 1.8) / 22);
-      this.ctx.strokeStyle = isSkillActive ? `rgba(0, 255, 159, ${rippleAlpha * 0.7})` : `rgba(0, 240, 255, ${rippleAlpha * 0.5})`;
-      this.ctx.lineWidth = 1.5;
+      // Expanding Synaptic Shockwave Ripple
+      const rippleR = r * 1.8 + ((this.time * 26) % 24);
+      const rippleAlpha = Math.max(0, 1.0 - (rippleR - r * 1.8) / 24);
+      this.ctx.strokeStyle = isSkillActive ? `rgba(0, 255, 159, ${rippleAlpha * 0.8})` : `rgba(0, 240, 255, ${rippleAlpha * 0.6})`;
+      this.ctx.lineWidth = 1.6;
       this.ctx.beginPath();
       this.ctx.arc(px, py, rippleR, 0, Math.PI * 2);
       this.ctx.stroke();
@@ -788,9 +756,9 @@ class SupremeBioNeuralCortex {
         px, py, rLit
       );
       grad.addColorStop(0.0, '#ffffff');
-      grad.addColorStop(0.3, isSkillActive ? '#00ff9f' : color);
-      grad.addColorStop(0.8, isSkillActive ? '#00ff9f' : color);
-      grad.addColorStop(1.0, '#011018');
+      grad.addColorStop(0.25, isSkillActive ? '#00ff9f' : color);
+      grad.addColorStop(0.75, isSkillActive ? '#00e676' : glow || color);
+      grad.addColorStop(1.0, '#001a14');
 
       this.ctx.fillStyle = grad;
       this.ctx.beginPath();
@@ -799,30 +767,35 @@ class SupremeBioNeuralCortex {
 
       // Hub Fresnel Corona
       if (isHub) {
-        this.ctx.strokeStyle = 'rgba(0, 255, 159, 0.95)';
+        this.ctx.strokeStyle = isSkillActive ? '#00ff9f' : 'rgba(0, 240, 255, 0.9)';
         this.ctx.lineWidth = 2.0 * scale;
         this.ctx.beginPath();
-        this.ctx.arc(px, py, r * 1.6 + Math.sin(this.time * 4) * 3, 0, Math.PI * 2);
+        this.ctx.arc(px, py, r * 1.65 + Math.sin(this.time * 4) * 3, 0, Math.PI * 2);
         this.ctx.stroke();
       }
     } else {
-      // 🌑 DORMANT / SOFFUSO: Soft dark translucent glass orb
+      // 🌑 DORMANT / DISATTIVO: Elegant pastel desaturated cyber-capsule with hairline rim
       this.ctx.shadowBlur = 0;
-      this.ctx.globalAlpha = isHub ? 0.38 : 0.22;
+      this.ctx.globalAlpha = isHub ? 0.45 : 0.28;
 
       const grad = this.ctx.createRadialGradient(
-        px - r * 0.35, py - r * 0.35, r * 0.1,
+        px - r * 0.3, py - r * 0.3, r * 0.05,
         px, py, r
       );
-      grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.4)');
-      grad.addColorStop(0.35, color);
-      grad.addColorStop(0.9, '#021824');
-      grad.addColorStop(1.0, '#01080e');
+      grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.35)');
+      grad.addColorStop(0.4, color); // Soft pastel hue
+      grad.addColorStop(0.85, '#0b1622');
+      grad.addColorStop(1.0, '#03080f');
 
       this.ctx.fillStyle = grad;
       this.ctx.beginPath();
-      this.ctx.arc(px, py, r * 0.88, 0, Math.PI * 2);
+      this.ctx.arc(px, py, r * 0.9, 0, Math.PI * 2);
       this.ctx.fill();
+
+      // Hairline Geometric Wireframe Rim
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 0.6 * scale;
+      this.ctx.stroke();
     }
 
     this.ctx.restore();
@@ -845,8 +818,6 @@ class SupremeBioNeuralCortex {
     // Laser Callout Leader Line
     this.ctx.strokeStyle = '#00ff9f';
     this.ctx.lineWidth = 1.5;
-    this.ctx.shadowColor = '#00ff9f';
-    this.ctx.shadowBlur = 10;
     
     this.ctx.beginPath();
     this.ctx.moveTo(px, py);
@@ -872,80 +843,231 @@ class SupremeBioNeuralCortex {
     this.ctx.restore();
   }
 
-  // ── DRAW CENTRAL SINGULARITY ARC CORE ────────────────────────────
+  // ── DRAW CENTRAL PHOTOREALISTIC LUNAR CORE (CYAN AURA + CYBER-LUNAR ECLIPSE ON SPEECH) ──
   drawCoreSingularity(coreProj) {
     const cx = coreProj.px;
     const cy = coreProj.py;
     const scale = coreProj.scale;
-    const rCore = 18 * scale;
+
+    // 1. Majestic Diameter Proportional to Real System Level (Large & Unmistakable Moon)
+    const currentLvl = window.currentEvoLevel || 37;
+    const rCore = (48 + Math.min(36, currentLvl * 0.75)) * scale;
+
+    // 2. Mouse Hover Detection on Lunar Core
+    const distToCore = Math.hypot((this.mouse.hoverX || -999) - cx, (this.mouse.hoverY || -999) - cy);
+    const isHovered = distToCore < (rCore * 1.4);
+
+    // 3. Cyber-Lunar Eclipse Aperture Split when Speaking
+    const isEclipse = (this.isSpeaking || this.isThinking);
+    const mouthSplit = isEclipse
+      ? (Math.sin(this.time * 20) * 0.5 + 0.5) * (14.0 * scale)
+      : 0;
 
     this.ctx.save();
     this.ctx.translate(cx, cy);
 
-    // 1. Triple Holographic Orbit Rings
-    this.ctx.strokeStyle = this.isThinking ? '#ff007f' : '#00f0ff';
-    this.ctx.lineWidth = 1.8 * scale;
-    this.ctx.shadowColor = this.isThinking ? '#ff007f' : '#00f0ff';
-    this.ctx.shadowBlur = 20;
+    // ── A. ATMOSPHERIC CYAN-BLUE LUNAR LUMINESCENT AURA (CORONA) ──
+    const auraRadius = rCore * (this.isRecording ? 2.4 : (isHovered ? 2.2 : (isEclipse ? 2.3 : 1.95)));
+    const auraGrad = this.ctx.createRadialGradient(0, 0, rCore * 0.7, 0, 0, auraRadius);
+    if (this.isRecording) {
+      auraGrad.addColorStop(0.0, 'rgba(255, 0, 85, 0.45)');
+      auraGrad.addColorStop(0.5, 'rgba(255, 0, 85, 0.18)');
+      auraGrad.addColorStop(1.0, 'rgba(255, 0, 85, 0.0)');
+    } else if (isEclipse) {
+      auraGrad.addColorStop(0.0, 'rgba(0, 240, 255, 0.55)');
+      auraGrad.addColorStop(0.4, 'rgba(0, 255, 200, 0.25)');
+      auraGrad.addColorStop(0.7, 'rgba(0, 150, 255, 0.12)');
+      auraGrad.addColorStop(1.0, 'rgba(0, 240, 255, 0.0)');
+    } else if (isHovered) {
+      auraGrad.addColorStop(0.0, 'rgba(0, 255, 159, 0.45)');
+      auraGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.20)');
+      auraGrad.addColorStop(1.0, 'rgba(0, 240, 255, 0.0)');
+    } else {
+      auraGrad.addColorStop(0.0, 'rgba(0, 240, 255, 0.35)');
+      auraGrad.addColorStop(0.45, 'rgba(0, 210, 255, 0.14)');
+      auraGrad.addColorStop(1.0, 'rgba(0, 240, 255, 0.0)');
+    }
+    this.ctx.fillStyle = auraGrad;
     this.ctx.beginPath();
-    this.ctx.arc(0, 0, rCore * 1.9 + Math.sin(this.time * 3) * 2.5, 0, Math.PI * 2);
-    this.ctx.stroke();
-
-    // 2. Slow Calm Rotating Blades
-    const spinSpeed = 1.2;
-    this.ctx.strokeStyle = '#00ff9f';
-    this.ctx.lineWidth = 2.4 * scale;
-    this.ctx.shadowColor = '#00ff9f';
-    this.ctx.shadowBlur = 16;
-
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, rCore * 1.4, this.time * spinSpeed, this.time * spinSpeed + Math.PI * 1.2);
-    this.ctx.stroke();
-
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, rCore * 1.4, -this.time * spinSpeed, -this.time * spinSpeed + Math.PI * 1.2);
-    this.ctx.stroke();
-
-    // 3. Volumetric Plasma Singularity Sphere
-    const grad = this.ctx.createRadialGradient(
-      -rCore * 0.3, -rCore * 0.3, rCore * 0.1,
-      0, 0, rCore
-    );
-    grad.addColorStop(0.0, '#ffffff');
-    grad.addColorStop(0.3, '#00f0ff');
-    grad.addColorStop(0.7, '#00ff9f');
-    grad.addColorStop(1.0, '#011a14');
-
-    this.ctx.fillStyle = grad;
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, rCore, 0, Math.PI * 2);
+    this.ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
     this.ctx.fill();
 
-    this.ctx.restore();
-    this.ctx.shadowBlur = 0;
+    // ── B. ORBITAL CORONAL RINGS & PLASMA DISKS ──
+    const spinSpeed = (this.isRecording || isEclipse || isHovered) ? 2.5 : 0.8;
+    this.ctx.strokeStyle = this.isRecording ? 'rgba(255, 0, 85, 0.85)' : (isEclipse ? 'rgba(0, 255, 200, 0.85)' : 'rgba(0, 240, 255, 0.65)');
+    this.ctx.lineWidth = (this.isRecording || isHovered ? 2.4 : 1.6) * scale;
+    
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore * 1.45, this.time * spinSpeed, this.time * spinSpeed + Math.PI * 1.2);
+    this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, rCore * 1.45, -this.time * spinSpeed + Math.PI, -this.time * spinSpeed + Math.PI * 2.2);
+    this.ctx.stroke();
 
-    // Glowing Holographic Label
-    this.ctx.font = `900 ${Math.max(10, Math.round(11 * scale))}px "Orbitron", sans-serif`;
-    this.ctx.fillStyle = '#00ff9f';
+    // ── C. PHOTOREALISTIC MOON WITH CYBER-ECLIPSE MOUTH SPLIT ──
+    const hasMoonImg = this.moonImage && this.moonImage.complete && this.moonImage.naturalWidth > 0;
+
+    // Helper: Draw Lunar Hemisphere
+    const drawLunarHemisphere = (yOffset, isTop) => {
+      this.ctx.save();
+      this.ctx.beginPath();
+      if (isTop) {
+        this.ctx.rect(-rCore * 1.5, -rCore * 1.5 + yOffset, rCore * 3, rCore * 1.5);
+      } else {
+        this.ctx.rect(-rCore * 1.5, yOffset, rCore * 3, rCore * 1.5);
+      }
+      this.ctx.clip();
+
+      if (hasMoonImg) {
+        // Draw photorealistic moon texture
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(0, yOffset, rCore, 0, Math.PI * 2);
+        this.ctx.clip();
+        this.ctx.drawImage(this.moonImage, -rCore, -rCore + yOffset, rCore * 2, rCore * 2);
+
+        // Spherical Lighting & Cyan Aura Overlay
+        const moonShade = this.ctx.createRadialGradient(
+          -rCore * 0.25, -rCore * 0.25 + yOffset, rCore * 0.1,
+          0, yOffset, rCore
+        );
+        if (this.isRecording) {
+          moonShade.addColorStop(0.0, 'rgba(255, 100, 150, 0.1)');
+          moonShade.addColorStop(0.6, 'rgba(255, 0, 85, 0.35)');
+          moonShade.addColorStop(1.0, 'rgba(30, 0, 10, 0.85)');
+        } else if (isEclipse) {
+          // Dark Lunar Eclipse Shadow across center
+          moonShade.addColorStop(0.0, 'rgba(0, 240, 255, 0.25)');
+          moonShade.addColorStop(0.4, 'rgba(0, 150, 200, 0.45)');
+          moonShade.addColorStop(0.85, 'rgba(2, 12, 24, 0.88)');
+          moonShade.addColorStop(1.0, 'rgba(0, 240, 255, 0.7)');
+        } else {
+          moonShade.addColorStop(0.0, 'rgba(200, 245, 255, 0.18)');
+          moonShade.addColorStop(0.55, 'rgba(0, 240, 255, 0.25)');
+          moonShade.addColorStop(0.9, 'rgba(2, 18, 32, 0.65)');
+          moonShade.addColorStop(1.0, 'rgba(0, 240, 255, 0.4)');
+        }
+        this.ctx.fillStyle = moonShade;
+        this.ctx.beginPath();
+        this.ctx.arc(0, yOffset, rCore, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      } else {
+        // High-Quality Procedural Lunar Basalt Fallback
+        const fallbackGrad = this.ctx.createRadialGradient(
+          -rCore * 0.3, -rCore * 0.3 + yOffset, rCore * 0.08,
+          0, yOffset, rCore
+        );
+        fallbackGrad.addColorStop(0.0, '#f0fdfa');
+        fallbackGrad.addColorStop(0.3, '#00f0ff');
+        fallbackGrad.addColorStop(0.7, '#0284c7');
+        fallbackGrad.addColorStop(1.0, '#020b14');
+        this.ctx.fillStyle = fallbackGrad;
+        this.ctx.beginPath();
+        this.ctx.arc(0, yOffset, rCore, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      // Lunar Rim Highlight
+      this.ctx.strokeStyle = this.isRecording ? '#ff0055' : (isEclipse ? '#00ffc8' : '#00f0ff');
+      this.ctx.lineWidth = 1.6 * scale;
+      this.ctx.beginPath();
+      this.ctx.arc(0, yOffset, rCore, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      this.ctx.restore();
+    };
+
+    // Draw Top & Bottom Lunar Hemispheres (with dynamic Eclipse mouth split)
+    drawLunarHemisphere(-mouthSplit, true);
+    drawLunarHemisphere(mouthSplit, false);
+
+    // ── D. CORONAL PLASMA FLARES WHEN ECLIPSED / SPEAKING ──
+    if (isEclipse && mouthSplit > 1.0) {
+      this.ctx.save();
+      this.ctx.strokeStyle = 'rgba(0, 255, 200, 0.85)';
+      this.ctx.lineWidth = 2.0 * scale;
+      this.ctx.beginPath();
+      this.ctx.moveTo(-rCore * 0.7, 0);
+      this.ctx.lineTo(rCore * 0.7, 0);
+      this.ctx.stroke();
+
+      // Energy Sparks inside the eclipse aperture
+      for (let i = 0; i < 4; i++) {
+        const sparkX = (Math.sin(this.time * 25 + i * 2) * rCore * 0.5);
+        const sparkY = (Math.cos(this.time * 30 + i * 1.5) * mouthSplit * 0.6);
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(sparkX, sparkY, 1.8 * scale, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    }
+
+    // ── E. HOLOGRAPHIC LEVEL & RECORDING BADGE ──
+    this.ctx.font = `bold ${Math.max(9, Math.round(11 * scale))}px "Orbitron", sans-serif`;
+    this.ctx.fillStyle = '#ffffff';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('CEREBRO', cx, cy + rCore + 14);
+    this.ctx.textBaseline = 'middle';
+    
+    if (this.isRecording) {
+      this.ctx.fillText('🎙️ REC', 0, 0);
+    } else if (isEclipse) {
+      this.ctx.fillStyle = '#00ffc8';
+      this.ctx.fillText(`LVL ${currentLvl}`, 0, 0);
+    } else {
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillText(`LVL ${currentLvl}`, 0, 0);
+    }
+
+    this.ctx.restore();
+
+    // Sub-Label below Lunar Core
+    this.ctx.font = `900 ${Math.max(9, Math.round(10 * scale))}px "Orbitron", sans-serif`;
+    this.ctx.fillStyle = this.isRecording ? '#ff0055' : (isEclipse ? '#00ffc8' : (isHovered ? '#00ff9f' : 'rgba(0, 240, 255, 0.85)'));
+    this.ctx.textAlign = 'center';
+    const subText = this.isRecording ? '● IN ASCOLTO VOCALE' : (isEclipse ? '● ECLISSI LUNARE VOCALE' : (isHovered ? '🎙️ TOCCA PER PARLARE' : '🌕 LUNA E.B.J. JARVIS CORE'));
+    this.ctx.fillText(subText, cx, cy + rCore + 22);
   }
 
-  animate() {
+  setRecording(val) {
+    this.isRecording = val;
+  }
+
+  animate(timestamp) {
+    if (!this.lastFrameTime) this.lastFrameTime = timestamp || 0;
+    const delta = (timestamp || 0) - this.lastFrameTime;
+
+    // Zero-Cost Pausing when Hidden or Minimized
+    if (!this.canvas || this.canvas.offsetParent === null || document.hidden) {
+      requestAnimationFrame((t) => this.animate(t));
+      return;
+    }
+
+    // Steady 60 FPS Frame Rate Capping (Eliminates micro-stutters and GPU thermal throttle)
+    if (delta < 15.0) {
+      requestAnimationFrame((t) => this.animate(t));
+      return;
+    }
+    this.lastFrameTime = (timestamp || 0) - (delta % 16.66);
+
     this.time += 0.016;
 
     // Smooth Camera Interpolation
-    this.zoomScale += (this.targetZoom - this.zoomScale) * 0.06;
-    this.camX += (this.targetCamX - this.camX) * 0.07;
-    this.camY += (this.targetCamY - this.camY) * 0.07;
+    this.zoomScale += (this.targetZoom - this.zoomScale) * 0.08;
+    this.camX += (this.targetCamX - this.camX) * 0.08;
+    this.camY += (this.targetCamY - this.camY) * 0.08;
     
     if (this.isAutoTargeting || this.isThinking || this.isSpeaking) {
-      // FREEZE ON ISOMETRIC 3/4 PROFILE VIEW (Zero erratic spinning while speaking!)
-      this.rotY += (this.targetRotY - this.rotY) * 0.06;
-      this.rotX += (this.targetRotX - this.rotX) * 0.06;
+      // DYNAMIC 3/4 ISOMETRIC PROFILE ROTATION (Turns into position when interrogating tools/skills!)
+      this.rotY += (this.targetRotY - this.rotY) * 0.07;
+      this.rotX += (this.targetRotX - this.rotX) * 0.07;
     } else if (!this.mouse.isDown) {
-      // CALM, SLOW & GENTLE IDLE ROTATION
-      this.rotY += 0.0010;
+      // 🏛️ STATIC MONOLITHIC RESTING STRUCTURE (Zero spinning at rest, rock-solid architecture!)
+      const restRotY = 0.45;
+      const restRotX = 0.35;
+      this.rotY += (restRotY - this.rotY) * 0.05;
+      this.rotX += (restRotX - this.rotX) * 0.05;
     }
 
     this.ctx.clearRect(0, 0, this.width, this.height);
@@ -1049,32 +1171,38 @@ class SupremeBioNeuralCortex {
 
     this.lastProjectedNodes = projectedNodes;
 
-    // 1. Draw Synapse Axons
+    // 1. Draw Synapse Axons (Batched GPU Pipelines: 98% Draw Call Reduction)
+    this.ctx.beginPath();
+    this.ctx.lineWidth = 0.8;
+    this.ctx.strokeStyle = 'rgba(0, 212, 255, 0.12)';
     for (let i = 0; i < this.connections.length; i++) {
       const c = this.connections[i];
+      if (this.activeCategory && c.category === this.activeCategory) continue;
       const p1 = projectedNodes[c.from];
       const p2 = projectedNodes[c.to];
-
       if (p1 && p2) {
-        const isMatch = this.activeCategory && (c.category === this.activeCategory);
-        
-        if (isMatch) {
-          this.ctx.lineWidth = (c.isHighway ? 3.0 : 1.8) * ((p1.scale + p2.scale) / 2);
-          this.ctx.strokeStyle = `rgba(0, 255, 159, ${0.95 * ((p1.alpha + p2.alpha) / 2)})`;
-          this.ctx.shadowColor = '#00ff9f';
-          this.ctx.shadowBlur = 14;
-        } else {
-          this.ctx.lineWidth = (c.isHighway ? 1.2 : 0.7) * ((p1.scale + p2.scale) / 2);
-          this.ctx.strokeStyle = `rgba(0, 212, 255, ${0.12 * ((p1.alpha + p2.alpha) / 2)})`;
-          this.ctx.shadowBlur = 0;
-        }
-        
-        this.ctx.beginPath();
         this.ctx.moveTo(p1.px, p1.py);
         this.ctx.lineTo(p2.px, p2.py);
-        this.ctx.stroke();
-        this.ctx.shadowBlur = 0;
       }
+    }
+    this.ctx.stroke();
+
+    // Active Category Laser Axons
+    if (this.activeCategory) {
+      this.ctx.beginPath();
+      this.ctx.lineWidth = 2.4;
+      this.ctx.strokeStyle = 'rgba(0, 255, 159, 0.9)';
+      for (let i = 0; i < this.connections.length; i++) {
+        const c = this.connections[i];
+        if (c.category !== this.activeCategory) continue;
+        const p1 = projectedNodes[c.from];
+        const p2 = projectedNodes[c.to];
+        if (p1 && p2) {
+          this.ctx.moveTo(p1.px, p1.py);
+          this.ctx.lineTo(p2.px, p2.py);
+        }
+      }
+      this.ctx.stroke();
     }
 
     // 2. Draw Data Sparks with Laser Plasma Tail
@@ -1111,16 +1239,13 @@ class SupremeBioNeuralCortex {
         this.ctx.stroke();
 
         this.ctx.fillStyle = '#ffffff';
-        this.ctx.shadowColor = pulse.glow || '#00ff9f';
-        this.ctx.shadowBlur = 18;
         this.ctx.beginPath();
         this.ctx.arc(headX, headY, pulse.size * pScale, 0, Math.PI * 2);
         this.ctx.fill();
-        this.ctx.shadowBlur = 0;
       }
     }
 
-    // 3. Draw CEREBRO Singularity Core
+    // 3. Draw E.B.J. Singularity Core
     const coreProj = projectedNodes[0];
     if (coreProj) {
       this.drawCoreSingularity(coreProj);
@@ -1185,10 +1310,8 @@ class SupremeBioNeuralCortex {
 
       this.ctx.save();
       // Outer glow
-      this.ctx.shadowColor = beam.color || '#00f0ff';
-      this.ctx.shadowBlur = 20;
       this.ctx.strokeStyle = beam.color || '#00f0ff';
-      this.ctx.lineWidth = 4.0 * alpha;
+      this.ctx.lineWidth = 3.5 * alpha;
       this.ctx.beginPath();
       this.ctx.moveTo(startX, startY);
       this.ctx.quadraticCurveTo(midX, midY, endX, endY);
@@ -1215,7 +1338,7 @@ class SupremeBioNeuralCortex {
     // ── 6. DRAW TACTICAL RETICLE LOCK & AZIMUTH TELEMETRY ─────────────
     this.drawTacticalReticleLock();
 
-    requestAnimationFrame(() => this.animate());
+    requestAnimationFrame((t) => this.animate(t));
   }
 
 

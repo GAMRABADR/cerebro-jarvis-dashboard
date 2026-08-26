@@ -1,0 +1,8 @@
+{
+  "name": "hermes_security_auditor",
+  "version": "1.0.0",
+  "description": "Hermes Security Auditor v1.0 - Penetration testing autorizzato, OSINT e vulnerability assessment con output JSON strict e remediation",
+  "author": "E.B.J. AI \u00b7 Ingegner Badr",
+  "role": "Hermes Auditor",
+  "category": "CYBERSECURITY_AUDIT"
+}

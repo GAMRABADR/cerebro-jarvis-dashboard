@@ -1,0 +1,19 @@
+{
+  "id": "universal_portal_auto_register",
+  "name": "Universal Portal & Real Estate Auto-Register",
+  "category": "GROWTH_ENGINE",
+  "icon": "\ud83c\udf10",
+  "triggers": [
+    "registrazione portali",
+    "registrami su tutti i portali",
+    "portali italia",
+    "iscrivi azienda",
+    "network nazionale",
+    "portali traslochi"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.09,
+  "description": "Skill universale e riusabile per registrare Pietro Traslochi e BadrExpress su tutti i portali di traslochi, edilizia e directory immobiliari d'Italia."
+}

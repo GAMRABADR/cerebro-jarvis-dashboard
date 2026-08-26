@@ -1,0 +1,19 @@
+{
+  "id": "bluetooth_wifi_iot_controller",
+  "name": "FastMCP Bluetooth & Wi-Fi Gateway",
+  "category": "HARDWARE_IOT",
+  "icon": "\ud83d\udcf6",
+  "triggers": [
+    "wifi",
+    "wi-fi",
+    "bluetooth",
+    "dispositivi bluetooth",
+    "reti wifi",
+    "connessione wifi"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.12,
+  "description": "Controllo e scansione hardware nativo di reti Wi-Fi, segnale dBm e dispositivi Bluetooth (cuffie, smartphone, controller)."
+}

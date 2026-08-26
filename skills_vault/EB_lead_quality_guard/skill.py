@@ -81,6 +81,46 @@ def geocode_address(address_text):
 
     return None, "Indirizzo non trovato su mappa reale"
 
+def parse_and_validate_date(date_str):
+    """
+    REGOLA TEMPORALE IMMUTABILE:
+    Annunci o richieste > 1 anno (365 giorni) sono SPAZZATURA e vengono SCARTATI al 100%.
+    Le richieste fresche (< 7 giorni) ottengono il moltiplicatore massimo.
+    """
+    import datetime
+    if not date_str:
+        return True, 0, "Data non specificata (assunta recente)"
+        
+    date_str = str(date_str).strip().lower()
+    now = datetime.datetime.now()
+    
+    # Check relative dates
+    if any(k in date_str for k in ["oggi", "ieri", "fa", "ore", "minuti", "ora", "recent"]):
+        return True, 0, "Richiesta Fresca Live (< 24-48 ore)"
+        
+    # Check year in date
+    m_year = re.search(r'(201\d|202[0-5])', date_str)
+    if m_year:
+        year_val = int(m_year.group(1))
+        if year_val < (now.year - 1):
+            return False, 999, f"SPAZZATURA TEMPORALE: Annuncio del {year_val} (> 1 anno fa). Scartato automaticamente!"
+            
+    # Try parsing standard dates
+    for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d", "%d.%m.%Y"]:
+        try:
+            d = datetime.datetime.strptime(date_str[:10], fmt)
+            days_old = (now - d).days
+            if days_old > 365:
+                return False, days_old, f"SPAZZATURA TEMPORALE: Annuncio vecchio di {days_old} giorni (> 1 anno). Scartato!"
+            elif days_old > 90:
+                return True, days_old, f"Annuncio datato ({days_old} giorni fa - Priorità Bassa)"
+            else:
+                return True, days_old, f"Richiesta Attiva ({days_old} giorni fa)"
+        except Exception:
+            pass
+            
+    return True, 0, "Data accettata"
+
 def execute(params=None):
     params = params or {}
     name = (params.get("name") or "Cliente").strip()
@@ -89,11 +129,26 @@ def execute(params=None):
     phone = params.get("phone", "").strip()
     partenza = params.get("partenza", "").strip()
     arrivo = params.get("arrivo", "").strip()
+    date_str = params.get("date") or params.get("scraped_date") or params.get("data_annuncio") or ""
     messenger_url = params.get("messenger_url", "").strip()
+
+    # ── 0. STRICT IMMUTABLE RULE: TEMPORAL RELEVANCE CHECK (< 365 DAYS) ──
+    date_ok, days_old, date_msg = parse_and_validate_date(date_str)
+    if not date_ok:
+        return {
+            "status": "REJECTED",
+            "skill": "EB_LeadQualityGuard",
+            "name": name,
+            "quality_score": 0,
+            "verdict": "REJECTED_STALE_OVER_1_YEAR",
+            "badge": "🔴 SCARTATO (SPAZZATURA > 1 ANNO)",
+            "penalties": [date_msg],
+            "message": f"Lead scartato: {date_msg}"
+        }
 
     score = 100
     penalties = []
-    checks = {}
+    checks = {"temporal": {"valid": True, "detail": date_msg, "days_old": days_old}}
 
     # 1. Check Real Name
     has_valid_name = bool(name and len(name) >= 3 and not any(w in name.lower() for w in ["utente", "anonimo", "facebook user", "inserzionista", "profilo", "null", "none"]))
@@ -147,12 +202,17 @@ def execute(params=None):
             score -= 10
             penalties.append(f"Partenza: {geo_p_msg}")
 
+    # 5. Temporal Decay Penalty (if > 90 days)
+    if days_old > 90:
+        score -= 20
+        penalties.append(f"Decadimento Temporale: Annuncio di {days_old} giorni fa")
+
     if not phone_ok:
         score -= 10 # Relies purely on Messenger
     if not email:
         score -= 5
 
-    score = max(50, min(100, score))
+    score = max(40, min(100, score))
 
     if score >= 85:
         verdict = "VERIFIED_HIGH_INTENT"

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E.B. TACTICAL STREAMDECK · 2026</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; user-select: none; }
+        body { background: #030810; color: #00f0ff; min-height: 100vh; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .header { text-align: center; margin-bottom: 20px; width: 100%; border-bottom: 1px solid rgba(0,240,255,0.2); padding-bottom: 10px; }
+        .header h1 { font-size: 20px; letter-spacing: 2px; text-shadow: 0 0 10px #00f0ff; }
+        .header p { font-size: 11px; color: #00ff88; margin-top: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 480px; }
+        .deck-btn {
+            background: rgba(4, 16, 32, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,240,255,0.05);
+            transition: all 0.15s ease;
+        }
+        .deck-btn:active { transform: scale(0.95); border-color: #00ff88; box-shadow: 0 0 25px #00ff88; background: #002215; }
+        .deck-btn .icon { font-size: 32px; margin-bottom: 8px; }
+        .deck-btn .label { font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
+        .deck-btn .sub { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+        #status-bar { margin-top: 20px; font-size: 12px; color: #00ff88; text-align: center; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ E.B. TACTICAL STREAMDECK</h1>
+        <p>COCKPIT CONTROLLER OLOGRAFICO · BADR EL OUARITI</p>
+    </div>
+
+    <div class="grid">
+        <div class="deck-btn" onclick="execMacro('briefing')">
+            <span class="icon">☀️</span>
+            <span class="label">MORNING BRIEF</span>
+            <span class="sub">Audio Telegram 08:00</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('chiama_lead')">
+            <span class="icon">📞</span>
+            <span class="label">CHIAMA LEAD</span>
+            <span class="sub">1-Click WhatsApp</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('pdf_bologna')">
+            <span class="icon">📄</span>
+            <span class="label">REPORT PDF</span>
+            <span class="sub">Bologna 2026 QR</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('lancia_ue5')">
+            <span class="icon">🎮</span>
+            <span class="label">UNREAL 5.8</span>
+            <span class="sub">Avvia EBGS Editor</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('focus_mode')">
+            <span class="icon">🔕</span>
+            <span class="label">FOCUS GUARD</span>
+            <span class="sub">Silenzio 120 FPS</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('furgone_eta')">
+            <span class="icon">🚚</span>
+            <span class="label">DISPATCH ETA</span>
+            <span class="sub">Avvisa Cliente GPS</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('paga_acconto')">
+            <span class="icon">💳</span>
+            <span class="label">PAGAMENTO</span>
+            <span class="sub">Satispay / Carta</span>
+        </div>
+        <div class="deck-btn" onclick="execMacro('omnivision')">
+            <span class="icon">👁️</span>
+            <span class="label">OMNIVISION</span>
+            <span class="sub">Guarda Schermo</span>
+        </div>
+    </div>
+
+    <div id="status-bar">🟢 Touch Macro Bus Pronto (Latenza Sub-ms)</div>
+
+    <script>
+        async function execMacro(cmd) {
+            const bar = document.getElementById('status-bar');
+            bar.innerText = '⚡ Esecuzione macro: ' + cmd + '...';
+            try {
+                let prompt = '';
+                if(cmd === 'briefing') prompt = 'E.B., genera il briefing del mattino';
+                else if(cmd === 'chiama_lead') prompt = 'E.B., apri la chat WhatsApp per chiamare l\'ultimo cliente';
+                else if(cmd === 'pdf_bologna') prompt = 'E.B., mi dai la lista di Bologna in PDF?';
+                else if(cmd === 'lancia_ue5') prompt = 'E.B., avvia unreal engine 5.8';
+                else if(cmd === 'focus_mode') prompt = 'E.B., qual è lo stato del gateway cognitivo e del protocollo silenzio?';
+                else if(cmd === 'furgone_eta') prompt = 'E.B., invia orario stimato e furgone in viaggio su WhatsApp';
+                else if(cmd === 'paga_acconto') prompt = 'E.B., genera link di pagamento satispay acconto trasloco';
+                else if(cmd === 'omnivision') prompt = 'E.B., guarda il mio schermo e dimmi cosa vedi';
+
+                const r = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({prompt: prompt})
+                });
+                const d = await r.json();
+                bar.innerText = '✅ Eseguito con successo (' + (d.model_used || 'E.B.') + ')';
+            } catch(e) {
+                bar.innerText = '❌ Errore esecuzione: ' + e;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -3,74 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E.B. SUPREME AI · STARK MATRIX HUD v7.2</title>
-  <link rel="stylesheet" href="style.css?v=109.0">
+  <title>E.B.J. AI · APEX MATRIX v100.0</title>
+  <link rel="stylesheet" href="style.css?v=1002.0">
   <link rel="manifest" href="manifest.json">
-
-
-
-
-  <meta name="theme-color" content="#00ff9f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="E.B. AI">
-
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="hud-scanlines"></div>
 
-  <!-- ── MASTER 4-HUB VIEW TOGGLE TOP BAR ────────────────────── -->
-  <div class="master-view-bar">
+  <!-- ── MASTER TOP BAR HUD ───────────────────────────────────────── -->
+  <header class="master-view-bar">
     <div class="mv-left">
-      <span class="mv-logo">⚡ E.B. SUPREME AI</span>
-      <span class="mv-tag">3D BIO-NEURAL CONNECTOME v5.0</span>
+      <button class="mv-hamburger" id="btn-hamburger" type="button" onclick="toggleMobileNav()" aria-label="Apri menu" aria-expanded="false" aria-controls="mv-center-nav">☰</button>
+      <span class="mv-logo">⚡ E.B.J. AI APEX</span>
+      <span class="mv-tag">EL OUARITI BADR · MATRIX v100.0</span>
     </div>
-    <div class="mv-center">
-      <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">⚡ E.B. CORE</button>
-      <button class="view-switch-btn" id="btn-view-kanban" onclick="switchMasterView('kanban')">📋 HERMES KANBAN (L5)</button>
-      <button class="view-switch-btn" id="btn-view-agente0" onclick="switchMasterView('agente0')">🤖 AGENTE ZERO</button>
-      <button class="view-switch-btn" id="btn-view-n8n" onclick="switchMasterView('n8n')">⚙️ N8N WORKFLOWS</button>
+
+    <div class="mv-center" id="mv-center-nav">
+      <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">
+        <span class="btn-dot live"></span>⚡ E.B.J. CORE
+      </button>
+
+      <!-- DROPDOWN: KANBAN -->
+      <div class="nav-dropdown-pod">
+        <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban">
+          🧠 KANBAN <span class="chevron">▾</span>
+        </button>
+        <div class="nav-dropdown-menu">
+          <div class="dd-item" onclick="switchMasterView('kanban')">
+            <span class="dd-icon">📋</span>
+            <div class="dd-text"><strong>HERMES MASTER KANBAN</strong><small>Visual DAG Pipeline & Task Board</small></div>
+          </div>
+          <div class="dd-item" onclick="switchMasterView('kali')">
+            <span class="dd-icon">🛡️</span>
+            <div class="dd-text"><strong>HERMES KALI KANBAN</strong><small>VPS Security Audit Engine</small></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DROPDOWN: N8N -->
+      <div class="nav-dropdown-pod">
+        <button class="view-switch-btn dropdown-trigger" id="btn-view-n8n">
+          🔄 N8N CLOUD <span class="chevron">▾</span>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a class="dd-item" href="http://92.4.233.42:5678" target="_blank">
+            <span class="dd-icon">☁️</span>
+            <div class="dd-text"><strong>N8N ORACLE VPS (24GB) ↗️</strong><small>92.4.233.42:5678 (Cloud Workflows)</small></div>
+          </a>
+          <a class="dd-item" href="http://127.0.0.1:5678" target="_blank">
+            <span class="dd-icon">💻</span>
+            <div class="dd-text"><strong>N8N LOCAL RUNNER ↗️</strong><small>127.0.0.1:5678 (64GB Workstation)</small></div>
+          </a>
+          <div class="dd-item" onclick="switchMasterView('n8n')">
+            <span class="dd-icon">📊</span>
+            <div class="dd-text"><strong>PANNELLO FLUSSI INTEGRATO</strong><small>Monitoraggio Intake & Preventivi</small></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DROPDOWN: KALI LINUX -->
+      <div class="nav-dropdown-pod">
+        <button class="view-switch-btn dropdown-trigger">
+          🛡️ KALI DOCKER <span class="chevron">▾</span>
+        </button>
+        <div class="nav-dropdown-menu">
+          <div class="dd-item" onclick="switchMasterView('kali')">
+            <span class="dd-icon">🧪</span>
+            <div class="dd-text"><strong>KALI LAB</strong><small>Catalogo tool, ricerca, esecuzione allowlist</small></div>
+          </div>
+          <div class="dd-item" onclick="openKaliCliModal()">
+            <span class="dd-icon">💻</span>
+            <div class="dd-text"><strong>TERMINALE /kali RAPIDO</strong><small>Esegui comandi container</small></div>
+          </div>
+          <div class="dd-item" onclick="quickKaliExec('docker stats --no-stream ebj-kali-engine')">
+            <span class="dd-icon">📊</span>
+            <div class="dd-text"><strong>STATUS KALI CONTAINER</strong><small>kalilinux/kali-custom:apex</small></div>
+          </div>
+          <div class="dd-item" onclick="quickKaliExec('nmap -T4 -F 92.4.233.42')">
+            <span class="dd-icon">🔍</span>
+            <div class="dd-text"><strong>AUDIT PORTE RAPIDO</strong><small>Scansione porte VPS in &lt; 1s</small></div>
+          </div>
+        </div>
+      </div>
+
+      <a class="view-switch-btn" href="http://92.4.233.42:50080" target="_blank" style="text-decoration:none;">
+        🤖 AGENTE ZERO ↗️
+      </a>
+
+      <button class="view-switch-btn" id="btn-toggle-terminal" onclick="toggleCyberTerminal()" style="border-color:#00ff9f; color:#00ff9f; font-weight:bold;">
+        💻 TERMINALE [T]
+      </button>
+
+      <button class="view-switch-btn" id="btn-toggle-modules" onclick="toggleModularCatalog()" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
+        🧩 MODULI [M]
+      </button>
     </div>
+
     <div class="mv-right">
+      <button class="vad-toggle-pill" id="btn-vad-toggle" onclick="toggleConversationalMode()" title="Chiacchierata Vocale Continua Senza Clic">
+        <span class="vad-dot"></span>🎙️ VOCE: <strong>OFF</strong>
+      </button>
       <span class="status-indicator live"></span>
-      <span class="mv-stat" id="master-status">ECOSISTEMA: ONLINE</span>
+      <span class="mv-stat" id="master-status">ONLINE 144 FPS</span>
       <span class="clock-val" id="utc-clock">00:00:00</span>
     </div>
-  </div>
+  </header>
+  <div class="mv-nav-backdrop" id="mv-nav-backdrop" onclick="toggleMobileNav(false)" hidden></div>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       VIEW 1: E.B. SUPREME TACTICAL HUD (DEFAULT VIEW!)
+       VIEW 1: APEX BENTO-GRID WORKSPACE
        ═══════════════════════════════════════════════════════════════ -->
   <div class="jarvis-workspace active" id="view-jarvis">
     <div class="hud-container">
-      <header class="top-bar">
-        <div class="tb-left">
-          <span class="hud-logo">⚡ E.B. SUPREME AI ARCHITECTURE</span>
-          <span class="hud-sublogo">BIO-SYNAPSE MATRIX · v5.0 SCIENTIFIC CORE</span>
-        </div>
-        <div class="tb-center">
-          <span class="status-indicator live"></span>
-          <span class="status-label" id="hud-status">SISTEMA NEURALE SUB-SECOND ONLINE</span>
-        </div>
-        <div class="tb-right">
-          <button class="settings-drawer-btn" onclick="toggleSettingsDrawer()" title="Apri Impostazioni, Umori e Profilo Autofill">⚙️ SETTINGS & MOODS</button>
-          <button class="hotkey-btn" onclick="setCustomHotkey()">🎙️ TASTO VOCALE: <span id="hotkey-display">Ctrl + Spazio</span></button>
-        </div>
-      </header>
-
-
+      
       <main class="main-grid">
         
-        <!-- LEFT PANEL -->
+        <!-- ── LEFT TACTICAL COMMAND DOCK ──────────────────────────── -->
         <section class="panel-box left-panel" id="left-tactical-dock">
           <div class="panel-header">
             <span class="ph-icon">⬡</span>
             <span class="ph-title">TACTICAL COMMAND MATRIX</span>
-            <button class="wing-toggle-btn" onclick="toggleLeftWing()" title="Riduci/Espandi Pannello Tattico">◀ HIDE</button>
+            <button class="wing-toggle-btn" onclick="toggleLeftWing()" title="Riduci/Espandi">◀ HIDE</button>
           </div>
+
           <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('hubs')">🌐 HUBS</button>
             <button class="tab-btn" onclick="switchTab('biz')">💼 BIZ</button>
@@ -79,7 +136,7 @@
             <button class="tab-btn" onclick="switchTab('fleet')">🤖 AGENTI</button>
           </div>
 
-          <!-- TAB 1: MASTER HUBS DIRECT ACCESS -->
+          <!-- TAB 1: HUBS -->
           <div class="tab-content active" id="tab-hubs">
             <div class="cmd-matrix-grid">
               <div class="cmd-tile vault-tile" onclick="switchMasterView('kanban')">
@@ -88,33 +145,33 @@
               </div>
               <div class="cmd-tile vault-tile" onclick="openAgente0Full()">
                 <span class="ct-code">🤖 AGENTE ZERO ↗️</span>
-                <span class="ct-desc">Apri Console Completa</span>
+                <span class="ct-desc">Console Completa VPS</span>
               </div>
               <div class="cmd-tile vault-tile" onclick="openN8nFull()">
                 <span class="ct-code">⚙️ N8N WORKFLOWS ↗️</span>
-                <span class="ct-desc">Apri Web App Ufficiale</span>
+                <span class="ct-desc">24GB Cloud Automations</span>
               </div>
-              <div class="cmd-tile" onclick="launchLevel5Pipeline()">
-                <span class="ct-code">🚀 LEVEL 5 RUN</span>
-                <span class="ct-desc">Avvia Pipeline Autonoma</span>
+              <div class="cmd-tile" onclick="toggleModule('mod-cpu-ram', true)">
+                <span class="ct-code">🎛️ WORKSTATION 64GB</span>
+                <span class="ct-desc">Monitor Telemetria Locale</span>
               </div>
             </div>
           </div>
 
-          <!-- TAB 2: BUSINESS WORKFLOWS -->
+          <!-- TAB 2: BIZ & TRASLOCHI -->
           <div class="tab-content" id="tab-biz">
             <div class="cmd-matrix-grid">
-              <div class="cmd-tile vault-tile" onclick="openLeadRadarModal()" style="border-color: #00ff9f; background: rgba(0, 255, 159, 0.12);">
-                <span class="ct-code" style="color: #00ff9f;">🎯 LEAD RADAR 2026</span>
+              <div class="cmd-tile vault-tile" onclick="toggleModule('mod-radar', true)" style="border-color:#00ff9f; background:rgba(0,255,159,0.12);">
+                <span class="ct-code" style="color:#00ff9f;">🎯 LEAD RADAR 2026</span>
                 <span class="ct-desc">Clienti Verificati & 1-Click Call</span>
+              </div>
+              <div class="cmd-tile vault-tile" onclick="toggleModule('mod-cargo', true)">
+                <span class="ct-code">📦 3D CARGO PACKING</span>
+                <span class="ct-desc">Calcolatore Ducato & Daily</span>
               </div>
               <div class="cmd-tile vault-tile" onclick="openModal('modal-send-email')">
                 <span class="ct-code">✉️ INVIA EMAIL</span>
-                <span class="ct-desc">Dispatch Immediato & Log</span>
-              </div>
-              <div class="cmd-tile vault-tile" onclick="openModal('modal-sift-gmail')">
-                <span class="ct-code">🔍 SPULCIA GMAIL</span>
-                <span class="ct-desc">FTS5 Triage & Fatture</span>
+                <span class="ct-desc">Dispatch Immediato SMTP</span>
               </div>
               <div class="cmd-tile vault-tile" onclick="openModal('modal-preventivo')">
                 <span class="ct-code">🚛 PREVENTIVI</span>
@@ -124,13 +181,8 @@
                 <span class="ct-code">🏷️ MARKETPLACE</span>
                 <span class="ct-desc">Stima & Annuncio Subito/FB</span>
               </div>
-              <div class="cmd-tile" onclick="sendQuick('JARVIS, genera un annuncio promozionale per la community di Discord con i link del gioco.')">
-                <span class="ct-code">📢 BROADCAST</span>
-                <span class="ct-desc">Notifica Discord Hub</span>
-              </div>
             </div>
           </div>
-
 
           <!-- TAB 3: GAME DEV -->
           <div class="tab-content" id="tab-game">
@@ -138,14 +190,8 @@
               <div class="cmd-tile" onclick="sendQuick('JARVIS, qual è lo stato della build di gioco EBGS e delle release Steamworks (AppID 2886940)?')">
                 <span class="ct-code">📦 STEAMWORKS</span><span class="ct-desc">Stato Build EBGS</span>
               </div>
-              <div class="cmd-tile" onclick="sendQuick('JARVIS, genera il changelog e le patch notes per il nuovo update di EBGS.')">
-                <span class="ct-code">📜 PATCH NOTES</span><span class="ct-desc">Generatore Update</span>
-              </div>
               <div class="cmd-tile" onclick="sendQuick('JARVIS, come ottimizzare i blueprint e gli shader in Unreal Engine 5.8?')">
                 <span class="ct-code">⚙️ UE 5.8 SHADERS</span><span class="ct-desc">Ottimizzazione GPU</span>
-              </div>
-              <div class="cmd-tile" onclick="sendQuick('JARVIS, verifica la configurazione dei server multiplayer dedicati per EBGS.')">
-                <span class="ct-code">🧪 SERVER MULTI</span><span class="ct-desc">Test Rete Dedicata</span>
               </div>
             </div>
           </div>
@@ -156,128 +202,42 @@
               <div class="cmd-tile vault-tile" onclick="queryVault('bustepaghe')"><span class="ct-code">💼 BUSTEPAGHE</span><span class="ct-desc">Archivio Cedolini</span></div>
               <div class="cmd-tile vault-tile" onclick="queryVault('keys')"><span class="ct-code">🔑 CHIAVI CD</span><span class="ct-desc">Seriali Steam & Licenze</span></div>
               <div class="cmd-tile vault-tile" onclick="queryVault('legale')"><span class="ct-code">⚖️ LEGALE & INPS</span><span class="ct-desc">Atti & Diffide</span></div>
-              <div class="cmd-tile vault-tile" onclick="queryVault('bollette')"><span class="ct-code">💡 BOLLETTE</span><span class="ct-desc">Rateizzazioni Utenze</span></div>
             </div>
           </div>
 
-          <!-- CYBERPUNK LIVE SKILLS & TOOLS HUD ACTIVITY MATRIX -->
-          <div class="skills-activity-hud" id="skills-activity-hud">
-            <div class="sah-header">
-              <span class="sah-title">⚡ LIVE SKILLS & TOOLS MATRIX</span>
-              <span class="sah-status" id="sah-overall-status">ALL SYSTEMS ONLINE</span>
-            </div>
-            <div class="sah-grid">
-              <div class="sah-row" id="sah-biz" data-cat="BUSINESS_SGOMBERI">
-                <span class="sah-cat">🚛 TRASLOCHI & BIZ</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-biz" style="width: 82%;"></div></div>
-                <span class="sah-count" id="sah-cnt-biz">12 TOOLS</span>
-                <span class="sah-led" id="sah-led-biz"></span>
+          <!-- TAB 5: AGENT FLEET -->
+          <div class="tab-content" id="tab-fleet">
+            <div class="cmd-matrix-grid">
+              <div class="cmd-tile vault-tile" onclick="sendQuick('JARVIS, sincronizza la flotta agenti')">
+                <span class="ct-code">🤖 AGENTE ZERO</span><span class="ct-desc">92.4.233.42 Status</span>
               </div>
-              <div class="sah-row" id="sah-game" data-cat="GAME_DEV">
-                <span class="sah-cat">🎮 GAME DEV UE5</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-game" style="width: 70%;"></div></div>
-                <span class="sah-count" id="sah-cnt-game">12 TOOLS</span>
-                <span class="sah-led" id="sah-led-game"></span>
-              </div>
-              <div class="sah-row" id="sah-ltm" data-cat="LTM_MEMORY">
-                <span class="sah-cat">🧠 LTM VAULT</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-ltm" style="width: 88%;"></div></div>
-                <span class="sah-count" id="sah-cnt-ltm">9 TOOLS</span>
-                <span class="sah-led" id="sah-led-ltm"></span>
-              </div>
-              <div class="sah-row" id="sah-vps" data-cat="API_INFRASTRUCTURE">
-                <span class="sah-cat">⚡ CLOUD VPS & N8N</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-vps" style="width: 95%;"></div></div>
-                <span class="sah-count" id="sah-cnt-vps">9 TOOLS</span>
-                <span class="sah-led active" id="sah-led-vps"></span>
-              </div>
-              <div class="sah-row" id="sah-voice" data-cat="VOICE_DEVOPS">
-                <span class="sah-cat">🎙️ VOICE & IOT</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-voice" style="width: 75%;"></div></div>
-                <span class="sah-count" id="sah-cnt-voice">8 TOOLS</span>
-                <span class="sah-led" id="sah-led-voice"></span>
-              </div>
-              <div class="sah-row" id="sah-market" data-cat="MARKETPLACE">
-                <span class="sah-cat">🏷️ MARKETPLACE</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-market" style="width: 60%;"></div></div>
-                <span class="sah-count" id="sah-cnt-market">6 TOOLS</span>
-                <span class="sah-led" id="sah-led-market"></span>
-              </div>
-              <div class="sah-row" id="sah-web" data-cat="WEB_RESEARCH">
-                <span class="sah-cat">🌐 LIVE WEB AI</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-web" style="width: 85%;"></div></div>
-                <span class="sah-count" id="sah-cnt-web">6 TOOLS</span>
-                <span class="sah-led" id="sah-led-web"></span>
-              </div>
-              <div class="sah-row" id="sah-fleet" data-cat="AUTONOMOUS_FLEET">
-                <span class="sah-cat">🤖 AGENTE ZERO FLEET</span>
-                <div class="sah-bar-track"><div class="sah-bar-fill" id="sah-bar-fleet" style="width: 90%;"></div></div>
-                <span class="sah-count" id="sah-cnt-fleet">6 TOOLS</span>
-                <span class="sah-led active" id="sah-led-fleet"></span>
+              <div class="cmd-tile vault-tile" onclick="toggleCyberTerminal()">
+                <span class="ct-code">🦀 RUST BRIDGE</span><span class="ct-desc">Port 9000 Active</span>
               </div>
             </div>
           </div>
 
-          <div class="model-select-wrapper">
-            <label for="model-select" class="ms-label">🧠 MOTORE NEURALE (CATEGORIZZATO):</label>
+          <!-- MODEL SELECTOR -->
+          <div class="model-select-wrapper" style="margin-top:12px;">
+            <label for="model-select" class="ms-label">🧠 MOTORE NEURALE:</label>
             <select id="model-select" class="ms-dropdown">
-              <optgroup label="── AUTO ROUTER ──">
-                <option value="auto" selected>⚡ Auto Intelligence Router (N8N Cascade Free-First)</option>
-              </optgroup>
-              <optgroup label="── TIER 1: FREE TIER (0€ · Ultra-Fast) ──">
-                <option value="groq-llama70b">⚡ Groq LPU · Llama 3.3 70B Versatile</option>
-                <option value="groq-qwen32b">⚡ Groq LPU · Qwen 2.5 32B Coder</option>
-                <option value="gemini-flash">✨ Gemini 2.0 Flash (Sub-200ms)</option>
-                <option value="gemini-flash-8b">✨ Gemini 1.5 Flash 8B (Ultra-Light)</option>
-              </optgroup>
-              <optgroup label="── TIER 2: LOCALE PC (∞ Illimitato) ──">
-                <option value="ollama-qwen7b">🖥️ Ollama Locale · Qwen 2.5 7B-Instruct</option>
-                <option value="ollama-llama3b">🖥️ Ollama Locale · Llama 3.2 3B Light</option>
-              </optgroup>
-              <optgroup label="── TIER 3: DEEP REASONING ──">
-                <option value="gemini-pro">🧠 Gemini 2.0 Pro Experimental (Thinking)</option>
-                <option value="gemini-1.5-pro">🧠 Gemini 1.5 Pro (2M Context)</option>
-                <option value="qwen-27b">🧠 Groq · Qwen3.6 27B (Deep Reasoning)</option>
-              </optgroup>
-              <optgroup label="── TIER 4: VPS HERETIC (Oracle Cloud) ──">
-                <option value="vps-heretic-14b">🛡️ VPS Heretic · Qwen 14B Uncensored</option>
-                <option value="agente-zero">🤖 Agente Zero Master Fleet Engine</option>
-              </optgroup>
+              <option value="auto" selected>⚡ Auto Intelligence Router (Free-First)</option>
+              <option value="groq-llama70b">⚡ Groq LPU · Llama 3.3 70B</option>
+              <option value="groq-qwen32b">⚡ Groq LPU · Qwen 2.5 32B Coder</option>
+              <option value="gemini-flash">✨ Gemini 2.0 Flash (Sub-200ms)</option>
+              <option value="qwen-38-empero">⚡ Qwen 3.8 Flash FP8 (Free Cloud Reasoning)</option>
+              <option value="ollama-qwen7b">🖥️ Ollama Locale · Qwen 2.5 7B</option>
+              <option value="qwen-27b">🧠 Unsloth · Qwen3.6 27B (RTX 4070)</option>
             </select>
-          </div>
-
-          <!-- MODEL CREDITS LIVE BAR (N8N FREE-TIER USAGE TRACKER) -->
-          <div class="model-credits-bar" id="model-credits-bar">
-            <span class="mcb-item">⚡ Groq <strong>0/14400</strong></span>
-            <div class="mcb-track"><div class="mcb-fill groq" style="width:100%"></div></div>
-            <span class="mcb-item">✨ Gemini <strong>0/1500</strong></span>
-            <div class="mcb-track"><div class="mcb-fill gemini" style="width:100%"></div></div>
-            <span class="mcb-item">🖥️ Locale <strong>∞</strong></span>
-          </div>
-
-
-          <!-- KNOWLEDGE GRAPH PHYSICS & FORCE SLIDERS (STILE VIDEO CLAUDE JARVIS) -->
-          <div class="physics-controls-box">
-            <div class="pc-header"><span class="pc-icon">⚙️</span> FORCES & KNOWLEDGE GRAPH</div>
-            <div class="pc-row">
-              <span class="pc-label">Repel Force:</span>
-              <input type="range" id="repel-slider" min="50" max="300" value="160" class="pc-slider" oninput="updateGraphPhysics()">
-              <span class="pc-val" id="repel-val">160</span>
-            </div>
-            <div class="pc-row">
-              <span class="pc-label">Link Length:</span>
-              <input type="range" id="link-slider" min="30" max="200" value="90" class="pc-slider" oninput="updateGraphPhysics()">
-              <span class="pc-val" id="link-val">90</span>
-            </div>
           </div>
         </section>
 
-        <!-- CENTER PANEL -->
+
+        <!-- ── CENTER APEX NEURAL STAGE ────────────────────────────── -->
         <section class="panel-box center-panel">
-          <!-- CLEAN HOLOGRAPHIC 3D CONNECTOME & GARGANTUA BLACK HOLE STAGE -->
-          <div class="holographic-cortex-stage" id="cerebro-core">
-            
-            <!-- E.B. NEURAL EVOLUTION & COGNITIVE CAPACITY MATRIX HUD (SLEEK TOP PILL) -->
+          
+          <div class="holographic-cortex-stage" id="E.B.J.-core">
+            <!-- EVOLUTION PILL HUD -->
             <div class="eb-evolution-hud" id="eb-evolution-hud">
               <div class="eeh-badge">
                 <span class="eeh-lvl-tag">LVL</span>
@@ -286,60 +246,67 @@
               <div class="eeh-info">
                 <div class="eeh-rank" id="eeh-rank">APEX AUTONOMOUS ARCHITECT</div>
                 <div class="eeh-bar-wrapper">
-                  <div class="eeh-bar-fill" id="eeh-bar-fill" style="width: 80%;"></div>
+                  <div class="eeh-bar-fill" id="eeh-bar-fill" style="width: 85%;"></div>
                 </div>
               </div>
               <div class="eeh-metrics">
-                <div class="eeh-m-item" title="Skill Ufficiali Attive nella Vault">
+                <div class="eeh-m-item" title="Skill Ufficiali Attive">
                   <span class="eeh-m-icon">🧩</span>
                   <span class="eeh-m-val" id="eeh-skills-val">41</span>
                   <span class="eeh-m-lbl">SKILLS</span>
                 </div>
-                <div class="eeh-m-item" title="Flussi N8N Attivi su VPS">
+                <div class="eeh-m-item" title="Flussi N8N VPS">
                   <span class="eeh-m-icon">🔄</span>
                   <span class="eeh-m-val" id="eeh-n8n-val">20</span>
                   <span class="eeh-m-lbl">N8N</span>
                 </div>
-                <div class="eeh-m-item" title="Indice di Intelligenza Computazionale Quantistica">
+                <div class="eeh-m-item" title="Indice IQ Computazionale">
                   <span class="eeh-m-icon">⚡</span>
                   <span class="eeh-m-val" id="eeh-iq-val">417.5</span>
                   <span class="eeh-m-lbl">IQ</span>
                 </div>
-                <button class="eeh-surge-btn" onclick="triggerNeuralSurge()" title="Invia impulso quantistico a tutti i nodi">⚡ SURGE</button>
+                <button class="eeh-surge-btn" onclick="triggerNeuralSurge()">⚡ SURGE</button>
               </div>
             </div>
 
-            <canvas id="synapseCanvas" class="synapse-canvas-master"></canvas>
+            <!-- 🌌 GPU 3D QUANTUM HOLOGRAPHIC SPHERE & ACCRETION RINGS (144 FPS / 0% CPU) -->
+            <div class="quantum-hologram-wrapper" id="quantum-hologram-wrapper" onclick="toggleRecording()">
+              <div class="quantum-accretion-ring ring-1"></div>
+              <div class="quantum-accretion-ring ring-2"></div>
+              <div class="quantum-accretion-ring ring-3"></div>
+              <div class="quantum-core-sphere" id="jarvis-sphere">
+                <div class="sphere-inner-pulse"></div>
+                <span class="sphere-label" id="sphere-label">E.B.J.</span>
+              </div>
+              <div class="sphere-status-glow" id="sphere-status-glow"></div>
+            </div>
 
-            <!-- FLOATING TOOL RUN HUD CARD (TOP-RIGHT AUTO-FADE) -->
+            <!-- FLOATING TOOL RUN HUD CARD -->
             <div class="tool-run-hud-card" id="tool-run-card">
               <div class="trc-header">
                 <span class="trc-status-dot"></span>
                 <span class="trc-title" id="trc-title">TOOL RUN · E.B. SENTINEL</span>
-                <button class="trc-close" onclick="closeToolCard()" title="Chiudi notifica">✕</button>
+                <button class="trc-close" onclick="closeToolCard()">✕</button>
               </div>
               <div class="trc-body" id="trc-body">
                 <p class="trc-main" id="trc-main">Sincronizzazione completata: 41 skill attive.</p>
               </div>
               <div class="trc-footer">
-                <span class="trc-time" id="trc-time">⚡ 0.01s LATENCY</span>
+                <span class="trc-time" id="trc-time">⚡ 0.001s LATENCY</span>
                 <button class="trc-ack-btn" onclick="closeToolCard()">Got it</button>
               </div>
             </div>
-
-            <div id="jarvis-sphere" style="display:none;"><span class="sphere-label">E.B.</span></div>
-            <div id="reactor-core" style="display:none;"><span id="core-text">READY</span><span id="core-sub">IN ATTESA</span></div>
-            <div id="accretion-ring" style="display:none;"></div>
-            <div class="waveform" id="waveform" style="display:none;"><div class="wf-bar"></div><div class="wf-bar"></div><div class="wf-bar"></div></div>
           </div>
 
-          <!-- RESPONSE BOX (SCIENTIFIC GLASSMORPHISM) -->
+          <!-- RESPONSE SYNTHESIS BOX -->
           <div class="response-box">
             <div class="resp-header">
-              <span class="resp-title">⚡ E.B. NEURAL SYNTHESIS</span>
-              <span class="resp-tag" id="resp-tag">STANDBY</span>
+              <span class="resp-title">⚡ E.B.J. NEURAL SYNTHESIS</span>
+              <span class="resp-tag" id="resp-tag">STANDBY 144 FPS</span>
             </div>
-            <div class="resp-body" id="resp-body">Pronto a ricevere ordini, Ingegner Badr. Il Connectome 3D Bio-Neurale è attivo al centro con trasmissione sinaptica ad impulsi. Invia un comando vocale o tocca il microfono.</div>
+            <div class="resp-body" id="resp-body">
+              Pronto a ricevere ordini, Ingegner Badr. L'ecosistema v100.0 APEX è attivo con accelerazione GPU pura e Rust Tokio Micro-Bridge. Tocca la Sfera o premi [Ctrl+Spazio] per parlare!
+            </div>
           </div>
 
           <!-- QUICK MOOD SWITCHER BAR -->
@@ -351,549 +318,360 @@
             <button class="mood-chip" id="chip-friendly" onclick="switchEBMood('friendly')">😄 SIMPATICO</button>
           </div>
 
-          <!-- HIGH-TECH NEON AUDIO OSCILLOSCOPE SPECTRUM -->
-          <div class="audio-oscilloscope-container">
-            <div class="osc-header">
-              <span class="osc-title">🎙️ NEURAL AUDIO SPECTRUM & DECIBEL MATRIX</span>
-              <span class="osc-val" id="vu-meter-val">0% · IDLE</span>
-            </div>
-            <div class="osc-equalizer-bars" id="osc-equalizer-bars">
-              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
-              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
-              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
-              <div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div><div class="osc-bar"></div>
-            </div>
-          </div>
-
-          <!-- DYNAMIC COLLAPSIBLE TACTICAL ACTION DOCK (PULSANTI A SCOMPARSA) -->
-          <div class="dynamic-action-dock" id="dynamic-action-dock">
-            <div class="dad-toggle-bar" onclick="toggleActionDock()" title="Mostra/Nascondi scorciatoie rapide dinamiche">
-              <span class="dad-icon">⚡</span>
-              <span class="dad-title">TACTICAL ACTION DOCK</span>
-              <span class="dad-chevron" id="dad-chevron">▲</span>
-            </div>
-            <div class="dad-content-pills" id="dad-pills">
-              <button class="dad-pill pill-lead" onclick="sendQuick('E.B., trova clienti a Imola')">🕷️ Lead Imola</button>
-              <button class="dad-pill pill-lead" onclick="sendQuick('E.B., cerca traslochi a Bologna')">👥 Lead Bologna</button>
-              <button class="dad-pill pill-voice" onclick="sendQuick('E.B., invia messaggio WhatsApp a 3405566778 dicendo il preventivo è approvato')">💬 WhatsApp 1-Click</button>
-              <button class="dad-pill pill-guard" onclick="sendQuick('E.B., esegui un audit di rete sul server 92.4.233.42')">🛡️ Kali Audit Rete</button>
-              <button class="dad-pill pill-quote" onclick="openModal('modal-preventivo')">🚚 Preventivo 60mq</button>
-              <button class="dad-pill pill-util" onclick="sendQuick('E.B., che tempo fa a Imola e che ore sono?')">🌦️ Meteo & Ora</button>
-            </div>
-          </div>
-
-
-          <!-- INTERACTIVE NEURAL MESSAGE QUEUE TRAY (GESTIONE & ELIMINAZIONE CODA) -->
-          <div id="neural-queue-tray" class="neural-queue-tray hidden">
-            <div class="nqt-header">
-              <span class="nqt-title">📥 CODA MESSAGGI ATTIVA (<span id="queue-count-tray">0</span>)</span>
-              <div class="nqt-actions">
-                <button class="nqt-btn-stop" onclick="stopJarvisVoice()" title="Interrompi voce JARVIS">⏹️ STOP VOCE</button>
-                <button class="nqt-btn-clear" onclick="clearMessageQueue()" title="Cancella tutta la coda">🗑️ SVUOTA TUTTO</button>
-              </div>
-            </div>
-            <div class="nqt-items" id="queue-items-list"></div>
-          </div>
-
-          <!-- DISCORD-STYLE ULTRA-RESPONSIVE INPUT CONTAINER -->
+          <!-- INPUT DOCK -->
           <div class="input-container discord-input-container">
-            <div id="queue-badge" class="queue-badge hidden" onclick="toggleQueueTray()" title="Clicca per gestire o eliminare i messaggi in coda">
-              📥 CODA (<span id="queue-count">0</span>) <span class="qb-del-icon">✕</span>
-            </div>
-
-            <!-- DISCORD STYLE MIC BUTTON WITH VOICE RING -->
-            <div class="discord-mic-wrapper" id="discord-mic-wrapper">
-              <div class="discord-voice-ring" id="discord-voice-ring"></div>
-              <button class="mic-btn discord-mic-btn" id="mic-btn" title="Tocca per parlare (Tap-to-Talk) o tieni premuto (Discord VAD)">
-                <span class="mic-icon-main">🎙️</span>
-                <div class="discord-mini-bars" id="discord-mini-bars">
-                  <span class="d-bar"></span><span class="d-bar"></span><span class="d-bar"></span>
-                </div>
-              </button>
-            </div>
+            <button class="attach-file-btn" onclick="document.getElementById('file-upload-input').click()" title="Allega File o Documento">📎</button>
+            <input type="file" id="file-upload-input" style="display:none;" onchange="handleFileUpload(this)">
 
             <div class="prompt-input-wrapper">
-              <input type="text" id="prompt-input" class="prompt-input" placeholder="Comanda JARVIS... (tocca 🎙️ o scrivi)" autocomplete="off">
+              <input type="text" id="prompt-input" class="prompt-input" placeholder="Comanda E.B.J... (premi Ctrl+Spazio per parlare o digita qui)" autocomplete="off">
               <div class="input-glow-bar"></div>
             </div>
 
-            <button class="send-btn" id="send-btn">
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">
               <span>INVIA</span>
               <span class="send-shortcut">↵</span>
             </button>
           </div>
         </section>
 
-        <!-- RIGHT PANEL: ORACLE VPS TELEMETRY & EVENT STREAM -->
+
+        <!-- ── RIGHT ORACLE VPS & RUST TELEMETRY DOCK ─────────────── -->
         <section class="panel-box right-panel" id="right-telemetry-dock">
           <div class="panel-header">
             <span class="ph-icon">⚡</span>
-            <span class="ph-title">ORACLE CLOUD VPS TELEMETRY</span>
-            <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi Pannello Telemetria">HIDE ▶</button>
+            <span class="ph-title">RUST & VPS TELEMETRY</span>
+            <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi">HIDE ▶</button>
           </div>
 
-
-          <!-- ORACLE VPS REAL-TIME HARDWARE & CONNECTOME TELEMETRY HUD (JAYSE HANSEN CIRCULAR FUI) -->
-          <div class="vps-live-telemetry-hud" id="vps-live-telemetry-hud">
+          <!-- TELEMETRY METRICS -->
+          <div class="vps-live-telemetry-hud">
             <div class="vlth-header">
               <span class="vlth-title">🛰️ STARK ORBITAL TELEMETRY</span>
               <span class="vlth-badge" id="vps-host-badge">92.4.233.42 · UBUNTU</span>
             </div>
 
-            <!-- DUAL CIRCULAR SVG GAUGES -->
-            <div class="fui-gauges-row">
-              <div class="fui-gauge-box">
-                <svg class="fui-circle-svg" viewBox="0 0 80 80">
-                  <circle class="fui-bg-arc" cx="40" cy="40" r="32" />
-                  <circle class="fui-val-arc cpu" id="svg-cpu-arc" cx="40" cy="40" r="32" style="stroke-dasharray: 201; stroke-dashoffset: 190;" />
-                </svg>
-                <div class="fui-gauge-center">
-                  <span class="fgc-val" id="vps-cpu-val">4.2%</span>
-                  <span class="fgc-lbl">CPU</span>
-                </div>
+            <div class="telemetry-compact-grid">
+              <div class="tc-card">
+                <span class="tc-lbl">CPU LOAD (8C/16T)</span>
+                <span class="tc-val val-green" id="vps-cpu-val">4.2%</span>
+                <div class="tc-bar"><div class="tc-fill fill-green" id="vps-cpu-bar" style="width:4.2%;"></div></div>
               </div>
-
-              <div class="fui-gauge-box">
-                <svg class="fui-circle-svg" viewBox="0 0 80 80">
-                  <circle class="fui-bg-arc" cx="40" cy="40" r="32" />
-                  <circle class="fui-val-arc ram" id="svg-ram-arc" cx="40" cy="40" r="32" style="stroke-dasharray: 201; stroke-dashoffset: 130;" />
-                </svg>
-                <div class="fui-gauge-center">
-                  <span class="fgc-val" id="vps-ram-val">34.8%</span>
-                  <span class="fgc-lbl">RAM</span>
-                </div>
+              <div class="tc-card">
+                <span class="tc-lbl">RAM WORKSTATION (64GB)</span>
+                <span class="tc-val val-cyan" id="vps-ram-val">18.7 GB (29%)</span>
+                <div class="tc-bar"><div class="tc-fill fill-cyan" id="vps-ram-bar" style="width:29%;"></div></div>
               </div>
-            </div>
-            
-            <div class="vlth-metrics-grid" style="display:none;">
-              <div class="vlth-card"><div class="vlth-track"><div class="vlth-fill" id="vps-cpu-bar"></div></div></div>
-              <div class="vlth-card"><div class="vlth-track"><div class="vlth-fill" id="vps-ram-bar"></div></div></div>
-            </div>
-
-            <div class="vlth-status-strip">
-              <div class="vlth-stat-item"><span class="vsi-dot online"></span> RUST: <strong id="vps-latency-val">&lt; 1.8ms</strong></div>
-              <div class="vlth-stat-item"><span class="vsi-dot online"></span> TUNNELS: <strong id="vps-tunnels-val">3/3 ACTIVE</strong></div>
-              <div class="vlth-stat-item"><span class="vsi-dot online"></span> N8N: <strong id="vps-bots-val">21 FLOWS</strong></div>
+              <div class="tc-card">
+                <span class="tc-lbl">RUST TOKIO BUS LATENCY</span>
+                <span class="tc-val val-emerald" id="vps-latency-val">0.15 ms</span>
+              </div>
+              <div class="tc-card">
+                <span class="tc-lbl">ACTIVE TUNNELS & BOTS</span>
+                <span class="tc-val" id="vps-tunnels-val">3/3 ACTIVE · 7 BOTS</span>
+              </div>
             </div>
           </div>
 
-          
-          <div class="event-stream-header"><span>EVENT STREAM LOG</span><button class="clear-btn" onclick="clearLog()">SVUOTA</button></div>
-          <div class="event-stream" id="event-stream"><div class="ev-line"><span class="ev-ts">00:00:00</span><span class="ev-type sys">SYS</span><span class="ev-msg">3D Bio-Neural Cortex Active</span></div></div>
+          <!-- EVENT STREAM -->
+          <div class="event-stream-container">
+            <div class="esc-header">
+              <span class="esc-title">📜 NEURAL DISPATCH LOG</span>
+            </div>
+            <div class="event-stream" id="event-stream">
+              <div class="ev-line"><span class="ev-ts">00:00:01</span><span class="ev-type sys">SYS</span><span class="ev-msg">E.B.J. AI v100.0 APEX Core Initialized.</span></div>
+              <div class="ev-line"><span class="ev-ts">00:00:02</span><span class="ev-type rust">RUST</span><span class="ev-msg">Tokio Bridge listening on port 9000 (&lt; 0.2ms latency).</span></div>
+            </div>
+          </div>
         </section>
 
-        <!-- FLOATING WING RESTORE BUTTONS (WHEN COLLAPSED) -->
-        <button class="restore-wing-btn left-float" id="restore-left-btn" onclick="toggleLeftWing()" title="Espandi Dock Tattico">🎛️ TACTICAL DOCK</button>
-        <button class="restore-wing-btn right-float" id="restore-right-btn" onclick="toggleRightWing()" title="Espandi Telemetria">📊 TELEMETRY</button>
       </main>
     </div>
   </div>
 
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       VIEW 2: HERMES AGENT MISSION CONTROL (LEVEL 5 DAG KANBAN)
-       ═══════════════════════════════════════════════════════════════ -->
-  <div class="hermes-workspace" id="view-kanban">
-    <aside class="hermes-sidebar">
-      <div class="hs-logo">
-        <div class="hs-icon">❖</div>
-        <div class="hs-title"><span>HERMES</span><span>AGENT</span></div>
-      </div>
-      <nav class="hs-nav">
-        <div class="hs-nav-item" onclick="switchMasterView('jarvis')"><span class="h-icon">⚡</span> TORNA A JARVIS HUD</div>
-        <div class="hs-nav-item active"><span class="h-icon">⭐</span> KANBAN (LEVEL 5)</div>
-        <div class="hs-nav-item" onclick="switchMasterView('agente0')"><span class="h-icon">🤖</span> AGENTE ZERO</div>
-        <div class="hs-nav-item" onclick="switchMasterView('n8n')"><span class="h-icon">⚙️</span> N8N WORKFLOWS</div>
-        <div class="hs-nav-item" onclick="openSgomberoModal()"><span class="h-icon">🚛</span> PREVENTIVI SGOMBERO</div>
-        <div class="hs-nav-item" onclick="openMarketplaceModal()"><span class="h-icon">🏷️</span> VENDI MARKETPLACE</div>
-      </nav>
-      <div class="hs-system-box">
-        <div class="hs-sys-title">SYSTEM</div>
-        <div class="hs-sys-status">GATEWAY: <b style="color:var(--green)">ONLINE</b></div>
-        <div class="hs-sys-actions">
-          <button class="h-btn-small" onclick="refreshKanban()">🔄 Refresh Board</button>
-          <button class="h-btn-small primary" onclick="launchLevel5Pipeline()">🚀 Run Level 5</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="hermes-main">
-      <div class="kanban-header">
-        <div class="kh-left">
-          <span class="kh-title">HERMES KANBAN (LEVEL 5 DAG)</span>
-          <button class="h-btn primary" style="background:#8b5cf6; color:#fff;" onclick="launchLevel5Pipeline()">🚀 LAUNCH LEVEL 5 PIPELINE</button>
-          <button class="h-btn secondary" onclick="openNewTaskModal()">+ NEW TASK</button>
-        </div>
-        <div class="kh-right">
-          <input type="text" id="kanban-filter" class="h-input" placeholder="Filter cards..." oninput="filterKanbanCards()">
-          <select id="filter-assignee" class="h-select" onchange="filterKanbanCards()">
-            <option value="ALL">All profiles</option>
-            <option value="AG-EBGStudio">AG-EBGStudio</option>
-            <option value="AG-MailMaster">AG-MailMaster</option>
-            <option value="AG-SocialMedia">AG-SocialMedia</option>
-            <option value="AG-LegalVault">AG-LegalVault</option>
-            <option value="AG-WebIntel">AG-WebIntel</option>
-            <option value="UNASSIGNED">Unassigned</option>
-          </select>
-          <button class="h-btn" onclick="refreshKanban()">🔄 REFRESH</button>
-        </div>
-      </div>
-
-      <div class="kanban-lanes-container">
-        <div class="kanban-lane" id="lane-triage">
-          <div class="lane-header triage"><div class="lh-title"><span class="lh-dot triage"></span> TRIAGE <span class="lh-count" id="count-triage">0</span></div><div class="lh-desc">Raw ideas & requests</div></div>
-          <div class="lane-cards" id="cards-triage"></div>
-        </div>
-        <div class="kanban-lane" id="lane-todo">
-          <div class="lane-header todo"><div class="lh-title"><span class="lh-dot todo"></span> TODO (DEPENDENCIES) <span class="lh-count" id="count-todo">0</span></div><div class="lh-desc">Waiting on dependencies (T1+T2 / T3)</div></div>
-          <div class="lane-cards" id="cards-todo"></div>
-        </div>
-        <div class="kanban-lane" id="lane-ready">
-          <div class="lane-header ready"><div class="lh-title"><span class="lh-dot ready"></span> READY <span class="lh-count" id="count-ready">0</span></div><div class="lh-desc">Assigned, ready to dispatch</div></div>
-          <div class="lane-cards" id="cards-ready"></div>
-        </div>
-        <div class="kanban-lane" id="lane-in_progress">
-          <div class="lane-header in_progress"><div class="lh-title"><span class="lh-dot in_progress"></span> IN PROGRESS <span class="lh-count" id="count-in_progress">0</span></div><div class="lh-desc">Parallel / sequential execution</div></div>
-          <div class="lane-cards" id="cards-in_progress"></div>
-        </div>
-        <div class="kanban-lane" id="lane-blocked">
-          <div class="lane-header blocked"><div class="lh-title"><span class="lh-dot blocked"></span> BLOCKED <span class="lh-count" id="count-blocked">0</span></div><div class="lh-desc">Waiting for human input</div></div>
-          <div class="lane-cards" id="cards-blocked"></div>
-        </div>
-        <div class="kanban-lane" id="lane-done">
-          <div class="lane-header done"><div class="lh-title"><span class="lh-dot done"></span> DONE <span class="lh-count" id="count-done">0</span></div><div class="lh-desc">Completed deliverables</div></div>
-          <div class="lane-cards" id="cards-done"></div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       VIEW 3: AGENTE ZERO OFFICIAL WEB APP
-       ═══════════════════════════════════════════════════════════════ -->
-  <div class="embed-workspace" id="view-agente0">
-    <div class="embed-header">
-      <span class="eh-title">🤖 AGENTE ZERO · OFFICIAL WEB INTERFACE</span>
-      <div class="embed-actions">
-        <button class="h-btn secondary" onclick="switchMasterView('jarvis')">⚡ Torna a JARVIS</button>
-        <button class="h-btn secondary" id="btn-reload-agente0" onclick="reloadAgente0Frame()">🔄 Ricarica</button>
-        <button class="h-btn primary" id="btn-open-agente0" onclick="openAgente0Full()">🚀 APRI IN NUOVA SCHEDA</button>
-      </div>
-    </div>
-    <div class="embed-frame-wrapper">
-      <iframe id="agente0-frame" src="https://fashion-provincial-fun-though.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" title="Agente Zero Official UI"></iframe>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       VIEW 4: N8N OFFICIAL GRAPHICAL WORKFLOW WORKSPACE
-       ═══════════════════════════════════════════════════════════════ -->
-  <div class="embed-workspace" id="view-n8n">
-    <div class="embed-header">
-      <span class="eh-title">⚙️ N8N OFFICIAL GRAPHICAL WORKFLOW WORKSPACE</span>
-      <div class="embed-actions">
-        <button class="h-btn secondary" onclick="switchMasterView('jarvis')">⚡ Torna a JARVIS</button>
-        <button class="h-btn secondary" id="btn-reload-n8n" onclick="reloadN8nFrame()">🔄 Ricarica</button>
-        <button class="h-btn primary" id="btn-open-n8n" onclick="openN8nFull()">🚀 APRI N8N IN NUOVA SCHEDA</button>
-      </div>
-    </div>
-    <div class="embed-frame-wrapper" style="display:flex; flex-direction:column;">
-      <div style="background:#040f1c; padding:12px 16px; border-bottom:1px solid #00d4ff33; display:flex; justify-content:space-between; align-items:center;">
+  <div class="jarvis-workspace" id="view-kali-lab">
+    <div class="kali-lab">
+      <header class="kali-lab-head">
         <div>
-          <span style="color:#00ff88; font-weight:700; font-size:0.85rem;">● N8N WORKFLOW AUTOMATION ENGINE</span>
-          <p style="margin:4px 0 0 0; font-size:0.75rem; color:#94a3b8;">La web app completa di n8n è attiva e pronta per creare flussi, collegare Telegram/WhatsApp e gestire i preventivi:</p>
+          <h1>Kali Lab</h1>
+          <p class="kali-lab-sub">Container <code>ebj-kali-engine</code> · solo binari in allowlist</p>
         </div>
-        <button class="h-btn primary" style="background:#10b981; color:#fff; font-weight:700; padding:8px 16px; font-size:0.8rem;" onclick="openN8nFull()">↗️ APRI N8N WEB APP COMPLETA</button>
+        <div class="kali-lab-actions">
+          <span class="kali-status-pill" id="kali-status-pill">stato: …</span>
+          <input type="search" id="kali-tool-search" placeholder="Cerca tool…" oninput="filterKaliTools()" />
+          <button type="button" class="view-switch-btn" onclick="refreshKaliCatalog()">Aggiorna elenco</button>
+          <button type="button" class="view-switch-btn" onclick="updateKaliTools()">Aggiorna tool</button>
+        </div>
+      </header>
+      <div class="kali-chip-row" id="kali-chip-row">
+        <button type="button" class="kali-chip active" data-cat="all" onclick="filterKaliCat(this,'all')">Tutti</button>
+        <button type="button" class="kali-chip" data-cat="recon" onclick="filterKaliCat(this,'recon')">Recon</button>
+        <button type="button" class="kali-chip" data-cat="password" onclick="filterKaliCat(this,'password')">Password</button>
+        <button type="button" class="kali-chip" data-cat="wireless" onclick="filterKaliCat(this,'wireless')">Wireless</button>
+        <button type="button" class="kali-chip" data-cat="web" onclick="filterKaliCat(this,'web')">Web</button>
+        <button type="button" class="kali-chip" data-cat="rete" onclick="filterKaliCat(this,'rete')">Rete</button>
       </div>
-      <iframe id="n8n-frame" src="https://system-roses-wrestling-lawsuit.trycloudflare.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads" class="hud-iframe" style="flex:1;" title="n8n Official Graphical Workspace"></iframe>
+      <div class="kali-card-grid" id="kali-card-grid" role="status" aria-live="polite"></div>
     </div>
+    <div class="kali-drawer-backdrop" id="kali-drawer-backdrop" onclick="closeKaliDrawer()" hidden></div>
+    <aside class="kali-drawer" id="kali-drawer" aria-hidden="true">
+      <button type="button" class="kali-drawer-close" onclick="closeKaliDrawer()">Chiudi</button>
+      <h2 id="kali-drawer-title">Tool</h2>
+      <p class="kali-lab-sub" id="kali-drawer-path"></p>
+      <label for="kali-drawer-args">Argomenti (es. --help)</label>
+      <input type="text" id="kali-drawer-args" placeholder="--help" />
+      <div class="kali-drawer-btns">
+        <button type="button" class="view-switch-btn" onclick="runKaliHelp()">--help</button>
+        <button type="button" class="view-switch-btn" onclick="runKaliVersion()">--version</button>
+        <button type="button" class="view-switch-btn" onclick="runKaliDrawer()">Esegui</button>
+      </div>
+      <pre class="kali-log" id="kali-log">Seleziona un tool.</pre>
+    </aside>
   </div>
+
 
   <!-- ═══════════════════════════════════════════════════════════════
-       INTERACTIVE TACTICAL MODALS
+       CYBER-TERMINAL HOLOGRAPHIC WINDOW (FIRST-CLASS CITIZEN [T])
        ═══════════════════════════════════════════════════════════════ -->
-  <!-- MODAL SKILL INSPECTOR DETAIL -->
-  <div class="hud-modal-overlay" id="modal-skill-detail">
-    <div class="hud-modal-card" style="max-width: 520px; border-color: #00ff9f;">
-      <div class="hmc-header">
-        <span class="hmc-title" id="msd-title" style="color:#00ff9f;">⚡ SKILL INSPECTOR HUD</span>
-        <button class="hmc-close" onclick="closeModal('modal-skill-detail')">✕</button>
-      </div>
-      <div class="hmc-form">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,255,159,0.08); padding:8px 12px; border-radius:4px; border:1px solid rgba(0,255,159,0.2);">
-          <div>
-            <div style="font-family:var(--font-hud); font-size:0.75rem; color:#00ff9f; font-weight:700;" id="msd-cat">CATEGORY</div>
-            <div style="font-family:var(--font-mono); font-size:0.68rem; color:#94a3b8;" id="msd-id">skill_id</div>
-          </div>
-          <span style="background:rgba(0,255,159,0.2); color:#00ff9f; padding:2px 8px; border-radius:3px; font-family:var(--font-mono); font-size:0.65rem; font-weight:700;">● ONLINE 120 FPS</span>
+  <div class="cyber-terminal-overlay" id="cyber-terminal-overlay" aria-hidden="true" onclick="handleTerminalOverlayClick(event)">
+    <div class="cyber-terminal-window" id="cyber-terminal-window">
+      
+      <!-- WINDOW HEADER WITH DRAG HANDLE -->
+      <div class="ct-header ct-draggable-handle" id="ct-window-header">
+        <div class="ct-header-left">
+          <span class="ct-led-pulse"></span>
+          <span class="ct-title">⚡ E.B.J. CYBER-TERMINAL MATRIX · ZERO LATENCY [T]</span>
         </div>
 
-        <div class="hmc-field">
-          <label class="hmc-label">DESCRIZIONE TATTICA & FUNZIONALITÀ:</label>
-          <p id="msd-desc" style="font-size:0.8rem; color:#e2e8f0; line-height:1.45; margin:0; background:rgba(255,255,255,0.04); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.08);"></p>
+        <div class="ct-header-tabs">
+          <button class="ct-tab active" id="ct-tab-rust" onclick="switchTerminalChannel('rust')">🦀 RUST CLI</button>
+          <button class="ct-tab" id="ct-tab-kali" onclick="switchTerminalChannel('kali')">🛡️ KALI VPS</button>
+          <button class="ct-tab" id="ct-tab-aider" onclick="switchTerminalChannel('aider')">🤖 AIDER AI</button>
+          <button class="ct-tab" id="ct-tab-sys" onclick="switchTerminalChannel('sys')">💻 SYSTEM</button>
         </div>
 
-        <div class="hmc-field">
-          <label class="hmc-label">COMANDO VOCALE RAPIDO COLLEGATO:</label>
-          <input type="text" id="msd-cmd" class="hmc-input" readonly style="color:#00f0ff; font-family:var(--font-mono); cursor:pointer;" onclick="this.select()">
-        </div>
-
-        <div class="hmc-actions">
-          <button class="h-btn secondary" onclick="closeModal('modal-skill-detail')">CHIUDI</button>
-          <button class="h-btn primary" id="msd-btn-exec" onclick="executeCurrentInspectedSkill()">🚀 ESEGUI ORA CON JARVIS</button>
+        <div class="ct-header-controls">
+          <button class="ct-ctrl-btn" onclick="dockCyberTerminal()" title="Aggancia in basso">📌 DOCK</button>
+          <button class="ct-ctrl-btn" onclick="maximizeCyberTerminal()" title="Schermo intero">🗖 FULL</button>
+          <button class="ct-ctrl-btn" onclick="minimizeCyberTerminal()" title="Riduci a pillola">─ MIN</button>
+          <button class="ct-ctrl-btn" onclick="centerCyberTerminal()" title="Ripristina centro">🎯 CENTRA</button>
+          <button class="ct-close-btn" onclick="toggleCyberTerminal()" title="Chiudi (ESC)">✕</button>
         </div>
       </div>
+
+      <!-- TERMINAL BODY -->
+      <div class="ct-body" id="ct-terminal-body">
+        <div class="ct-log-line ct-banner">
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  E.B.J. AI CYBER-TERMINAL v100.0 APEX · RUST TOKIO ENGINE (PORT 9000)        ║
+║  Canali: [🦀 Rust] [🛡️ Kali Docker 92.4.233.42] [🤖 Aider] [💻 System Shell]  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+        </div>
+        <div class="ct-log-line ct-system">🛡️ Trascina l'intestazione per spostare · Trascina l'angolo in basso a destra per ridimensionare</div>
+        <div class="ct-log-line ct-system">💡 Premi [T] o [ESC] per aprire/chiudere · Clicca [📌 DOCK] per agganciare in basso</div>
+      </div>
+
+      <!-- TERMINAL FOOTER -->
+      <div class="ct-footer">
+        <span class="ct-prompt-symbol" id="ct-prompt-symbol">rust@ebj:~#</span>
+        <input type="text" class="ct-input" id="ct-command-input" placeholder="Digita un comando o clicca un pulsante rapido..." autocomplete="off" />
+        <button class="ct-send-btn" onclick="submitTerminalCommand()">ESEGUI ↵</button>
+      </div>
+
+      <!-- RESIZE GRIP -->
+      <div class="ct-resize-grip" id="ct-resize-grip" title="Trascina per ridimensionare">⇲</div>
     </div>
   </div>
 
-  <!-- MODAL 1: INVIA EMAIL RAPIDA -->
-  <div class="hud-modal-overlay" id="modal-send-email">
-    <div class="hud-modal-card">
-      <div class="hmc-header">
-        <span class="hmc-title">✉️ INVIA EMAIL RAPIDA (JARVIS DISPATCH)</span>
-        <button class="hmc-close" onclick="closeModal('modal-send-email')">✕</button>
-      </div>
-      <div class="hmc-form">
-        <div class="hmc-field">
-          <label class="hmc-label">DESTINATARIO (EMAIL):</label>
-          <input type="email" id="email-to" class="hmc-input" placeholder="es: commerciale@immobiliarebologna.it" value="commerciale@immobiliarebologna.it">
-        </div>
-        <div class="hmc-field">
-          <label class="hmc-label">OGGETTO:</label>
-          <input type="text" id="email-subject" class="hmc-input" placeholder="es: Proposta Preventivo Sgombero Uffici 180mq" value="Proposta Preventivo Sgombero Uffici 180mq">
-        </div>
-        <div class="hmc-field">
-          <label class="hmc-label">MESSAGGIO:</label>
-          <textarea id="email-body" class="hmc-textarea" placeholder="Scrivi il messaggio o lascia che JARVIS lo generi...">Gentile Cliente, confermiamo la disponibilità per lo sgombero uffici in Via Indipendenza. Preventivo: 1.750€ + IVA compreso smaltimento ecocentro. Restiamo a disposizione per il sopralluogo.</textarea>
-        </div>
-        <div class="hmc-actions">
-          <button class="h-btn secondary" onclick="closeModal('modal-send-email')">ANNULLA</button>
-          <button class="h-btn primary" onclick="submitSendEmail()">🚀 INVIA ORA & ARCHIVIA NEL VAULT</button>
-        </div>
-      </div>
-    </div>
+  <!-- FLOATING MINIMIZED PILL -->
+  <div class="ct-minimized-pill" id="ct-minimized-pill" onclick="restoreCyberTerminal()">
+    <span class="ct-pulse-led"></span>
+    <span class="ct-min-title">🖥️ TERMINALE [T]</span>
+    <span class="ct-min-badge" id="ct-min-badge">🦀 RUST</span>
   </div>
 
-  <!-- MODAL 2: SPULCIA GMAIL & VAULT -->
-  <div class="hud-modal-overlay" id="modal-sift-gmail">
-    <div class="hud-modal-card">
-      <div class="hmc-header">
-        <span class="hmc-title">🔍 SPULCIA GMAIL & ARCHIVIO VAULT</span>
-        <button class="hmc-close" onclick="closeModal('modal-sift-gmail')">✕</button>
-      </div>
-      <div class="hmc-form">
-        <div class="hmc-field">
-          <label class="hmc-label">CERCA TRA LE EMAIL (MITTENTE, FATTURA, CEDOLINI, PAROLA CHIAVE):</label>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="sift-query" class="hmc-input" style="flex:1;" placeholder="es: fattura, sgombero, inps, steam, agenzia entrate" onkeypress="if(event.key==='Enter') executeLiveSift()">
-            <button class="h-btn primary" onclick="executeLiveSift()">CERCA</button>
-          </div>
-        </div>
-        <div id="sift-results" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
-        <div class="hmc-actions">
-          <button class="h-btn secondary" onclick="closeModal('modal-sift-gmail')">CHIUDI</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 3: PREVENTIVO SGOMBERO -->
-  <div class="hud-modal-overlay" id="modal-preventivo">
-    <div class="hud-modal-card">
-      <div class="hmc-header">
-        <span class="hmc-title">🚛 GENERATORE PREVENTIVO SGOMBERO RAPIDO</span>
-        <button class="hmc-close" onclick="closeModal('modal-preventivo')">✕</button>
-      </div>
-      <div class="hmc-form">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="hmc-field">
-            <label class="hmc-label">METRI QUADRI (MQ):</label>
-            <input type="number" id="prev-mq" class="hmc-input" value="100" min="10" oninput="calcPrevTotal()">
-          </div>
-          <div class="hmc-field">
-            <label class="hmc-label">PIANO IMMOBILE:</label>
-            <select id="prev-piano" class="hmc-select" onchange="calcPrevTotal()">
-              <option value="0">Piano Terra / Giardino (+0€)</option>
-              <option value="50">1° Piano (+50€)</option>
-              <option value="100" selected>2° Piano (+100€)</option>
-              <option value="180">3° Piano o superiore (+180€)</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="hmc-field">
-            <label class="hmc-label">PRESENZA ASCENSORE:</label>
-            <select id="prev-asc" class="hmc-select" onchange="calcPrevTotal()">
-              <option value="0">Sì (Ascensore / Montacarichi)</option>
-              <option value="120" selected>No (Scale manuali +120€)</option>
-            </select>
-          </div>
-          <div class="hmc-field">
-            <label class="hmc-label">SMALTIMENTO SPECIALE ECOCENTRO:</label>
-            <select id="prev-smalt" class="hmc-select" onchange="calcPrevTotal()">
-              <option value="90" selected>Standard (Legno/Ferro/Carta +90€)</option>
-              <option value="190">Pesante (Macerie / Vernici +190€)</option>
-            </select>
-          </div>
-        </div>
-        <div style="background:#020810; border:1px solid #10b981; border-radius:4px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:var(--font-hud); font-size:0.85rem; color:#10b981;">STIMA TOTALE PREVENTIVO:</span>
-          <span id="prev-totale-display" style="font-family:var(--font-mono); font-size:1.3rem; font-weight:900; color:#00ff88;">1.110,00 € + IVA</span>
-        </div>
-        <div class="hmc-actions">
-          <button class="h-btn secondary" onclick="closeModal('modal-preventivo')">ANNULLA</button>
-          <button class="h-btn primary" onclick="submitPreventivo()">📋 SALVA IN KANBAN & NOTIFICA TELEGRAM</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       E.B. SETTINGS & PERSONALITY CONTROL DRAWER (DESKTOP & MOBILE)
+       MODULAR CARDS CATALOG MODAL [M]
        ═══════════════════════════════════════════════════════════════ -->
-  <div class="settings-drawer-backdrop" id="settings-backdrop" onclick="toggleSettingsDrawer()"></div>
-  <aside class="settings-drawer" id="settings-drawer">
-    <div class="sd-header">
-      <div class="sd-title-box">
-        <span class="sd-icon">⚙️</span>
-        <span class="sd-title">E.B. CONTROL CENTER & DNA</span>
-      </div>
-      <button class="sd-close-btn" onclick="toggleSettingsDrawer()">✕</button>
-    </div>
-
-    <div class="sd-content">
-      <!-- SECTION 1: PERSONALITY / MOOD SELECTION -->
-      <div class="sd-section">
-        <div class="sds-title">🎭 PERSONALITÀ & TONO CONVERSAZIONALE</div>
-        <div class="sds-grid-moods">
-          <div class="sds-mood-card active" id="sd-mood-jarvis" onclick="switchEBMood('jarvis')">
-            <span class="sd-mc-icon">⚡</span>
-            <div class="sd-mc-info">
-              <span class="sd-mc-name">J.A.R.V.I.S. (Iron Man)</span>
-              <span class="sd-mc-desc">Brillante, elegante, ironico, impeccabile</span>
-            </div>
-          </div>
-          <div class="sds-mood-card" id="sd-mood-military" onclick="switchEBMood('military')">
-            <span class="sd-mc-icon">🛡️</span>
-            <div class="sd-mc-info">
-              <span class="sd-mc-name">Tattico Militare</span>
-              <span class="sd-mc-desc">Conciso, codici operativi, zero chiacchiere</span>
-            </div>
-          </div>
-          <div class="sds-mood-card" id="sd-mood-architect" onclick="switchEBMood('architect')">
-            <span class="sd-mc-icon">🔬</span>
-            <div class="sd-mc-info">
-              <span class="sd-mc-name">Senior Architect</span>
-              <span class="sd-mc-desc">Ingegneristico, metriche, dettagli tecnici</span>
-            </div>
-          </div>
-          <div class="sds-mood-card" id="sd-mood-friendly" onclick="switchEBMood('friendly')">
-            <span class="sd-mc-icon">😄</span>
-            <div class="sd-mc-info">
-              <span class="sd-mc-name">Amichevole & Simpatico</span>
-              <span class="sd-mc-desc">Caloroso, colloquiale, battute e supporto</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 2: AUTOFILL PROFILE (BROWSER ACTION AGENT) -->
-      <div class="sd-section">
-        <div class="sds-title">🌐 PROFILO AUTOFILL (COMPILAZIONE FORM AUTOMATICA)</div>
-        <div class="sds-form-grid">
-          <div class="sds-input-group">
-            <label>Nome Completo:</label>
-            <input type="text" id="af-fullname" value="Badr El Ouariti" class="sds-input">
-          </div>
-          <div class="sds-input-group">
-            <label>Email Ufficiale:</label>
-            <input type="email" id="af-email" value="badraudi@gmail.com" class="sds-input">
-          </div>
-          <div class="sds-input-group">
-            <label>Telefono / Cellulare:</label>
-            <input type="tel" id="af-phone" value="3400000000" class="sds-input">
-          </div>
-          <div class="sds-input-group">
-            <label>Azienda / Brand:</label>
-            <input type="text" id="af-company" value="EBGStudio / Pietro Traslochi" class="sds-input">
-          </div>
-          <div class="sds-input-group">
-            <label>Città Operativa:</label>
-            <input type="text" id="af-city" value="Imola / Bologna" class="sds-input">
-          </div>
-          <div class="sds-input-group">
-            <label>Note Automatiche:</label>
-            <input type="text" id="af-notes" value="Richiesta ufficiale da ecosistema E.B." class="sds-input">
-          </div>
-        </div>
-        <button class="sds-save-btn" onclick="saveAutofillProfile()">💾 SALVA PROFILO NEL VAULT</button>
-      </div>
-
-      <!-- SECTION 3: BEHAVIORAL DNA STATS -->
-      <div class="sd-section">
-        <div class="sds-title">🧬 STATISTICHE DNA DIGITALE & RAPPORT</div>
-        <div class="sds-dna-stats">
-          <div class="sds-dna-item">
-            <span class="sdi-label">Interruzioni Registrate:</span>
-            <span class="sdi-val" id="dna-interrupts">0</span>
-          </div>
-          <div class="sds-dna-item">
-            <span class="sdi-label">Interazioni Totali:</span>
-            <span class="sdi-val" id="dna-interactions">42</span>
-          </div>
-          <div class="sds-dna-item">
-            <span class="sdi-label">Grado di Sincronia:</span>
-            <span class="sdi-val neon-green">100% PERFETTO</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 4: 3D GRAPH PHYSICS & SOUND FX -->
-      <div class="sd-section">
-        <div class="sds-title">🔬 AUDIO-REACTIVE 3D & FISICA GRAFO</div>
-        <div class="sds-toggle-row">
-          <span>Risonanza Vocale 3D (FFT a 60 FPS):</span>
-          <input type="checkbox" id="toggle-fft" checked class="sds-checkbox" onchange="toggleAudioReactivity(this.checked)">
-        </div>
-        <div class="sds-toggle-row">
-          <span>Micro Sound FX Scientifici:</span>
-          <input type="checkbox" id="toggle-sfx" checked class="sds-checkbox">
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       LEAD RADAR 2026 MODAL (VERIFIED CLIENTS & 1-CLICK CALL)
-       ═══════════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay" id="modal-lead-radar">
-    <div class="modal-box holo-modal" style="max-width: 720px;">
+  <div class="modal-overlay" id="modal-modular-catalog">
+    <div class="modal-box holo-modal" style="max-width:880px;">
       <div class="modal-header">
-        <span class="mh-title">🎯 RADAR CLIENTI & LEAD FRESCHI (2026)</span>
-        <button class="modal-close" onclick="closeModal('modal-lead-radar')">✕</button>
-      </div>
-      <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:8px;">
-          <span style="font-size:0.75rem; color:#00ff9f; font-family:var(--font-hud);">● SCRAPING ATTIVO: SUBITO, FB MARKETPLACE, PORTALI EBG</span>
-          <button class="h-btn primary" onclick="loadLeadRadar()">🔄 AGGIORNA LISTA</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:#00f0ff; font-size:1.3rem;">🧩</span>
+          <div>
+            <h3 style="margin:0; font-family:'Orbitron', sans-serif; font-size:1rem; color:#00f0ff;">CATALOGO SCHEDE DINAMICHE & MODULI</h3>
+            <small style="color:#94a3b8; font-size:0.75rem;">Attiva/disattiva le schede a piacimento o chiedi a voce a E.B.J.</small>
+          </div>
         </div>
-        <div class="lead-radar-list" id="lead-radar-list" style="display:flex; flex-direction:column; gap:8px;">
-          <!-- Injected via loadLeadRadar() in app.js -->
+        <button class="modal-close" onclick="closeModal('modal-modular-catalog')">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding:18px; max-height:68vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:0.78rem; color:#00ff9f; font-weight:bold;">💡 Puoi dire a voce: "E.B.J., mostrami la scheda CPU" o "Apri terminale"</span>
+          <div style="display:flex; gap:8px;">
+            <button class="h-btn primary" onclick="openAllModules()">🌟 APRI TUTTI</button>
+            <button class="h-btn" onclick="resetToEssentialModules()">🎯 DEFAULT ESSENZIALE</button>
+            <button class="h-btn close" onclick="closeAllModules()" style="border-color:#ff4d79; color:#ff4d79;">👁️ STEALTH</button>
+          </div>
+        </div>
+
+        <div class="modular-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px;">
+          <!-- Card 1: Core Sfera -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🧠</span>
+              <div class="mcc-info"><strong>SFERA NEURALE 3D</strong><small>Nucleo Quantistico GPU</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-synapses" checked onchange="toggleModule('mod-synapses', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Core olografico quantistico animato dalla GPU a 144 FPS nativi.</p>
+          </div>
+
+          <!-- Card 2: Cyber-Terminal -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🖥️</span>
+              <div class="mcc-info"><strong>CYBER-TERMINAL [T]</strong><small>Rust Tokio & Kali CLI</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-terminal" onchange="toggleModule('mod-terminal', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Console flottante multi-canale, ridimensionabile e dockabile in basso.</p>
+          </div>
+
+          <!-- Card 3: CPU & RAM 64GB -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🎛️</span>
+              <div class="mcc-info"><strong>CPU & RAM 64GB</strong><small>Workstation Imola</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-cpu-ram" checked onchange="toggleModule('mod-cpu-ram', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Telemetria nativa 8C/16T, RAM 64GB DDR4 e bus Tokio sub-millisecondo.</p>
+          </div>
+
+          <!-- Card 4: Oracle VPS 24GB -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🛡️</span>
+              <div class="mcc-info"><strong>ORACLE CLOUD VPS</strong><small>92.4.233.42 · 24GB RAM</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-vps" checked onchange="toggleModule('mod-vps', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Stato tunnel Cloudflare, N8N Cloud e container Docker isolati.</p>
+          </div>
+
+          <!-- Card 5: Dual GPU -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">⚡</span>
+              <div class="mcc-info"><strong>DUAL GPU RTX 4070</strong><small>12GB VRAM + GTX 1660</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-gpu" onchange="toggleModule('mod-gpu', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Monitoraggio VRAM e motore locale Unsloth Qwen 27B zero-filter.</p>
+          </div>
+
+          <!-- Card 6: Cargo 3D -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">📦</span>
+              <div class="mcc-info"><strong>3D CARGO OPTIMIZER</strong><small>Ducato Maxi vs Daily 35q</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-cargo" onchange="toggleModule('mod-cargo', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Calcolo volumetrico m³ e ottimizzazione vano di carico furgoni.</p>
+          </div>
+
+          <!-- Card 7: N8N Funnel -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🔄</span>
+              <div class="mcc-info"><strong>N8N FUNNEL TRASLOCHI</strong><small>Preventivi & Contratti</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-n8n" onchange="toggleModule('mod-n8n', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Generazione contratti bollati e dispatch email/Telegram 24/7.</p>
+          </div>
+
+          <!-- Card 8: Radar Clienti -->
+          <div class="mod-cat-card">
+            <div class="mcc-header">
+              <span class="mcc-icon">🎯</span>
+              <div class="mcc-info"><strong>RADAR CLIENTI 2026</strong><small>Scraping Lead Imola/Bologna</small></div>
+              <label class="mcc-toggle"><input type="checkbox" id="chk-mod-radar" onchange="toggleModule('mod-radar', this.checked)"><span class="mcc-slider"></span></label>
+            </div>
+            <p class="mcc-desc">Scansione in tempo reale di annunci traslochi e sgomberi freschi.</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="synaptic_3d_lab.js?v=109.0"></script>
-  <script src="app.js?v=109.0"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       DYNAMIC FLOATING MODULAR WINDOW CARDS STAGE
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="floating-modules-stage" id="floating-modules-stage">
+    
+    <!-- Scheda 1: CPU & RAM 64GB -->
+    <div class="modular-window-card" id="card-mod-cpu-ram" style="display:none; top:90px; right:20px; width:340px;">
+      <div class="mwc-header ct-draggable-handle">
+        <span class="mwc-title">🎛️ CPU & RAM WORKSTATION</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleModule('mod-cpu-ram', false)">✕</button></div>
+      </div>
+      <div class="mwc-body">
+        <div class="mwc-metric-row"><span class="mwc-lbl">CPU 8C/16T Load:</span> <span class="mwc-val val-green" id="mwc-cpu-val">4.2%</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-green" id="mwc-cpu-fill" style="width:4.2%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">RAM 64GB DDR:</span> <span class="mwc-val val-cyan" id="mwc-ram-val">18.7 / 64 GB (29%)</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-cyan" id="mwc-ram-fill" style="width:29%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">Tokio Zero-Copy Bus:</span> <span class="mwc-val val-emerald">0.15 ms LATENCY</span></div>
+      </div>
+    </div>
+
+    <!-- Scheda 2: Oracle Cloud VPS 24GB -->
+    <div class="modular-window-card" id="card-mod-vps" style="display:none; top:290px; right:20px; width:340px;">
+      <div class="mwc-header ct-draggable-handle">
+        <span class="mwc-title">🛡️ ORACLE CLOUD VPS (24GB)</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleModule('mod-vps', false)">✕</button></div>
+      </div>
+      <div class="mwc-body">
+        <div class="mwc-metric-row"><span class="mwc-lbl">Host:</span> <span class="mwc-val">92.4.233.42 (Ubuntu 24.04)</span></div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">RAM Cloud:</span> <span class="mwc-val val-cyan">24 GB Ampere A1</span></div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">Tunnel Status:</span> <span class="mwc-val val-green">ONLINE (eb.badrexpress.com)</span></div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">Kali Docker Engine:</span> <span class="mwc-val val-emerald">RUNNING (tmpfs 50GB/s)</span></div>
+      </div>
+    </div>
+
+    <!-- Scheda 3: Dual GPU -->
+    <div class="modular-window-card" id="card-mod-gpu" style="display:none; top:90px; left:320px; width:340px;">
+      <div class="mwc-header ct-draggable-handle">
+        <span class="mwc-title">⚡ DUAL GPU RTX 4070 MATRIX</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleModule('mod-gpu', false)">✕</button></div>
+      </div>
+      <div class="mwc-body">
+        <div class="mwc-metric-row"><span class="mwc-lbl">GPU 1:</span> <span class="mwc-val val-cyan">NVIDIA RTX 4070 12GB VRAM</span></div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">GPU 2:</span> <span class="mwc-val val-green">NVIDIA GTX 1660 6GB</span></div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">Local Model Engine:</span> <span class="mwc-val val-emerald">Qwen 27B Unsloth Zero-Filter</span></div>
+      </div>
+    </div>
+
+    <!-- Scheda 4: Cargo 3D -->
+    <div class="modular-window-card" id="card-mod-cargo" style="display:none; top:280px; left:320px; width:360px;">
+      <div class="mwc-header ct-draggable-handle">
+        <span class="mwc-title">📦 3D CARGO PACKING OPTIMIZER</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleModule('mod-cargo', false)">✕</button></div>
+      </div>
+      <div class="mwc-body">
+        <div style="font-size:0.75rem; color:#cbd5e1; margin-bottom:8px;">Calcolo volumetrico e assegnazione vano di carico EBG:</div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <button class="mwc-chip" onclick="quickCalculateCargo(35)">🏠 Trilocale 75mq</button>
+          <button class="mwc-chip" onclick="quickCalculateCargo(18)">🏢 Ufficio 40mq</button>
+          <button class="mwc-chip" onclick="quickCalculateCargo(12)">📦 Sgombero Box</button>
+        </div>
+        <div id="mwc-cargo-result" style="font-size:0.75rem; color:#00ff9f; background:rgba(0,0,0,0.5); padding:8px; border-radius:4px; border:1px solid rgba(0,255,159,0.2);">
+          Veicolo consigliato: 🚚 DUCATO MAXI (15 m³) · Occupazione: 82%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="cyber_audio_engine.js?v=1000.0"></script>
+  <script src="app.js?v=1002.0"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-

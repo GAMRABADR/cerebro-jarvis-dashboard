@@ -1,0 +1,18 @@
+{
+  "name": "E.B.J. API Keys Inventory",
+  "id": "ebj_api_keys_inventory",
+  "category": "SECURITY",
+  "description": "Inventario NOMI di API key e credenziali (mai i valori). Cerca env.example, compose, server.py, Agente-0, skills. Gruppi: AI, cloud/infra, messaging, payments, other. HARDCODED + path se in chiaro.",
+  "version": "1.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "triggers": [
+    "lista chiavi api",
+    "inventario credenziali",
+    "quali api keys",
+    "quali token",
+    "quali secret",
+    "mappa env"
+  ],
+  "inputs": ["root", "max_files"],
+  "outputs": ["status", "groups", "hardcoded_count", "scanned_files", "latency_ms"]
+}

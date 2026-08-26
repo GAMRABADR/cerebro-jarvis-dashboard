@@ -1,0 +1,15 @@
+{
+  "id": "instant_payment_invoicing_engine",
+  "name": "Instant Payment & Invoicing",
+  "category": "FINTECH_BILLING",
+  "icon": "\ud83d\udcb3",
+  "triggers": [
+    "paga",
+    "link pagamento",
+    "satispay",
+    "acconto trasloco",
+    "fattura sdi"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

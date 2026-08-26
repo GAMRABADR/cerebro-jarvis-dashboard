@@ -1,0 +1,9 @@
+{
+  "name": "AI Cascade Router",
+  "id": "ai_cascade_router",
+  "category": "AI_INFRASTRUCTURE",
+  "description": "Cascata Groq, Gemini, OpenRouter, Hugging Face, Qwen locale, QwenCloud. Chiavi da ambiente.",
+  "version": "1.0.0",
+  "inputs": ["prompt", "task", "model"],
+  "outputs": ["status", "provider", "text", "latency_ms"]
+}

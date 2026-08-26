@@ -1,0 +1,22 @@
+{
+  "name": "Hermes Aether-Swarm Cyber-Matrix Superpower",
+  "id": "hermes_aetherswarm_matrix",
+  "category": "SWARM_SUPERPOWER",
+  "description": "Superpotere di orchestrazione e multiplexing multi-agente in tempo reale: gestisce canali paralleli tra Rust Aether, Hermes Kali Linux Docker, Aider Coder e N8N con routing sub-millisecondo.",
+  "version": "3.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "channel",
+    "command",
+    "args",
+    "async_mode"
+  ],
+  "outputs": [
+    "status",
+    "channel",
+    "stdout",
+    "exit_code",
+    "latency_ms",
+    "timestamp"
+  ]
+}

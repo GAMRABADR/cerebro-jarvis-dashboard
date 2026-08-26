@@ -1,0 +1,17 @@
+{
+  "name": "Aste Giudiziarie & Sgomberi 360 Radar",
+  "id": "aste_sgomberi_radar",
+  "category": "BUSINESS_SGOMBERI_360",
+  "description": "Intercettazione aste e proposte pacchetto chiavi in mano Sgombero + Pulizia + Imbianchino.",
+  "version": "1.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "region"
+  ],
+  "outputs": [
+    "region",
+    "total_active_deals",
+    "deals",
+    "value_proposition"
+  ]
+}

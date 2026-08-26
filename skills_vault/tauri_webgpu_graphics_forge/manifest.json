@@ -1,0 +1,19 @@
+{
+  "name": "Tauri 2.0 & WebGPU Native Graphics Architect",
+  "id": "tauri_webgpu_graphics_forge",
+  "category": "GRAPHICS_AND_GUI",
+  "description": "Gestione, compilazione e distribuzione delle interfacce grafiche GPU-accelerate in Rust wgpu e sincronizzazione multi-agente.",
+  "version": "2.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "action",
+    "engine",
+    "skill_id",
+    "manifest"
+  ],
+  "outputs": [
+    "status",
+    "hardware_acceleration",
+    "agents_synced"
+  ]
+}

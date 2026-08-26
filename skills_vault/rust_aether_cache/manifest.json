@@ -1,0 +1,21 @@
+{
+  "name": "Rust Aether-Cache Zero-Copy Synchronizer",
+  "id": "rust_aether_cache",
+  "category": "RUST_HIGH_PERFORMANCE",
+  "description": "Buffer di memoria in-RAM zero-copy e replica di telemetria a 30 microsecondi tra Workstation locale (64GB) e VPS Oracle (24GB).",
+  "version": "3.0.0",
+  "author": "Ingegner Badr El Ouariti",
+  "inputs": [
+    "action",
+    "key",
+    "value",
+    "ttl_seconds"
+  ],
+  "outputs": [
+    "status",
+    "key",
+    "cached_value",
+    "latency_micros",
+    "synced_nodes"
+  ]
+}

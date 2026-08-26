@@ -1,0 +1,13 @@
+{
+  "id": "bluetooth_proximity_presence",
+  "name": "Bluetooth Proximity Presence",
+  "category": "HARDWARE_IOT",
+  "icon": "\ud83d\udcf1",
+  "triggers": [
+    "presenza bluetooth",
+    "studio wake-up",
+    "prossimita"
+  ],
+  "version": "1.0.0",
+  "runner": "python"
+}

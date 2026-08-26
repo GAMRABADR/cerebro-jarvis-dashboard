@@ -1,0 +1,19 @@
+{
+  "id": "hot_folder_document_ingestor",
+  "name": "Hot-Drop Document & PDF Ingestor",
+  "category": "COGNITIVE_KERNEL",
+  "icon": "\ud83d\udce5",
+  "triggers": [
+    "estrai documenti",
+    "leggi pdf",
+    "cartella documenti",
+    "assimila documenti",
+    "documenti drop",
+    "nuovo documento"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.05,
+  "description": "Monitoraggio automatico della cartella di drop D:\\EBGStudioProgetti\\DOCUMENTI_INGESTION_AUTOMATICA per estrazione e memorizzazione istantanea di PDF, foto e documenti."
+}

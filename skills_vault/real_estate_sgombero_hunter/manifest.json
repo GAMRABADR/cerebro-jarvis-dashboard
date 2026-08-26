@@ -1,0 +1,21 @@
+{
+  "id": "real_estate_sgombero_hunter",
+  "name": "Real Estate & Aste Sgombero Hunter",
+  "category": "BUSINESS_ARBITRAGE",
+  "icon": "\ud83c\udfe2",
+  "triggers": [
+    "sgomberi",
+    "sgombero",
+    "lavori bologna",
+    "aste immobiliari",
+    "sgomberi immobiliari",
+    "pietro traslochi sgomberi",
+    "lavori per zona",
+    "sgomberi pietro"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.08,
+  "description": "Radar certificato per sgomberi e traslochi tra agenzie immobiliari, custodi giudiziari, aste e privati a Bologna e Imola con 1-Click WhatsApp per Badr e Pietro."
+}

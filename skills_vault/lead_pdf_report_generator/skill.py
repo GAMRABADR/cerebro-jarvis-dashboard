@@ -1,7 +1,9 @@
-import os, time, sqlite3
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.pdfgen import canvas
+import os, time, sqlite3, qrcode
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, KeepTogether, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPORTS_DIR = os.path.join(BASE_DIR, "public", "reports")
@@ -12,7 +14,6 @@ def execute(params=None):
     params = params or {}
     city_filter = (params.get("city") or "").lower().strip()
     
-    # Query database
     leads = []
     try:
         conn = sqlite3.connect(VAULT_DB)
@@ -25,82 +26,175 @@ def execute(params=None):
                 continue
             leads.append({
                 "name": r[0], "phone": r[1], "city": r[2], "service": r[3],
-                "volume_mq": r[4], "budget": r[5], "source": r[6], "status": r[7],
+                "volume_mq": r[4], "budget": r[5] or 0.0, "source": r[6], "status": r[7],
                 "date": r[8], "notes": r[9]
             })
     except Exception as e:
         print(f"[Lead PDF DB Err]: {e}")
-        leads = [
-            {"name": "Marco Rossi", "phone": "+39 347 889 1234", "city": "Bologna (Centro)", "service": "Trasloco Completo 3 Piani", "volume_mq": 85, "budget": 820.0, "source": "PietroTraslochi", "status": "VERIFICATO", "date": "2026-08-25", "notes": "Richiede uso scala esterna e imballaggio mobili pregiati."},
-            {"name": "Elena Bianchi", "phone": "+39 333 456 7890", "city": "Imola (Viale Dante)", "service": "Sgombero Appartamento + Garage", "volume_mq": 60, "budget": 480.0, "source": "BadrExpress", "status": "VERIFICATO", "date": "2026-08-25", "notes": "Sgombero immediato prima di fine mese."},
-            {"name": "Luca Moretti", "phone": "+39 349 112 3344", "city": "Faenza (Zona Fiera)", "service": "Trasloco Ufficio", "volume_mq": 120, "budget": 1150.0, "source": "Subito.it Radar", "status": "VERIFICATO", "date": "2026-08-25", "notes": "Postazioni PC e armadi archivio."}
-        ]
 
+    total_budget = sum(l["budget"] for l in leads)
+    city_name = (city_filter or "Emilia-Romagna Metropoli").title()
     filter_tag = city_filter.replace(" ", "_") if city_filter else "emilia_romagna"
     filename = f"report_leads_{filter_tag}_{int(time.time())}.pdf"
     pdf_path = os.path.join(REPORTS_DIR, filename)
     public_url = f"/reports/{filename}"
 
-    # Generate PDF
-    c = canvas.Canvas(pdf_path, pagesize=A4)
-    width, height = A4
+    # Setup Doc
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=A4,
+        leftMargin=10*mm,
+        rightMargin=10*mm,
+        topMargin=10*mm,
+        bottomMargin=10*mm
+    )
 
-    # Top Cybernetic Header
-    c.setFillColor(colors.HexColor("#04101e"))
-    c.rect(0, height - 100, width, 100, fill=1, stroke=0)
+    styles = getSampleStyleSheet()
 
-    c.setFillColor(colors.HexColor("#00f0ff"))
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(35, height - 45, "E.B. SUPREME AI · LEAD & CLIENTI RADAR 2026")
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=15,
+        leading=18,
+        textColor=colors.HexColor('#04101e')
+    )
 
-    c.setFillColor(colors.HexColor("#00ff9f"))
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(35, height - 68, f"REPORT LOGISTICA & TRASLOCHI · TERRITORIO: {(city_filter or 'EMILIA-ROMAGNA METROPOLI').upper()}")
+    subtitle_style = ParagraphStyle(
+        'DocSub',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9.5,
+        leading=13,
+        textColor=colors.HexColor('#0284c7')
+    )
 
-    c.setFillColor(colors.HexColor("#94a3b8"))
-    c.setFont("Helvetica", 9)
-    c.drawString(35, height - 85, f"Data Generazione: {time.strftime('%d/%m/%Y %H:%M:%S')} | Target Anno: 2026 | Vault: SQLite WAL Mode")
+    card_title_style = ParagraphStyle(
+        'CardTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10.5,
+        leading=13,
+        textColor=colors.HexColor('#0f172a')
+    )
 
-    # Draw Leads Cards
-    y = height - 130
-    for idx, lead in enumerate(leads[:6]):
-        # Background card
-        c.setFillColor(colors.HexColor("#f8fafc"))
-        c.setStrokeColor(colors.HexColor("#cbd5e1"))
-        c.roundRect(30, y - 85, width - 60, 95, 6, fill=1, stroke=1)
+    phone_style = ParagraphStyle(
+        'PhoneStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=11.5,
+        leading=14,
+        textColor=colors.HexColor('#0369a1')
+    )
 
-        # Card Title
-        c.setFillColor(colors.HexColor("#0f172a"))
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(45, y - 10, f"#{idx+1} · {lead['name']} ({lead['city']})")
+    text_style = ParagraphStyle(
+        'CardText',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor('#334155')
+    )
 
-        # Verified Badge
-        c.setFillColor(colors.HexColor("#059669"))
-        c.setFont("Helvetica-Bold", 9)
-        c.drawString(width - 170, y - 10, f"[ {lead['status']} · {lead['source']} ]")
+    notes_style = ParagraphStyle(
+        'CardNotes',
+        parent=styles['Italic'],
+        fontName='Helvetica-Oblique',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#64748b')
+    )
 
-        # Details
-        c.setFillColor(colors.HexColor("#334155"))
-        c.setFont("Helvetica", 9)
-        c.drawString(45, y - 30, f"📞 Recapito Telefonico: {lead['phone']}   |   🏷️ Servizio: {lead['service']} ({lead['volume_mq']} mq)")
-        c.drawString(45, y - 48, f"💰 Stima Budget: € {lead['budget']:.2f}   |   📅 Rilevamento: {lead['date']}")
+    story = []
+
+    # Generate QR Code
+    qr = qrcode.QRCode(box_size=3, border=1)
+    qr.add_data(f"https://eb.badrexpress.com{public_url}")
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color='#04101e', back_color='#ffffff')
+    qr_path = os.path.join(REPORTS_DIR, 'qr_temp.png')
+    qr_img.save(qr_path)
+
+    # Header Table
+    header_data = [
+        [
+            Paragraph(f'<b>PIETRO TRASLOCHI & EBGSTUDIO</b><br/><font size=9 color="#059669"><b>RADAR COMMESSE & CLIENTI VERIFICATI 2026</b></font><br/><font size=8 color="#64748b">Territorio: {city_name.upper()} · Data Generazione: {time.strftime("%d/%m/%Y %H:%M")}</font>', title_style),
+            Image(qr_path, width=20*mm, height=20*mm)
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[150*mm, 40*mm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 3*mm))
+    story.append(HRFlowable(width='100%', thickness=1.5, color=colors.HexColor('#0284c7'), spaceAfter=4*mm))
+
+    # Summary Table
+    summary_data = [
+        [
+            Paragraph(f'<b>Commesse Rilevate:</b> {len(leads)} Clienti', text_style),
+            Paragraph(f'<b>Valore Totale Pipeline:</b> € {total_budget:,.2f}', phone_style),
+            Paragraph('<b>Stato:</b> DISPATCH DIRETTO ATTIVO', subtitle_style)
+        ]
+    ]
+    summary_table = Table(summary_data, colWidths=[60*mm, 75*mm, 55*mm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f0fdf4')),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#86efac')),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#bbf7d0')),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 4*mm))
+
+    # Lead Cards
+    for idx, lead in enumerate(leads):
+        card_data = [
+            [
+                Paragraph(f'<b>#{idx+1} · {lead["name"]}</b>  ({lead["city"]})', card_title_style),
+                Paragraph(f'<font color="#059669"><b>[{lead["status"]}]</b></font>', text_style)
+            ],
+            [
+                Paragraph(f'<b>TEL:</b> <font color="#0284c7" size=11.5><b>{lead["phone"]}</b></font>', phone_style),
+                Paragraph(f'<b>Budget:</b> € {lead["budget"]:,.2f}  |  <b>Mq:</b> {lead["volume_mq"]} mq', text_style)
+            ],
+            [
+                Paragraph(f'<b>Fonte Scraping:</b> <font color="#4338ca"><b>{lead["source"]}</b></font>', text_style),
+                Paragraph(f'<b>Data Annuncio:</b> <font color="#0f766e"><b>{lead["date"]}</b></font>', text_style)
+            ],
+            [
+                Paragraph(f'<b>Servizio:</b> {lead["service"]}', text_style),
+                Paragraph(f'<b>Note:</b> {lead["notes"]}', notes_style)
+            ]
+        ]
+        card_table = Table(card_data, colWidths=[115*mm, 75*mm])
+        card_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#ffffff')),
+            ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#cbd5e1')),
+            ('LINEBELOW', (0,0), (-1,0), 0.5, colors.HexColor('#f1f5f9')),
+            ('LINEBELOW', (0,2), (-1,2), 0.5, colors.HexColor('#f8fafc')),
+            ('TOPPADDING', (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ]))
         
-        # Notes
-        c.setFillColor(colors.HexColor("#64748b"))
-        c.setFont("Helvetica-Oblique", 8.5)
-        c.drawString(45, y - 68, f"Note: {lead['notes'][:85]}")
+        story.append(KeepTogether([card_table, Spacer(1, 2.5*mm)]))
 
-        y -= 105
-        if y < 80:
-            c.showPage()
-            y = height - 50
 
-    # Footer
-    c.setFillColor(colors.HexColor("#64748b"))
-    c.setFont("Helvetica", 8)
-    c.drawString(35, 25, "Documento ufficiale generato dal sistema autonomo E.B. per l'Ingegner Badr · EBGStudio & PietroTraslochi.")
+    # Footer Note
+    story.append(Spacer(1, 2*mm))
+    story.append(Paragraph('<font size=7.5 color="#94a3b8">Documento Ufficiale generato dal CEREBRO JARVIS / E.B. SUPREME AI per l\'Ingegner Badr · EBGStudio & Pietro Traslochi · Tutti i diritti riservati 2026.</font>', text_style))
 
-    c.save()
+    doc.build(story)
 
     return {
         "status": "SUCCESS",
@@ -108,8 +202,11 @@ def execute(params=None):
         "pdf_path": pdf_path,
         "url": public_url,
         "count": len(leads),
-        "city": city_filter or "Tutte le città"
+        "total_budget": total_budget,
+        "city": city_name
     }
 
 if __name__ == "__main__":
     print(execute({"city": "bologna"}))
+
+

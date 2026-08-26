@@ -1,0 +1,9 @@
+{
+  "name": "E.B.J. Upload Hub",
+  "id": "ebj_upload_hub",
+  "category": "MEDIA",
+  "description": "Instrada upload verso GitHub, Hugging Face, Drive, YouTube, media 9:16 o cartella locale.",
+  "version": "1.0.0",
+  "inputs": ["target", "path", "filename", "content_base64"],
+  "outputs": ["status", "target", "result"]
+}

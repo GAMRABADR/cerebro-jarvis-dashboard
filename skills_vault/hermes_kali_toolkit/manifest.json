@@ -1,0 +1,9 @@
+{
+  "name": "Hermes Kali Toolkit",
+  "id": "hermes_kali_toolkit",
+  "category": "SECURITY",
+  "description": "Catalogo e lancio allowlist dei tool nel container ebj-kali-engine. Azioni list, run, which, update.",
+  "version": "1.1.0",
+  "inputs": ["action", "tool", "args"],
+  "outputs": ["status", "catalog", "stdout", "exit_code"]
+}
