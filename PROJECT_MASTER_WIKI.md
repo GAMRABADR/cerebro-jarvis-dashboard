@@ -2,7 +2,7 @@
 > **Documento Privato Ufficiale & Immutabile dell'Ecosistema EBGStudio**  
 > **Comandante & Ingegnere Capo:** Ingegner Badr El Ouariti (`badraudi@gmail.com` | `+39 388 870 3508` | Imola)  
 > **Partner Operativo Logistica:** Pietro (`+39 328 426 3554` | PietroTraslochi.com)  
-> **Data Ultimo Aggiornamento:** 27/08/2026 22:45:00 (Sincronizzato in Tempo Reale)
+> **Data Ultimo Aggiornamento:** 28/08/2026 00:15:00 (Sincronizzato in Tempo Reale)
 
 ---
 
@@ -80,6 +80,9 @@ Il router di inferenza in `server.py` implementa un failover automatico su 4 liv
 ---
 
 ## 11. REGISTRO STORICO MIGLIORIE IN TEMPO REALE (REAL-TIME WIKI LOG)
+
+* `[HASH: 194aa225d1a6]` **[2026-08-28 00:15:00] P16 INFRASTRUTTURA NATIVA — Dock Control, Shield, Backup, Self-Heal** *(Cat: INFRASTRUCTURE)*:
+  **EBJ DOCK CONTROL**: modulo Rust `docker.rs` nel bridge (client Docker Engine via unix socket, decodifica chunked e demux log, zero dipendenze nuove) — `GET /api/docker/containers` (stato+RAM), `POST /api/docker/action` (start/stop/restart), `GET /api/docker/logs`; protetto da header `X-EBJ-Token` (senza token: 401). GUI cyberpunk in Hermes `/docker` con card cliccabili e auto-refresh 15s, pubblica via nginx sul tunnel ebgs. **EBJ SHIELD**: Trivy 0.74.0, scan settimanale lunedì 03:30 sulle immagini dei container attivi, report + alert Telegram. **EBJ BACKUP**: repo Restic cifrato `/opt/backups/restic-repo`, primo backup riuscito (dump Postgres n8n+ebj_supreme, lead vault, dati bridge/Hermes, env, nginx), timer giornaliero 02:30, retention 7gg/4sett/6mesi. **SELF-HEAL**: container critici monitorati ogni 5min con riavvio automatico + Telegram. Tailscale 1.102 installato (autenticazione Ingegnere pending). Knowledge agente: nuova sezione 9.
 
 * `[HASH: 23fa098af9ad]` **[2026-08-27 22:45:00] CHIUSURA FINALE — 138/138 TOOL KALI OK, COLLI DI BOTTIGLIA RISOLTI** *(Cat: FINAL_VALIDATION)*:
   Test sistematico di TUTTI i tool del catalogo via catena di produzione bridge→Hermes→Kali: **138/138 funzionanti** (103 exit-0 + 35 rispondenti, 0 guasti, 0 timeout, latenza media 607ms end-to-end). Kiterunner rimosso dal catalogo (inesistente su ARM64). Fix: risoluzione name→binary nella Kali Exec API, bloodhound.py installato, theHarvester e bloodhound ri-verificati OK. Colli di bottiglia risolti: Lead Pipeline (chiamata corretta a `run_cycle`, genera lead reali), Kali OSINT Harvester (JSON.stringify nel body Telegram → SUCCESS), Morning Briefing (nodo Telegram convertito a HTTP Request con token risolto dinamicamente dal DB), limiti RAM alzati live con `docker update` (agent-zero e kali-engine da 2GB a 4GB: pressione RAM da 74%/71% a 37%/36%). Watchdog Kali Exec API provato sul campo: restart automatico dopo kill. Lead vault a 1374 lead. Ecosistema: 7 container healthy, 5 timer systemd attivi, 4 tunnel monitorati.
