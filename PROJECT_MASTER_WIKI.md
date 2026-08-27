@@ -2,7 +2,7 @@
 > **Documento Privato Ufficiale & Immutabile dell'Ecosistema EBGStudio**  
 > **Comandante & Ingegnere Capo:** Ingegner Badr El Ouariti (`badraudi@gmail.com` | `+39 388 870 3508` | Imola)  
 > **Partner Operativo Logistica:** Pietro (`+39 328 426 3554` | PietroTraslochi.com)  
-> **Data Ultimo Aggiornamento:** 28/08/2026 00:15:00 (Sincronizzato in Tempo Reale)
+> **Data Ultimo Aggiornamento:** 28/08/2026 00:45:00 (Sincronizzato in Tempo Reale)
 
 ---
 
@@ -80,6 +80,9 @@ Il router di inferenza in `server.py` implementa un failover automatico su 4 liv
 ---
 
 ## 11. REGISTRO STORICO MIGLIORIE IN TEMPO REALE (REAL-TIME WIKI LOG)
+
+* `[HASH: de5f5ae4c492]` **[2026-08-28 00:45:00] SESSIONE COLLI DI BOTTIGLIA —TROVATI E RISOLTI** *(Cat: PERFORMANCE)*:
+  (1) **server.py HUD: CPU 29.8%→1.1%** — scoperto poller Telegram duplicato nella HUD, in conflitto getUpdates col Superbot (stesso token, eccezioni silenziate in loop): disattivato, il bot resta al Superbot. (2) **Lead Pipeline riparata in 2 strati**: nodo Telegram con credenziale inesistente → convertito a HTTP Request con token risolto dinamicamente dal DB; poi errore di parse Markdown di Telegram (underscore dentro il bold dell'heartbeat) → rimosso parse_mode. **Ciclo schedulato 23:20 = SUCCESS**. (3) Disco: journal vacuum + prune docker, 69%→66%. (4) Load 2.59 diagnosticato come boot di n8n post-restart: normalizzato a 0.06. (5) Primo scan Trivy: 33 CRITICAL / 47 HIGH nelle immagini (per lo più senza fix upstream), monitoraggio settimanale già attivo con alert Telegram. Sweep difensivo: nessun altro workflow attivo con credenziali telegramApi mancanti.
 
 * `[HASH: 194aa225d1a6]` **[2026-08-28 00:15:00] P16 INFRASTRUTTURA NATIVA — Dock Control, Shield, Backup, Self-Heal** *(Cat: INFRASTRUCTURE)*:
   **EBJ DOCK CONTROL**: modulo Rust `docker.rs` nel bridge (client Docker Engine via unix socket, decodifica chunked e demux log, zero dipendenze nuove) — `GET /api/docker/containers` (stato+RAM), `POST /api/docker/action` (start/stop/restart), `GET /api/docker/logs`; protetto da header `X-EBJ-Token` (senza token: 401). GUI cyberpunk in Hermes `/docker` con card cliccabili e auto-refresh 15s, pubblica via nginx sul tunnel ebgs. **EBJ SHIELD**: Trivy 0.74.0, scan settimanale lunedì 03:30 sulle immagini dei container attivi, report + alert Telegram. **EBJ BACKUP**: repo Restic cifrato `/opt/backups/restic-repo`, primo backup riuscito (dump Postgres n8n+ebj_supreme, lead vault, dati bridge/Hermes, env, nginx), timer giornaliero 02:30, retention 7gg/4sett/6mesi. **SELF-HEAL**: container critici monitorati ogni 5min con riavvio automatico + Telegram. Tailscale 1.102 installato (autenticazione Ingegnere pending). Knowledge agente: nuova sezione 9.
