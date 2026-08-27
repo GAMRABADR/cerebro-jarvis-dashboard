@@ -2,8 +2,15 @@
   "name": "Hermes Kali Toolkit",
   "id": "hermes_kali_toolkit",
   "category": "SECURITY",
-  "description": "Catalogo e lancio allowlist dei tool nel container ebj-kali-engine. Azioni list, run, which, update.",
-  "version": "1.1.0",
+  "description": "Catalogo e lancio allowlist dei tool nel container ebj-kali-engine. Azioni list, status, run, which, update. Perimetro limitato agli host di proprieta' (badrexpress.com, pietrotraslochi.com, tinoshop.it, 127.0.0.1, VPS Oracle): nessun payload, nessun playbook d'attacco.",
+  "version": "1.4.0",
   "inputs": ["action", "tool", "args"],
-  "outputs": ["status", "catalog", "stdout", "exit_code"]
+  "outputs": ["status", "catalog", "catalog_count", "categories", "last_exec", "stdout", "path", "exit_code"],
+  "actions": {
+    "list": "Catalogo completo dei tool in allowlist (139 binari, 12 famiglie).",
+    "status": "Diagnostica Hermes: conteggio catalogo, famiglie, chiave SSH, ultima esecuzione (solo nome + exit).",
+    "which": "Percorso reale del binario nel container via argv `docker exec <c> which -- <binario>`.",
+    "run": "Esecuzione argv del binario; argomenti vuoti diventano `--help`.",
+    "update": "Rilancia /opt/ebj/update-tools.sh nel container."
+  }
 }

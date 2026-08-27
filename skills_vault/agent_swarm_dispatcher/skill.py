@@ -1,15 +1,11 @@
 """
 Intelligent Multi-Agent Dispatch Router & MCP Specialization Matrix
-Smista automaticamente ogni richiesta all'agente specializzato più idoneo:
-- 🧠 HERMES MASTER: Dialogo, Voce, Preventivi, Vision AI, Calendario, Memoria
-- 🛡️ HERMES KALI: Sicurezza, Audit di Rete, Scansioni Nmap, Comandi Linux
-- 🤖 AGENTE ZERO: Esecuzione Script complessi, Code Dev, PLC Siemens, CNC
-- 🕷️ OPENCLAW / CRAWL4AI: Web Scraping massivo su RAM-Disk, Aste, Subito, Autolavaggi
-- 🔄 N8N ORCHESTRATOR: Flussi visivi, Webhook, Notifiche Telegram, Google Sheets
+Hermes Kali usa l'intero catalogo tool-catalog.json (allowlist), non un sottoinsieme fisso.
 """
 import os
 import json
 import time
+import re
 
 AGENT_SPECIALIZATION_MATRIX = {
     "HERMES_MASTER": {
@@ -23,7 +19,7 @@ AGENT_SPECIALIZATION_MATRIX = {
     },
     "HERMES_KALI": {
         "role": "Braccio Operativo Sicurezza, Diagnostica di Rete & Linux Native",
-        "description": "Esecuzione tool a basso livello nel container Docker kalilinux/kali-custom:apex, audit sicurezza e monitoraggio porte.",
+        "description": "Esecuzione tool allowlist nel container kali-custom:apex (catalogo Hermes Kali).",
         "assigned_mcp_skills": [
             "hermes_kali_toolkit",
             "mcp-nmap-scanner", "mcp-whois-dns-prober", "mcp-fail2ban-manager",
@@ -58,45 +54,81 @@ AGENT_SPECIALIZATION_MATRIX = {
     }
 }
 
+_KALI_STATIC_KW = (
+    "/kali", "kali lab", "scansiona", "sicurezza", "vulnerab",
+    "fail2ban", "linux comando", "penetration", "pentest",
+)
+
+
+def _catalog_tool_names():
+    names = set()
+    here = os.path.dirname(os.path.abspath(__file__))
+    paths = (
+        os.path.join(here, "..", "hermes_kali_toolkit", "tool-catalog.json"),
+        os.path.normpath(os.path.join(here, "..", "..", "..", "ebj-supreme", "kali", "tool-catalog.json")),
+    )
+    for p in paths:
+        if os.path.isfile(p):
+            try:
+                with open(p, encoding="utf-8") as fh:
+                    data = json.load(fh)
+                if isinstance(data, list):
+                    for item in data:
+                        for key in ("name", "binary"):
+                            val = str(item.get(key) or "").strip().lower()
+                            if val:
+                                names.add(val)
+                break
+            except Exception:
+                continue
+    return names
+
+
+def _looks_like_kali(prompt: str) -> bool:
+    p_low = prompt.lower().strip()
+    if any(k in p_low for k in _KALI_STATIC_KW):
+        return True
+    tools = _catalog_tool_names()
+    if not tools:
+        return False
+    if re.search(r"(?:ebj|hermes|jarvis)\s+(?:lancia|esegui|run|avvia)\s+\S+", p_low):
+        return True
+    first = re.split(r"\s+", p_low, maxsplit=1)[0]
+    first = first.lstrip("/")
+    return first in tools
+
+
+def _run_kali(prompt: str):
+    try:
+        from skills_vault.hermes_kali_toolkit.skill import execute as kali_exec, parse_user_kali, parse_kali_cli
+    except ImportError:
+        return None
+    params = parse_user_kali(prompt) or parse_kali_cli(prompt)
+    return kali_exec(params)
+
+
 def route_task_to_agent(task_prompt=""):
     t0 = time.time()
     p_low = task_prompt.lower().strip()
-    
-    # 1. Check KALI keywords (toolkit allowlist + audit rete)
-    kali_kw = [
-        "/kali", "scansiona", "nmap", "porte", "sicurezza", "vulnerab",
-        "dns", "ssl", "certificato", "fail2ban", "linux comando",
-        "hydra", "aircrack", "john", "hashcat", "gobuster", "nikto",
-        "sqlmap", "wifite", "ffuf", "masscan", "dirb", "wfuzz",
-        "whatweb", "wpscan", "tcpdump", "tshark", "kali lab",
-    ]
-    if any(k in p_low for k in kali_kw):
+
+    if _looks_like_kali(task_prompt):
         assigned_agent = "HERMES_KALI"
-        reason = "Task di sicurezza, audit di rete o tool Kali allowlist (hermes_kali_toolkit)."
-    
-    # 2. Check SCRAPING & OPENCLAW keywords
+        reason = "Task Kali: catalogo allowlist completo (hermes_kali_toolkit)."
     elif any(k in p_low for k in ["scrappa", "estrai", "subito", "bakeca", "aste", "annunci", "autolavaggi d'italia", "crawl", "cerca annunci"]):
         assigned_agent = "OPENCLAW_CRAWL4AI"
         reason = "Task di data mining, web scraping intensivo o monitoraggio aste su RAM-Disk."
-        
-    # 3. Check AGENTE ZERO & INDUSTRIAL keywords
     elif any(k in p_low for k in ["plc", "siemens", "s7-1200", "cnc", "gcode", "g-code", "unreal", "ue5", "blender", "compila c++", "script python"]):
         assigned_agent = "AGENTE_ZERO"
         reason = "Task di sviluppo codice, automazione industriale PLC/CNC o rendering 3D."
-        
-    # 4. Check N8N keywords
     elif any(k in p_low for k in ["flusso", "workflow", "cron notturno", "schedula", "foglio excel", "google sheets", "bot telegram"]):
         assigned_agent = "N8N_ORCHESTRATOR"
         reason = "Task di orchestrazione visiva, trigger temporizzato o automazione multi-canale."
-        
-    # 5. Default -> HERMES MASTER (Regia Cognitiva)
     else:
         assigned_agent = "HERMES_MASTER"
         reason = "Task di dialogo naturale, calcolo preventivo, vision AI o strategia generale."
-        
+
     agent_info = AGENT_SPECIALIZATION_MATRIX.get(assigned_agent, {})
-    
-    return {
+    out = {
         "status": "SUCCESS",
         "task_prompt": task_prompt,
         "assigned_agent": assigned_agent,
@@ -105,6 +137,16 @@ def route_task_to_agent(task_prompt=""):
         "available_mcp_tools": agent_info.get("assigned_mcp_skills", []),
         "latency_ms": round((time.time() - t0) * 1000, 2)
     }
+    if assigned_agent == "HERMES_KALI":
+        kali = _run_kali(task_prompt)
+        if kali:
+            out["kali"] = kali
+            out["stdout"] = kali.get("stdout") or kali.get("message") or ""
+            out["exit_code"] = kali.get("exit_code")
+            if kali.get("status") == "ERROR":
+                out["status"] = "ERROR"
+    return out
+
 
 def execute(params=None):
     params = params or {}
@@ -114,5 +156,5 @@ def execute(params=None):
             "status": "SUCCESS",
             "matrix": AGENT_SPECIALIZATION_MATRIX
         }
-    prompt = params.get("prompt") or params.get("task") or ""
+    prompt = params.get("prompt") or params.get("task") or params.get("command") or ""
     return route_task_to_agent(prompt)

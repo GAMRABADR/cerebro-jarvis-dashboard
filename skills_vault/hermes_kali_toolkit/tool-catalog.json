@@ -1,53 +1,830 @@
 [
-  {"name": "nmap", "binary": "nmap", "category": "recon", "package": "nmap"},
-  {"name": "ncat", "binary": "ncat", "category": "recon", "package": "nmap"},
-  {"name": "nping", "binary": "nping", "category": "recon", "package": "nmap"},
-  {"name": "masscan", "binary": "masscan", "category": "recon", "package": "masscan"},
-  {"name": "whatweb", "binary": "whatweb", "category": "recon", "package": "whatweb"},
-  {"name": "wafw00f", "binary": "wafw00f", "category": "recon", "package": "wafw00f"},
-  {"name": "dig", "binary": "dig", "category": "recon", "package": "dnsutils"},
-  {"name": "whois", "binary": "whois", "category": "recon", "package": "whois"},
-  {"name": "netdiscover", "binary": "netdiscover", "category": "recon", "package": "netdiscover"},
-  {"name": "ike-scan", "binary": "ike-scan", "category": "recon", "package": "ike-scan"},
-  {"name": "enum4linux", "binary": "enum4linux", "category": "recon", "package": "enum4linux"},
-  {"name": "nbtscan", "binary": "nbtscan", "category": "recon", "package": "nbtscan"},
-  {"name": "hydra", "binary": "hydra", "category": "password", "package": "hydra"},
-  {"name": "medusa", "binary": "medusa", "category": "password", "package": "medusa"},
-  {"name": "ncrack", "binary": "ncrack", "category": "password", "package": "ncrack"},
-  {"name": "john", "binary": "john", "category": "password", "package": "john"},
-  {"name": "hashcat", "binary": "hashcat", "category": "password", "package": "hashcat"},
-  {"name": "crunch", "binary": "crunch", "category": "password", "package": "crunch"},
-  {"name": "cewl", "binary": "cewl", "category": "password", "package": "cewl"},
-  {"name": "hashid", "binary": "hashid", "category": "password", "package": "hashid"},
-  {"name": "hash-identifier", "binary": "hash-identifier", "category": "password", "package": "hash-identifier"},
-  {"name": "aircrack-ng", "binary": "aircrack-ng", "category": "wireless", "package": "aircrack-ng"},
-  {"name": "airmon-ng", "binary": "airmon-ng", "category": "wireless", "package": "aircrack-ng"},
-  {"name": "airodump-ng", "binary": "airodump-ng", "category": "wireless", "package": "aircrack-ng"},
-  {"name": "aireplay-ng", "binary": "aireplay-ng", "category": "wireless", "package": "aircrack-ng"},
-  {"name": "wifite", "binary": "wifite", "category": "wireless", "package": "wifite"},
-  {"name": "reaver", "binary": "reaver", "category": "wireless", "package": "reaver"},
-  {"name": "bully", "binary": "bully", "category": "wireless", "package": "bully"},
-  {"name": "hcxdumptool", "binary": "hcxdumptool", "category": "wireless", "package": "hcxdumptool"},
-  {"name": "hcxpcapngtool", "binary": "hcxpcapngtool", "category": "wireless", "package": "hcxtools"},
-  {"name": "macchanger", "binary": "macchanger", "category": "wireless", "package": "macchanger"},
-  {"name": "gobuster", "binary": "gobuster", "category": "web", "package": "gobuster"},
-  {"name": "ffuf", "binary": "ffuf", "category": "web", "package": "ffuf"},
-  {"name": "dirb", "binary": "dirb", "category": "web", "package": "dirb"},
-  {"name": "wfuzz", "binary": "wfuzz", "category": "web", "package": "wfuzz"},
-  {"name": "nikto", "binary": "nikto", "category": "web", "package": "nikto"},
-  {"name": "sqlmap", "binary": "sqlmap", "category": "web", "package": "sqlmap"},
-  {"name": "wpscan", "binary": "wpscan", "category": "web", "package": "wpscan"},
-  {"name": "kiterunner", "binary": "kr", "category": "web", "package": "kiterunner"},
-  {"name": "tcpdump", "binary": "tcpdump", "category": "rete", "package": "tcpdump"},
-  {"name": "tshark", "binary": "tshark", "category": "rete", "package": "tshark"},
-  {"name": "mitmdump", "binary": "mitmdump", "category": "rete", "package": "mitmproxy"},
-  {"name": "proxychains4", "binary": "proxychains4", "category": "rete", "package": "proxychains4"},
-  {"name": "nc", "binary": "nc", "category": "rete", "package": "netcat-traditional"},
-  {"name": "socat", "binary": "socat", "category": "rete", "package": "socat"},
-  {"name": "responder", "binary": "responder", "category": "rete", "package": "responder"},
-  {"name": "impacket-smbclient", "binary": "impacket-smbclient", "category": "identity", "package": "impacket-scripts"},
-  {"name": "crackmapexec", "binary": "crackmapexec", "category": "identity", "package": "crackmapexec"},
-  {"name": "netexec", "binary": "netexec", "category": "identity", "package": "netexec"},
-  {"name": "curl", "binary": "curl", "category": "utilita", "package": "curl"},
-  {"name": "jq", "binary": "jq", "category": "utilita", "package": "jq"}
+  {
+    "name": "nmap",
+    "binary": "nmap",
+    "category": "recon",
+    "package": "nmap"
+  },
+  {
+    "name": "ncat",
+    "binary": "ncat",
+    "category": "recon",
+    "package": "nmap"
+  },
+  {
+    "name": "nping",
+    "binary": "nping",
+    "category": "recon",
+    "package": "nmap"
+  },
+  {
+    "name": "masscan",
+    "binary": "masscan",
+    "category": "recon",
+    "package": "masscan"
+  },
+  {
+    "name": "whatweb",
+    "binary": "whatweb",
+    "category": "recon",
+    "package": "whatweb"
+  },
+  {
+    "name": "wafw00f",
+    "binary": "wafw00f",
+    "category": "recon",
+    "package": "wafw00f"
+  },
+  {
+    "name": "dig",
+    "binary": "dig",
+    "category": "recon",
+    "package": "dnsutils"
+  },
+  {
+    "name": "whois",
+    "binary": "whois",
+    "category": "recon",
+    "package": "whois"
+  },
+  {
+    "name": "netdiscover",
+    "binary": "netdiscover",
+    "category": "recon",
+    "package": "netdiscover"
+  },
+  {
+    "name": "ike-scan",
+    "binary": "ike-scan",
+    "category": "recon",
+    "package": "ike-scan"
+  },
+  {
+    "name": "enum4linux",
+    "binary": "enum4linux",
+    "category": "recon",
+    "package": "enum4linux"
+  },
+  {
+    "name": "nbtscan",
+    "binary": "nbtscan",
+    "category": "recon",
+    "package": "nbtscan"
+  },
+  {
+    "name": "amass",
+    "binary": "amass",
+    "category": "recon",
+    "package": "amass"
+  },
+  {
+    "name": "theharvester",
+    "binary": "theHarvester",
+    "category": "recon",
+    "package": "theharvester"
+  },
+  {
+    "name": "subfinder",
+    "binary": "subfinder",
+    "category": "recon",
+    "package": "subfinder"
+  },
+  {
+    "name": "dnsenum",
+    "binary": "dnsenum",
+    "category": "recon",
+    "package": "dnsenum"
+  },
+  {
+    "name": "fierce",
+    "binary": "fierce",
+    "category": "recon",
+    "package": "fierce"
+  },
+  {
+    "name": "traceroute",
+    "binary": "traceroute",
+    "category": "recon",
+    "package": "traceroute"
+  },
+  {
+    "name": "arp-scan",
+    "binary": "arp-scan",
+    "category": "recon",
+    "package": "arp-scan"
+  },
+  {
+    "name": "hping3",
+    "binary": "hping3",
+    "category": "recon",
+    "package": "hping3"
+  },
+  {
+    "name": "smbclient",
+    "binary": "smbclient",
+    "category": "recon",
+    "package": "smbclient"
+  },
+  {
+    "name": "rpcinfo",
+    "binary": "rpcinfo",
+    "category": "recon",
+    "package": "rpcbind"
+  },
+  {
+    "name": "ldapsearch",
+    "binary": "ldapsearch",
+    "category": "recon",
+    "package": "ldap-utils"
+  },
+  {
+    "name": "onesixtyone",
+    "binary": "onesixtyone",
+    "category": "recon",
+    "package": "onesixtyone"
+  },
+  {
+    "name": "dnsrecon",
+    "binary": "dnsrecon",
+    "category": "recon",
+    "package": "dnsrecon"
+  },
+  {
+    "name": "sslscan",
+    "binary": "sslscan",
+    "category": "recon",
+    "package": "sslscan"
+  },
+  {
+    "name": "smbmap",
+    "binary": "smbmap",
+    "category": "recon",
+    "package": "smbmap"
+  },
+  {
+    "name": "naabu",
+    "binary": "naabu",
+    "category": "recon",
+    "package": "naabu"
+  },
+  {
+    "name": "httpx",
+    "binary": "httpx",
+    "category": "recon",
+    "package": "httpx-toolkit"
+  },
+  {
+    "name": "hydra",
+    "binary": "hydra",
+    "category": "password",
+    "package": "hydra"
+  },
+  {
+    "name": "medusa",
+    "binary": "medusa",
+    "category": "password",
+    "package": "medusa"
+  },
+  {
+    "name": "ncrack",
+    "binary": "ncrack",
+    "category": "password",
+    "package": "ncrack"
+  },
+  {
+    "name": "john",
+    "binary": "john",
+    "category": "password",
+    "package": "john"
+  },
+  {
+    "name": "hashcat",
+    "binary": "hashcat",
+    "category": "password",
+    "package": "hashcat"
+  },
+  {
+    "name": "crunch",
+    "binary": "crunch",
+    "category": "password",
+    "package": "crunch"
+  },
+  {
+    "name": "cewl",
+    "binary": "cewl",
+    "category": "password",
+    "package": "cewl"
+  },
+  {
+    "name": "hashid",
+    "binary": "hashid",
+    "category": "password",
+    "package": "hashid"
+  },
+  {
+    "name": "hash-identifier",
+    "binary": "hash-identifier",
+    "category": "password",
+    "package": "hash-identifier"
+  },
+  {
+    "name": "fcrackzip",
+    "binary": "fcrackzip",
+    "category": "password",
+    "package": "fcrackzip"
+  },
+  {
+    "name": "pdfcrack",
+    "binary": "pdfcrack",
+    "category": "password",
+    "package": "pdfcrack"
+  },
+  {
+    "name": "samdump2",
+    "binary": "samdump2",
+    "category": "password",
+    "package": "samdump2"
+  },
+  {
+    "name": "aircrack-ng",
+    "binary": "aircrack-ng",
+    "category": "wireless",
+    "package": "aircrack-ng"
+  },
+  {
+    "name": "airmon-ng",
+    "binary": "airmon-ng",
+    "category": "wireless",
+    "package": "aircrack-ng"
+  },
+  {
+    "name": "airodump-ng",
+    "binary": "airodump-ng",
+    "category": "wireless",
+    "package": "aircrack-ng"
+  },
+  {
+    "name": "aireplay-ng",
+    "binary": "aireplay-ng",
+    "category": "wireless",
+    "package": "aircrack-ng"
+  },
+  {
+    "name": "wifite",
+    "binary": "wifite",
+    "category": "wireless",
+    "package": "wifite"
+  },
+  {
+    "name": "reaver",
+    "binary": "reaver",
+    "category": "wireless",
+    "package": "reaver"
+  },
+  {
+    "name": "bully",
+    "binary": "bully",
+    "category": "wireless",
+    "package": "bully"
+  },
+  {
+    "name": "hcxdumptool",
+    "binary": "hcxdumptool",
+    "category": "wireless",
+    "package": "hcxdumptool"
+  },
+  {
+    "name": "hcxpcapngtool",
+    "binary": "hcxpcapngtool",
+    "category": "wireless",
+    "package": "hcxtools"
+  },
+  {
+    "name": "macchanger",
+    "binary": "macchanger",
+    "category": "wireless",
+    "package": "macchanger"
+  },
+  {
+    "name": "bettercap",
+    "binary": "bettercap",
+    "category": "wireless",
+    "package": "bettercap"
+  },
+  {
+    "name": "gobuster",
+    "binary": "gobuster",
+    "category": "web",
+    "package": "gobuster"
+  },
+  {
+    "name": "ffuf",
+    "binary": "ffuf",
+    "category": "web",
+    "package": "ffuf"
+  },
+  {
+    "name": "dirb",
+    "binary": "dirb",
+    "category": "web",
+    "package": "dirb"
+  },
+  {
+    "name": "wfuzz",
+    "binary": "wfuzz",
+    "category": "web",
+    "package": "wfuzz"
+  },
+  {
+    "name": "nikto",
+    "binary": "nikto",
+    "category": "web",
+    "package": "nikto"
+  },
+  {
+    "name": "sqlmap",
+    "binary": "sqlmap",
+    "category": "web",
+    "package": "sqlmap"
+  },
+  {
+    "name": "wpscan",
+    "binary": "wpscan",
+    "category": "web",
+    "package": "wpscan"
+  },
+  {
+    "name": "nuclei",
+    "binary": "nuclei",
+    "category": "web",
+    "package": "nuclei"
+  },
+  {
+    "name": "feroxbuster",
+    "binary": "feroxbuster",
+    "category": "web",
+    "package": "feroxbuster"
+  },
+  {
+    "name": "dirsearch",
+    "binary": "dirsearch",
+    "category": "web",
+    "package": "dirsearch"
+  },
+  {
+    "name": "hakrawler",
+    "binary": "hakrawler",
+    "category": "web",
+    "package": "hakrawler"
+  },
+  {
+    "name": "arjun",
+    "binary": "arjun",
+    "category": "web",
+    "package": "arjun"
+  },
+  {
+    "name": "commix",
+    "binary": "commix",
+    "category": "web",
+    "package": "commix"
+  },
+  {
+    "name": "xsser",
+    "binary": "xsser",
+    "category": "web",
+    "package": "xsser"
+  },
+  {
+    "name": "tcpdump",
+    "binary": "tcpdump",
+    "category": "rete",
+    "package": "tcpdump"
+  },
+  {
+    "name": "tshark",
+    "binary": "tshark",
+    "category": "rete",
+    "package": "tshark"
+  },
+  {
+    "name": "mitmdump",
+    "binary": "mitmdump",
+    "category": "rete",
+    "package": "mitmproxy"
+  },
+  {
+    "name": "proxychains4",
+    "binary": "proxychains4",
+    "category": "rete",
+    "package": "proxychains4"
+  },
+  {
+    "name": "nc",
+    "binary": "nc",
+    "category": "rete",
+    "package": "netcat-traditional"
+  },
+  {
+    "name": "socat",
+    "binary": "socat",
+    "category": "rete",
+    "package": "socat"
+  },
+  {
+    "name": "responder",
+    "binary": "responder",
+    "category": "rete",
+    "package": "responder"
+  },
+  {
+    "name": "ngrep",
+    "binary": "ngrep",
+    "category": "rete",
+    "package": "ngrep"
+  },
+  {
+    "name": "ettercap",
+    "binary": "ettercap",
+    "category": "rete",
+    "package": "ettercap-text-only"
+  },
+  {
+    "name": "snmpwalk",
+    "binary": "snmpwalk",
+    "category": "rete",
+    "package": "snmp"
+  },
+  {
+    "name": "chisel",
+    "binary": "chisel",
+    "category": "rete",
+    "package": "chisel"
+  },
+  {
+    "name": "ligolo-proxy",
+    "binary": "ligolo-proxy",
+    "category": "rete",
+    "package": "ligolo-ng"
+  },
+  {
+    "name": "ligolo-agent",
+    "binary": "ligolo-agent",
+    "category": "rete",
+    "package": "ligolo-ng"
+  },
+  {
+    "name": "tor",
+    "binary": "tor",
+    "category": "rete",
+    "package": "tor"
+  },
+  {
+    "name": "impacket-smbclient",
+    "binary": "impacket-smbclient",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "impacket-secretsdump",
+    "binary": "impacket-secretsdump",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "impacket-GetNPUsers",
+    "binary": "impacket-GetNPUsers",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "impacket-GetUserSPNs",
+    "binary": "impacket-GetUserSPNs",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "impacket-lookupsid",
+    "binary": "impacket-lookupsid",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "impacket-rpcdump",
+    "binary": "impacket-rpcdump",
+    "category": "identity",
+    "package": "impacket-scripts"
+  },
+  {
+    "name": "crackmapexec",
+    "binary": "crackmapexec",
+    "category": "identity",
+    "package": "crackmapexec"
+  },
+  {
+    "name": "netexec",
+    "binary": "netexec",
+    "category": "identity",
+    "package": "netexec"
+  },
+  {
+    "name": "enum4linux-ng",
+    "binary": "enum4linux-ng",
+    "category": "identity",
+    "package": "enum4linux-ng"
+  },
+  {
+    "name": "bloodhound.py",
+    "binary": "bloodhound-python",
+    "category": "identity",
+    "package": "bloodhound.py"
+  },
+  {
+    "name": "certipy-ad",
+    "binary": "certipy-ad",
+    "category": "identity",
+    "package": "certipy-ad"
+  },
+  {
+    "name": "evil-winrm",
+    "binary": "evil-winrm",
+    "category": "identity",
+    "package": "evil-winrm"
+  },
+  {
+    "name": "searchsploit",
+    "binary": "searchsploit",
+    "category": "vuln",
+    "package": "exploitdb"
+  },
+  {
+    "name": "msfconsole",
+    "binary": "msfconsole",
+    "category": "vuln",
+    "package": "metasploit-framework"
+  },
+  {
+    "name": "lynis",
+    "binary": "lynis",
+    "category": "hardening",
+    "package": "lynis"
+  },
+  {
+    "name": "chkrootkit",
+    "binary": "chkrootkit",
+    "category": "hardening",
+    "package": "chkrootkit"
+  },
+  {
+    "name": "rkhunter",
+    "binary": "rkhunter",
+    "category": "hardening",
+    "package": "rkhunter"
+  },
+  {
+    "name": "bandit",
+    "binary": "bandit",
+    "category": "hardening",
+    "package": "bandit"
+  },
+  {
+    "name": "trufflehog",
+    "binary": "trufflehog",
+    "category": "hardening",
+    "package": "trufflehog"
+  },
+  {
+    "name": "gitleaks",
+    "binary": "gitleaks",
+    "category": "hardening",
+    "package": "gitleaks"
+  },
+  {
+    "name": "binwalk",
+    "binary": "binwalk",
+    "category": "forensics",
+    "package": "binwalk"
+  },
+  {
+    "name": "foremost",
+    "binary": "foremost",
+    "category": "forensics",
+    "package": "foremost"
+  },
+  {
+    "name": "exiftool",
+    "binary": "exiftool",
+    "category": "forensics",
+    "package": "libimage-exiftool-perl"
+  },
+  {
+    "name": "strings",
+    "binary": "strings",
+    "category": "forensics",
+    "package": "binutils"
+  },
+  {
+    "name": "file",
+    "binary": "file",
+    "category": "forensics",
+    "package": "file"
+  },
+  {
+    "name": "hexedit",
+    "binary": "hexedit",
+    "category": "forensics",
+    "package": "hexedit"
+  },
+  {
+    "name": "steghide",
+    "binary": "steghide",
+    "category": "forensics",
+    "package": "steghide"
+  },
+  {
+    "name": "stegsnow",
+    "binary": "stegsnow",
+    "category": "forensics",
+    "package": "stegsnow"
+  },
+  {
+    "name": "radare2",
+    "binary": "radare2",
+    "category": "reverse",
+    "package": "radare2"
+  },
+  {
+    "name": "r2",
+    "binary": "r2",
+    "category": "reverse",
+    "package": "radare2"
+  },
+  {
+    "name": "gdb",
+    "binary": "gdb",
+    "category": "reverse",
+    "package": "gdb"
+  },
+  {
+    "name": "strace",
+    "binary": "strace",
+    "category": "reverse",
+    "package": "strace"
+  },
+  {
+    "name": "ltrace",
+    "binary": "ltrace",
+    "category": "reverse",
+    "package": "ltrace"
+  },
+  {
+    "name": "checksec",
+    "binary": "checksec",
+    "category": "reverse",
+    "package": "checksec"
+  },
+  {
+    "name": "curl",
+    "binary": "curl",
+    "category": "utilita",
+    "package": "curl"
+  },
+  {
+    "name": "jq",
+    "binary": "jq",
+    "category": "utilita",
+    "package": "jq"
+  },
+  {
+    "name": "git",
+    "binary": "git",
+    "category": "utilita",
+    "package": "git"
+  },
+  {
+    "name": "python3",
+    "binary": "python3",
+    "category": "utilita",
+    "package": "python3"
+  },
+  {
+    "name": "pip3",
+    "binary": "pip3",
+    "category": "utilita",
+    "package": "python3-pip"
+  },
+  {
+    "name": "wget",
+    "binary": "wget",
+    "category": "utilita",
+    "package": "wget"
+  },
+  {
+    "name": "openssl",
+    "binary": "openssl",
+    "category": "utilita",
+    "package": "openssl"
+  },
+  {
+    "name": "testssl",
+    "binary": "testssl",
+    "category": "utilita",
+    "package": "testssl.sh"
+  },
+  {
+    "name": "apktool",
+    "binary": "apktool",
+    "category": "mobile",
+    "package": "apktool"
+  },
+  {
+    "name": "jadx",
+    "binary": "jadx",
+    "category": "mobile",
+    "package": "jadx"
+  },
+  {
+    "name": "adb",
+    "binary": "adb",
+    "category": "mobile",
+    "package": "adb"
+  },
+  {
+    "name": "fastboot",
+    "binary": "fastboot",
+    "category": "mobile",
+    "package": "fastboot"
+  },
+  {
+    "name": "d2j-dex2jar",
+    "binary": "d2j-dex2jar",
+    "category": "mobile",
+    "package": "dex2jar"
+  },
+  {
+    "name": "d2j-baksmali",
+    "binary": "d2j-baksmali",
+    "category": "mobile",
+    "package": "dex2jar"
+  },
+  {
+    "name": "d2j-smali",
+    "binary": "d2j-smali",
+    "category": "mobile",
+    "package": "dex2jar"
+  },
+  {
+    "name": "d2j-jar2dex",
+    "binary": "d2j-jar2dex",
+    "category": "mobile",
+    "package": "dex2jar"
+  },
+  {
+    "name": "apksigner",
+    "binary": "apksigner",
+    "category": "mobile",
+    "package": "apksigner"
+  },
+  {
+    "name": "zipalign",
+    "binary": "zipalign",
+    "category": "mobile",
+    "package": "zipalign"
+  },
+  {
+    "name": "aapt",
+    "binary": "aapt",
+    "category": "mobile",
+    "package": "aapt"
+  },
+  {
+    "name": "androguard",
+    "binary": "androguard",
+    "category": "mobile",
+    "package": "androguard"
+  },
+  {
+    "name": "ideviceinstaller",
+    "binary": "ideviceinstaller",
+    "category": "mobile",
+    "package": "ideviceinstaller"
+  },
+  {
+    "name": "idevice_id",
+    "binary": "idevice_id",
+    "category": "mobile",
+    "package": "libimobiledevice-utils"
+  },
+  {
+    "name": "ideviceinfo",
+    "binary": "ideviceinfo",
+    "category": "mobile",
+    "package": "libimobiledevice-utils"
+  },
+  {
+    "name": "sqlite3",
+    "binary": "sqlite3",
+    "category": "mobile",
+    "package": "sqlite3"
+  }
 ]

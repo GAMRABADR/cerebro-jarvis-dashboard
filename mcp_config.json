@@ -4,37 +4,62 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio"],
       "env": {},
-      "description": "Accesso nativo al file system del workspace, asset UE5 e codice sorgente"
+      "description": "Accesso nativo al file system locale, asset Unreal Engine 5.8, documenti e sorgenti"
     },
     "sqlite": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\cerebro-jarvis-dashboard\\hermes_ltm_memory.db"],
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\cerebro-jarvis-dashboard\\mail_vault.db"],
       "env": {},
-      "description": "Query SQL in linguaggio naturale sui database di memoria, mail e kanban"
-    },
-    "git": {
-      "command": "npx",
-      "args": ["-y", "mcp-server-git", "--repository", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio"],
-      "env": {},
-      "description": "Controllo versioni Git, commit, branch e diff del repository"
+      "description": "Query SQL dirette ad alta velocità sui lead 2026, memorie LTM e storico commesse"
     },
     "playwright": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
       "env": {},
-      "description": "Browser automation per estrazione annunci Subito, Facebook e portali protetti"
+      "description": "Browser automation protetta per scraping dinamico di Subito, Marketplace e portali web"
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-git", "--repository", "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio"],
+      "env": {},
+      "description": "Controllo versioni Git, time machine vocale, commit atomici e rollback"
     },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
       "env": {},
-      "description": "Motore di Deep Reasoning per risolvere problemi architetturali complessi di UE5 e logistica"
+      "description": "Motore di deep reasoning per la scomposizione e risoluzione di task complessi"
     },
     "docker-vps": {
       "command": "python",
       "args": ["-m", "docker_mcp_bridge", "--host", "92.4.233.42"],
       "env": {},
-      "description": "Controllo container Docker n8n, FFmpeg e Agente Zero sulla VPS Oracle"
+      "description": "Supervisore container Docker, n8n e Agente Zero sulla VPS Oracle Ubuntu"
+    },
+    "telegram-matrix": {
+      "command": "python",
+      "args": ["-m", "telegram_mcp_matrix", "--bot", "jarvis"],
+      "env": {},
+      "description": "Gateway per il broadcast istantaneo di note vocali, PDF e notifiche sui bot Telegram"
+    },
+    "ffmpeg-media": {
+      "command": "python",
+      "args": ["-m", "ffmpeg_mcp_studio", "--out-dir", "public/media_out"],
+      "env": {},
+      "description": "Motore multimediale per sintesi audio HQ a 320kbps, video Shorts 9:16 e filtri OCR"
+    },
+    "smtp-mailer": {
+      "command": "python",
+      "args": ["-m", "smtp_mcp_engine", "--port", "465"],
+      "env": {},
+      "description": "Invio email certificato via Google SMTP SSL con allegati PDF automatici"
+    },
+    "rust-aether-kernel": {
+      "command": "target/release/jarvis-bridge.exe",
+      "args": ["--port", "9000", "--shared-memory"],
+      "env": {},
+      "description": "Event Bus in Rust Tokio a zero-copy per telemetria sotto-millisecondo a 120 FPS"
     }
   }
 }
+

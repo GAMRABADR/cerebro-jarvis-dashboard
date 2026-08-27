@@ -2,9 +2,10 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E.B.J. AI · APEX MATRIX v100.0</title>
-  <link rel="stylesheet" href="style.css?v=1002.0">
+  <link rel="stylesheet" href="style.css?v=1004.0">
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,8 +103,14 @@
     </div>
 
     <div class="mv-right">
-      <button class="vad-toggle-pill" id="btn-vad-toggle" onclick="toggleConversationalMode()" title="Chiacchierata Vocale Continua Senza Clic">
-        <span class="vad-dot"></span>🎙️ VOCE: <strong>OFF</strong>
+      <input type="hidden" id="model-select" value="auto">
+      <div class="ms-chips" id="ms-chips" title="Motore neurale">
+        <button type="button" class="ms-chip active" data-value="auto">AUTO</button>
+        <button type="button" class="ms-chip" data-value="groq-llama70b">GROQ</button>
+        <button type="button" class="ms-chip" data-value="qwen-27b">LOCALE</button>
+      </div>
+      <button class="vad-toggle-pill active" id="btn-vad-toggle" onclick="toggleConversationalMode()" title="Chiacchierata vocale continua — clic per ON/OFF, oppure Ctrl+Spazio">
+        <span class="vad-dot"></span>🎙️ VOCE: <strong>ON</strong>
       </button>
       <span class="status-indicator live"></span>
       <span class="mv-stat" id="master-status">ONLINE 144 FPS</span>
@@ -216,20 +223,6 @@
               </div>
             </div>
           </div>
-
-          <!-- MODEL SELECTOR -->
-          <div class="model-select-wrapper" style="margin-top:12px;">
-            <label for="model-select" class="ms-label">🧠 MOTORE NEURALE:</label>
-            <select id="model-select" class="ms-dropdown">
-              <option value="auto" selected>⚡ Auto Intelligence Router (Free-First)</option>
-              <option value="groq-llama70b">⚡ Groq LPU · Llama 3.3 70B</option>
-              <option value="groq-qwen32b">⚡ Groq LPU · Qwen 2.5 32B Coder</option>
-              <option value="gemini-flash">✨ Gemini 2.0 Flash (Sub-200ms)</option>
-              <option value="qwen-38-empero">⚡ Qwen 3.8 Flash FP8 (Free Cloud Reasoning)</option>
-              <option value="ollama-qwen7b">🖥️ Ollama Locale · Qwen 2.5 7B</option>
-              <option value="qwen-27b">🧠 Unsloth · Qwen3.6 27B (RTX 4070)</option>
-            </select>
-          </div>
         </section>
 
 
@@ -321,7 +314,7 @@
           <!-- INPUT DOCK -->
           <div class="input-container discord-input-container">
             <button class="attach-file-btn" onclick="document.getElementById('file-upload-input').click()" title="Allega File o Documento">📎</button>
-            <input type="file" id="file-upload-input" style="display:none;" onchange="handleFileUpload(this)">
+            <input type="file" id="file-upload-input" hidden tabindex="-1" onchange="handleFileUpload(this)">
 
             <div class="prompt-input-wrapper">
               <input type="text" id="prompt-input" class="prompt-input" placeholder="Comanda E.B.J... (premi Ctrl+Spazio per parlare o digita qui)" autocomplete="off">
@@ -411,6 +404,13 @@
         <button type="button" class="kali-chip" data-cat="wireless" onclick="filterKaliCat(this,'wireless')">Wireless</button>
         <button type="button" class="kali-chip" data-cat="web" onclick="filterKaliCat(this,'web')">Web</button>
         <button type="button" class="kali-chip" data-cat="rete" onclick="filterKaliCat(this,'rete')">Rete</button>
+        <button type="button" class="kali-chip" data-cat="identity" onclick="filterKaliCat(this,'identity')">Identità</button>
+        <button type="button" class="kali-chip" data-cat="vuln" onclick="filterKaliCat(this,'vuln')">Vuln</button>
+        <button type="button" class="kali-chip" data-cat="hardening" onclick="filterKaliCat(this,'hardening')">Hardening</button>
+        <button type="button" class="kali-chip" data-cat="forensics" onclick="filterKaliCat(this,'forensics')">Forensics</button>
+        <button type="button" class="kali-chip" data-cat="reverse" onclick="filterKaliCat(this,'reverse')">Reverse</button>
+        <button type="button" class="kali-chip" data-cat="mobile" onclick="filterKaliCat(this,'mobile')">Mobile</button>
+        <button type="button" class="kali-chip" data-cat="utilita" onclick="filterKaliCat(this,'utilita')">Utilità</button>
       </div>
       <div class="kali-card-grid" id="kali-card-grid" role="status" aria-live="polite"></div>
     </div>
@@ -671,7 +671,7 @@
     </div>
   </div>
 
-  <script src="cyber_audio_engine.js?v=1000.0"></script>
-  <script src="app.js?v=1002.0"></script>
+  <script src="cyber_audio_engine.js?v=1001.0"></script>
+  <script src="app.js?v=1004.0"></script>
 </body>
 </html>

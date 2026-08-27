@@ -114,6 +114,48 @@ def _try_openrouter(prompt: str) -> str | None:
     )
 
 
+def _try_qwen38_openrouter(prompt: str) -> str | None:
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if not key:
+        return None
+    return _chat_openai_compat(
+        "https://openrouter.ai/api/v1/chat/completions",
+        key,
+        os.environ.get("QWEN38_OPENROUTER_MODEL", "qwen/qwen3.8-max"),
+        prompt,
+        timeout=45,
+    )
+
+
+def _try_nvidia(prompt: str) -> str | None:
+    key = os.environ.get("NVIDIA_API_KEY", "").strip()
+    if not key:
+        return None
+    return _chat_openai_compat(
+        os.environ.get(
+            "NVIDIA_BASE_URL",
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+        ),
+        key,
+        os.environ.get("NVIDIA_MODEL", "meta/llama-3.3-70b-instruct"),
+        prompt,
+        timeout=40,
+    )
+
+
+def _try_ollama(prompt: str) -> str | None:
+    base = (os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
+    if base.endswith("/v1"):
+        url = f"{base}/chat/completions"
+    else:
+        url = f"{base}/v1/chat/completions"
+    model = os.environ.get("HERMES_MODEL") or os.environ.get("OLLAMA_MODEL") or "hermes3:8b"
+    try:
+        return _chat_openai_compat(url, "ollama", model, prompt, timeout=40)
+    except Exception:
+        return None
+
+
 def _try_hf(prompt: str) -> str | None:
     key = (os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_API_KEY") or "").strip()
     if not key:
@@ -170,14 +212,18 @@ def _try_qwencloud(prompt: str) -> str | None:
             "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
         ),
         key,
-        os.environ.get("QWEN_CLOUD_MODEL", "qwen-turbo"),
+        os.environ.get("QWEN_CLOUD_MODEL", "qwen3.8-max"),
         prompt,
+        timeout=45,
     )
 
 
 _STEPS = (
     ("groq", _try_groq),
+    ("qwen3.8_openrouter", _try_qwen38_openrouter),
+    ("nvidia", _try_nvidia),
     ("gemini", _try_gemini),
+    ("ollama", _try_ollama),
     ("openrouter", _try_openrouter),
     ("huggingface", _try_hf),
     ("qwen_local", _try_qwen_local),
@@ -193,13 +239,22 @@ def providers_set() -> dict:
     hf = bool((os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_API_KEY") or "").strip())
     qwen_local = bool(_qwen_local_key())
     qwencloud = bool(_qwencloud_key())
+    nvidia = bool(os.environ.get("NVIDIA_API_KEY", "").strip())
+    ollama_base = (os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST") or "").strip()
+    tavily = bool(os.environ.get("TAVILY_API_KEY", "").strip())
+    elevenlabs = bool(os.environ.get("ELEVENLABS_API_KEY", "").strip())
     return {
         "groq": "set" if groq else "not set",
+        "qwen3.8_openrouter": "set" if openrouter else "not set",
+        "nvidia": "set" if nvidia else "not set",
         "gemini": "set" if gemini else "not set",
+        "ollama": "set" if ollama_base else "not set",
         "openrouter": "set" if openrouter else "not set",
         "huggingface": "set" if hf else "not set",
         "qwen_local": "set" if qwen_local else "not set",
         "qwencloud": "set" if qwencloud else "not set",
+        "tavily_search": "set" if tavily else "not set",
+        "elevenlabs_tts": "set" if elevenlabs else "not set",
     }
 
 

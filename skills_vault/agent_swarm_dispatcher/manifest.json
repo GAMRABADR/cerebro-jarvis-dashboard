@@ -3,7 +3,7 @@
   "id": "agent_swarm_dispatcher",
   "category": "MULTI_AGENT_ORCHESTRATION",
   "description": "Instradamento intelligente e ripartizione specializzata dei compiti e delle skill MCP tra Hermes Master, Hermes Kali, Agente Zero, OpenClaw e N8N.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": "Ingegner Badr El Ouariti",
   "inputs": [
     "prompt",

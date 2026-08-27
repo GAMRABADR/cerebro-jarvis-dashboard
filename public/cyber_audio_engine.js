@@ -101,3 +101,5 @@ class CyberAudioEngine {
 }
 
 window.cyberAudio = new CyberAudioEngine();
+window.playUiClick = function () { window.cyberAudio && window.cyberAudio.playEclipseChirp(); };
+window.playLaserChime = function () { window.cyberAudio && window.cyberAudio.playConfirmationLaser(); };

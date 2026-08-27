@@ -8,7 +8,7 @@ import sqlite3
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 VAULT_DB = os.path.join(BASE_DIR, "mail_vault.db")
 MEMORY_DB = os.path.join(BASE_DIR, "hermes_ltm_memory.db")
-HOT_FOLDER = r"D:\EBGStudioProgetti\DOCUMENTI_INGESTION_AUTOMATICA"
+HOT_FOLDER = r"D:\EBGStudioProgetti\Oracle-VPS and EBGStudio\DOCUMENTI_INGESTION_AUTOMATICA"
 
 os.makedirs(HOT_FOLDER, exist_ok=True)
 
@@ -16,9 +16,9 @@ def scan_and_ingest_documents():
     extracted_docs = []
     
     if os.path.exists(HOT_FOLDER):
-        for f in os.listdir(HOT_FOLDER):
-            full_p = os.path.join(HOT_FOLDER, f)
-            if os.path.isfile(full_p):
+        for root, dirs, files in os.walk(HOT_FOLDER):
+            for f in files:
+                full_p = os.path.join(root, f)
                 ext = os.path.splitext(f)[1].lower()
                 text = ""
                 
@@ -40,18 +40,18 @@ def scan_and_ingest_documents():
                 
                 if text.strip():
                     clean_snip = text.strip()[:300]
-                    # Store fact in memory db
                     try:
                         conn = sqlite3.connect(MEMORY_DB)
                         c = conn.cursor()
                         c.execute("INSERT OR REPLACE INTO memories (category, topic, fact, importance, created_at, source) VALUES (?, ?, ?, ?, ?, ?)",
-                                  ("DOCUMENT_INGESTION", f"File: {f}", clean_snip, 9, int(time.time()), "HOT_FOLDER_DROP"))
+                                  ("DOCUMENT_INGESTION", f"File: {full_p}", clean_snip, 9, int(time.time()), "HOT_FOLDER_DROP"))
                         conn.commit()
                         conn.close()
                     except Exception: pass
                     
                     extracted_docs.append({
                         "file": f,
+                        "path": full_p,
                         "size_bytes": os.path.getsize(full_p),
                         "characters_extracted": len(text),
                         "preview": clean_snip
@@ -62,7 +62,7 @@ def scan_and_ingest_documents():
         "hot_folder_path": HOT_FOLDER,
         "total_documents_processed": len(extracted_docs),
         "documents": extracted_docs,
-        "message": f"Cartella monitorata H24. Inserisci qualsiasi PDF o foto in {HOT_FOLDER} e verrà assimilato all'istante."
+        "message": f"Cartella monitorata H24. Inserisci qualsiasi PDF o foto in {HOT_FOLDER} (anche in sotto-cartelle) e verrà assimilato all'istante."
     }
 
 def execute(params=None):

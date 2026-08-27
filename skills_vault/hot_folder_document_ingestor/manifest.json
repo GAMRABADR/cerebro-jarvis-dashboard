@@ -15,5 +15,5 @@
   "runner": "python",
   "status": "ONLINE_OPTIMAL",
   "latency_ms": 0.05,
-  "description": "Monitoraggio automatico della cartella di drop D:\\EBGStudioProgetti\\DOCUMENTI_INGESTION_AUTOMATICA per estrazione e memorizzazione istantanea di PDF, foto e documenti."
+  "description": "Monitoraggio automatico della cartella di drop D:\\EBGStudioProgetti\\DOCUMENTI_INGESTION_AUTOMATICA (ora in Oracle-VPS and EBGStudio, scansione ricorsiva) per estrazione e memorizzazione istantanea di PDF, foto e documenti."
 }

@@ -11,7 +11,181 @@ let terminalHistory = [];
 let terminalHistoryIndex = -1;
 let voiceHotkey = 'Ctrl+Space';
 let _toolCardTimer = null;
-window.isConversationalMode = false;
+
+const EBJ_WAKE_ACK = 'Ci sono, Ingegnere. Dimmi.';
+
+window.ebjVoiceEnabled = localStorage.getItem('ebj_voce') !== 'off';
+window.isConversationalMode = window.ebjVoiceEnabled;
+let _ebjCurrentAudio = null;
+let _ebjRecognition = null;
+let _ebjMicOn = false;
+let _ebjVoiceUnlocked = false;
+let _ebjWsGreeted = false;
+
+function isEbjWakePhrase(text) {
+  const raw = String(text || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const compact = raw.replace(/\s/g, '');
+  return [
+    'ebj', 'e b j', 'ebj ci sei', 'ebj cisei', 'jarvis',
+    'hermes sei li', 'hermes sei la', 'ebj sei li', 'ebj sei la'
+  ].includes(raw) || ['ebj', 'ebjcisei', 'jarvis', 'hermesseili', 'hermesseila'].includes(compact);
+}
+
+function updateVadPill() {
+  const btn = document.getElementById('btn-vad-toggle');
+  if (!btn) return;
+  const on = !!window.ebjVoiceEnabled;
+  btn.classList.toggle('active', on);
+  const strong = btn.querySelector('strong');
+  if (strong) strong.textContent = on ? 'ON' : 'OFF';
+}
+
+function stopEbjSpeech() {
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+  if (_ebjCurrentAudio) {
+    try { _ebjCurrentAudio.pause(); } catch (_) {}
+    _ebjCurrentAudio = null;
+  }
+}
+
+window.playSpeechAudio = async function(text) {
+  if (!window.ebjVoiceEnabled || !text) return;
+  const clean = String(text).replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 420);
+  if (!clean) return;
+  const resumeMic = _ebjMicOn;
+  if (_ebjRecognition && resumeMic) {
+    try { _ebjRecognition.onend = null; _ebjRecognition.stop(); } catch (_) {}
+    _ebjMicOn = false;
+  }
+  stopEbjSpeech();
+  try { window.cyberAudio && window.cyberAudio.initContext(); } catch (_) {}
+  let played = false;
+  try {
+    const r = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: clean }),
+      signal: AbortSignal.timeout(25000)
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.audio_base64) {
+        _ebjCurrentAudio = new Audio('data:audio/mpeg;base64,' + d.audio_base64);
+        await Promise.race([
+          new Promise((resolve) => {
+            _ebjCurrentAudio.onended = resolve;
+            _ebjCurrentAudio.onerror = resolve;
+            _ebjCurrentAudio.play().then(() => { played = true; }).catch(resolve);
+          }),
+          new Promise((resolve) => setTimeout(resolve, 20000))
+        ]);
+      }
+    }
+  } catch (_) {}
+  if (!played) {
+    try {
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = 'it-IT';
+      u.rate = 1.04;
+      await new Promise((resolve) => {
+        u.onend = resolve;
+        u.onerror = resolve;
+        window.speechSynthesis.speak(u);
+      });
+    } catch (_) {}
+  }
+  if (window.ebjVoiceEnabled && resumeMic) startEbjMic();
+};
+
+function stopEbjMic() {
+  _ebjMicOn = false;
+  if (_ebjRecognition) {
+    try { _ebjRecognition.onend = null; _ebjRecognition.stop(); } catch (_) {}
+  }
+}
+
+function startEbjMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    addEvent('sys', 'Microfono: Web Speech non disponibile in questo browser');
+    return;
+  }
+  stopEbjMic();
+  _ebjRecognition = new SR();
+  _ebjRecognition.lang = 'it-IT';
+  _ebjRecognition.continuous = true;
+  _ebjRecognition.interimResults = false;
+  _ebjRecognition.onresult = (e) => {
+    const last = e.results[e.results.length - 1];
+    if (!last || !last.isFinal) return;
+    const text = (last[0] && last[0].transcript || '').trim();
+    if (!text || isBusy) return;
+    const input = document.getElementById('prompt-input');
+    if (input) input.value = '';
+    executeCommandPipeline(text);
+  };
+  _ebjRecognition.onerror = (ev) => {
+    if (ev.error === 'not-allowed') addEvent('sys', 'Microfono bloccato dal browser — consenti l\'audio');
+  };
+  _ebjRecognition.onend = () => {
+    if (window.ebjVoiceEnabled && _ebjMicOn) {
+      try { _ebjRecognition.start(); } catch (_) {}
+    }
+  };
+  _ebjMicOn = true;
+  try { _ebjRecognition.start(); } catch (_) {}
+}
+
+function unlockEbjVoice() {
+  if (_ebjVoiceUnlocked) return;
+  _ebjVoiceUnlocked = true;
+  try { window.cyberAudio && window.cyberAudio.initContext(); } catch (_) {}
+  if (window.ebjVoiceEnabled) startEbjMic();
+}
+
+window.toggleConversationalMode = function() {
+  const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (window.ebjVoiceEnabled && !_ebjMicOn && hasSR) {
+    _ebjVoiceUnlocked = true;
+    updateVadPill();
+    startEbjMic();
+    window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
+    addEvent('sys', 'Voce ON — ascolto continuo');
+    return;
+  }
+  window.ebjVoiceEnabled = !window.ebjVoiceEnabled;
+  window.isConversationalMode = window.ebjVoiceEnabled;
+  localStorage.setItem('ebj_voce', window.ebjVoiceEnabled ? 'on' : 'off');
+  updateVadPill();
+  try { window.cyberAudio && window.cyberAudio.initContext(); } catch (_) {}
+  if (window.ebjVoiceEnabled) {
+    _ebjVoiceUnlocked = true;
+    startEbjMic();
+    window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
+    addEvent('sys', 'Voce ON — ascolto continuo');
+  } else {
+    stopEbjMic();
+    stopEbjSpeech();
+    addEvent('sys', 'Voce OFF');
+  }
+};
+
+function initCustomModelSelect() {
+  const hidden = document.getElementById('model-select');
+  const chips = document.getElementById('ms-chips');
+  if (!hidden || !chips) return;
+  chips.querySelectorAll('.ms-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      hidden.value = btn.getAttribute('data-value') || 'auto';
+      chips.querySelectorAll('.ms-chip').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
 
 // ── 1. CLOCK TICKER ────────────────────────────────────────────────
 function tickClock() {
@@ -111,16 +285,46 @@ window.sendQuick = function(text) {
 
 async function executeCommandPipeline(prompt) {
   isBusy = true;
+  unlockEbjVoice();
   addEvent('usr', prompt);
   
   const respEl = document.getElementById('resp-body');
   const respTag = document.getElementById('resp-tag');
-  if (respTag) respTag.textContent = 'THINKING...';
-  if (respEl) respEl.textContent = 'Elaborazione neurale in corso...';
-
-  // Sphere visual pulse
   const sphere = document.getElementById('jarvis-sphere');
   if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
+
+  const finish = (reply, tag) => {
+    if (respEl) respEl.textContent = reply;
+    if (respTag) respTag.textContent = tag;
+    addEvent('ai', String(reply).slice(0, 80) + '...');
+    if (window.playSpeechAudio) window.playSpeechAudio(reply);
+    const input = document.getElementById('prompt-input');
+    if (input) input.focus();
+  };
+
+  if (isEbjWakePhrase(prompt)) {
+    window.isConversationalMode = true;
+    finish(EBJ_WAKE_ACK, 'E.B.J. LISTEN');
+    try {
+      fetch('http://127.0.0.1:9000/api/wake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: prompt }),
+        signal: AbortSignal.timeout(800)
+      }).catch(() => {});
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, persona: currentPersonality, model: 'auto' })
+      }).catch(() => {});
+    } catch (_) {}
+    isBusy = false;
+    if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+    return;
+  }
+
+  if (respTag) respTag.textContent = 'THINKING...';
+  if (respEl) respEl.textContent = 'Elaborazione neurale in corso...';
 
   try {
     const model = document.getElementById('model-select')?.value || 'auto';
@@ -132,20 +336,8 @@ async function executeCommandPipeline(prompt) {
     const d = await res.json();
     
     const reply = d.response || 'Nessuna risposta ricevuta.';
-    if (respEl) respEl.textContent = reply;
-    if (respTag) respTag.textContent = (d.model_used || 'E.B.J. AI').toUpperCase();
-
-    addEvent('ai', reply.slice(0, 80) + '...');
-
-    // Automatic UI Modular Action Handler (Voice-Card Matrix)
-    if (d.ui_action) {
-      window.handleAiUiAction(d.ui_action);
-    }
-
-    // Play speech audio if available
-    if (window.playSpeechAudio) {
-      window.playSpeechAudio(reply);
-    }
+    finish(reply, (d.model_used || 'E.B.J. AI').toUpperCase());
+    if (d.ui_action) window.handleAiUiAction(d.ui_action);
   } catch (err) {
     if (respEl) respEl.textContent = 'Errore di comunicazione: ' + err.message;
     if (respTag) respTag.textContent = 'ERROR';
@@ -533,6 +725,12 @@ window.addEventListener('keydown', (e) => {
     }
   }
 
+  if (e.ctrlKey && e.code === 'Space') {
+    e.preventDefault();
+    toggleConversationalMode();
+    return;
+  }
+
   if (!isInput) {
     if (e.key === 't' || e.key === 'T') {
       e.preventDefault();
@@ -566,7 +764,13 @@ const KALI_CAT_ALIASES = {
   password: ['password', 'passwords'],
   wireless: ['wireless', 'wifi'],
   web: ['web'],
-  rete: ['rete', 'network', 'sniffing', 'sniffing-spoofing']
+  rete: ['rete', 'network', 'sniffing', 'sniffing-spoofing'],
+  identity: ['identity', 'identita', 'ad', 'impacket'],
+  vuln: ['vuln', 'vulnerability', 'vulnerabilita'],
+  hardening: ['hardening', 'audit', 'osint-secrets'],
+  forensics: ['forensics', 'forense'],
+  reverse: ['reverse', 're', 'reversing'],
+  utilita: ['utilita', 'utility', 'utils']
 };
 
 let kaliCatalog = [];
@@ -887,7 +1091,36 @@ window.updateKaliTools = async function() {
 
 // INIT ON DOM READY
 document.addEventListener('DOMContentLoaded', () => {
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+  }
   initDraggableWindows();
   loadModularCardsState();
+  initCustomModelSelect();
+  updateVadPill();
   showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
+  connectEbjRustListen();
+  document.addEventListener('click', unlockEbjVoice, { once: true });
 });
+
+function connectEbjRustListen() {
+  try {
+    const ws = new WebSocket('ws://127.0.0.1:9000/ws/ebj');
+    ws.onopen = () => addEvent('rust', 'E.B.J. in ascolto sul bridge :9000');
+    ws.onmessage = (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        if (!d || !d.response) return;
+        if (!_ebjWsGreeted) {
+          _ebjWsGreeted = true;
+          addEvent('rust', String(d.response).slice(0, 80));
+        }
+      } catch (_) {}
+    };
+    ws.onerror = () => {};
+    ws.onclose = () => {
+      setTimeout(connectEbjRustListen, 8000);
+    };
+    window._ebjListenWs = ws;
+  } catch (_) {}
+}

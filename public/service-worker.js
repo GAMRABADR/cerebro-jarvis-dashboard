@@ -1,5 +1,5 @@
 // E.B. Autonomous PWA Service Worker v1.0
-const CACHE_NAME = 'eb-supreme-v1.0';
+const CACHE_NAME = 'eb-supreme-v1003.0';
 const ASSETS = [
   '/',
   '/index.html',

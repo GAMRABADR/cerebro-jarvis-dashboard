@@ -8,16 +8,14 @@ import sqlite3
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 VAULT_DB = os.path.join(BASE_DIR, "mail_vault.db")
 MEMORY_DB = os.path.join(BASE_DIR, "hermes_ltm_memory.db")
-HOT_FOLDER = r"D:\EBGStudioProgetti\DOCUMENTI_INGESTION_AUTOMATICA"
-FAMILY_ARCHIVE = r"E:\Archivio_Personale_e_Familiare"
+HOT_FOLDER = r"D:\EBGStudioProgetti\Oracle-VPS and EBGStudio\DOCUMENTI_INGESTION_AUTOMATICA"
+FAMILY_ARCHIVE = os.path.join(HOT_FOLDER, "Archivio_Personale_e_Familiare")
 
 def deep_scan_and_ingest():
     results = []
     
-    # 1. Scan Hot Folder and Family Archive
+    # 1. Scan Hot Folder (contiene anche l'Archivio_Personale_e_Familiare)
     scan_paths = [HOT_FOLDER]
-    if os.path.exists(FAMILY_ARCHIVE):
-        scan_paths.append(FAMILY_ARCHIVE)
         
     for sp in scan_paths:
         for root, dirs, files in os.walk(sp):
