@@ -2,7 +2,7 @@
 > **Documento Privato Ufficiale & Immutabile dell'Ecosistema EBGStudio**  
 > **Comandante & Ingegnere Capo:** Ingegner Badr El Ouariti (`badraudi@gmail.com` | `+39 388 870 3508` | Imola)  
 > **Partner Operativo Logistica:** Pietro (`+39 328 426 3554` | PietroTraslochi.com)  
-> **Data Ultimo Aggiornamento:** 29/08/2026 22:10:00 (Sincronizzato in Tempo Reale)
+> **Data Ultimo Aggiornamento:** 12/09/2026 09:19:01 (Sincronizzato in Tempo Reale)
 
 ---
 
@@ -64,11 +64,6 @@ Il router di inferenza in `server.py` implementa un failover automatico su 4 liv
 ---
 
 ## 7. REGISTRO STORICO MIGLIORIE IN TEMPO REALE (REAL-TIME WIKI LOG)
-
-* `[HASH: 4d409ca8a9fa]` **[2026-08-29 22:10:00] P8 EBJ COMMAND HUB LIVE + STATO ECOSISTEMA** *(Cat: INTERFACE)*:
-  Pagina `/hub` su Hermes (cyberpunk, auto-refresh 30s, protetta basic auth `ebg`): VPS RAM/CPU/disco live, lead totali (2.819+), documenti in memoria, workflow n8n attivi, stato tunnel, ultimo backup Restic, esito Trivy, tile accesso rapido (Dock Control, Upload, HUD Jarvis, Agente Zero, n8n, BadrExpress). Dati aggregati dal worker `ebj-hub-status` (timer 60s) su volume condiviso. URL permanente: `https://ebj-vps.taila7f20c.ts.net/hub`.
-  RIEPILOGO STATO (28-29/08): catena bridge Rust :9000 → Hermes :8089 → Kali Exec API :8899 operativa; 138/138 tool Kali verificati; Dock Control GUI live; memoria infinita (ingest Rust + worker PDF/chat); backup giornalieri Restic ok; self-heal + watchdog tunnel + Trivy settimanale attivi; Tailscale funnel ATTIVO con link permanenti ts.net; HUD Jarvis raggiungibile su `/hud/`; eb.badrexpress.com vivo su Cloudflare Access ma tunnel nominato da ricollegare (token CF). Lead Pipeline genera lead reali ogni 20 min.
-
 * `[HASH: 61f53a9d565a]` Attivazione Motore Real-Time Wiki Sync (Rust/Python + N8N).
 * `[HASH: 14f16a1e13da]` Sincronizzazione Automatica Immutabile Wiki Attiva con hash SHA256.
 * `[HASH: 8a4c1f90e21b]` Integrazione Catalogo 100 MCP Server Mondiali & Architettura FastMCP Rust.

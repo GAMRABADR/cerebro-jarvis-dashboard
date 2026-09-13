@@ -26,6 +26,16 @@
         <span class="btn-dot live"></span>⚡ E.B.J. CORE
       </button>
 
+      <!-- PREVENTIVO CLIENTE MAGNET -->
+      <a href="/preventivo" target="_blank" class="view-switch-btn" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
+        <span class="btn-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span>🎯 ACQUISIZIONE CLIENTI ↗️
+      </a>
+
+      <!-- VISTA ECOSYSTEM MAP TOPOLOGY -->
+      <button class="view-switch-btn" id="btn-view-topology" onclick="switchMasterView('topology')">
+        <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span>🗺️ ECOSYSTEM MAP
+      </button>
+
       <!-- DROPDOWN: KANBAN -->
       <div class="nav-dropdown-pod">
         <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban">
@@ -274,6 +284,14 @@
               <div class="sphere-status-glow" id="sphere-status-glow"></div>
             </div>
 
+            <!-- 🌌 QUICK LAUNCH 3D COSMOS BUTTON -->
+            <div style="display:flex; justify-content:center; margin-top:8px; margin-bottom:12px;">
+              <button onclick="switchMasterView('topology')" style="background:rgba(0, 240, 255, 0.12); border:1px solid #00f0ff; color:#00f0ff; border-radius:20px; padding:6px 16px; font-family:'Outfit', sans-serif; font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 0 15px rgba(0,240,255,0.25); transition:all 0.2s;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span>
+                🌌 APRI 3D NEURAL COSMOS & KNOWLEDGE GRAPH (J.A.R.V.I.S.) ↗️
+              </button>
+            </div>
+
             <!-- FLOATING TOOL RUN HUD CARD -->
             <div class="tool-run-hud-card" id="tool-run-card">
               <div class="trc-header">
@@ -302,13 +320,46 @@
             </div>
           </div>
 
-          <!-- QUICK MOOD SWITCHER BAR -->
-          <div class="quick-mood-bar" id="quick-mood-bar">
-            <span class="qmb-label">🎭 MOOD:</span>
-            <button class="mood-chip active" id="chip-jarvis" onclick="switchEBMood('jarvis')">⚡ JARVIS</button>
-            <button class="mood-chip" id="chip-military" onclick="switchEBMood('military')">🛡️ MILITARE</button>
-            <button class="mood-chip" id="chip-architect" onclick="switchEBMood('architect')">🔬 ARCHITECT</button>
-            <button class="mood-chip" id="chip-friendly" onclick="switchEBMood('friendly')">😄 SIMPATICO</button>
+          
+          <!-- MOOD CARD GRID — 4 Personalita -->
+          <div class="mood-card-grid" id="mood-card-grid">
+
+            <div class="mood-card active" data-mood="jarvis" id="mood-card-jarvis"
+                 onclick="setMood('jarvis')" title="Alt+1">
+              <span class="mood-shortcut">Alt+1</span>
+              <span class="mood-emoji">⚡</span>
+              <span class="mood-name">JARVIS</span>
+              <span class="mood-desc">Elegante · Preciso<br>Iron Man Mode</span>
+              <span class="mood-dot"></span>
+            </div>
+
+            <div class="mood-card" data-mood="military" id="mood-card-military"
+                 onclick="setMood('military')" title="Alt+2">
+              <span class="mood-shortcut">Alt+2</span>
+              <span class="mood-emoji">🛡️</span>
+              <span class="mood-name">MILITARE</span>
+              <span class="mood-desc">Tattico · Diretto<br>War Room Mode</span>
+              <span class="mood-dot"></span>
+            </div>
+
+            <div class="mood-card" data-mood="architect" id="mood-card-architect"
+                 onclick="setMood('architect')" title="Alt+3">
+              <span class="mood-shortcut">Alt+3</span>
+              <span class="mood-emoji">🔬</span>
+              <span class="mood-name">ARCHITECT</span>
+              <span class="mood-desc">Tecnico · Analitico<br>Senior Dev Mode</span>
+              <span class="mood-dot"></span>
+            </div>
+
+            <div class="mood-card" data-mood="friendly" id="mood-card-friendly"
+                 onclick="setMood('friendly')" title="Alt+4">
+              <span class="mood-shortcut">Alt+4</span>
+              <span class="mood-emoji">😄</span>
+              <span class="mood-name">SIMPATICO</span>
+              <span class="mood-desc">Ironico · Casual<br>Friendly Mode</span>
+              <span class="mood-dot"></span>
+            </div>
+
           </div>
 
           <!-- INPUT DOCK -->
@@ -337,31 +388,50 @@
             <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi">HIDE ▶</button>
           </div>
 
-          <!-- TELEMETRY METRICS -->
+          <!-- TELEMETRY METRICS (DUAL NODE: ORACLE CLOUD VPS 24GB + WORKSTATION 64GB) -->
           <div class="vps-live-telemetry-hud">
             <div class="vlth-header">
-              <span class="vlth-title">🛰️ STARK ORBITAL TELEMETRY</span>
-              <span class="vlth-badge" id="vps-host-badge">92.4.233.42 · UBUNTU</span>
+              <span class="vlth-title">☁️ ORACLE CLOUD VPS</span>
+              <span class="vlth-badge" id="vps-host-badge" style="background:rgba(0,255,159,0.15); color:#00ff9f; border:1px solid rgba(0,255,159,0.35);">ALWAYS FREE · 24GB RAM · 4 ARM</span>
             </div>
 
             <div class="telemetry-compact-grid">
               <div class="tc-card">
-                <span class="tc-lbl">CPU LOAD (8C/16T)</span>
-                <span class="tc-val val-green" id="vps-cpu-val">4.2%</span>
-                <div class="tc-bar"><div class="tc-fill fill-green" id="vps-cpu-bar" style="width:4.2%;"></div></div>
+                <span class="tc-lbl">VPS CPU (4 ARM OCPU)</span>
+                <span class="tc-val val-green" id="vps-cpu-val">5.7%</span>
+                <div class="tc-bar"><div class="tc-fill fill-green" id="vps-cpu-bar" style="width:5.7%;"></div></div>
               </div>
               <div class="tc-card">
-                <span class="tc-lbl">RAM WORKSTATION (64GB)</span>
-                <span class="tc-val val-cyan" id="vps-ram-val">18.7 GB (29%)</span>
-                <div class="tc-bar"><div class="tc-fill fill-cyan" id="vps-ram-bar" style="width:29%;"></div></div>
+                <span class="tc-lbl">VPS RAM (24GB AMPERE)</span>
+                <span class="tc-val val-cyan" id="vps-ram-val">20.9 / 24 GB (87%)</span>
+                <div class="tc-bar"><div class="tc-fill fill-cyan" id="vps-ram-bar" style="width:87%;"></div></div>
+              </div>
+              <div class="tc-card">
+                <span class="tc-lbl">VPS NVME (145GB DISK)</span>
+                <span class="tc-val val-emerald" id="vps-disk-val">122.5 / 145 GB</span>
+                <div class="tc-bar"><div class="tc-fill fill-emerald" id="vps-disk-bar" style="width:84%;"></div></div>
               </div>
               <div class="tc-card">
                 <span class="tc-lbl">RUST TOKIO BUS LATENCY</span>
-                <span class="tc-val val-emerald" id="vps-latency-val">0.15 ms</span>
+                <span class="tc-val val-emerald" id="vps-latency-val">0.05 ms</span>
+              </div>
+            </div>
+
+            <!-- WORKSTATION LOCAL SECTION -->
+            <div class="vlth-header" style="margin-top:10px;">
+              <span class="vlth-title">🖥️ WORKSTATION LOCALE</span>
+              <span class="vlth-badge" style="background:rgba(0,240,255,0.12); color:#00f0ff; border:1px solid rgba(0,240,255,0.35);">BADR-PC · 64GB DDR4</span>
+            </div>
+            <div class="telemetry-compact-grid">
+              <div class="tc-card">
+                <span class="tc-lbl">PC CPU (8C/16T)</span>
+                <span class="tc-val val-green" id="ws-cpu-val">49.2%</span>
+                <div class="tc-bar"><div class="tc-fill fill-green" id="ws-cpu-bar" style="width:49%;"></div></div>
               </div>
               <div class="tc-card">
-                <span class="tc-lbl">ACTIVE TUNNELS & BOTS</span>
-                <span class="tc-val" id="vps-tunnels-val">3/3 ACTIVE · 7 BOTS</span>
+                <span class="tc-lbl">PC RAM (64GB DDR)</span>
+                <span class="tc-val val-cyan" id="ws-ram-val">48.9 / 64 GB (76%)</span>
+                <div class="tc-bar"><div class="tc-fill fill-cyan" id="ws-ram-bar" style="width:76%;"></div></div>
               </div>
             </div>
           </div>
@@ -609,18 +679,186 @@
        ═══════════════════════════════════════════════════════════════ -->
   <div class="floating-modules-stage" id="floating-modules-stage">
     
-    <!-- Scheda 1: CPU & RAM 64GB -->
-    <div class="modular-window-card" id="card-mod-cpu-ram" style="display:none; top:90px; right:20px; width:340px;">
+    
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW: N8N WORKFLOW AUTOMATION MATRIX (34 FLUSSI ATTIVI)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-n8n" style="display:none; flex-direction:column; width:100%; height:calc(100vh - 56px); background:#060a12; padding:12px; box-sizing:border-box;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:10px 16px; background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.2); border-radius:10px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:22px;">🔄</span>
+        <div>
+          <h2 style="margin:0; font-size:14px; color:#00f0ff; letter-spacing:1px;">N8N WORKFLOW ENGINE · 34 FLUSSI DISPONIBILI</h2>
+          <span style="font-size:10px; color:#778899;">Tunnel Locale Attivo: <code>http://localhost:5678</code> (VPS Oracle 24GB)</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a href="http://localhost:5678" target="_blank" style="padding:6px 14px; background:#ff6b35; color:#fff; border-radius:6px; font-size:11px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          🚀 APRI IN SCHEDA COMPLETA ↗
+        </a>
+        <button onclick="document.getElementById('n8n-frame').src='http://localhost:5678'" style="padding:6px 12px; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); color:#00f0ff; border-radius:6px; font-size:11px; cursor:pointer;">
+          🔄 Ricarica Frame
+        </button>
+      </div>
+    </div>
+    <div style="flex:1; border:1px solid rgba(0,240,255,0.15); border-radius:8px; overflow:hidden; position:relative; background:#0e131f;">
+      <iframe id="n8n-frame" src="http://localhost:5678" style="width:100%; height:100%; border:none;" title="N8N Automation Workflows"></iframe>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW: MASTER KANBAN BOARD (LEADS & AGENTS ORCHESTRATION)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-kanban" style="display:none; flex-direction:column; width:100%; height:calc(100vh - 56px); background:#060a12; padding:12px; box-sizing:border-box; overflow-y:auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:10px 16px; background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.3); border-radius:10px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:22px;">📋</span>
+        <div>
+          <h2 style="margin:0; font-size:14px; color:#a78bfa; letter-spacing:1px;">HERMES MASTER KANBAN · LEADS & FLUSSI OPERATIVI</h2>
+          <span style="font-size:10px; color:#8899aa;">Pipeline automatizzata: Subito/OSINT ➔ Qualificazione ➔ Follow-up n8n</span>
+        </div>
+      </div>
+      <button onclick="refreshKanbanData()" style="padding:6px 14px; background:rgba(124,58,237,0.2); border:1px solid rgba(124,58,237,0.5); color:#c4b5fd; border-radius:6px; font-size:11px; cursor:pointer; font-weight:700;">
+        🔄 Aggiorna Dati
+      </button>
+    </div>
+
+    <!-- 4 Colonne Kanban -->
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; flex:1;">
+      
+      <!-- Colonna 1: Nuovi Lead -->
+      <div style="background:rgba(0,20,40,0.6); border:1px solid rgba(0,240,255,0.2); border-radius:10px; padding:10px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:6px; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:#00f0ff;">📥 NUOVI LEAD OSINT</span>
+          <span class="sp-badge" style="background:rgba(0,240,255,0.2); color:#00f0ff;" id="kb-count-nuovi">0</span>
+        </div>
+        <div id="kb-col-nuovi" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- Colonna 2: DM Ready & Contattati -->
+      <div style="background:rgba(20,30,10,0.6); border:1px solid rgba(34,197,94,0.2); border-radius:10px; padding:10px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(34,197,94,0.2); padding-bottom:6px; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:#22c55e;">💬 DM READY / WHATSAPP</span>
+          <span class="sp-badge" style="background:rgba(34,197,94,0.2); color:#22c55e;" id="kb-count-contattati">0</span>
+        </div>
+        <div id="kb-col-contattati" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- Colonna 3: Preventivo Elaborato -->
+      <div style="background:rgba(30,20,5,0.6); border:1px solid rgba(245,158,11,0.2); border-radius:10px; padding:10px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(245,158,11,0.2); padding-bottom:6px; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:#f59e0b;">📑 PREVENTIVO INVIATO</span>
+          <span class="sp-badge" style="background:rgba(245,158,11,0.2); color:#f59e0b;" id="kb-count-preventivi">0</span>
+        </div>
+        <div id="kb-col-preventivi" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- Colonna 4: Lavori Chiusi / Conclusi -->
+      <div style="background:rgba(25,10,35,0.6); border:1px solid rgba(168,85,247,0.2); border-radius:10px; padding:10px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(168,85,247,0.2); padding-bottom:6px; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:#c084fc;">🚚 ACCETTATO / CHIUSO</span>
+          <span class="sp-badge" style="background:rgba(168,85,247,0.2); color:#c084fc;" id="kb-count-chiusi">0</span>
+        </div>
+        <div id="kb-col-chiusi" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════ -->
+  <!-- VISTA J.A.R.V.I.S. 3D NEURAL COSMOS & KNOWLEDGE GRAPH (IDENTICA AL VIDEO)  -->
+  <!-- ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-topology" style="display:none; width:100%; height:calc(100vh - 56px); background:#02050b; position:relative; overflow:hidden;">
+    
+    <!-- 3D Three.js Container -->
+    <div id="cosmos-3d-container" style="position:absolute; inset:0; width:100%; height:100%; z-index:1;"></div>
+
+    <!-- Floating Sleek Tooltip (Hover sui Nodi) -->
+    <div id="cosmos-tooltip" style="position:fixed; display:none; z-index:100; pointer-events:none; background:rgba(3, 10, 20, 0.92); border:1px solid #00f0ff; border-radius:10px; padding:10px 14px; backdrop-filter:blur(16px); box-shadow:0 0 20px rgba(0, 240, 255, 0.35); min-width:180px; font-family:'Outfit', sans-serif;"></div>
+
+    <!-- Top-Left Navigation & Controls Overlay -->
+    <div style="position:absolute; top:20px; left:20px; z-index:10; display:flex; flex-direction:column; gap:8px; pointer-events:auto;">
+      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.25); border-radius:12px; padding:10px 16px; backdrop-filter:blur(16px); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span>
+          <span style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#fff; letter-spacing:1px;">J.A.R.V.I.S. 3D CONSTELLATION</span>
+        </div>
+        <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono', monospace; margin-top:3px;">
+          Force-Directed Ecosystem Matrix · 360° Orbit Mode
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Arc Reactor HUD Dial (Identico al Video YouTube) -->
+    <div id="cosmos-arc-reactor" style="position:absolute; top:20px; right:20px; z-index:10; display:flex; flex-direction:column; align-items:center; gap:14px; pointer-events:auto;">
+      
+      <!-- Arc Reactor Dial Container -->
+      <div style="position:relative; width:190px; height:190px; display:flex; align-items:center; justify-content:center;">
+        <div class="reactor-outer-ring"></div>
+        <div class="reactor-ticks-ring"></div>
+        <div class="reactor-inner-core">
+          <span style="font-family:'Outfit', sans-serif; font-size:13px; font-weight:900; letter-spacing:3px; color:#00f0ff; text-shadow:0 0 10px #00f0ff;">J.A.R.V.I.S.</span>
+        </div>
+      </div>
+
+      <!-- Status Badges -->
+      <div style="display:flex; gap:6px;">
+        <span style="background:rgba(16,185,129,0.18); border:1px solid #10b981; color:#10b981; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span> LISTENING
+        </span>
+        <span style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px;">
+          ✦ RUST / QWEN 27B ⚡
+        </span>
+      </div>
+
+      <div style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace; letter-spacing:1px;">
+        • listening, sir...
+      </div>
+
+      <!-- Layout Switcher Buttons (RING, CUBE, SPHERE, CONSTELLATION) -->
+      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.2); border-radius:12px; padding:6px; display:flex; gap:4px; backdrop-filter:blur(12px);">
+        <button class="cosmos-btn-mode active" id="btn-layout-constellation" onclick="setCosmosLayout('constellation')">CONSTELLATION</button>
+        <button class="cosmos-btn-mode" id="btn-layout-ring" onclick="setCosmosLayout('ring')">RING</button>
+        <button class="cosmos-btn-mode" id="btn-layout-cube" onclick="setCosmosLayout('cube')">CUBE</button>
+        <button class="cosmos-btn-mode" id="btn-layout-sphere" onclick="setCosmosLayout('sphere')">SPHERE</button>
+      </div>
+
+      <!-- Quick Toggles (EYES, HOLO, FOCUS) -->
+      <div style="width:100%; display:flex; flex-direction:column; gap:6px;">
+        <div class="cosmos-toggle-row"><span class="ctr-lbl">EYES</span><span class="ctr-val on">watching</span></div>
+        <div class="cosmos-toggle-row"><span class="ctr-lbl">HOLO 3D</span><span class="ctr-val on">active</span></div>
+        <div class="cosmos-toggle-row" onclick="resetCosmosCamera()" style="cursor:pointer;"><span class="ctr-lbl">CAMERA</span><span class="ctr-val">re-center ↺</span></div>
+      </div>
+
+      <!-- Inspector Drawer per Nodo Cliccato -->
+      <div id="cosmos-inspector-drawer" style="display:none; width:260px; background:rgba(4, 14, 26, 0.95); border:1px solid rgba(0, 240, 255, 0.35); border-radius:14px; padding:16px; backdrop-filter:blur(20px); box-shadow:0 15px 40px rgba(0,0,0,0.7);">
+      </div>
+
+    </div>
+
+  </div>
+
+    <!-- Scheda 1: DUAL TELEMETRY: VPS 24GB + WORKSTATION 64GB -->
+    <div class="modular-window-card" id="card-mod-cpu-ram" style="display:none; top:90px; right:20px; width:360px;">
       <div class="mwc-header ct-draggable-handle">
-        <span class="mwc-title">🎛️ CPU & RAM WORKSTATION</span>
+        <span class="mwc-title">⚡ DUAL TELEMETRY: VPS 24GB + PC 64GB</span>
         <div class="mwc-btns"><button class="mwc-btn" onclick="toggleModule('mod-cpu-ram', false)">✕</button></div>
       </div>
       <div class="mwc-body">
-        <div class="mwc-metric-row"><span class="mwc-lbl">CPU 8C/16T Load:</span> <span class="mwc-val val-green" id="mwc-cpu-val">4.2%</span></div>
-        <div class="mwc-track"><div class="mwc-fill fill-green" id="mwc-cpu-fill" style="width:4.2%;"></div></div>
-        <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">RAM 64GB DDR:</span> <span class="mwc-val val-cyan" id="mwc-ram-val">18.7 / 64 GB (29%)</span></div>
-        <div class="mwc-track"><div class="mwc-fill fill-cyan" id="mwc-ram-fill" style="width:29%;"></div></div>
-        <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">Tokio Zero-Copy Bus:</span> <span class="mwc-val val-emerald">0.15 ms LATENCY</span></div>
+        <div style="font-size:10px; font-weight:700; color:#00ff9f; letter-spacing:1px; margin-bottom:4px;">☁️ ORACLE CLOUD VPS · ALWAYS FREE (0,00 €)</div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">CPU 4 Core ARM:</span> <span class="mwc-val val-green" id="mwc-vps-cpu-val">5.7%</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-green" id="mwc-vps-cpu-fill" style="width:6%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:6px;"><span class="mwc-lbl">RAM Cloud (24GB):</span> <span class="mwc-val val-cyan" id="mwc-vps-ram-val">20.9 / 24 GB (87%)</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-cyan" id="mwc-vps-ram-fill" style="width:87%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:6px;"><span class="mwc-lbl">SSD NVMe (145GB):</span> <span class="mwc-val val-emerald" id="mwc-vps-disk-val">122.5 / 145 GB (84%)</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-emerald" id="mwc-vps-disk-fill" style="width:84%;"></div></div>
+        
+        <div style="font-size:10px; font-weight:700; color:#00f0ff; letter-spacing:1px; margin-top:10px; margin-bottom:4px;">🖥️ WORKSTATION LOCALE (BADR PC)</div>
+        <div class="mwc-metric-row"><span class="mwc-lbl">CPU 8C/16T Load:</span> <span class="mwc-val val-green" id="mwc-cpu-val">49.2%</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-green" id="mwc-cpu-fill" style="width:49%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:6px;"><span class="mwc-lbl">RAM 64GB DDR:</span> <span class="mwc-val val-cyan" id="mwc-ram-val">48.9 / 64 GB (76%)</span></div>
+        <div class="mwc-track"><div class="mwc-fill fill-cyan" id="mwc-ram-fill" style="width:76%;"></div></div>
+        <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">Tokio Zero-Copy Bus:</span> <span class="mwc-val val-emerald">0.05 ms LATENCY</span></div>
       </div>
     </div>
 
@@ -673,5 +911,330 @@
 
   <script src="cyber_audio_engine.js?v=1001.0"></script>
   <script src="app.js?v=1004.0"></script>
+
+<!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
+<div id="screen-panel">
+  <div class="sp-header">
+    <span class="sp-title">📺 LIVE SCREEN</span>
+    <div class="sp-badges">
+      <span class="sp-badge live" id="sp-live-badge">● LIVE</span>
+      <span class="sp-badge fps" id="sp-fps-badge">5 FPS</span>
+    </div>
+    <button class="sp-close" onclick="toggleScreenPanel()">✕</button>
+  </div>
+  <div id="screen-canvas-wrap">
+    <img id="screen-canvas" src="" alt="Live Screen" />
+    <div class="sp-overlay">
+      <button class="sp-btn" onclick="screenAnalyzeNow()">🔍 ANALIZZA AI</button>
+      <button class="sp-btn" onclick="screenSnapshot()">📸 SNAP</button>
+      <button class="sp-btn danger" id="sp-pause-btn" onclick="toggleScreenPause()">⏸ PAUSA</button>
+      <span class="sp-stats" id="sp-stats-txt">— KB/s</span>
+    </div>
+  </div>
+  <div id="sp-ai-result"></div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  E.B.J. SCREEN CAPTURE ENGINE — Rust WebSocket + AI Vision
+// ═══════════════════════════════════════════════════════════════════════
+(function() {
+const RUST_WS_URL   = 'ws://127.0.0.1:9000/ws/screen';
+const RUST_STATS    = 'http://127.0.0.1:9000/api/screen/stats';
+const RUST_PAUSE    = 'http://127.0.0.1:9000/api/screen/pause';
+const RUST_RESUME   = 'http://127.0.0.1:9000/api/screen/resume';
+const RUST_FRAME_B64 = 'http://127.0.0.1:9000/api/screen/frame-b64';
+const AI_ANALYZE    = 'http://127.0.0.1:8088/api/screen/analyze';
+
+let ws          = null;
+let wsOpen      = false;
+let paused      = false;
+let frameCount  = 0;
+let panelOpen   = false;
+let statsInterval = null;
+
+const canvas    = () => document.getElementById('screen-canvas');
+const aiResult  = () => document.getElementById('sp-ai-result');
+const statsTxt  = () => document.getElementById('sp-stats-txt');
+const liveBadge = () => document.getElementById('sp-live-badge');
+const fpsBadge  = () => document.getElementById('sp-fps-badge');
+const pauseBtn  = () => document.getElementById('sp-pause-btn');
+
+// ── WS Connection ─────────────────────────────────────────────────────
+function connectScreenWS() {
+  if (ws && wsOpen) return;
+  try {
+    ws = new WebSocket(RUST_WS_URL);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+      wsOpen = true;
+      if(liveBadge()) liveBadge().style.color = '#ff4444';
+      console.log('[SCREEN WS] Connesso al Rust Bridge');
+    };
+
+    ws.onmessage = (evt) => {
+      if (paused || !panelOpen) return;
+      if (evt.data instanceof ArrayBuffer) {
+        const blob = new Blob([evt.data], { type: 'image/jpeg' });
+        const url  = URL.createObjectURL(blob);
+        const img  = canvas();
+        if (img) {
+          const old = img.src;
+          img.src = url;
+          if (old && old.startsWith('blob:')) URL.revokeObjectURL(old);
+          frameCount++;
+        }
+      }
+    };
+
+    ws.onerror = () => {
+      wsOpen = false;
+      // Fallback: polling HTTP se WS non disponibile
+      startHttpPolling();
+    };
+
+    ws.onclose = () => {
+      wsOpen = false;
+      if (panelOpen) setTimeout(connectScreenWS, 2000); // Riconnetti
+    };
+  } catch(e) {
+    startHttpPolling();
+  }
+}
+
+// ── HTTP Polling Fallback (se WS non disponibile) ─────────────────────
+let pollTimer = null;
+function startHttpPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(async () => {
+    if (!panelOpen || paused) return;
+    try {
+      const r = await fetch(RUST_FRAME_B64);
+      const d = await r.json();
+      if (d.ready && d.frame) {
+        const img = canvas();
+        if (img) img.src = 'data:image/jpeg;base64,' + d.frame;
+        frameCount++;
+      }
+    } catch(e) {}
+  }, 200); // 5fps
+}
+
+// ── Stats Updater ──────────────────────────────────────────────────────
+async function updateStats() {
+  try {
+    const r = await fetch(RUST_STATS, { cache: 'no-store' });
+    const d = await r.json();
+    const kbps = Math.round(d.bytes_per_s / 1024);
+    if(statsTxt()) statsTxt().textContent = kbps + ' KB/s | Δ ' + d.delta_count;
+    if(fpsBadge()) fpsBadge().textContent = d.fps_target + ' FPS';
+  } catch(e) {
+    if(statsTxt()) statsTxt().textContent = 'HTTP fallback';
+  }
+}
+
+// ── Panel Toggle ───────────────────────────────────────────────────────
+window.toggleScreenPanel = function() {
+  const panel = document.getElementById('screen-panel');
+  panelOpen = !panelOpen;
+  if (panelOpen) {
+    panel.classList.add('visible');
+    connectScreenWS();
+    statsInterval = setInterval(updateStats, 2000);
+    updateStats();
+  } else {
+    panel.classList.remove('visible');
+    if (statsInterval) clearInterval(statsInterval);
+  }
+  // Toggle button state
+  const btn = document.getElementById('screen-toggle-main');
+  if(btn) btn.classList.toggle('active', panelOpen);
+};
+
+// ── Pause / Resume ─────────────────────────────────────────────────────
+window.toggleScreenPause = async function() {
+  paused = !paused;
+  const btn = pauseBtn();
+  try {
+    await fetch(paused ? RUST_PAUSE : RUST_RESUME, { method: 'POST' });
+    if(btn) btn.textContent = paused ? '▶ RIPRENDI' : '⏸ PAUSA';
+    if(liveBadge()) liveBadge().style.opacity = paused ? '0.3' : '1';
+  } catch(e) {}
+};
+
+// ── AI Analysis ────────────────────────────────────────────────────────
+window.screenAnalyzeNow = async function() {
+  const img = canvas();
+  if (!img || !img.src) return;
+
+  // Converti img src in base64
+  let b64 = '';
+  if (img.src.startsWith('blob:')) {
+    const resp = await fetch(RUST_FRAME_B64);
+    const data = await resp.json();
+    b64 = data.frame || '';
+  } else if (img.src.startsWith('data:')) {
+    b64 = img.src.split(',')[1];
+  }
+
+  if (!b64) return;
+
+  const res = aiResult();
+  if (res) {
+    res.classList.add('visible');
+    res.textContent = '🔍 Analisi AI in corso...';
+  }
+
+  try {
+    const r = await fetch(AI_ANALYZE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frame_b64: b64, mime: 'image/jpeg', prompt: 'Descrivi brevemente cosa vedi in questo screenshot del desktop. Evidenzia elementi importanti, app aperte, testo visibile.' })
+    });
+    const d = await r.json();
+    if (res) res.textContent = d.analysis || d.response || 'Analisi completata.';
+    // Invia anche in chat
+    if (typeof addBotMessage === 'function') {
+      addBotMessage('📺 **SCREEN ANALYSIS:** ' + (d.analysis || d.response || ''));
+    }
+  } catch(e) {
+    if (res) res.textContent = 'Errore analisi: ' + e.message;
+  }
+};
+
+// ── Snapshot ───────────────────────────────────────────────────────────
+window.screenSnapshot = function() {
+  const img = canvas();
+  if (!img || !img.src) return;
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = 'ebj-screen-' + Date.now() + '.jpg';
+  a.click();
+};
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.key === 's') { e.preventDefault(); toggleScreenPanel(); }
+  if (e.altKey && e.key === 'a') { e.preventDefault(); screenAnalyzeNow(); }
+});
+
+// Auto-connetti se il panel era già aperto
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[SCREEN ENGINE] Inizializzato. Alt+S per aprire, Alt+A per analizzare.');
+});
+
+})();
+</script>
+
+
+<script>
+// ── Mood Card Manager ─────────────────────────────────────────────────────
+window.setMood = function(mood) {
+  // Deactivate all cards
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+  // Activate selected
+  const card = document.getElementById('mood-card-' + mood);
+  if (card) card.classList.add('active');
+  // Call existing setQuickMood
+  if (typeof setQuickMood === 'function') setQuickMood(mood);
+  else if (typeof switchMood === 'function') switchMood(mood);
+  // API call
+  fetch('/api/mood/set', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({mood}) }).catch(()=>{});
+};
+// Keyboard shortcuts Alt+1-4
+document.addEventListener('keydown', (e) => {
+  if (!e.altKey) return;
+  const map = {'1':'jarvis','2':'military','3':'architect','4':'friendly'};
+  if (map[e.key]) { e.preventDefault(); window.setMood(map[e.key]); }
+});
+</script>
+
+
+<script>
+// ── KANBAN DYNAMIC LOADER ──────────────────────────────────────────────────
+window.refreshKanbanData = async function() {
+  try {
+    const res = await fetch('/api/leads/list?limit=50').catch(() => null);
+    let leads = [];
+    if (res && res.ok) {
+      const data = await res.json();
+      leads = data.leads || [];
+    }
+    
+    // Pulisci colonne
+    const colNuovi = document.getElementById('kb-col-nuovi');
+    const colContattati = document.getElementById('kb-col-contattati');
+    const colPrev = document.getElementById('kb-col-preventivi');
+    const colChiusi = document.getElementById('kb-col-chiusi');
+    if (!colNuovi) return;
+
+    colNuovi.innerHTML = '';
+    colContattati.innerHTML = '';
+    colPrev.innerHTML = '';
+    colChiusi.innerHTML = '';
+
+    let cNuovi = 0, cCont = 0, cPrev = 0, cChiusi = 0;
+
+    leads.forEach(lead => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; font-size:11px;';
+      const phoneDisplay = (lead.phone && lead.phone !== 'DM_ONLY') ? `📞 ${lead.phone}` : '✉️ DM / Messenger';
+      const waBtn = lead.whatsapp_link ? `<a href="${lead.whatsapp_link}" target="_blank" style="display:inline-block; margin-top:4px; padding:2px 8px; background:#22c55e; color:#000; border-radius:4px; text-decoration:none; font-weight:bold; font-size:9px;">WhatsApp 1-Click</a>` : '';
+
+      card.innerHTML = `
+        <div style="font-weight:bold; color:#e2e8f0; margin-bottom:2px;">${lead.client_name || 'Richiesta Privato'}</div>
+        <div style="font-size:10px; color:#94a3b8;">📍 ${lead.city || 'Bologna'} · ${lead.service_type || 'Trasloco'}</div>
+        <div style="font-size:10px; color:#38bdf8; margin-top:2px;">${phoneDisplay}</div>
+        <div style="font-size:9px; color:#64748b; margin-top:3px;">Fonte: ${lead.source || 'OSINT'}</div>
+        ${waBtn}
+      `;
+
+      if (lead.phone && lead.phone !== 'DM_ONLY') {
+        colContattati.appendChild(card);
+        cCont++;
+      } else {
+        colNuovi.appendChild(card);
+        cNuovi++;
+      }
+    });
+
+    document.getElementById('kb-count-nuovi').textContent = cNuovi;
+    document.getElementById('kb-count-contattati').textContent = cCont;
+    document.getElementById('kb-count-preventivi').textContent = cPrev;
+    document.getElementById('kb-count-chiusi').textContent = cChiusi;
+  } catch(e) {
+    console.warn('[KANBAN] Errore caricamento:', e);
+  }
+};
+
+// Carica kanban quando si passa alla vista
+const _origSwitchMasterView = window.switchMasterView;
+window.switchMasterView = function(view) {
+  _origSwitchMasterView && _origSwitchMasterView(view);
+  const targetId = KALI_VIEW_MAP[view] || 'view-jarvis';
+  document.querySelectorAll('.jarvis-workspace').forEach(w => {
+    if (w.id === targetId) {
+      w.style.display = 'flex';
+      w.classList.add('active');
+    } else {
+      w.style.display = 'none';
+      w.classList.remove('active');
+    }
+  });
+  if (view === 'kanban') window.refreshKanbanData();
+  if (view === 'topology') {
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      if (window.setCosmosLayout) window.setCosmosLayout('constellation');
+    }, 60);
+  }
+};
+</script>
+
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="jarvis_3d_cosmos.js"></script>
 </body>
 </html>

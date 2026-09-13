@@ -826,5 +826,10 @@
     "binary": "sqlite3",
     "category": "mobile",
     "package": "sqlite3"
-  }
+  },
+  {"name": "sherlock", "binary": "sherlock", "category": "recon", "package": "sherlock-project"},
+  {"name": "holehe", "binary": "holehe", "category": "recon", "package": "holehe"},
+  {"name": "katana", "binary": "katana", "category": "web", "package": "katana-go"},
+  {"name": "gowitness", "binary": "gowitness", "category": "web", "package": "gowitness"},
+  {"name": "spiderfoot", "binary": "sfcli.py", "category": "recon", "package": "spiderfoot"}
 ]

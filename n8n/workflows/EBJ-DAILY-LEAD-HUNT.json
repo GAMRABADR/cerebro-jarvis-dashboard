@@ -1,0 +1,111 @@
+{
+  "name": "EBJ-DAILY-LEAD-HUNT",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cron-trigger",
+      "name": "Cron 8:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8089/api/lead-hunter/scrape",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ queries: ['cerco trasloco', 'devo traslocare', 'aiuto sgombero', 'cerco sgombero', 'vorrei traslocare'], platforms: ['subito.it', 'bakeca.it'], zone: 'torino' }) }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "http-scrape",
+      "name": "Scraping Lead Hunter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "filter-clients",
+              "leftValue": "={{ $json.classification }}",
+              "operator": { "type": "string", "operation": "equals" },
+              "rightValue": "CLIENT"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-clients",
+      "name": "Solo CLIENT",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.0,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8089/api/lead/contact",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ lead_name: $json.title || '', phone: ($json.phones && $json.phones[0]) || null, post_text: $json.title || '', lead_data: { origine: $json.origine, destinazione: $json.destinazione, tipo: $json.tipo }, channels: ['whatsapp', 'sms', 'messenger'] }) }}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "http-contact",
+      "name": "Contatto Auto Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [980, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '-1001988134270', text: '🎯 EBJ Daily Lead Hunt\\n\\nLead trovati: ' + $('Scraping Lead Hunter').item.json.total_found + '\\nClient: ' + $('Scraping Lead Hunter').item.json.clients + '\\nContattati: ' + $input.all().length, parse_mode: 'HTML' }) }}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "telegram-notify",
+      "name": "Telegram Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8089/api/telemetry/leads",
+        "options": { "timeout": 10000 }
+      },
+      "id": "http-telemetry",
+      "name": "Telemetrie Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 500]
+    }
+  ],
+  "connections": {
+    "Cron 8:00": {
+      "main": [[{ "node": "Scraping Lead Hunter", "type": "main", "index": 0 }]]
+    },
+    "Scraping Lead Hunter": {
+      "main": [[{ "node": "Solo CLIENT", "type": "main", "index": 0 }]]
+    },
+    "Solo CLIENT": {
+      "main": [[{ "node": "Contatto Auto Lead", "type": "main", "index": 0 }]]
+    },
+    "Contatto Auto Lead": {
+      "main": [[{ "node": "Telegram Report", "type": "main", "index": 0 }, { "node": "Telemetrie Leads", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "ebj" }, { "name": "lead-hunter" }, { "name": "daily" }]
+}

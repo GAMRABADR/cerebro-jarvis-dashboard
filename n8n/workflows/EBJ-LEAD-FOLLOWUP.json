@@ -1,0 +1,71 @@
+{
+  "name": "EBJ-LEAD-FOLLOWUP",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cron-18",
+      "name": "Cron 18:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8089/api/lead-hunter/list?status=new&limit=50",
+        "options": { "timeout": 10000 }
+      },
+      "id": "http-new-leads",
+      "name": "Lead Non Contattati",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8089/api/lead/contact",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ lead_id: $json.id, lead_name: $json.lead_name || '', phone: $json.phone || null, email: $json.email || null, facebook_url: $json.facebook_url || null, post_text: $json.post_text || '', lead_data: { origine: $json.origine, destinazione: $json.destinazione, tipo: $json.tipo }, channels: ['sms', 'email', 'messenger'] }) }}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "http-retry-contact",
+      "name": "Retry Contatto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '-1001988134270', text: '📋 EBJ Followup 18:00\\n\\nLead non contattati: ' + $('Lead Non Contattati').item.json.total + '\\nRetry effettuati: ' + $input.all().length, parse_mode: 'HTML' }) }}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "telegram-followup",
+      "name": "Telegram Followup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [980, 300],
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Cron 18:00": {
+      "main": [[{ "node": "Lead Non Contattati", "type": "main", "index": 0 }]]
+    },
+    "Lead Non Contattati": {
+      "main": [[{ "node": "Retry Contatto", "type": "main", "index": 0 }]]
+    },
+    "Retry Contatto": {
+      "main": [[{ "node": "Telegram Followup", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "ebj" }, { "name": "followup" }, { "name": "daily" }]
+}

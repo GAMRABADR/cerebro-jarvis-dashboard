@@ -1586,3 +1586,102 @@ body:has(#view-kali-lab.active) .floating-modules-stage {
     scroll-behavior: auto !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* J.A.R.V.I.S. ARC REACTOR & 3D COSMOS HUD STYLES (YOUTUBE REFERENCE)       */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+.reactor-outer-ring {
+  position: absolute;
+  width: 176px;
+  height: 176px;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(0, 240, 255, 0.15);
+  animation: spin-reactor 24s linear infinite;
+}
+
+.reactor-ticks-ring {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px double rgba(0, 255, 159, 0.5);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.25);
+  animation: spin-reactor-reverse 16s linear infinite;
+}
+
+.reactor-inner-core {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.28) 0%, rgba(2, 6, 15, 0.92) 75%);
+  border: 1.5px solid #00f0ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+@keyframes spin-reactor {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reactor-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.cosmos-btn-mode {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cosmos-btn-mode.active, .cosmos-btn-mode:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.cosmos-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(4, 14, 26, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: border-color 0.2s;
+}
+
+.cosmos-toggle-row:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.cosmos-toggle-row .ctr-lbl {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.cosmos-toggle-row .ctr-val {
+  color: #64748b;
+  font-weight: bold;
+}
+
+.cosmos-toggle-row .ctr-val.on {
+  color: #00ff9f;
+  text-shadow: 0 0 6px #00ff9f;
+}

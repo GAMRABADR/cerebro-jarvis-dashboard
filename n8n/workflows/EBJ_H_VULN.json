@@ -1,0 +1,75 @@
+{
+  "name": "EBJ_H_VULN",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ebj-h-vuln",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-vuln",
+      "name": "Webhook VULN",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300],
+      "webhookId": "ebj-h-vuln"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:9000/api/ebj-h/dispatch",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tool: $json.body.tool, args: ($json.body.args || ['--help']), family: 'vuln', action: ($json.body.action || 'run') }) }}",
+        "options": { "timeout": 180000 }
+      },
+      "id": "http-rust",
+      "name": "Rust Dispatch :9000",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8088/api/kali/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: ($json.body.action || 'run'), tool: $json.body.tool, args: ($json.body.args || ['--help']) }) }}",
+        "options": { "timeout": 180000 }
+      },
+      "id": "http-fallback",
+      "name": "Fallback Hermes :8088",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 480]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [820, 380]
+    }
+  ],
+  "connections": {
+    "Webhook VULN": {
+      "main": [[{ "node": "Rust Dispatch :9000", "type": "main", "index": 0 }]]
+    },
+    "Rust Dispatch :9000": {
+      "main": [
+        [{ "node": "Respond", "type": "main", "index": 0 }],
+        [{ "node": "Fallback Hermes :8088", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fallback Hermes :8088": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "EBJ_H" }]
+}

@@ -1,5 +1,5 @@
 # 🌌 HERMES AGENT & JARVIS · HOLOGRAPHIC LONG-TERM MEMORY VAULT
-*Ultima sincronizzazione automatica: 2026-08-26 23:23:46*
+*Ultima sincronizzazione automatica: 2026-09-13 12:34:40*
 
 Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, sincronizzata con SQLite Vector/FTS.
 
@@ -63,6 +63,98 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Interazione Utente** `★★★★★`: Hermes Auditor, esegui un audit di sicurezza su 92.4.233.42 *(Registrato: 2026-08-26 18:25:23)*
 - **Interazione Utente** `★★★★★`: FAI UN PING A QUESTO INDIRIZZO E ANALIZZALO CON CALI STRUMEENTI HE HAI https://www.facebook.com/ *(Registrato: 2026-08-26 21:23:06)*
 - **Interazione Utente** `★★★★★`: TROVA IL MIO IP *(Registrato: 2026-08-26 21:23:46)*
+- **Interazione Utente** `★★★★★`: E.B.J., stato generale dei sistemi? *(Registrato: 2026-08-28 00:35:09)*
+- **Interazione Utente** `★★★★★`: rintraccia questo numero 3888703508 *(Registrato: 2026-08-28 00:36:23)*
+- **Interazione Utente** `★★★★★`: chiamalo usa kali *(Registrato: 2026-08-28 00:36:49)*
+- **Interazione Utente** `★★★★★`: chiamata   telefonica *(Registrato: 2026-08-28 00:37:27)*
+- **Interazione Utente** `★★★★★`: e biggie mi sentì *(Registrato: 2026-08-28 00:38:00)*
+- **Interazione Utente** `★★★★★`: Controlla la mia email *(Registrato: 2026-08-28 00:38:27)*
+- **Interazione Utente** `★★★★★`: Apri il sito internet www.google.com *(Registrato: 2026-08-28 00:39:28)*
+- **Interazione Utente** `★★★★★`: quali tools puoi usare di Cali Linux *(Registrato: 2026-08-28 00:40:14)*
+- **Interazione Utente** `★★★★★`: hai sviluppato un'app *(Registrato: 2026-08-28 08:07:26)*
+- **Interazione Utente** `★★★★★`: la banca Credem ho detto Vado su se tu glielo dici tu vieni hai mangiato Tu m'hai detto ieri vieni andiamo *(Registrato: 2026-08-28 08:12:04)*
+- **Interazione Utente** `★★★★★`: trovami lavoro per torino *(Registrato: 2026-08-28 08:13:25)*
+- **Interazione Utente** `★★★★★`: Ma perché si vede che tipo quando bevi il tuo cervello non funziona bene come quando *(Registrato: 2026-08-28 08:13:38)*
+- **Interazione Utente** `★★★★★`: mangiamo che facciamo un po' di patate non lo so con poco non lo so al forno meglio farei facciamo un casino *(Registrato: 2026-08-28 08:14:31)*
+- **Interazione Utente** `★★★★★`: ma io non so se vuoi *(Registrato: 2026-08-28 08:14:34)*
+- **Interazione Utente** `★★★★★`: zenzero zenzero *(Registrato: 2026-08-28 08:15:17)*
+- **Interazione Utente** `★★★★★`: Ma domani arriva *(Registrato: 2026-08-28 08:15:53)*
+- **Interazione Utente** `★★★★★`: sì poi ti chiama quella persona che tu pensi *(Registrato: 2026-08-28 08:29:27)*
+- **Interazione Utente** `★★★★★`: Sì sì sto partendo adesso *(Registrato: 2026-08-28 08:30:03)*
+- **Interazione Utente** `★★★★★`: EBJ, forniscimi lead per Torino via email *(Registrato: 2026-08-28 08:36:59)*
+- **Interazione Utente** `★★★★★`: EBJ, forniscimi lead per Torino via email" *(Registrato: 2026-08-28 08:38:51)*
+- **Interazione Utente** `★★★★★`: inviami un pdf alla mia mail badraudi@gmail.com con lista torino di lavori tralochi *(Registrato: 2026-08-28 08:40:04)*
+- **Interazione Utente** `★★★★★`: The Big mi senti *(Registrato: 2026-08-28 08:41:33)*
+- **Interazione Utente** `★★★★★`: Invia un'email a badr@gmail.com con tutti i lavori di Torino *(Registrato: 2026-08-28 15:43:22)*
+- **Interazione Utente** `★★★★★`: Ok mi ha inviato l'email con tutti i lavori adesso hai visto *(Registrato: 2026-08-28 15:44:00)*
+- **Interazione Utente** `★★★★★`: lista clienti numeri di telefono e clienti *(Registrato: 2026-08-28 15:44:41)*
+- **Interazione Utente** `★★★★★`: è un programma Jarvis *(Registrato: 2026-08-28 17:58:54)*
+- **Interazione Utente** `★★★★★`: ed Esse il mio drone in *(Registrato: 2026-08-28 17:58:57)*
+- **Interazione Utente** `★★★★★`: possiamo anche parlarne *(Registrato: 2026-08-28 19:28:23)*
+- **Interazione Utente** `★★★★★`: Eh ho già parlato *(Registrato: 2026-08-28 19:28:27)*
+- **Interazione Utente** `★★★★★`: vedi che c'è una gente Zero *(Registrato: 2026-08-28 19:28:58)*
+- **Interazione Utente** `★★★★★`: Guarda vorrei guardar poco fatto *(Registrato: 2026-08-28 19:29:01)*
+- **Interazione Utente** `★★★★★`: AVG ci sei Ti ricordi di me *(Registrato: 2026-08-28 19:30:21)*
+- **Interazione Utente** `★★★★★`: ti rendi conto *(Registrato: 2026-08-28 19:31:07)*
+- **Interazione Utente** `★★★★★`: a badare guariti@gmail.com *(Registrato: 2026-08-28 19:31:48)*
+- **Interazione Utente** `★★★★★`: Invia il messaggio alla mia email *(Registrato: 2026-08-28 19:32:50)*
+- **Interazione Utente** `★★★★★`: confermo in via *(Registrato: 2026-08-28 19:33:29)*
+- **Interazione Utente** `★★★★★`: Aspetta vediamo se me l'ha inviata *(Registrato: 2026-08-28 19:34:06)*
+- **Interazione Utente** `★★★★★`: email oggetto Luca inviata a Badr Audition sulla gmail.com *(Registrato: 2026-08-28 19:34:57)*
+- **Interazione Utente** `★★★★★`: Halo ha come cazzo *(Registrato: 2026-08-28 19:36:37)*
+- **Interazione Utente** `★★★★★`: non ha nessuno *(Registrato: 2026-08-28 19:37:06)*
+- **Interazione Utente** `★★★★★`: è stata trasformata”, Raffaello *(Registrato: 2026-08-28 19:40:36)*
+- **Interazione Utente** `★★★★★`: la tira un'altra cosa No oggi ha detto *(Registrato: 2026-08-28 19:41:50)*
+- **Interazione Utente** `★★★★★`: s alleanza Il desiderio *(Registrato: 2026-08-28 19:41:54)*
+- **Interazione Utente** `★★★★★`: BMW grindel mai sentito Sicilia *(Registrato: 2026-08-28 19:42:30)*
+- **Interazione Utente** `★★★★★`: dentro Il martirio sono vuote questo *(Registrato: 2026-08-28 19:44:01)*
+- **Interazione Utente** `★★★★★`: bacheca Superiore *(Registrato: 2026-08-28 19:45:34)*
+- **Interazione Utente** `★★★★★`: di offrire *(Registrato: 2026-08-28 19:45:36)*
+- **Interazione Utente** `★★★★★`: volevamo costruire dove sarebbero entrati nel mondo del gelato Quindi era buono bene a lui Sì doveva Lancia *(Registrato: 2026-08-28 19:48:04)*
+- **Interazione Utente** `★★★★★`: da adesso è fresco insomma era stato inviato Gesù invece quelle divertenti e che è una radio mais un fagioli che faresti l'ultimo *(Registrato: 2026-08-28 19:48:56)*
+- **Interazione Utente** `★★★★★`: pellegrinata di Francesco reputato assoluti sono pomodoro Ah buono questa qui dove volete fare qualcosa *(Registrato: 2026-08-28 19:50:47)*
+- **Interazione Utente** `★★★★★`: tutti i giorni ma che dici *(Registrato: 2026-08-28 19:51:36)*
+- **Interazione Utente** `★★★★★`: al di sopra *(Registrato: 2026-08-28 19:52:15)*
+- **Interazione Utente** `★★★★★`: degli estremità perché *(Registrato: 2026-08-28 19:52:18)*
+- **Interazione Utente** `★★★★★`: però mandami pure vaffanculo *(Registrato: 2026-08-28 19:53:06)*
+- **Interazione Utente** `★★★★★`: No dai ma che sia chiamata sicuro sicuro *(Registrato: 2026-08-28 19:54:25)*
+- **Interazione Utente** `★★★★★`: alla prossima settimana prossima porca Miseno d'oro o un muro dalle catamassa massima Voglio una persona sbaglia *(Registrato: 2026-08-28 19:55:49)*
+- **Interazione Utente** `★★★★★`: ho perso il lavoro quindi devo farla finire così *(Registrato: 2026-08-28 19:56:43)*
+- **Interazione Utente** `★★★★★`: 200 300 80 16 magazzi *(Registrato: 2026-08-28 19:57:50)*
+- **Interazione Utente** `★★★★★`: grumi perché *(Registrato: 2026-08-28 19:59:30)*
+- **Interazione Utente** `★★★★★`: pompieri alzati *(Registrato: 2026-08-28 20:03:03)*
+- **Interazione Utente** `★★★★★`: gradi l'università *(Registrato: 2026-08-28 20:04:51)*
+- **Interazione Utente** `★★★★★`: una notte in spiaggia ed arrivava al Blocco per il paese aveva la stessa musica faccio i massaggi orientali conosci *(Registrato: 2026-08-28 20:06:39)*
+- **Interazione Utente** `★★★★★`: il marito e mia sorella ha fatto un incidente grosso *(Registrato: 2026-08-28 20:07:56)*
+- **Interazione Utente** `★★★★★`: normale Sta leggendo il mio WhatsApp *(Registrato: 2026-08-28 20:08:31)*
+- **Interazione Utente** `★★★★★`: sta leggendo le mie cose *(Registrato: 2026-08-28 20:08:34)*
+- **Interazione Utente** `★★★★★`: E.B.J., sei online? *(Registrato: 2026-09-01 04:27:58)*
+- **Interazione Utente** `★★★★★`: Mandami il mio curriculum via email *(Registrato: 2026-09-01 04:29:33)*
+- **Interazione Utente** `★★★★★`: mandami lead via email di torino e bologna tutti quelli che trovi *(Registrato: 2026-09-01 04:30:59)*
+- **Interazione Utente** `★★★★★`: sei sicuro che siano contatti veri testa la chiamata verso il numero 3888703508 *(Registrato: 2026-09-01 04:34:58)*
+- **Interazione Utente** `★★★★★`: chiama pietro *(Registrato: 2026-09-01 04:35:34)*
+- **Interazione Utente** `★★★★★`: chiama trillo *(Registrato: 2026-09-01 04:35:58)*
+- **Interazione Utente** `★★★★★`: Baby Jane le leggi *(Registrato: 2026-09-01 04:38:53)*
+- **Interazione Utente** `★★★★★`: Leggimi dal versetto 1 al versetto 6 *(Registrato: 2026-09-01 04:40:26)*
+- **Interazione Utente** `★★★★★`: misura anni se *(Registrato: 2026-09-01 04:41:50)*
+- **Interazione Utente** `★★★★★`: Mi chiamo Badr e domani vado a Torino per un sopralluogo importante con Pietro. *(Registrato: 2026-09-01 04:44:45)*
+- **Interazione Utente** `★★★★★`: Dove vado domani e con chi? *(Registrato: 2026-09-01 04:44:48)*
+- **Interazione Utente** `★★★★★`: Cosa ti ho detto due secondi fa? *(Registrato: 2026-09-01 04:44:51)*
+- **Interazione Utente** `★★★★★`: Cosa abbiamo appena comprato e per quale azienda? *(Registrato: 2026-09-01 04:46:20)*
+- **Interazione Utente** `★★★★★`: Mandami l'indirizzo di oggi e non sbagliare *(Registrato: 2026-09-01 13:46:41)*
+- **Interazione Utente** `★★★★★`: ebg Mandami via email i lead di oggi di Bologna numeri veri *(Registrato: 2026-09-01 13:47:27)*
+- **Interazione Utente** `★★★★★`: con le spese esterne o spider-man ha detto di essere intervenuto *(Registrato: 2026-09-01 13:50:04)*
+- **Interazione Utente** `★★★★★`: dimenticati questo che abbiamo appena detto spider-man è una roba del genere perché non c'entra niente era accesa la TV *(Registrato: 2026-09-01 13:50:47)*
+- **Interazione Utente** `★★★★★`: LG dimentica spider-man *(Registrato: 2026-09-01 13:50:56)*
+- **Interazione Utente** `★★★★★`: E.B.J., sei attivo? *(Registrato: 2026-09-02 06:15:05)*
+- **Interazione Utente** `★★★★★`: Mandami un'email con il *(Registrato: 2026-09-02 06:15:53)*
+- **Interazione Utente** `★★★★★`: presenta il codice *(Registrato: 2026-09-13 07:35:54)*
+- **Interazione Utente** `★★★★★`: Ué Pietro Come stai *(Registrato: 2026-09-13 10:32:04)*
+- **Interazione Utente** `★★★★★`: stai prendendo un pochino il sole in giardino *(Registrato: 2026-09-13 10:32:13)*
+- **Interazione Utente** `★★★★★`: so che tipo c'è una zia che è strano e lui ha anche abita Lui abita a Ozzano dell'Emilia *(Registrato: 2026-09-13 10:33:56)*
+- **Interazione Utente** `★★★★★`: sì e lui li da lì Eh si si incontra con me *(Registrato: 2026-09-13 10:34:06)*
+- **Interazione Utente** `★★★★★`: in un giorno ti fai 100 150 €200 *(Registrato: 2026-09-13 10:34:30)*
+- **Interazione Utente** `★★★★★`: capito lui se ne fa molti di più lui se ne fa di più è ovvio lui si fa mille al giorno qua però se ho bisogno dei soldi o qualcosa di Pietro Ho bisogno di pagare *(Registrato: 2026-09-13 10:34:40)*
 
 ## 📂 Categoria: `BUSINESS_SGOMBERI`
 
@@ -71,6 +163,9 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Richiesta/Dettaglio Trasloco** `★★★★★`: E.B.J., registrami su tutti i portali di traslochi e directory immobiliari d Italia *(Registrato: 2026-08-25 13:54:18)*
 - **Richiesta/Dettaglio Trasloco** `★★★★★`: DOVE LA LISTA DEI TRASLOCHI SGONMBERI BOLOGNA ? ME LAI MANDATA ? *(Registrato: 2026-08-25 14:44:59)*
 - **Richiesta/Dettaglio Trasloco** `★★★★★`: MANDAMI EMAIL CONTENETE BOLOGNA LEAD DI TRASLOCHI STRAPPATI  SULLA MIA EMAIL BADRAUDI@GMAIL.COM *(Registrato: 2026-08-25 19:16:56)*
+- **Richiesta/Dettaglio Trasloco** `★★★★★`: Mandami lista clienti per Torino traslochi o sgomberi numeri reali *(Registrato: 2026-08-28 08:42:04)*
+- **Richiesta/Dettaglio Trasloco** `★★★★★`: Ho acquistato un nuovo furgone Iveco Daily 35C15 per la flotta di Pietro Traslochi. *(Registrato: 2026-09-01 04:46:17)*
+- **Richiesta/Dettaglio Trasloco** `★★★★★`: Ho comprato un nuovo furgone Iveco Daily 35C15 per la flotta di Pietro Traslochi. *(Registrato: 2026-09-01 13:40:59)*
 
 ## 📂 Categoria: `ECOSYSTEM_IDENTITY`
 
@@ -113,6 +208,7 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Configurazione Server/VPS** `★★★★★`: E.B. ricordati che il codice segreto del server principale è OMEGA-2026 *(Registrato: 2026-08-25 21:39:24)*
 - **Configurazione Server/VPS** `★★★★★`: E.B. ricordati che il codice segreto del server principale e OMEGA-2026 *(Registrato: 2026-08-25 21:39:38)*
 - **Configurazione Server/VPS** `★★★★★`: E.B. qual e il codice segreto del server principale che ti ho detto? *(Registrato: 2026-08-25 21:39:41)*
+- **Configurazione Server/VPS** `★★★★★`: Non riesco ad accedere al tunnel dn8n *(Registrato: 2026-08-28 19:35:46)*
 - **Nuovo Hub Bologna** `★★★★★`: Il nuovo Hub operativo di EBGStudio a Bologna si trova in Via dell Industria 14 (Zona San Donato). *(Registrato: 2026-08-24 23:03:33)*
 
 ## 📂 Categoria: `MARKETPLACE_RULES`
