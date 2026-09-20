@@ -2,7 +2,7 @@
 > **Documento Privato Ufficiale & Immutabile dell'Ecosistema EBGStudio**  
 > **Comandante & Ingegnere Capo:** Ingegner Badr El Ouariti (`badraudi@gmail.com` | `+39 388 870 3508` | Imola)  
 > **Partner Operativo Logistica:** Pietro (`+39 328 426 3554` | PietroTraslochi.com)  
-> **Data Ultimo Aggiornamento:** 20/09/2026 09:54 UTC
+> **Data Ultimo Aggiornamento:** 20/09/2026 14:09 UTC
 
 ---
 
@@ -63,7 +63,127 @@ Il router di inferenza in `server.py` implementa un failover automatico su 4 liv
 
 ---
 
-## 7. REGISTRO STORICO MIGLIORIE IN TEMPO REALE (REAL-TIME WIKI LOG)
+## 7. SISTEMA DI COMUNICAZIONE VOCALE · CATENA, BUDGET DI PARETE, GAP MISURATO
+*Regola di lettura di questa sezione: ogni numero scritto qui e' una misura presa
+contro il backend reale, non una stima. Se un numero non e' misurato, e' scritto
+come target di letteratura e detto.*
+
+### 7.1 La catena com'edavvero (ordine eseguito, non disegno architetturale)
+1. **Microfono nel browser** — `jarvis/public/cyber_audio_engine.js`: `getUserMedia`
+   con `echoCancellation: true`, `noiseSuppression: true`, `autoGainControl: true`
+   (righe 285-287) e `MediaRecorder(..., { mimeType: 'audio/webm;codecs=opus' })`
+   (riga 392). Il confine del turno lo decide il browser: VAD RMS soglia `0.014`,
+   apertura dopo 2 frame voiced, chiusura a 700 ms di silenzio o 15 s di tetto.
+2. **`POST api/transcribe`** — `app.js:217-220`: l'intero blob del turno viaggia
+   **base64** (costo: +33% di byte sull'uplink, che da 4G e' il collo di bottiglia
+   reale, non il modello). Dietro: Groq `whisper-large-v3-turbo`.
+3. **`POST /api/chat`** — la cascata `chiedi_ai` di `server.py`, con il budget di
+   parete in `EBJ_CHAT_BUDGET_MS` (default 25000).
+4. **`POST api/tts`** — edge-tts, che restituisce **il file intero**.
+5. **Riproduzione** — `app.js:113-117`: `new Blob` → `createObjectURL` → `new Audio`.
+   Nessun audio parte prima che la sintesi sia finita.
+
+Due autorità separate, volutamente: il dashboard Python su `:8088` (host systemd,
+che ESEGUE una copia rsyncata in `/home/ubuntu/cerebro-jarvis-dashboard`) e il
+router AI in Rust `ai-rotator` su `:8096` (container). L'hook
+`ops/deploy_hooks/027-una-sola-autorita-8096.sh` e' la guardia del fatto che `:8096`
+ha un solo padrone.
+
+### 7.2 Il contratto del budget di parete (cio' che impedisce i 51 secondi)
+Un budget che non morde gli anelli **gia' partiti** non e' un budget: chiude solo i
+successivi. Da qui i due helper in `server.py`:
+* **`_tetto(nativo, timeout_s)`** → il timeout di UN tentativo = `min(valore nativo
+  dell'anello, residuo del budget)`, con pavimento a 1.0 s e `None` = comportamento
+  nativo.
+* **`_con_tetto(fn, kwargs, secondi)`** → esegue una chiamata il cui codice NON e'
+  nostro su un thread **daemon** (un thread non-daemon bloccherebbe lo spegnimento
+  dell'interprete) e ritorna `(valore, esito)`, `esito`: `False` = concluso, `True` = tetto
+  scaduto, stringa = l'anello ha sollevato. Serve perche' lo skill
+  `ai_cascade_router` ha sei `timeout` fissi fra 20 e 45 s e nessun parametro per il
+  budget: li si copre dall'esterno.
+* Chiusi sul residuo: i 5 call site della cascata di `chiedi_ai`
+  (`timeout_s=residuo()`), l'anello Ollama, le 5 porte locali di
+  `query_local_model` (`61517/8080/8000/11434/1234`, con `break` a residuo < 1.5 s),
+  `query_groq_models`, `query_gemini_models`, `query_qwen38_empero`,
+  `query_ai_rotator_engine`, e `query_vision` (Gemini `max(2, resto())`, anello
+  locale `qwen3-vl:2b` `max(3, resto())`).
+
+### 7.3 Misure (20/09/2026, backend reale, prima → dopo)
+| Misura | Prima | Dopo |
+|---|---|---|
+| `/api/chat` prompt di una parola | 51.45 s / 52.40 s / 27.38 s | 11.38 s / 1.99 s / 8.30 s |
+| chat di prova dell'hook 027 ("Rispondi con una sola parola: OK") | — | 1783 ms, 7 caratteri |
+| Turno vocale completo lato server | — | 14.50 s |
+| `api/tts` | — | 6.55 s |
+| `api/transcribe` | — | 0.52 s |
+| `/api/screen/analyze` (visione) | — | 1.04 s |
+| Anello locale `qwen3-vl:2b` (sonda diretta, non l'endpoint) | 96.20 s | invariato: perche' il tetto lo morde |
+
+**Causa dei 51 s, trovata e non ipotizzata:** `is_censored_or_refusal` scartava
+ogni testo sotto le cinque unita' di carattere. Un `"OK"` legittimo (lunghezza 2)
+veniva buttato e la cascata ripartiva da zero — due volte, oltre il budget
+dichiarato. Regola permanente: **un filtro sui rifiuti non puo' usare la lunghezza**,
+perche' la risposta corta corretta e' esattamente quella che il filtro dovrebbe
+proteggere. L'hook 027 ha un'asserzione (`grep_codice 'len(txt.strip()) < 5'`) che
+vieta il ritorno di quella regola.
+
+### 7.4 Cosa dice la letteratura (2026) e dove siamo noi
+Budget di un turno citato dalle implementazioni pubbliche: **< 300 ms** come target
+aggressivo (STT 50-100 ms, primo token LLM 100-200 ms, primo byte TTS 50-80 ms,
+trasporto WebRTC 20-50 ms) e **< 1 s** come target realistico (STT < 200 ms, primo
+token < 400 ms, TTS < 200 ms); **barge-in** a partire da ~300 ms di parlato.
+Noi siamo a **14.50 s** → 14-48 volte il budget. La conclusione non e' "i modelli
+sono lenti" (l'anello locale risponde in 1 ms di handshake e `transcribe` in 0.52 s):
+e' che la catena e' **a blocchi interi** — turno intero su, file intero giu'.
+
+### 7.5 Prossimi miglioramenti, in ordine di byte-secondi guadagnati
+1. **TTS a frasi, streaming**: far partire l'audio sulla prima frase generata invece
+   del file intero. Da solo mangia i 6.55 s di testa.
+2. **Audio in quadri Opus binari sul WebSocket del bridge Rust (`:9000`)** al posto
+   del base64 su `:8088`: −33% di byte in uplink e fine del `MediaRecorder` che deve
+   chiudere il blob prima di mandare niente.
+3. **STT streaming** con trascrizioni parziali gia' durante il parlato (il budget
+   Groq whisper non cambia, ma smette di essere seriale rispetto al microfono).
+4. **Cascata in Rust dentro `ai-rotator`**: un solo posto dove il budget esiste,
+   invece di sei timeout fissi python coperti dall'esterno con `_con_tetto`.
+5. **Endpointing semantico + acustico** e **barge-in reale a 300 ms**: oggi il
+   confine e' solo acustico (700 ms di silenzio).
+6. **Ecocancellazione: non fidarsi del vincolo.** MDN documenta `echoCancellation`
+   come vincolo accettato ma i browser ignorano quelli sconosciuti, WebKit ha il bug
+   179411 ("`getUserMedia echoCancellation` constraint has no affect") e le tracce di
+   un `RTCPeerConnection` non espongono mai la proprieta'. Su iOS/telefono, quindi,
+   l'altoparlante rientra dal microfono comunque: la difesa vera e' quella gia'
+   implementata (VAD in pausa mentre EBJ parla), non il vincolo.
+
+### 7.6 Il telefono come client permanente (hook `025-hud-telefono.sh`)
+Asserzioni portanti, tutte verdi e con marker: `touch-action: manipulation` **dentro**
+`@media (pointer: coarse)` (toglie i ~300 ms del doppio-tap: meta' del budget di
+reattivita' bruciati prima di accendere il microfono), target ≥ 44 px,
+`#btn-live-voice-link` a **48 px con `padding: 12px 14px !important`** (senza
+`!important` lo stile inline del markup vince e i 44 px restano una promessa),
+`font-size: 16px` sugli input (sotto, iOS zooma la pagina al focus e la tastiera
+copre la sfera), `100dvh`, `env(safe-area-inset-*)`, breakpoint 430 px,
+`window.ebjMobileHud` come **assegnazione di vertice** di `app.js` prima del tag che
+carica il 3D (altrimenti legge `undefined` e scarica 629 KB di `three.min.js`+
+OrbitControls comunque), e nessun `ws://`/`:9000` letterale nel client: tutto passa
+da `window.ebjBridgeUrl`.
+**La prova discriminante non e' un grep sui sorgenti:** sono gli SHA dei byte serviti
+da `:$PORT` per `index.html`, `app.js`, `style.css`, `cyber_audio_engine.js`,
+`jarvis_3d_cosmos.js` (uguaglianza byte-del-repo == byte-del-telefono) piu'
+`Cache-Control: no-store` letto con **GET** (`curl -sI` chiede HEAD, e il
+`BaseHTTPRequestHandler` di jarvis risponde `501`: un header "manca" perche' la
+risposta non c'e').
+
+**Fonti dei numeri e dei vincoli di cui sopra** (lette il 20/09/2026, non citate a
+memoria): [Voice AI pipeline: STT, LLM, TTS and the 300ms budget](https://www.channel.tel/blog/voice-ai-pipeline-stt-tts-latency-budget) ·
+[Voice AI is Not About Speech. It is About Latency and Turn-Taking](https://ittariv.ai/voice-ai-is-not-about-speech-it-is-about-latency-and-turn-taking/) ·
+[Barge-in and interruption handling for on-device voice agents](https://www.runedge.ai/blog/barge-in-interruption-handling-on-device-voice) ·
+[MDN · MediaTrackSettings.echoCancellation](https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings/echoCancellation) ·
+[WebKit bug 179411 · echoCancellation constraint has no affect](https://bugs.webkit.org/show_bug.cgi?id=179411)
+
+---
+
+## 8. REGISTRO STORICO MIGLIORIE IN TEMPO REALE (REAL-TIME WIKI LOG)
 * `[HASH: 61f53a9d565a]` Attivazione Motore Real-Time Wiki Sync (Rust/Python + N8N).
 * `[HASH: 14f16a1e13da]` Sincronizzazione Automatica Immutabile Wiki Attiva con hash SHA256.
 * `[HASH: 8a4c1f90e21b]` Integrazione Catalogo 100 MCP Server Mondiali & Architettura FastMCP Rust.
@@ -84,3 +204,5 @@ Il router di inferenza in `server.py` implementa un failover automatico su 4 liv
 * `[HASH: bd4a4515c9a1]` **[2026-09-19 22:32:39] Fix lead-engine: crash-loop di 3 settimane chiuso + buco del worker (unit rotto bloccava la propria riparazione)** *(Cat: RUST-OPS)*: Scoperto verificando il deploy 91eb81a..5077f71: i tre unit systemd lead-analyzer/lead-dispatcher/lead-enricher in crash-loop dal 31/08 con rc 217/USER, counter a ~32.000 restart. Diagnosi: gli unit dichiarano User=ebj ma l'utente OS non esiste (il ruolo ebj vive nel container ebj-postgres, db lead_engine, 6 tabelle integre); il .env 0600 ubuntu in WorkingDirectory porta l'unica DATABASE_URL vera, e il placeholder PASSWORD nell'ambiente del unit la vince perche' dotenv non sovrascrive variabili gia' poste. Fix a) repo lead-engine/systemd: User/Group ubuntu e rimossa la DATABASE_URL finta, commit 24d9182. Fix b) deploy-worker.sh, commit 0e4a2de: FAILED=systemd:* entrava in HOOK_BLOCKERS e quindi sync_installed_units non girava mai - l'unit rotto bloccava per costruzione l'installazione del proprio fix; ora l'allineamento unit gira anche coi soli blocker systemd (copiare una definizione non puo' leggere male nessuno stack; gli hook SQL restano dietro il gate pieno) e il ramo lead-engine installa i tre unit + daemon-reload PRIMA del restart, cosi' il fix vale nello stesso giro. Harness: pendenza verde, allarmi 12/12. Verifica live 22:30 UTC: 3 unit active sotto User=ubuntu, salute check gate del worker 'lead-engine: sano (3 unit attive)', deployed_sha consumato a 0e4a2de4, /health su :8091 :8092 :8093 verdi con outbound_enabled=false (gate LEAD_ENGINE_MODE invariato, nessun contatto in uscita).
 
 * `[HASH: 2da8db20576b]` **[2026-09-20 09:54:32] EBJ Fase 8d/8e - chat e microfono di JARVIS: tre difetti indipendenti, e il front door che nessuno versionava** *(Cat: VOCE/OPS)*: Misurato su `https://92.4.233.42/hud/`, perche' l'unica porta viva del dashboard: `:8088` e' filtrata dal firewall e volutamente NON esposta (gira su `http.server` senza auth, `ops/tunnel_named.sh`), `eb.badrexpress.com` e' dietro Cloudflare Access e atterra su OpenWebUI, e il quick tunnel di jarvis non pubblica un URL da 7 giorni. DIFETTO 1 (chat): il client chiamava l'API con path assoluti `/api/*`. Sotto un prefisso di path la richiesta finisce sull'ORIGINE, dove il server di riserva non ha nessuna rotta `/api/` e il catch-all `try_files` risponde la home di marketing con un 200; in POST arriva un 405 da nginx. Misurato oggi: `GET /api/status` -> 200 con 129490 byte di marketing, `POST /api/chat` -> 405, mentre `GET /hud/api/status` -> 200 con il JSON vero del dashboard. Fix: 18 rotte rese relative alla pagina nei 4 file vivi (`app.js`, `index.html`, `deck.html`, `preventivo.html`) - vale sotto `/`, sotto `/hud/` e sotto qualunque hostname futuro senza toccare nginx ne' il firewall. `ecosystem_graph.js` e `synaptic_3d_lab.js` restano assoluti perche' nessun tag li carica: file morti, verificato. DIFETTO 2 (microfono): `startContinuousVoice` dipendeva da `ws://localhost:9000/ws/voice-dialogue`. Da una pagina https e' mixed content: il browser non apre nemmeno la mano, quindi nessun evento di fine turno arrivava MAI. Ora VAD RMS e `MediaRecorder` del turno stanno nel browser (soglia 0.014, 2 frame voiced per aprire, chiusura a 700 ms di silenzio o 15 s). DIFETTO 3, indipendente dal 2: anche quando il socket rispondeva, `onSpeechEnd` ridipingeva l'HUD e nessuno chiamava `POST /api/transcribe`, che invece funzionava da settimane. Ora `window.ebjTranscribeBlob` chiude il giro transcribe -> `executeCommandPipeline` -> `/api/tts`, con il VAD in pausa mentre EBJ parla (senza quella riga si trascriveva da solo) e un barge-in che interrompe davvero: `interruptJarvisSpeaking()` leggeva `window.currentPlayingVoiceAudio`, che nessun codice aveva mai scritto. PROVA DELLA CATENA sullo stesso prefisso e contro il backend reale: `/hud/api/chat` -> 200 `CATENA-OK`; `/hud/api/tts` -> 19 KB mp3 `it-IT-GiuseppeMultilingualNeural`; QUELLO STESSO AUDIO rimandato a `/hud/api/transcribe` -> "Il microfono di JARVIS adesso funziona." via whisper-turbo. Dopo il deploy: `tests/voce_roundtrip_harness.sh` 8/8 e `tests/allarmi_worker_harness.sh` 12/12. Nuovo `tests/hud_prefix_shim.py`: replica locale del `location /hud/` (proxy_pass con slash finale) per provare il client sotto prefisso senza toccare la produzione. FRONT DOOR: `/etc/nginx/sites-enabled/ebgs-cluster.conf` NON era nel repo - 281 righe, data 01/09, file reale e non symlink, e dentro ci stanno i due siti, agent0, l'hub, il dock e la `location /hud/`. Ora c'e' lo specchio `ops/nginx/ebgs-cluster.conf` come baseline del drift (notificato, mai fatale: una rotta aggiunta a mano dopo il 20/09 puo' essere viva e giusta) + `ops/nginx/inject_hud_location.py` con `ebj-hud-location.conf`, che riconosce il server block di riserva (`default_server` E `server_name _`) e rimette la location solo se manca. Hook `021-porta-hud.sh`: ricostruisce su copia, valida con `nginx -t` e applica solo se verde, con backup e ripristino; la prova non e' un grep sul config ma il codice della porta - 401 = il prefisso matcha e chiede le credenziali, 200 = il catch-all serve marketing e la porta non c'e' anche se il file sembra a posto. Verde al primo giro (marker scritto, nessun drift, `deployed_sha` a `143f602`). DUE TRAPPOLE MISURATE OGGI: un `nginx -t` in scratch che non includa `/etc/nginx/conf.d/*.conf` fallisce con `zero size shared memory zone ebj_consent`, e un gate sempre rosso zittirebbe la riparazione restando invisibile al resto dell'hook; raddoppiare la location NON e' estetico, nginx rifiuta il config intero con `duplicate location "/hud/"`, quindi la guardia di idempotenza del parser e' portante e non pulizia. `jarvis/public/tunnels_config.json` dichiarava jarvis su `https://api.trycloudflare.com`: un dominio inesistente scritto come fosse un endpoint, la stessa classe del 200 che mente. Ora porta vera, perche' non c'e' un tunnel e come si riverifica. PASSO UMANO RIMASTO: il microfono fisico e' dell'utente - aprire `https://92.4.233.42/hud/` (TLS auto-firmato: il certificato buono sta sul bordo Cloudflare, non sulla VPS), login `ebg`, Alt+M. Due `ws://127.0.0.1:9000` restano in `app.js` (`/ws/ebj`, ascolto del bridge) e `index.html` (`/ws/screen`, pannello schermo): due funzioni diverse, ugualmente morte per lo stesso mixed content, fuori dal perimetro di questa riparazione. Segnalato e NON toccato: l'hook `016-proteggi-risponditori.sh` e' rosso dal 14/09 22:10 (721 giri, `memory.min=0` su ssh/nginx) e non scrive marker, quindi ogni giro riprova - preesistente a questa fase, ma e' rumore che puo' coprire un rosso nuovo.
+
+* `[HASH: 8646c1e3855e]` **[2026-09-20 14:09:06] EBJ Fase 9 - Il budget di parete morde gli anelli GIA' partiti, e il telefono tocca un pulsante da 48 px** *(Cat: VOCE/REATTIVITA'/MOBILE)*: /api/chat di una parola rispondeva in 51.45 / 52.40 / 27.38 s contro i 25000 ms dichiarati da EBJ_CHAT_BUDGET_MS. Causa, trovata e non ipotizzata: is_censored_or_refusal scartava ogni testo sotto le cinque unita' di carattere, quindi un "OK" legittimo (lunghezza 2) veniva buttato e la cascata ripartiva da zero - due volte. Corretto insieme al contratto che mancava: un budget che chiude solo gli anelli NON ancora partiti non e' un budget. Due helper in server.py - _tetto(nativo, timeout_s) = min(valore nativo dell'anello, residuo), pavimento 1.0 s, e _con_tetto(fn, kwargs, secondi) che gira su thread DAEMON (non-daemon bloccherebbe lo spegnimento dell'interprete) e ritorna (valore, esito) con esito False/True/stringa. Clampati sul residuo: 5 call site di chiedi_ai, l'anello Ollama, le 5 porte di query_local_model con break a residuo < 1.5 s, query_groq_models, query_gemini_models, query_qwen38_empero, query_ai_rotator_engine, query_vision. _con_tetto serve per lo skill ai_cascade_router, che ha sei timeout fissi fra 20 e 45 s e nessun parametro di budget: non e' codice nostro e non si puo' modificare dall'interno. MISURATO DOPO: chat 11.38 / 1.99 / 8.30 s, probe dell'hook "Rispondi con una sola parola: OK" = 7 caratteri in 1783 ms, turno vocale completo lato server 14.50 s, tts 6.55 s, stt 0.52 s, /api/screen/analyze 1.04 s. GAP CON LA LETTERATURA (20/09, fonti in sezione 7): target 300 ms aggressivo (STT 50-100, primo token 100-200, primo byte TTS 50-80, trasporto 20-50) e < 1 s realistico, barge-in da ~300 ms di parlato. Noi 14.50 s = 14-48x, e il collo di bottiglia NON sono i modelli (transcribe 0.52 s): e' la catena a blocchi interi - turno intero su in base64 (+33% byte in uplink 4G), file TTS intero giu' prima del primo suono. HOOK 027 VERDE per la prima volta (marker scritto): asserisce sull'ESEGUITO /home/ubuntu/cerebro-jarvis-dashboard/server.py e non solo sul repo, >= 4 anelli clampati, assenza della regola di lunghezza, e la parete di 40000 ms verificata a orologio su due probe reali. Trovata anche la vera ragione per cui 027 non era mai andato verde: il suo grep di divieto su '?key=' matchava un COMMENTO esplicativo a server.py:1763 - l'assert era verde su codice rotto e rosso su codice giusto. Due incidenti identici nella stessa sessione. Fix strutturale: grep_codice() sfila le righe di commento (# e //) prima di cercare, e il pattern incriminato non va scritto alla lettera nei sorgenti. Applicato anche a skills_vault/ai_cascade_router/skill.py, seconda fuga reale trovata: la chiave Gemini viaggiava in ?key= nell'URL, e le eccezioni di urlopen riportano l'URL completo dentro il dict errors che risale nei report. Ora x-goog-api-key. TELEFONO: #btn-live-voice-link portato a 48 px con padding: 12px 14px !important - senza !important lo stile inline del markup vince e i 44 px dell'asserzione restano una promessa; etichette touch-aware (etichetta_micro/stato_micro) perche' Alt+M e Alt+M non esistono su una tastiera virtuale, e il pulsante SCHERMO esiste come equivalente del hotkey. Hook 025 verde con marker: la prova non e' un grep sui sorgenti ma la SHA256 dei byte SERVITI da :8088 per i 5 file che il telefono scarica (index.html b6490fbf == repo), piu' Cache-Control: no-store letto con GET perche' curl -sI chiede HEAD e il BaseHTTPRequestHandler di jarvis risponde 501 - un header "manca" perche' la risposta non c'e', che e' la stessa classe del 200 che mente. DEPLOY: repo spinto a bc49502 (via b1b7db7, 5f8bb94, adec276), VPS consumata, hook 025 e 027 entrambi markerati. NUOVA SEZIONE 7 di questa wiki (catena vocale reale, contratto del budget, misure, gap di letteratura, roadmap in ordine di byte-secondi, telefono) - e il registro e' adesso la sezione 8: le entry si accodano in fondo al file, il registro resta l'ultima sezione. PASSI UMANI RIMASTI: il test fisico da telefono/4G (un test dal PC non dichiara chiusa una cosa che vive in tasca) e la rotazione della chiave Gemini comparsa nei log vecchi di ai-rotator (i log nuovi sono provati puliti; la chiave va ruotata a mano, il suo valore non va scritto in nessun file). ROSSI PREESISTENTI NON TOCCATI: 015-tunnel-named.sh e 016-proteggi-risponditori.sh, e l'AVVISO TELEGRAM NON PARTITO per TELEGRAM_CHAT_ID segnaposto.
