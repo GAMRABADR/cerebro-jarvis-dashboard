@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.exe
+
+# Logs
+*.log
+cloudflared.log
+watchdog_supervisor.log
+
+# Databases & Local Memory
+*.db
+*.db-wal
+*.db-shm
+
+# Temp & Audio test files
+*.mp3
+*.bin
+public/reports/*.pdf
+public/reports/*.png
+public/voice_dispatches/
+.env

@@ -29,6 +29,28 @@ def init_memory():
             topic, fact, category, content='memories', content_rowid='id'
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS infinite_chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT DEFAULT 'default',
+            role TEXT,
+            content TEXT,
+            model_used TEXT,
+            summary TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS infinite_context_summaries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT DEFAULT 'default',
+            start_turn_id INTEGER,
+            end_turn_id INTEGER,
+            summary TEXT,
+            topics TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     conn.commit()
     
     # Sync FTS
@@ -335,7 +357,7 @@ def get_holographic_memory_context(prompt=""):
     lines.append("[FINE MEMORIA PERSISTENTE OLOGRAFICA]")
     return "\n".join(lines)
 
-def auto_memorize_turn(user_prompt, ai_response):
+def auto_memorize_turn(user_prompt, ai_response, model_used=""):
     p_low = user_prompt.lower()
     # 1. Update biography if present
     extract_and_update_biography(user_prompt)
@@ -353,6 +375,84 @@ def auto_memorize_turn(user_prompt, ai_response):
         
         clean_fact = user_prompt.strip()[:200]
         store_memory(cat, topic, clean_fact, importance=6)
+
+    # 3. Lifelong Infinite Turn Storage
+    append_infinite_turn("user", user_prompt, session_id="default")
+    if ai_response:
+        append_infinite_turn("assistant", ai_response, model_used=model_used, session_id="default")
+
+def append_infinite_turn(role, content, model_used="", session_id="default"):
+    if not content or not content.strip():
+        return
+    try:
+        conn = sqlite3.connect(MEMORY_DB)
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO infinite_chat_history (session_id, role, content, model_used, created_at)
+            VALUES (?, ?, ?, ?, datetime('now'))
+        """, (session_id, role, content.strip(), model_used))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[Infinite Memory Append Error]: {e}")
+
+def get_infinite_context_for_prompt(prompt, session_id="default", max_recent_turns=8):
+    """
+    Costruisce il bundle di contesto infinito:
+    1. Memoria a lungo termine da FTS5 / Vector
+    2. Riassunto dei turni storici precedenti
+    3. Ultimi turni verbatim intatti
+    """
+    recent_turns = []
+    older_count = 0
+    older_summary_lines = []
+
+    try:
+        conn = sqlite3.connect(MEMORY_DB)
+        c = conn.cursor()
+        c.execute("""
+            SELECT id, role, content, model_used, created_at
+            FROM infinite_chat_history
+            WHERE session_id = ?
+            ORDER BY id DESC LIMIT 30
+        """, (session_id,))
+        rows = c.fetchall()
+        conn.close()
+
+        if rows:
+            rows.reverse()
+            if len(rows) > max_recent_turns:
+                older = rows[:-max_recent_turns]
+                recent = rows[-max_recent_turns:]
+                older_count = len(older)
+                for r in older[-6:]: # Ultimi 6 della storia passata come punti chiave
+                    prefix = "Badr" if r[1] == "user" else "JARVIS"
+                    older_summary_lines.append(f"• [{prefix}]: {r[2][:160]}...")
+                recent_turns = recent
+            else:
+                recent_turns = rows
+    except Exception as e:
+        print(f"[Infinite Context Error]: {e}")
+
+    lines = []
+    if older_summary_lines:
+        lines.append("\n==================================================================")
+        lines.append(f"[CONTESTO INFINITO - SINTESI CRONOLOGICA DEI {older_count} TURNI PRECEDENTI]:")
+        lines.extend(older_summary_lines)
+        lines.append("==================================================================")
+
+    if recent_turns:
+        lines.append("\n[DIALOGO RECENTE ATTIVO]:")
+        for r in recent_turns:
+            prefix = "Badr" if r[1] == "user" else "JARVIS"
+            lines.append(f"{prefix}: {r[2]}")
+
+    # Aggiungi contesto olografico da FTS
+    holo_context = get_holographic_memory_context(prompt)
+    if holo_context:
+        lines.append(holo_context)
+
+    return "\n".join(lines)
 
 
 

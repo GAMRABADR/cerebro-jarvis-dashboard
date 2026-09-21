@@ -4,107 +4,395 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pietro Traslochi Bologna · Calcola Preventivo Istantaneo</title>
+  <!-- Modern Libraries for E.B.J. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
     :root {
       --primary: #0284c7;
-      --primary-dark: #0369a1;
+      --primary-glow: rgba(2, 132, 199, 0.4);
       --accent: #10b981;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
+      --accent-glow: rgba(16, 185, 129, 0.35);
+      --bg: #030712;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --border: rgba(55, 65, 81, 0.7);
     }
-    * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .container { width: 100%; max-width: 520px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-    .badge { display: inline-block; background: rgba(2, 132, 199, 0.15); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    h1 { font-size: 22px; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
-    p.subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
-    .form-group { margin-bottom: 14px; text-align: left; }
-    label { display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
-    input, select { width: 100%; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; }
-    input:focus, select:focus { border-color: var(--primary); }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-submit { width: 100%; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; font-size: 15px; font-weight: 700; padding: 14px; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4); transition: transform 0.1s, opacity 0.2s; }
-    .btn-submit:hover { opacity: 0.95; }
-    .btn-submit:active { transform: scale(0.98); }
-    .result-box { display: none; margin-top: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 18px; text-align: center; }
-    .result-price { font-size: 32px; font-weight: 900; color: var(--accent); margin: 8px 0; }
-    .btn-wa { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #25D366; color: #fff; font-size: 14px; font-weight: 700; padding: 12px; border-radius: 8px; text-decoration: none; margin-top: 12px; }
-    .footer-note { font-size: 11px; color: #64748b; margin-top: 16px; text-align: center; }
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body {
+      background: radial-gradient(circle at 50% 10%, rgba(2, 132, 199, 0.18) 0%, rgba(3, 7, 18, 1) 75%);
+      color: var(--text);
+      padding: 20px 16px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(2, 132, 199, 0.12);
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(2, 132, 199, 0.15);
+      border: 1px solid rgba(2, 132, 199, 0.35);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 6px; }
+    p.subtitle { font-size: 13.5px; color: var(--text-muted); margin-bottom: 22px; }
+    .form-group { margin-bottom: 15px; text-align: left; }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+    }
+    label svg { width: 14px; height: 14px; color: #38bdf8; }
+    input, select {
+      width: 100%;
+      background: rgba(3, 7, 18, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 25px rgba(2, 132, 199, 0.5);
+    }
+    .btn-submit:active { transform: translateY(1px); }
+    .result-box {
+      display: none;
+      margin-top: 24px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .result-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent-glow);
+      margin: 10px 0;
+    }
+    .btn-wa {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 700;
+      padding: 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      margin-top: 14px;
+      box-shadow: 0 6px 18px var(--accent-glow);
+      transition: all 0.2s ease;
+    }
+    .btn-wa:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(16, 185, 129, 0.5); }
+    .footer-note { font-size: 11.5px; color: #6b7280; margin-top: 18px; text-align: center; line-height: 1.5; }
   </style>
 </head>
 <body>
   <div class="container">
-    <span class="badge">Pietro Traslochi · Flotta Bologna & Imola</span>
+    <div class="badge" id="dynamic-badge"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Pietro Traslochi · Flotta Bologna &amp; Imola</div>
     <h1>Calcola la Tariffa del Tuo Trasloco</h1>
-    <p class="subtitle">Stima trasparente certificata in 30 secondi. Nessun impegno.</p>
+    <p class="subtitle">Stima trasparente certificata in 30 secondi con motore Rust in tempo reale.</p>
+
+    <!-- LIVE PRICE BOX (aggiornato in tempo reale da Rust :9000) -->
+    <div id="live-price-box" style="display:none; background: linear-gradient(135deg, rgba(2,132,199,0.15), rgba(16,185,129,0.1)); border:1px solid #0284c7; border-radius:12px; padding:14px 18px; margin-bottom:16px; text-align:center;">
+      <span style="font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:1px;">Stima in Tempo Reale — Motore Rust EBG</span>
+      <div style="margin:6px 0 2px 0;">
+        <span id="price-base-barrato" style="font-size:18px;color:#64748b;text-decoration:line-through;">€ 0</span>
+        &nbsp;→&nbsp;
+        <span id="price-final-live" style="font-size:28px;font-weight:900;color:#10b981;">€ 0</span>
+        &nbsp;<span style="font-size:12px;color:#10b981;font-weight:700;">con BOLOGNA15 -15%</span>
+      </div>
+      <div id="price-breakdown" style="font-size:11px;color:#94a3b8;margin-top:4px;"></div>
+    </div>
 
     <form id="quote-form" onsubmit="submitQuote(event)">
       <div class="row">
         <div class="form-group">
-          <label>Città o Zona di Partenza</label>
-          <input type="text" id="origin_city" value="Bologna" required placeholder="Es. Bologna Mazzini">
+          <label><i data-lucide="map-pin"></i> Città o Zona di Partenza</label>
+          <input type="text" id="origin_city" value="Bologna" required placeholder="Es. Bologna Mazzini" oninput="updateLivePrice()">
         </div>
         <div class="form-group">
-          <label>Città di Arrivo</label>
-          <input type="text" id="dest_city" required placeholder="Es. Imola / Casalecchio">
+          <label><i data-lucide="navigation"></i> Città di Arrivo</label>
+          <input type="text" id="dest_city" required placeholder="Es. Imola / Casalecchio" oninput="updateLivePrice()">
         </div>
       </div>
 
       <div class="row">
         <div class="form-group">
-          <label>Numero di Stanze / Vani</label>
-          <select id="rooms">
-            <option value="1">Monolocale (1 Vano)</option>
-            <option value="2" selected>Bilocale (2 Vani)</option>
-            <option value="3">Trilocale (3 Vani)</option>
-            <option value="4">4+ Vani / Villa</option>
-            <option value="1">Solo Sgombero Cantina / Garage</option>
+          <label><i data-lucide="truck"></i> Tipo di Servizio / Vani</label>
+          <select id="rooms" onchange="updateLivePrice()">
+            <option value="1" data-mq="30" data-sgombero="true">Sgombero Cantina / Garage</option>
+            <option value="1" data-mq="40">Monolocale (1 Vano)</option>
+            <option value="2" data-mq="60" selected>Bilocale (2 Vani)</option>
+            <option value="3" data-mq="85">Trilocale (3 Vani)</option>
+            <option value="4" data-mq="120">4+ Vani / Villa</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Ascensore</label>
-          <select id="has_elevator">
+          <label><i data-lucide="chevrons-up-down"></i> Ascensore nel palazzo</label>
+          <select id="has_elevator" onchange="updateLivePrice()">
             <option value="true">Sì, presente</option>
             <option value="false">No, solo scale</option>
           </select>
         </div>
       </div>
 
+      <div class="row" id="floor-row">
+        <div class="form-group">
+          <label><i data-lucide="building"></i> Piano di Partenza</label>
+          <select id="piano_partenza" onchange="updateLivePrice()">
+            <option value="0">Piano Terra</option>
+            <option value="1">1° Piano</option>
+            <option value="2" selected>2° Piano</option>
+            <option value="3">3° Piano</option>
+            <option value="4">4° Piano</option>
+            <option value="5">5°+ Piano</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i data-lucide="building-2"></i> Piano di Arrivo</label>
+          <select id="piano_arrivo" onchange="updateLivePrice()">
+            <option value="0">Piano Terra</option>
+            <option value="1" selected>1° Piano</option>
+            <option value="2">2° Piano</option>
+            <option value="3">3° Piano</option>
+            <option value="4">4° Piano</option>
+            <option value="5">5°+ Piano</option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-group">
-        <label>Il Tuo Nome e Cognome</label>
+        <label><i data-lucide="user"></i> Il Tuo Nome e Cognome</label>
         <input type="text" id="client_name" required placeholder="Es. Marco Rossi">
       </div>
 
       <div class="form-group">
-        <label>Cellulare per Ricevere il Preventivo su WhatsApp</label>
-        <input type="tel" id="phone" required placeholder="Es. 347 1234567">
+        <label><i data-lucide="phone"></i> Cellulare per Ricevere il Coupon &amp; Preventivo su WhatsApp</label>
+        <input type="tel" id="phone" required placeholder="Es. 347 1234567" oninput="validatePhoneField(this)">
+        <span id="phone-hint" style="font-size:11px;color:#64748b;display:block;margin-top:4px;"></span>
       </div>
 
-      <button type="submit" class="btn-submit" id="btn-calc">⚡ CALCOLA E BLOCCA IL PREZZO</button>
+      <input type="hidden" id="coupon_code" value="">
+
+      <button type="submit" class="btn-submit" id="btn-calc">🎟️ SBLOCCA IL BUONO SCONTO SU WHATSAPP &amp; BLOCCA IL PREZZO</button>
     </form>
 
     <div class="result-box" id="result-box">
       <span style="font-size: 11px; font-weight: bold; color: #10b981; text-transform: uppercase;">Stima Calcolata con Successo!</span>
       <div class="result-price" id="res-price">€ 380.00</div>
-      <p style="font-size: 12px; color: #cbd5e1;" id="res-desc">Include furgone Maxi, carburante e assicurazione all-inclusive Pietro Traslochi.</p>
-      <a href="#" target="_blank" class="btn-wa" id="wa-btn">💬 CONFERMA DATA SU WHATSAPP ORA</a>
+      <p style="font-size: 12px; color: #cbd5e1;" id="res-desc">Include sconto coupon, furgone Maxi con sponda, carburante e sopralluogo gratuito Pietro Traslochi &amp; BadrExpress.</p>
+      <a href="#" target="_blank" class="btn-wa" id="wa-btn">💬 CONFERMA DATA SU WHATSAPP CON BADR &amp; PIETRO</a>
       <p style="font-size: 10px; color: #94a3b8; margin-top: 8px;">Codice Pratica: <strong id="res-code">EBJ-PT-0000</strong></p>
     </div>
 
     <div class="footer-note">
-      🔒 I tuoi dati sono protetti e usati solo per elaborare il preventivo.<br/>
-      Pietro Traslochi & BadrExpress · Servizio Attivo su Bologna, Imola e Provincia.
+      🔒 I tuoi dati sono protetti e usati solo per elaborare il preventivo e inviare il buono sconto.<br>
+      Pietro Traslochi &amp; BadrExpress · Servizio Attivo su Bologna, Imola e Provincia.
     </div>
   </div>
 
   <script>
+    // ── RUST LIVE PRICING ENGINE ─────────────────────────────────────────
+    // Chiama /api/math/quote-estimate (proxy Python :8088 -> Rust :9000 in < 2ms)
+    // Funziona perfettamente anche su https://eb.badrexpress.com da smartphone
+    const RUST_BASE = '';
+    let liveDebounce = null;
+    let lastRustPrice = 0;
+    let lastPracticeCode = 'EBJ-PT-' + Date.now().toString().slice(-6);
+
+    function getFormMq() {
+      const sel = document.getElementById('rooms');
+      const opt = sel.options[sel.selectedIndex];
+      return parseInt(opt.getAttribute('data-mq') || '60', 10);
+    }
+
+    async function updateLivePrice() {
+      clearTimeout(liveDebounce);
+      liveDebounce = setTimeout(async () => {
+        const mq = getFormMq();
+        const ascensore = document.getElementById('has_elevator').value === 'true';
+        const pPart = parseInt(document.getElementById('piano_partenza')?.value || '0');
+        const pArr = parseInt(document.getElementById('piano_arrivo')?.value || '0');
+        const dest = (document.getElementById('dest_city').value || '').trim().toLowerCase();
+        // Stima km semplice: Bologna intra-city = 8km, fuori = 25km
+        const km = (dest && dest !== 'bologna' && dest !== '') ? 25.0 : 8.0;
+
+        try {
+          const r = await fetch(RUST_BASE + '/api/math/quote-estimate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mq: mq, piano_partenza: pPart, piano_arrivo: pArr,
+              ascensore_partenza: ascensore, ascensore_arrivo: ascensore,
+              km_trasferta: km, smontaggio_richiesto: false
+            })
+          });
+          if (!r.ok) throw new Error('rust_err');
+          const d = await r.json();
+          lastRustPrice = d.total_price;
+          lastPracticeCode = d.practice_code || lastPracticeCode;
+          const discounted = Math.round(d.total_price * 0.85 * 100) / 100;
+          document.getElementById('live-price-box').style.display = 'block';
+          document.getElementById('price-base-barrato').textContent = '€ ' + d.total_price.toFixed(2);
+          document.getElementById('price-final-live').textContent = '€ ' + discounted.toFixed(2);
+          document.getElementById('price-breakdown').textContent =
+            `Base € ${d.base_price} + Scale € ${d.stairs_fee} + Trasferta € ${d.distance_fee} · Motore Rust ${d.execution_time_us}µs`;
+        } catch {
+          // Fallback: stima locale semplice (senza chiamata di rete)
+          const base = mq * 8.5;
+          const scale = ascensore ? 0 : (pPart * mq * 0.45);
+          const total = Math.round((base + scale + 75) * 100) / 100;
+          lastRustPrice = total;
+          const discounted = Math.round(total * 0.85 * 100) / 100;
+          document.getElementById('live-price-box').style.display = 'block';
+          document.getElementById('price-base-barrato').textContent = '€ ' + total.toFixed(2);
+          document.getElementById('price-final-live').textContent = '€ ' + discounted.toFixed(2);
+          document.getElementById('price-breakdown').textContent = 'Stima locale (Rust non raggiungibile)';
+        }
+      }, 400);
+    }
+
+    function validatePhoneField(inp) {
+      const v = inp.value.replace(/\D/g, '');
+      const hint = document.getElementById('phone-hint');
+      if (v.length === 0) { hint.textContent = ''; inp.style.borderColor = ''; return; }
+      if (v.length >= 9 && /^(3\d{9}|0\d{8,9})$/.test(v)) {
+        hint.textContent = '✅ Numero valido — riceverai il preventivo e il coupon su WhatsApp';
+        hint.style.color = '#10b981';
+        inp.style.borderColor = '#10b981';
+      } else if (v.length >= 6) {
+        hint.textContent = '⚠️ Inserisci il numero mobile italiano (es. 347 1234567)';
+        hint.style.color = '#f59e0b';
+        inp.style.borderColor = '#f59e0b';
+      }
+    }
+
+    // ── MAGIC LINK & URL PARAMS PRE-FILLING ENGINE ──────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const nameParam  = params.get('n') || params.get('name') || '';
+      const cityParam  = params.get('c') || params.get('city') || '';
+      const servParam  = params.get('s') || params.get('service') || '';
+      const couponParam = params.get('coupon') || params.get('promo') || 'BOLOGNA15';
+
+      if (nameParam) document.getElementById('client_name').value = nameParam;
+      if (cityParam) document.getElementById('origin_city').value = cityParam;
+
+      if (servParam) {
+        const sLow = servParam.toLowerCase();
+        const roomsSel = document.getElementById('rooms');
+        if (sLow.includes('sgomber') || sLow.includes('cantina')) roomsSel.selectedIndex = 0;
+        else if (sLow.includes('tri') || sLow.includes('3')) roomsSel.selectedIndex = 3;
+        else if (sLow.includes('4') || sLow.includes('villa')) roomsSel.selectedIndex = 4;
+        else roomsSel.selectedIndex = 2;
+      }
+
+      if (couponParam) {
+        document.getElementById('coupon_code').value = couponParam;
+        showCouponBanner(nameParam, couponParam, servParam || 'Trasloco/Sgombero');
+      }
+
+      // Avvia subito il calcolo live Rust
+      updateLivePrice();
+    });
+
+    function showCouponBanner(name, coupon, service) {
+      const banner = document.createElement('div');
+      banner.id = 'coupon-banner';
+      banner.style.cssText = 'background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(2,132,199,0.2)); border: 1px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 16px; text-align: left;';
+      const greeting = name ? `Ciao <strong>${name}</strong>!` : 'Offerta Speciale Riservata!';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <span style="background: #10b981; color: #04101e; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">Coupon Attivo: ${coupon}</span>
+          <span id="countdown-timer" style="color: #f59e0b; font-size: 11px; font-weight: bold;">⏳ Scade tra 23:59:45</span>
+        </div>
+        <p style="font-size: 13px; color: #ffffff; margin: 4px 0 0 0;">
+          ${greeting} Hai diritto a <strong>-15% (€ 50 di sconto immediato)</strong> e <strong>sopralluogo gratuito</strong> sul tuo servizio a Bologna.
+        </p>`;
+      const form = document.getElementById('quote-form');
+      form.parentNode.insertBefore(banner, form);
+      let totalSeconds = 23 * 3600 + 59 * 60 + 45;
+      setInterval(() => {
+        totalSeconds--;
+        if (totalSeconds < 0) totalSeconds = 0;
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const el = document.getElementById('countdown-timer');
+        if (el) el.textContent = `⏳ Scade tra ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }, 1000);
+    }
+
     async function submitQuote(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-calc');
-      btn.textContent = 'Elaborazione in corso...';
+      btn.textContent = 'Verifica disponibilità flotta...';
       btn.disabled = true;
 
       const payload = {
@@ -114,7 +402,10 @@
         dest_city: document.getElementById('dest_city').value.trim(),
         rooms: parseInt(document.getElementById('rooms').value),
         has_elevator: document.getElementById('has_elevator').value === 'true',
-        source: 'Landing Web / Facebook'
+        coupon_code: document.getElementById('coupon_code').value.trim() || 'BOLOGNA15',
+        rust_price: lastRustPrice,
+        practice_code: lastPracticeCode,
+        source: 'Magic Link / Facebook Messenger'
       };
 
       try {
@@ -124,26 +415,48 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        
+
         if (data.status === 'ok' || data.estimated_price) {
           document.getElementById('quote-form').style.display = 'none';
+          const banner = document.getElementById('coupon-banner');
+          if (banner) banner.style.display = 'none';
+          document.getElementById('live-price-box').style.display = 'none';
+
+          const finalPrice = data.estimated_price || Math.round(lastRustPrice * 0.85 * 100) / 100;
           document.getElementById('result-box').style.display = 'block';
-          document.getElementById('res-price').textContent = '€ ' + Number(data.estimated_price).toFixed(2);
-          document.getElementById('res-code').textContent = data.practice_code || 'EBJ-PT-2026';
+          document.getElementById('res-price').textContent = '€ ' + Number(finalPrice).toFixed(2);
+          document.getElementById('res-code').textContent = data.practice_code || lastPracticeCode;
           if (data.whatsapp_handshake_url) {
             document.getElementById('wa-btn').href = data.whatsapp_handshake_url;
           }
+
+          // Confetti celebration blast!
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 120,
+              spread: 75,
+              origin: { y: 0.6 },
+              colors: ['#10b981', '#0284c7', '#38bdf8', '#34d399', '#f59e0b']
+            });
+          }
         } else {
           alert('Errore: ' + (data.message || 'Numero non valido. Verifica il numero inserito.'));
-          btn.textContent = '⚡ CALCOLA E BLOCCA IL PREZZO';
+          btn.textContent = '🎟️ SBLOCCA IL BUONO SCONTO SU WHATSAPP & BLOCCA IL PREZZO';
           btn.disabled = false;
         }
       } catch (err) {
         alert('Errore di connessione al server: ' + err);
-        btn.textContent = '⚡ CALCOLA E BLOCCA IL PREZZO';
+        btn.textContent = '🎟️ SBLOCCA IL BUONO SCONTO SU WHATSAPP & BLOCCA IL PREZZO';
         btn.disabled = false;
       }
     }
+
+    // Inizializza icone Lucide all'avvio
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
   </script>
 </body>
 </html>
