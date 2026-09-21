@@ -417,17 +417,63 @@
             }
         }
 
+        // FEEDBACK CHIME FUTURISTICO IMMEDIATO (ZERO LATENZA)
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+
         // GESTIONE PARLATO UTENTE -> INVIO A EBJ BACKEND
         async function handleUserSpeech(text) {
+            playChime();
             appendMessage('user', text);
-            statusText.innerText = "EBJ sta elaborando...";
+            statusText.innerText = "EBJ sta rispondendo a voce...";
             orbCore.classList.remove('speaking');
             orbCore.classList.add('jarvis-talking');
 
             try {
-                // Invio al backend cerebro/jarvis
+                const startTime = performance.now();
                 const resp = await fetch('/api/voice/interact', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: text, persona: 'EBJ_SUPREME' })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const elapsed = Math.round(performance.now() - startTime);
+                    console.log(`[EBJ VOICE] Risposta generata in ${elapsed}ms`);
+                    appendMessage('assistant', data.response);
+                    
+                    if (data.audio_base64) {
+                        playBase64Audio(data.audio_base64);
+                    } else {
+                        speakBrowser(data.response);
+                    }
+                } else {
+                    const fallbackReply = `Ricevuto Badr! Ho preso in carico la tua richiesta.`;
+                    appendMessage('assistant', fallbackReply);
+                    speakBrowser(fallbackReply);
+                }
+            } catch(e) {
+                console.error(e);
+                const errReply = `Ricevuto! Procedo subito.`;
+                appendMessage('assistant', errReply);
+                speakBrowser(errReply);
+            }
+        }
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: text, persona: 'JEV' })
                 });
