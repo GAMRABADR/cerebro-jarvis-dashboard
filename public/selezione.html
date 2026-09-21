@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SELEZIONE — Cockpit Commerciale Autolavaggi</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #131b2e;
+            --border-color: #1e293b;
+            --gold: #facc15;
+            --gold-dark: #ca8a04;
+            --green: #22c55e;
+            --red: #ef4444;
+            --blue: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding-bottom: 50px;
+        }
+
+        /* BRAND HEADER */
+        .brand-header {
+            background: linear-gradient(180deg, #000000 0%, #0f172a 100%);
+            border-bottom: 3px solid var(--gold);
+            padding: 16px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo-img {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            color: var(--gold);
+        }
+
+        .brand-slogan {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #cbd5e1;
+            margin-top: 2px;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold);
+            letter-spacing: 0.5px;
+            margin-top: 3px;
+        }
+
+        .italian-flag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #14532d;
+            border: 1px solid #22c55e;
+            color: #86efac;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action-top {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .btn-action-top:hover {
+            background: #334155;
+            border-color: var(--gold);
+        }
+
+        .btn-action-top.primary {
+            background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+            color: #000;
+            border: none;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        /* STATS COUNTER BAR */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .stat-card:hover, .stat-card.active {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .stat-num {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
+        }
+
+        /* SEARCH & FILTER */
+        .search-bar {
+            margin-bottom: 18px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--gold);
+        }
+
+        /* CAR WASH CARD */
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .wash-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .wash-card:hover {
+            border-color: #334155;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .wash-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .distance-tag {
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .wash-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .wash-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .plant-badge {
+            background: #0284c7;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-badge-current {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* CALL BUTTONS ROW */
+        .contact-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-call {
+            background: #0284c7;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(2,132,199,0.3);
+            transition: 0.15s;
+        }
+
+        .btn-call:active {
+            transform: scale(0.98);
+            background: #0369a1;
+        }
+
+        .btn-wa {
+            background: #16a34a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(22,163,74,0.3);
+            transition: 0.15s;
+        }
+
+        .btn-wa:active {
+            transform: scale(0.98);
+            background: #15803d;
+        }
+
+        /* OUTCOME SELECTION BUTTONS */
+        .outcome-box {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .outcome-label-text {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .outcome-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .btn-outcome {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 6px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.2;
+            transition: 0.15s;
+            outline: none;
+        }
+
+        .btn-outcome.interested {
+            background: #14532d;
+            color: #86efac;
+            border-color: #22c55e;
+        }
+
+        .btn-outcome.interested:hover, .btn-outcome.interested.active {
+            background: #22c55e;
+            color: #000;
+        }
+
+        .btn-outcome.not-interested {
+            background: #450a0a;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+
+        .btn-outcome.not-interested:hover, .btn-outcome.not-interested.active {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-outcome.already-supplied {
+            background: #713f12;
+            color: #fde047;
+            border-color: #eab308;
+        }
+
+        .btn-outcome.already-supplied:hover, .btn-outcome.already-supplied.active {
+            background: #eab308;
+            color: #000;
+        }
+
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #fff;
+            border: 2px solid var(--gold);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* BOTTOM FOOTER */
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 30px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP BAR BRAND UFFICIALE -->
+    <header class="brand-header">
+        <div class="header-content">
+            <div class="brand-info">
+                <img src="/selezione_logo_brand.jpg" alt="SELEZIONE Logo" class="brand-logo-img" onerror="this.style.display='none'">
+                <div>
+                    <div class="brand-title"><span>S</span>ELEZIONE</div>
+                    <div class="brand-slogan">LA SCELTA CHE FA LA DIFFERENZA</div>
+                    <div class="brand-sub">DISTRIBUZIONE E VENDITA PRODOTTI PROFESSIONALI</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <span class="italian-flag-badge">🇮🇹 PRODOTTI 100% ITALIANI</span>
+                <a href="/SELEZIONE_Prospetto_Autolavaggi_Bologna.pdf" target="_blank" class="btn-action-top">
+                    📄 Scarica PDF
+                </a>
+                <button onclick="regenerateAndSendPdf()" class="btn-action-top primary">
+                    ⚡ Invia PDF a Badr
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- KPI SUMMARY BAR -->
+        <div class="stats-grid">
+            <div class="stat-card active" onclick="filterByStatus('ALL')">
+                <div class="stat-num" id="count-total">23</div>
+                <div class="stat-label">Totale Impianti</div>
+            </div>
+            <div class="stat-card" onclick="filterByStatus('DA_CHIAMARE')">
+                <div class="stat-num" style="color: #38bdf8;" id="count-to-call">0</div>
+                <div class="stat-label">📞 Da Chiamare</div>
+            </div>
+            <div class="stat-card" onclick="filterByStatus('INTERESSATO')">
+                <div class="stat-num" style="color: #22c55e;" id="count-interested">0</div>
+                <div class="stat-label">🟢 Interessati</div>
+            </div>
+            <div class="stat-card" onclick="filterByStatus('GIA_FORNITO_SELECTION')">
+                <div class="stat-num" style="color: #eab308;" id="count-supplied">0</div>
+                <div class="stat-label">★ Già Forniti</div>
+            </div>
+            <div class="stat-card" onclick="filterByStatus('NON_INTERESSATO')">
+                <div class="stat-num" style="color: #ef4444;" id="count-not-interested">0</div>
+                <div class="stat-label">🔴 Non Int.</div>
+            </div>
+        </div>
+
+        <!-- SEARCH BOX -->
+        <div class="search-bar">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cerca per nome, via o zona (es. Imola, San Lazzaro, Self)..." oninput="applyFilters()">
+        </div>
+
+        <!-- LISTA SCHEDE AUTOLAVAGGI -->
+        <div id="card-list" class="card-list">
+            <div style="text-align: center; padding: 40px; color: #94a3b8;">Caricamento impianti autolavaggio...</div>
+        </div>
+
+        <div class="footer-note">
+            <b>SELEZIONE — Distribuzione e Vendita Prodotti Professionali</b><br>
+            Autolavaggi · Lavanderie · Ristorazione · Pulizie Professionali · Igiene e Sanificanti<br>
+            Coordinamento Commerciale: Badr (+39 388 870 3508 · badraudi@gmail.com)
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">Esito aggiornato con successo!</div>
+
+    <script>
+        let carWashes = [];
+        let activeFilter = 'ALL';
+
+        async function loadCarWashes() {
+            try {
+                const res = await fetch('/api/carwash/list');
+                carWashes = await res.json();
+                updateCounts();
+                renderCards();
+            } catch (err) {
+                document.getElementById('card-list').innerHTML = `
+                    <div style="background:#450a0a; color:#fca5a5; padding:20px; border-radius:10px; text-align:center;">
+                        Errore di caricamento dati: ${err.message}
+                    </div>
+                `;
+            }
+        }
+
+        function updateCounts() {
+            const total = carWashes.length;
+            const toCall = carWashes.filter(w => !w.lead_status || w.lead_status === 'DA_CHIAMARE').length;
+            const interested = carWashes.filter(w => w.lead_status === 'INTERESSATO').length;
+            const supplied = carWashes.filter(w => w.lead_status && w.lead_status.includes('GIA_FORNITO')).length;
+            const notInterested = carWashes.filter(w => w.lead_status === 'NON_INTERESSATO').length;
+
+            document.getElementById('count-total').textContent = total;
+            document.getElementById('count-to-call').textContent = toCall;
+            document.getElementById('count-interested').textContent = interested;
+            document.getElementById('count-supplied').textContent = supplied;
+            document.getElementById('count-not-interested').textContent = notInterested;
+        }
+
+        function filterByStatus(status) {
+            activeFilter = status;
+            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active'));
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const q = document.getElementById('search-input').value.toLowerCase().trim();
+            const filtered = carWashes.filter(w => {
+                const matchQuery = !q || 
+                    w.name.toLowerCase().includes(q) || 
+                    w.address.toLowerCase().includes(q) || 
+                    w.zone.toLowerCase().includes(q) ||
+                    w.plant_type.toLowerCase().includes(q);
+
+                let matchStatus = true;
+                if (activeFilter === 'DA_CHIAMARE') {
+                    matchStatus = (!w.lead_status || w.lead_status === 'DA_CHIAMARE');
+                } else if (activeFilter === 'INTERESSATO') {
+                    matchStatus = (w.lead_status === 'INTERESSATO');
+                } else if (activeFilter === 'GIA_FORNITO_SELECTION') {
+                    matchStatus = (w.lead_status && w.lead_status.includes('GIA_FORNITO'));
+                } else if (activeFilter === 'NON_INTERESSATO') {
+                    matchStatus = (w.lead_status === 'NON_INTERESSATO');
+                }
+
+                return matchQuery && matchStatus;
+            });
+
+            renderCards(filtered);
+        }
+
+        function renderCards(list = carWashes) {
+            const container = document.getElementById('card-list');
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        Nessun autolavaggio corrispondente ai filtri impostati.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(w => {
+                const cleanPhone = w.phone.replace(/[^0-9]/g, '');
+                const telHref = cleanPhone.startsWith('39') ? `tel:+${cleanPhone}` : `tel:+39${cleanPhone}`;
+                const waHref = cleanPhone.startsWith('39') ? `https://wa.me/${cleanPhone}` : `https://wa.me/39${cleanPhone}`;
+
+                let plantBg = '#0284c7';
+                const pLow = w.plant_type.toLowerCase();
+                if (pLow.includes('mano') || pLow.includes('detailing')) plantBg = '#16a34a';
+                else if (pLow.includes('self') || pLow.includes('h24')) plantBg = '#d97706';
+                else if (pLow.includes('servito')) plantBg = '#6366f1';
+
+                const status = w.lead_status || 'DA_CHIAMARE';
+                let statusBg = '#475569';
+                let statusText = 'DA CHIAMARE';
+                if (status === 'INTERESSATO') {
+                    statusBg = '#16a34a';
+                    statusText = '🟢 INTERESSATO';
+                } else if (status === 'NON_INTERESSATO') {
+                    statusBg = '#dc2626';
+                    statusText = '🔴 NON INTERESSATO';
+                } else if (status.includes('GIA_FORNITO')) {
+                    statusBg = '#ca8a04';
+                    statusText = '★ GIÀ FORNITO SELECTION';
+                }
+
+                return `
+                <div class="wash-card" id="card-${w.id}">
+                    <div class="card-header-row">
+                        <div class="wash-name">${w.name}</div>
+                        <div class="distance-tag">📍 ${w.distance}</div>
+                    </div>
+
+                    <div class="wash-details">
+                        📍 <b>${w.address}</b> (${w.zone})<br>
+                        ${w.notes ? `<span style="color:#cbd5e1;">💡 ${w.notes}</span>` : ''}
+                    </div>
+
+                    <div class="wash-tags">
+                        <span class="plant-badge" style="background: ${plantBg};">${w.plant_type}</span>
+                        <span class="status-badge-current" id="badge-${w.id}" style="background: ${statusBg};">${statusText}</span>
+                    </div>
+
+                    <!-- PULSANTI CHIAMATA ONE-TOUCH -->
+                    <div class="contact-row">
+                        <a href="${telHref}" class="btn-call">
+                            📞 CHIAMA ORA
+                        </a>
+                        <a href="${waHref}" target="_blank" class="btn-wa">
+                            💬 WhatsApp
+                        </a>
+                    </div>
+
+                    <!-- SELETTORE ESITO RAPIDO -->
+                    <div class="outcome-box">
+                        <div class="outcome-label-text">
+                            <span>Segna Esito Chiamata:</span>
+                            <span id="ts-${w.id}" style="color:#64748b; font-size:10px;">${w.last_call_at ? 'Ultima: ' + w.last_call_at.substring(11, 16) : ''}</span>
+                        </div>
+                        <div class="outcome-buttons-grid">
+                            <button class="btn-outcome interested ${status === 'INTERESSATO' ? 'active' : ''}" onclick="setOutcome(${w.id}, 'INTERESSATO')">
+                                🟢 Interessato
+                            </button>
+                            <button class="btn-outcome already-supplied ${status.includes('GIA_FORNITO') ? 'active' : ''}" onclick="setOutcome(${w.id}, 'GIA_FORNITO_SELECTION')">
+                                ★ Già Fornito
+                            </button>
+                            <button class="btn-outcome not-interested ${status === 'NON_INTERESSATO' ? 'active' : ''}" onclick="setOutcome(${w.id}, 'NON_INTERESSATO')">
+                                🔴 Non Int.
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function setOutcome(id, outcome) {
+            try {
+                const res = await fetch(`/api/carwash/outcome?id=${id}&outcome=${outcome}&format=json`);
+                const data = await res.json();
+                if (data.success) {
+                    // Aggiorna stato locale
+                    const target = carWashes.find(w => w.id === id);
+                    if (target) {
+                        target.lead_status = outcome;
+                        target.call_outcome = outcome;
+                    }
+                    updateCounts();
+
+                    // Aggiorna badge e bottoni della card
+                    const badge = document.getElementById(`badge-${id}`);
+                    if (badge) {
+                        badge.style.background = data.color;
+                        badge.textContent = outcome === 'INTERESSATO' ? '🟢 INTERESSATO' : 
+                                            outcome === 'NON_INTERESSATO' ? '🔴 NON INTERESSATO' : 
+                                            outcome.includes('GIA_FORNITO') ? '★ GIÀ FORNITO SELECTION' : 'DA CHIAMARE';
+                    }
+
+                    const card = document.getElementById(`card-${id}`);
+                    if (card) {
+                        card.querySelectorAll('.btn-outcome').forEach(btn => btn.classList.remove('active'));
+                        if (outcome === 'INTERESSATO') card.querySelector('.btn-outcome.interested').classList.add('active');
+                        else if (outcome === 'NON_INTERESSATO') card.querySelector('.btn-outcome.not-interested').classList.add('active');
+                        else if (outcome.includes('GIA_FORNITO')) card.querySelector('.btn-outcome.already-supplied').classList.add('active');
+                    }
+
+                    showToast(`✅ Esito salvato: ${data.name} ➔ ${data.label}`);
+                }
+            } catch (err) {
+                showToast(`❌ Errore aggiornamento esito: ${err.message}`);
+            }
+        }
+
+        async function regenerateAndSendPdf() {
+            showToast("🔄 Rigenerazione PDF e invio email a Badr in corso...");
+            try {
+                const res = await fetch('/api/carwash/pdf/regenerate');
+                const data = await res.json();
+                showToast("📨 PDF rigenerato e spedito con successo a badraudi@gmail.com!");
+            } catch (err) {
+                showToast(`❌ Errore: ${err.message}`);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // Avvio automatico al caricamento
+        window.addEventListener('DOMContentLoaded', loadCarWashes);
+    </script>
+</body>
+</html>
