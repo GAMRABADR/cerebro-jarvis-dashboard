@@ -14,8 +14,9 @@ let _toolCardTimer = null;
 
 const EBJ_WAKE_ACK = 'Ci sono, Ingegnere. Dimmi.';
 
-window.ebjVoiceEnabled = localStorage.getItem('ebj_voce') !== 'off';
-window.isConversationalMode = window.ebjVoiceEnabled;
+window.ebjVoiceEnabled = true;
+localStorage.setItem('ebj_voce', 'on');
+window.isConversationalMode = true;
 let _ebjCurrentAudio = null;
 let _ebjRecognition = null;
 let _ebjMicOn = false;
@@ -73,7 +74,7 @@ window.playSpeechAudio = async function(text) {
     const r = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: clean }),
+      body: JSON.stringify({ text: clean, persona: currentPersonality }),
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
@@ -82,7 +83,8 @@ window.playSpeechAudio = async function(text) {
         const binaryStr = atob(d.audio_base64);
         const bytes = new Uint8Array(binaryStr.length);
         for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-        const blob = new Blob([bytes], { type: 'audio/mpeg' });
+        const mimeType = d.mime_type || (d.voice && d.voice.startsWith('kokoro') ? 'audio/wav' : 'audio/mpeg');
+        const blob = new Blob([bytes], { type: mimeType });
         const blobUrl = URL.createObjectURL(blob);
 
         _ebjCurrentAudio = new Audio(blobUrl);
@@ -437,22 +439,70 @@ async function executeCommandPipeline(prompt) {
 
   try {
     const model = document.getElementById('model-select')?.value || 'auto';
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, model, persona: currentPersonality })
-    });
-    const d = await res.json();
-    
-    const reply = d.response || 'Nessuna risposta ricevuta.';
-    finish(reply, (d.model_used || 'E.B.J. AI').toUpperCase());
-    if (d.ui_action) window.handleAiUiAction(d.ui_action);
+    let reply = '';
+    let modelTag = 'EBJ SUPREME';
+
+    // 1. Chiamata diretta all'intelligenza vocale e operativa unificata EBJ
+    try {
+      const vRes = await fetch('/api/voice/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: prompt, persona: currentPersonality }),
+        signal: AbortSignal.timeout(6000)
+      });
+      if (vRes.ok) {
+        const vData = await vRes.json();
+        reply = vData.response || '';
+        if (vData.audio_base64 && window.ebjVoiceEnabled) {
+          try {
+            const snd = new Audio('data:audio/mp3;base64,' + vData.audio_base64);
+            snd.play();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fallback su /api/chat se necessario
+    if (!reply) {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, model, persona: currentPersonality })
+      });
+      const d = await res.json();
+      reply = d.response || 'Nessuna risposta ricevuta.';
+      modelTag = (d.model_used || 'E.B.J. AI').toUpperCase();
+      if (d.ui_action) window.handleAiUiAction(d.ui_action);
+      updateAiModeBadge(d);
+    }
+
+    finish(reply, modelTag);
   } catch (err) {
     if (respEl) respEl.textContent = 'Errore di comunicazione: ' + err.message;
     if (respTag) respTag.textContent = 'ERROR';
   } finally {
     isBusy = false;
     if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+  }
+}
+
+function updateAiModeBadge(data) {
+  const badge = document.getElementById('ai-mode-badge');
+  const textEl = document.getElementById('ai-mode-text');
+  if (!badge || !textEl || !data) return;
+
+  const mode = data.execution_mode || (data.is_local_vps ? 'local_vps_gpu' : 'cloud_free');
+  const rawModel = (data.model_used || '').toUpperCase();
+
+  if (mode === 'local_vps_gpu' || data.is_local_vps || rawModel.includes('VPS-LOCAL-GPU')) {
+    badge.className = 'ai-mode-pill local-vps';
+    const cleanName = rawModel.replace('VPS-LOCAL-GPU:', '').trim() || 'QWEN 3.8 27B';
+    textEl.textContent = `🟣 MODALITÀ LOCALE VPS (${cleanName})`;
+    badge.title = 'MODALITÀ SOVRANA: Token/Quota Cloud esauriti. Inferenza attiva su GPU VPS/Locale senza limiti!';
+  } else {
+    badge.className = 'ai-mode-pill cloud-free';
+    textEl.textContent = `🟢 CLOUD FREE: ${rawModel}`;
+    badge.title = 'MODALITÀ CLOUD: Esecuzione attiva su quota gratuita (Groq / Cerebras / Gemini / OpenRouter / HF)';
   }
 }
 
@@ -1209,6 +1259,47 @@ document.addEventListener('DOMContentLoaded', () => {
   loadModularCardsState();
   initCustomModelSelect();
   updateVadPill();
+});
+
+// ── AZIONE DIRETTA MARKETPLACE DA HOME CONTROLLO TOTALE ──────────────
+window.publishMarketplaceDirect = async function() {
+  const btn = document.getElementById('btn-pub-direct');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Pubblicazione...';
+  }
+  try {
+    const res = await fetch('/api/marketplace/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ submit: true })
+    });
+    const d = await res.json();
+    if (d.status === 'SUCCESS') {
+      if (btn) {
+        btn.textContent = '✅ Pubblicato!';
+        btn.style.background = '#22c55e';
+      }
+      if (window.playSpeechAudio) {
+        window.playSpeechAudio("Ottime notizie Badr! L'annuncio delle 3 porte è stato inviato e pubblicato con successo su Facebook Marketplace.");
+      }
+      addEvent('sys', 'Facebook Marketplace: Annuncio porte pubblicato con successo!');
+    } else {
+      if (btn) btn.textContent = '⚠️ Errore';
+      addEvent('sys', 'Errore pubblicazione: ' + (d.error || 'Verifica sessione'));
+    }
+  } catch (err) {
+    if (btn) btn.textContent = '⚠️ Errore Rete';
+  } finally {
+    setTimeout(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🚀 Pubblica FB';
+        btn.style.background = '#eab308';
+      }
+    }, 6000);
+  }
+};
   showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
   connectEbjRustListen();
   document.addEventListener('click', unlockEbjVoice, { once: true });

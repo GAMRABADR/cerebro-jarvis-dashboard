@@ -10,44 +10,52 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Modern UI Libraries for E.B.J. -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body>
+  <div class="jarvis-scanline"></div>
 
   <!-- ── MASTER TOP BAR HUD ───────────────────────────────────────── -->
   <header class="master-view-bar">
     <div class="mv-left">
-      <button class="mv-hamburger" id="btn-hamburger" type="button" onclick="toggleMobileNav()" aria-label="Apri menu" aria-expanded="false" aria-controls="mv-center-nav">☰</button>
-      <span class="mv-logo">⚡ E.B.J. AI APEX</span>
+      <button class="mv-hamburger" id="btn-hamburger" type="button" onclick="toggleMobileNav()" aria-label="Apri menu" aria-expanded="false" aria-controls="mv-center-nav"><i data-lucide="menu" class="lucide-icon"></i></button>
+      <span class="mv-logo" style="display:inline-flex; align-items:center; gap:8px;">
+        <img src="/ebj_supreme_logo.jpg" alt="EBJ Supreme Logo" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #00f0ff; box-shadow:0 0 10px rgba(0,240,255,0.7); object-fit:cover;">
+        <span>E.B.J. AI APEX</span>
+      </span>
       <span class="mv-tag">EL OUARITI BADR · MATRIX v100.0</span>
     </div>
 
     <div class="mv-center" id="mv-center-nav">
       <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">
-        <span class="btn-dot live"></span>⚡ E.B.J. CORE
+        <span class="btn-dot live"></span><i data-lucide="cpu" class="lucide-icon"></i>E.B.J. CORE
       </button>
 
       <!-- PREVENTIVO CLIENTE MAGNET -->
       <a href="/preventivo" target="_blank" class="view-switch-btn" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
-        <span class="btn-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span>🎯 ACQUISIZIONE CLIENTI ↗️
+        <span class="btn-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span><i data-lucide="target" class="lucide-icon text-emerald"></i>ACQUISIZIONE CLIENTI <i data-lucide="external-link" class="lucide-icon sm"></i>
       </a>
 
       <!-- VISTA ECOSYSTEM MAP TOPOLOGY -->
       <button class="view-switch-btn" id="btn-view-topology" onclick="switchMasterView('topology')">
-        <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span>🗺️ ECOSYSTEM MAP
+        <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span><i data-lucide="compass" class="lucide-icon text-cyan"></i>ECOSYSTEM MAP
       </button>
 
       <!-- DROPDOWN: KANBAN -->
       <div class="nav-dropdown-pod">
         <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban">
-          🧠 KANBAN <span class="chevron">▾</span>
+          <i data-lucide="layout-dashboard" class="lucide-icon"></i>KANBAN <span class="chevron">▾</span>
         </button>
         <div class="nav-dropdown-menu">
           <div class="dd-item" onclick="switchMasterView('kanban')">
-            <span class="dd-icon">📋</span>
+            <span class="dd-icon"><i data-lucide="trello" class="lucide-icon text-cyan"></i></span>
             <div class="dd-text"><strong>HERMES MASTER KANBAN</strong><small>Visual DAG Pipeline & Task Board</small></div>
           </div>
           <div class="dd-item" onclick="switchMasterView('kali')">
-            <span class="dd-icon">🛡️</span>
+            <span class="dd-icon"><i data-lucide="shield-alert" class="lucide-icon text-pink"></i></span>
             <div class="dd-text"><strong>HERMES KALI KANBAN</strong><small>VPS Security Audit Engine</small></div>
           </div>
         </div>
@@ -56,19 +64,19 @@
       <!-- DROPDOWN: N8N -->
       <div class="nav-dropdown-pod">
         <button class="view-switch-btn dropdown-trigger" id="btn-view-n8n">
-          🔄 N8N CLOUD <span class="chevron">▾</span>
+          <i data-lucide="git-branch" class="lucide-icon text-cyan"></i>N8N CLOUD <span class="chevron">▾</span>
         </button>
         <div class="nav-dropdown-menu">
           <a class="dd-item" href="http://92.4.233.42:5678" target="_blank">
-            <span class="dd-icon">☁️</span>
+            <span class="dd-icon"><i data-lucide="cloud" class="lucide-icon text-cyan"></i></span>
             <div class="dd-text"><strong>N8N ORACLE VPS (24GB) ↗️</strong><small>92.4.233.42:5678 (Cloud Workflows)</small></div>
           </a>
           <a class="dd-item" href="http://127.0.0.1:5678" target="_blank">
-            <span class="dd-icon">💻</span>
+            <span class="dd-icon"><i data-lucide="laptop" class="lucide-icon text-emerald"></i></span>
             <div class="dd-text"><strong>N8N LOCAL RUNNER ↗️</strong><small>127.0.0.1:5678 (64GB Workstation)</small></div>
           </a>
           <div class="dd-item" onclick="switchMasterView('n8n')">
-            <span class="dd-icon">📊</span>
+            <span class="dd-icon"><i data-lucide="activity" class="lucide-icon text-amber"></i></span>
             <div class="dd-text"><strong>PANNELLO FLUSSI INTEGRATO</strong><small>Monitoraggio Intake & Preventivi</small></div>
           </div>
         </div>
@@ -77,38 +85,41 @@
       <!-- DROPDOWN: KALI LINUX -->
       <div class="nav-dropdown-pod">
         <button class="view-switch-btn dropdown-trigger">
-          🛡️ KALI DOCKER <span class="chevron">▾</span>
+          <i data-lucide="shield" class="lucide-icon text-pink"></i>KALI DOCKER <span class="chevron">▾</span>
         </button>
         <div class="nav-dropdown-menu">
           <div class="dd-item" onclick="switchMasterView('kali')">
-            <span class="dd-icon">🧪</span>
+            <span class="dd-icon"><i data-lucide="flask-conical" class="lucide-icon text-pink"></i></span>
             <div class="dd-text"><strong>KALI LAB</strong><small>Catalogo tool, ricerca, esecuzione allowlist</small></div>
           </div>
           <div class="dd-item" onclick="openKaliCliModal()">
-            <span class="dd-icon">💻</span>
+            <span class="dd-icon"><i data-lucide="terminal" class="lucide-icon text-emerald"></i></span>
             <div class="dd-text"><strong>TERMINALE /kali RAPIDO</strong><small>Esegui comandi container</small></div>
           </div>
           <div class="dd-item" onclick="quickKaliExec('docker stats --no-stream ebj-kali-engine')">
-            <span class="dd-icon">📊</span>
+            <span class="dd-icon"><i data-lucide="bar-chart-3" class="lucide-icon text-cyan"></i></span>
             <div class="dd-text"><strong>STATUS KALI CONTAINER</strong><small>kalilinux/kali-custom:apex</small></div>
           </div>
           <div class="dd-item" onclick="quickKaliExec('nmap -T4 -F 92.4.233.42')">
-            <span class="dd-icon">🔍</span>
+            <span class="dd-icon"><i data-lucide="search" class="lucide-icon text-amber"></i></span>
             <div class="dd-text"><strong>AUDIT PORTE RAPIDO</strong><small>Scansione porte VPS in &lt; 1s</small></div>
           </div>
         </div>
       </div>
 
       <a class="view-switch-btn" href="http://92.4.233.42:50080" target="_blank" style="text-decoration:none;">
-        🤖 AGENTE ZERO ↗️
+        <i data-lucide="bot" class="lucide-icon text-emerald"></i>AGENTE ZERO <i data-lucide="external-link" class="lucide-icon sm"></i>
       </a>
 
       <button class="view-switch-btn" id="btn-toggle-terminal" onclick="toggleCyberTerminal()" style="border-color:#00ff9f; color:#00ff9f; font-weight:bold;">
-        💻 TERMINALE [T]
+        <i data-lucide="terminal" class="lucide-icon text-emerald"></i>TERMINALE [T]
       </button>
 
       <button class="view-switch-btn" id="btn-toggle-modules" onclick="toggleModularCatalog()" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
-        🧩 MODULI [M]
+        <i data-lucide="boxes" class="lucide-icon text-cyan"></i>MODULI [M]
+      </button>
+      <button class="view-switch-btn" id="btn-toggle-cmd-palette" onclick="openCommandPalette()" style="border-color:#ffd700; color:#ffd700; font-weight:bold; background:rgba(255,215,0,0.08);">
+        <i data-lucide="command" class="lucide-icon text-amber"></i>COMMANDS [Ctrl+K]
       </button>
     </div>
 
@@ -119,8 +130,15 @@
         <button type="button" class="ms-chip" data-value="groq-llama70b">GROQ</button>
         <button type="button" class="ms-chip" data-value="qwen-27b">LOCALE</button>
       </div>
+      <div id="ai-mode-badge" class="ai-mode-pill cloud-free" title="Stato Rotazione AI Engine (Cloud Free Pool / Local VPS GPU)">
+        <span class="ai-mode-dot"></span>
+        <span id="ai-mode-text">🟢 CLOUD FREE (AUTO)</span>
+      </div>
       <button class="vad-toggle-pill active" id="btn-vad-toggle" onclick="toggleConversationalMode()" title="Chiacchierata vocale continua — clic per ON/OFF, oppure Ctrl+Spazio">
-        <span class="vad-dot"></span>🎙️ VOCE: <strong>ON</strong>
+        <span class="vad-dot"></span><i data-lucide="mic" class="lucide-icon text-emerald icon-pulse" style="margin-right:2px;"></i>VOCE: <strong>ON</strong>
+      </button>
+      <button class="vad-toggle-pill" id="btn-vision-top" onclick="toggleScreenVision()" title="👁️ OCCHIO VISION: Guarda lo schermo, commenta le pagine e compila i form con i dati di Badr (Alt+V)" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.08);">
+        <span class="vad-dot" id="dot-vision-top" style="background:#00f0ff; box-shadow:0 0 8px #00f0ff;"></span><i data-lucide="eye" class="lucide-icon text-cyan icon-scan" style="margin-right:2px;"></i>OCCHIO: <strong id="lbl-vision-top">OFF</strong>
       </button>
       <span class="status-indicator live"></span>
       <span class="mv-stat" id="master-status">ONLINE 144 FPS</span>
@@ -272,16 +290,71 @@
               </div>
             </div>
 
-            <!-- 🌌 GPU 3D QUANTUM HOLOGRAPHIC SPHERE & ACCRETION RINGS (144 FPS / 0% CPU) -->
-            <div class="quantum-hologram-wrapper" id="quantum-hologram-wrapper" onclick="toggleRecording()">
-              <div class="quantum-accretion-ring ring-1"></div>
-              <div class="quantum-accretion-ring ring-2"></div>
-              <div class="quantum-accretion-ring ring-3"></div>
-              <div class="quantum-core-sphere" id="jarvis-sphere">
-                <div class="sphere-inner-pulse"></div>
-                <span class="sphere-label" id="sphere-label">E.B.J.</span>
-              </div>
-              <div class="sphere-status-glow" id="sphere-status-glow"></div>
+            <!-- 🌌 J.A.R.V.I.S. ARC REACTOR HOLOGRAPHIC HUD (144 FPS / TONY STARK FUI) -->
+            <div class="jarvis-arc-hud-container" id="quantum-hologram-wrapper" onclick="toggleRecording()" title="Tocca l'Arc Reactor o premi [Ctrl+Spazio] per parlare con J.A.R.V.I.S.">
+              <svg class="jarvis-arc-svg" viewBox="0 0 240 240">
+                <defs>
+                  <radialGradient id="arcCoreGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                    <stop offset="35%" stop-color="#00f0ff" stop-opacity="0.9"/>
+                    <stop offset="70%" stop-color="#0066ff" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#001026" stop-opacity="0"/>
+                  </radialGradient>
+                  <filter id="arcGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur1"/>
+                    <feGaussianBlur stdDeviation="6" result="blur2"/>
+                    <feMerge>
+                      <feMergeNode in="blur2"/>
+                      <feMergeNode in="blur1"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <!-- 1. ANELLO ESTERNO CON TACCHE GRADUATE 360° -->
+                <circle cx="120" cy="120" r="110" fill="none" stroke="rgba(0,240,255,0.2)" stroke-width="1.5"/>
+                <g class="arc-rot-clockwise">
+                  <circle cx="120" cy="120" r="106" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="4 8 16 8" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(0,255,159,0.4)" stroke-width="1" stroke-dasharray="2 6"/>
+                  <line x1="120" y1="6" x2="120" y2="18" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="120" y1="222" x2="120" y2="234" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="6" y1="120" x2="18" y2="120" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="222" y1="120" x2="234" y2="120" stroke="#00ff9f" stroke-width="2"/>
+                </g>
+
+                <!-- 2. ANELLO INTERMEDIO DENTATO (GEAR TEETH) -->
+                <g class="arc-rot-counter">
+                  <circle cx="120" cy="120" r="88" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="12 16" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="80" fill="none" stroke="rgba(255,183,3,0.45)" stroke-width="1.5" stroke-dasharray="30 20"/>
+                </g>
+
+                <!-- 3. ANELLO A DIAFRAMMA OTTICO / STARK HUD -->
+                <g class="arc-rot-fast">
+                  <circle cx="120" cy="120" r="64" fill="none" stroke="rgba(0,255,159,0.7)" stroke-width="2" stroke-dasharray="6 24 12 12"/>
+                </g>
+
+                <!-- 4. RETICOLO DI MIRA CENTRALE (TARGET CROSSHAIR) -->
+                <line x1="85" y1="120" x2="155" y2="120" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+                <line x1="120" y1="85" x2="120" y2="155" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+
+                <!-- 5. NUCLEO AL PLASMA PULSANTE (ARC REACTOR CORE) -->
+                <g class="arc-pulse-core" id="jarvis-sphere">
+                  <circle cx="120" cy="120" r="46" fill="url(#arcCoreGrad)"/>
+                  <circle cx="120" cy="120" r="42" fill="none" stroke="#ffffff" stroke-width="1.5" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="22" fill="#ffffff" filter="url(#arcGlow)"/>
+                </g>
+
+                <!-- 6. LABEL CENTRALE -->
+                <text x="120" y="125" text-anchor="middle" fill="#01040a" font-family="'Orbitron', sans-serif" font-weight="900" font-size="12" letter-spacing="2">E.B.J.</text>
+              </svg>
+            </div>
+
+            <!-- 7. AUDIO SPECTRUM VISUALIZER IN TEMPO REALE -->
+            <div class="jarvis-audio-spectrum" id="jarvis-audio-spectrum">
+              <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+              <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+              <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+              <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
             </div>
 
             <!-- 🌌 QUICK LAUNCH 3D COSMOS BUTTON -->
@@ -317,6 +390,100 @@
             </div>
             <div class="resp-body" id="resp-body">
               Pronto a ricevere ordini, Ingegner Badr. L'ecosistema v100.0 APEX è attivo con accelerazione GPU pura e Rust Tokio Micro-Bridge. Tocca la Sfera o premi [Ctrl+Spazio] per parlare!
+            </div>
+          </div>
+
+          <!-- ── APEX UNIFIED COMMAND CENTER (CONTROLLO TOTALE) ──────────────── -->
+          <div class="apex-command-dock" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #00f0ff; border-radius: 14px; padding: 14px 18px; margin: 12px 0; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); backdrop-filter: blur(12px);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00ff9f; box-shadow: 0 0 10px #00ff9f;"></span>
+                <span style="font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 1px; color: #00f0ff;">
+                  EBJ SUPREME · CENTRO DI CONTROLLO TOTALE
+                </span>
+              </div>
+              <span style="font-size: 11px; font-weight: bold; color: #94a3b8; background: #1e293b; padding: 3px 8px; border-radius: 6px;">
+                TUTTO IN UN UNICO POSTO
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+              <!-- MODULO 1: VOCE ALWAYS-ON -->
+              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #38bdf8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                    🎙️ VOCE CONTINUA
+                  </div>
+                  <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">
+                    Parla a voce libera: EBJ ti ascolta ed esegue.
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <button onclick="toggleConversationalMode()" class="quick-btn" style="flex: 1; background: #0284c7; color: #fff; font-size: 11px; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    Attiva Microfono
+                  </button>
+                  <a href="/voice" target="_blank" class="quick-btn" style="background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; font-size: 11px; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center;">
+                    Full UI ↗️
+                  </a>
+                </div>
+              </div>
+
+              <!-- MODULO 2: JEV MARKETPLACE -->
+              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #facc15; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: #facc15; display: flex; align-items: center; gap: 6px;">
+                    🚪 JEV MARKETPLACE
+                  </div>
+                  <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">
+                    3 Porte Massello (75€ cad. - Trattabili)
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <button onclick="publishMarketplaceDirect()" id="btn-pub-direct" class="quick-btn" style="flex: 1; background: #eab308; color: #000; font-size: 11px; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-weight: 900;">
+                    🚀 Pubblica FB
+                  </button>
+                  <a href="/porte" target="_blank" class="quick-btn" style="background: #1e293b; color: #facc15; border: 1px solid #facc15; font-size: 11px; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center;">
+                    Cockpit ↗️
+                  </a>
+                </div>
+              </div>
+
+              <!-- MODULO 3: AUTOLAVAGGI SELEZIONE -->
+              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #22c55e; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: #22c55e; display: flex; align-items: center; gap: 6px;">
+                    🚿 SELEZIONE DETERGENZA
+                  </div>
+                  <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">
+                    23 Autolavaggi Bologna (Chiamate 1-Touch)
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <a href="/selezione" target="_blank" class="quick-btn" style="flex: 1; background: #16a34a; color: #fff; font-size: 11px; padding: 6px; border: none; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center;">
+                    📱 Chiama & Segna
+                  </a>
+                  <a href="/SELEZIONE_Prospetto_Autolavaggi_Bologna.pdf" download class="quick-btn" style="background: #1e293b; color: #22c55e; border: 1px solid #22c55e; font-size: 11px; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center;">
+                    PDF 📄
+                  </a>
+                </div>
+              </div>
+
+              <!-- MODULO 4: BADREXPRESS & PREVENTIVI -->
+              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #a855f7; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 6px;">
+                    🚛 BADREXPRESS LOGISTICA
+                  </div>
+                  <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">
+                    Traslochi, Consegne al Piano & Furgone
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <a href="/preventivo" target="_blank" class="quick-btn" style="flex: 1; background: #9333ea; color: #fff; font-size: 11px; padding: 6px; border: none; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center;">
+                    📦 Calcola Prezzo
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -364,7 +531,8 @@
 
           <!-- INPUT DOCK -->
           <div class="input-container discord-input-container">
-            <button class="attach-file-btn" onclick="document.getElementById('file-upload-input').click()" title="Allega File o Documento">📎</button>
+            <button class="attach-file-btn" onclick="document.getElementById('file-upload-input').click()" title="Allega File o Documento"><i data-lucide="paperclip" class="lucide-icon"></i></button>
+            <button class="attach-file-btn vision-eye-btn" id="btn-vision-eye" onclick="toggleScreenVision()" title="👁️ OCCHIO VISION: Guarda lo schermo, commenta la pagina e compila i form con i tuoi dati (Alt+V)" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.12);"><i data-lucide="eye" class="lucide-icon text-cyan icon-scan"></i></button>
             <input type="file" id="file-upload-input" hidden tabindex="-1" onchange="handleFileUpload(this)">
 
             <div class="prompt-input-wrapper">
@@ -373,6 +541,7 @@
             </div>
 
             <button class="send-btn" id="send-btn" onclick="sendMessage()">
+              <i data-lucide="send" class="lucide-icon sm" style="margin-right:4px;"></i>
               <span>INVIA</span>
               <span class="send-shortcut">↵</span>
             </button>
@@ -383,7 +552,7 @@
         <!-- ── RIGHT ORACLE VPS & RUST TELEMETRY DOCK ─────────────── -->
         <section class="panel-box right-panel" id="right-telemetry-dock">
           <div class="panel-header">
-            <span class="ph-icon">⚡</span>
+            <span class="ph-icon"><i data-lucide="activity" class="lucide-icon text-cyan"></i></span>
             <span class="ph-title">RUST & VPS TELEMETRY</span>
             <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi">HIDE ▶</button>
           </div>
@@ -569,22 +738,22 @@
     <div class="modal-box holo-modal" style="max-width:880px;">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="color:#00f0ff; font-size:1.3rem;">🧩</span>
+          <span style="color:#00f0ff;"><i data-lucide="boxes" class="lucide-icon lg text-cyan"></i></span>
           <div>
             <h3 style="margin:0; font-family:'Orbitron', sans-serif; font-size:1rem; color:#00f0ff;">CATALOGO SCHEDE DINAMICHE & MODULI</h3>
             <small style="color:#94a3b8; font-size:0.75rem;">Attiva/disattiva le schede a piacimento o chiedi a voce a E.B.J.</small>
           </div>
         </div>
-        <button class="modal-close" onclick="closeModal('modal-modular-catalog')">✕</button>
+        <button class="modal-close" onclick="closeModal('modal-modular-catalog')"><i data-lucide="x" class="lucide-icon sm"></i></button>
       </div>
 
       <div class="modal-body" style="padding:18px; max-height:68vh; overflow-y:auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
           <span style="font-size:0.78rem; color:#00ff9f; font-weight:bold;">💡 Puoi dire a voce: "E.B.J., mostrami la scheda CPU" o "Apri terminale"</span>
           <div style="display:flex; gap:8px;">
-            <button class="h-btn primary" onclick="openAllModules()">🌟 APRI TUTTI</button>
-            <button class="h-btn" onclick="resetToEssentialModules()">🎯 DEFAULT ESSENZIALE</button>
-            <button class="h-btn close" onclick="closeAllModules()" style="border-color:#ff4d79; color:#ff4d79;">👁️ STEALTH</button>
+            <button class="h-btn primary" onclick="openAllModules()"><i data-lucide="sparkles" class="lucide-icon sm text-green"></i> APRI TUTTI</button>
+            <button class="h-btn" onclick="resetToEssentialModules()"><i data-lucide="check-circle" class="lucide-icon sm text-cyan"></i> DEFAULT ESSENZIALE</button>
+            <button class="h-btn close" onclick="closeAllModules()" style="border-color:#ff4d79; color:#ff4d79;"><i data-lucide="eye-off" class="lucide-icon sm text-pink"></i> STEALTH</button>
           </div>
         </div>
 
@@ -592,7 +761,7 @@
           <!-- Card 1: Core Sfera -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🧠</span>
+              <span class="mcc-icon"><i data-lucide="atom" class="lucide-icon text-cyan icon-pulse"></i></span>
               <div class="mcc-info"><strong>SFERA NEURALE 3D</strong><small>Nucleo Quantistico GPU</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-synapses" checked onchange="toggleModule('mod-synapses', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -602,7 +771,7 @@
           <!-- Card 2: Cyber-Terminal -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🖥️</span>
+              <span class="mcc-icon"><i data-lucide="terminal" class="lucide-icon text-emerald"></i></span>
               <div class="mcc-info"><strong>CYBER-TERMINAL [T]</strong><small>Rust Tokio & Kali CLI</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-terminal" onchange="toggleModule('mod-terminal', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -612,7 +781,7 @@
           <!-- Card 3: CPU & RAM 64GB -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🎛️</span>
+              <span class="mcc-icon"><i data-lucide="cpu" class="lucide-icon text-cyan"></i></span>
               <div class="mcc-info"><strong>CPU & RAM 64GB</strong><small>Workstation Imola</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-cpu-ram" checked onchange="toggleModule('mod-cpu-ram', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -622,7 +791,7 @@
           <!-- Card 4: Oracle VPS 24GB -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🛡️</span>
+              <span class="mcc-icon"><i data-lucide="server" class="lucide-icon text-emerald"></i></span>
               <div class="mcc-info"><strong>ORACLE CLOUD VPS</strong><small>92.4.233.42 · 24GB RAM</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-vps" checked onchange="toggleModule('mod-vps', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -632,7 +801,7 @@
           <!-- Card 5: Dual GPU -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">⚡</span>
+              <span class="mcc-icon"><i data-lucide="activity" class="lucide-icon text-pink"></i></span>
               <div class="mcc-info"><strong>DUAL GPU RTX 4070</strong><small>12GB VRAM + GTX 1660</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-gpu" onchange="toggleModule('mod-gpu', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -642,7 +811,7 @@
           <!-- Card 6: Cargo 3D -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">📦</span>
+              <span class="mcc-icon"><i data-lucide="box" class="lucide-icon text-amber"></i></span>
               <div class="mcc-info"><strong>3D CARGO OPTIMIZER</strong><small>Ducato Maxi vs Daily 35q</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-cargo" onchange="toggleModule('mod-cargo', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -652,7 +821,7 @@
           <!-- Card 7: N8N Funnel -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🔄</span>
+              <span class="mcc-icon"><i data-lucide="workflow" class="lucide-icon text-cyan"></i></span>
               <div class="mcc-info"><strong>N8N FUNNEL TRASLOCHI</strong><small>Preventivi & Contratti</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-n8n" onchange="toggleModule('mod-n8n', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -662,7 +831,7 @@
           <!-- Card 8: Radar Clienti -->
           <div class="mod-cat-card">
             <div class="mcc-header">
-              <span class="mcc-icon">🎯</span>
+              <span class="mcc-icon"><i data-lucide="radar" class="lucide-icon text-emerald"></i></span>
               <div class="mcc-info"><strong>RADAR CLIENTI 2026</strong><small>Scraping Lead Imola/Bologna</small></div>
               <label class="mcc-toggle"><input type="checkbox" id="chk-mod-radar" onchange="toggleModule('mod-radar', this.checked)"><span class="mcc-slider"></span></label>
             </div>
@@ -811,8 +980,17 @@
         </span>
       </div>
 
-      <div style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace; letter-spacing:1px;">
-        • listening, sir...
+      <!-- Live Full-Duplex Dialogue Button & Spectrum -->
+      <button id="btn-live-voice-link" onclick="toggleLiveVoiceLink()" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 14px; background:linear-gradient(135deg, rgba(0,229,255,0.12), rgba(0,100,255,0.22)); border:1px solid #00e5ff; border-radius:20px; color:#00e5ff; font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; letter-spacing:1px; cursor:pointer; box-shadow:0 0 15px rgba(0,229,255,0.25); transition:all 0.3s ease;">
+        <span id="voice-link-indicator" style="width:8px; height:8px; border-radius:50%; background:#00e5ff; box-shadow:0 0 8px #00e5ff;"></span>
+        <span id="voice-link-label">🎙️ LIVE VOICE LINK (Alt+M)</span>
+      </button>
+      <div id="voice-live-spectrum" style="display:none; width:100%; height:16px; background:rgba(0,10,25,0.8); border:1px solid rgba(0,229,255,0.3); border-radius:6px; overflow:hidden; padding:2px; box-sizing:border-box;">
+        <div id="voice-energy-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #00e5ff, #ffd700); border-radius:4px; transition:width 0.05s ease;"></div>
+      </div>
+
+      <div id="voice-dialogue-status-text" style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace; letter-spacing:1px; text-align:center;">
+        • standby, press Alt+M to talk
       </div>
 
       <!-- Layout Switcher Buttons (RING, CUBE, SPHERE, CONSTELLATION) -->
@@ -859,6 +1037,13 @@
         <div class="mwc-metric-row" style="margin-top:6px;"><span class="mwc-lbl">RAM 64GB DDR:</span> <span class="mwc-val val-cyan" id="mwc-ram-val">48.9 / 64 GB (76%)</span></div>
         <div class="mwc-track"><div class="mwc-fill fill-cyan" id="mwc-ram-fill" style="width:76%;"></div></div>
         <div class="mwc-metric-row" style="margin-top:8px;"><span class="mwc-lbl">Tokio Zero-Copy Bus:</span> <span class="mwc-val val-emerald">0.05 ms LATENCY</span></div>
+        <div style="margin-top:10px; border:1px solid rgba(0,255,159,0.2); border-radius:6px; padding:6px; background:rgba(0,0,0,0.35);">
+          <div style="font-size:9px; color:#00ff9f; font-family:'Orbitron',sans-serif; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span><i data-lucide="activity" class="lucide-icon sm text-green" style="margin-right:4px;"></i>RUST VECTOR SPARKLINE</span>
+            <span style="color:#00f0ff;">⚡ 23µs</span>
+          </div>
+          <img id="mwc-rust-sparkline" src="/api/graphics/sparkline?points=18,25,32,45,40,62,58,74,88,95&stroke=%2300ff9f" style="width:100%; height:48px; display:block;" alt="Rust Sparkline">
+        </div>
       </div>
     </div>
 
@@ -915,19 +1100,19 @@
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
 <div id="screen-panel">
   <div class="sp-header">
-    <span class="sp-title">📺 LIVE SCREEN</span>
+    <span class="sp-title"><i data-lucide="monitor" class="lucide-icon text-cyan" style="margin-right:6px;"></i>LIVE SCREEN</span>
     <div class="sp-badges">
       <span class="sp-badge live" id="sp-live-badge">● LIVE</span>
       <span class="sp-badge fps" id="sp-fps-badge">5 FPS</span>
     </div>
-    <button class="sp-close" onclick="toggleScreenPanel()">✕</button>
+    <button class="sp-close" onclick="toggleScreenPanel()"><i data-lucide="x" class="lucide-icon sm"></i></button>
   </div>
   <div id="screen-canvas-wrap">
     <img id="screen-canvas" src="" alt="Live Screen" />
     <div class="sp-overlay">
-      <button class="sp-btn" onclick="screenAnalyzeNow()">🔍 ANALIZZA AI</button>
-      <button class="sp-btn" onclick="screenSnapshot()">📸 SNAP</button>
-      <button class="sp-btn danger" id="sp-pause-btn" onclick="toggleScreenPause()">⏸ PAUSA</button>
+      <button class="sp-btn" onclick="screenAnalyzeNow()"><i data-lucide="sparkles" class="lucide-icon text-cyan sm"></i> ANALIZZA AI</button>
+      <button class="sp-btn" onclick="screenSnapshot()"><i data-lucide="camera" class="lucide-icon text-emerald sm"></i> SNAP</button>
+      <button class="sp-btn danger" id="sp-pause-btn" onclick="toggleScreenPause()"><i data-lucide="pause" class="lucide-icon text-pink sm"></i> PAUSA</button>
       <span class="sp-stats" id="sp-stats-txt">— KB/s</span>
     </div>
   </div>
@@ -1118,11 +1303,178 @@ window.screenSnapshot = function() {
 document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key === 's') { e.preventDefault(); toggleScreenPanel(); }
   if (e.altKey && e.key === 'a') { e.preventDefault(); screenAnalyzeNow(); }
+  if (e.altKey && (e.key === 'v' || e.key === 'V')) { e.preventDefault(); toggleScreenVision(); }
 });
 
-// Auto-connetti se il panel era già aperto
+// ═══════════════════════════════════════════════════════════════════════
+//  E.B.J. VISION OCCHIO ENGINE — Screen Capture, Comment & Form Autofill
+// ═══════════════════════════════════════════════════════════════════════
+let activeVisionStream = null;
+let isVisionAnalyzing = false;
+
+window.toggleScreenVision = async function() {
+  const eyeBtn = document.getElementById('btn-vision-eye');
+  const topBtn = document.getElementById('btn-vision-top');
+  const lblTop = document.getElementById('lbl-vision-top');
+  const dotTop = document.getElementById('dot-vision-top');
+
+  if (isVisionAnalyzing) return;
+
+  try {
+    if (eyeBtn) eyeBtn.style.transform = 'scale(1.25)';
+    if (lblTop) lblTop.textContent = 'ATTIVO...';
+    if (dotTop) dotTop.style.background = '#ff0055';
+
+    if (!activeVisionStream || !activeVisionStream.active) {
+      activeVisionStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always', displaySurface: 'monitor' },
+        audio: false
+      });
+      activeVisionStream.getVideoTracks()[0].addEventListener('ended', () => {
+        activeVisionStream = null;
+        if (lblTop) lblTop.textContent = 'OFF';
+        if (dotTop) dotTop.style.background = '#00f0ff';
+        if (eyeBtn) eyeBtn.style.transform = 'scale(1)';
+      });
+    }
+
+    const video = document.createElement('video');
+    video.srcObject = activeVisionStream;
+    video.play();
+    await new Promise(r => video.onloadedmetadata = r);
+    await new Promise(r => setTimeout(r, 150));
+
+    const cvs = document.createElement('canvas');
+    cvs.width = video.videoWidth || 1920;
+    cvs.height = video.videoHeight || 1080;
+    const ctx = cvs.getContext('2d');
+    ctx.drawImage(video, 0, 0, cvs.width, cvs.height);
+
+    const b64 = cvs.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    const screenImg = document.getElementById('screen-canvas');
+    if (screenImg) screenImg.src = 'data:image/jpeg;base64,' + b64;
+
+    // Push al micro-bridge Rust (:9000)
+    fetch('http://127.0.0.1:9000/api/screen/push-frame', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frame_b64: b64 })
+    }).catch(() => {});
+
+    if (typeof addEvent === 'function') {
+      addEvent('usr', '👁️ [OCCHIO VISION] Schermata acquisita. Commenta e rileva form.');
+    }
+    const respEl = document.getElementById('resp-body');
+    const respTag = document.getElementById('resp-tag');
+    if (respTag) respTag.textContent = 'VISION EYE...';
+    if (respEl) respEl.textContent = '👁️ AG-JARVIS sta osservando lo schermo e analizzando il contenuto...';
+
+    isVisionAnalyzing = true;
+
+    const res = await fetch('/api/screen/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        frame_b64: b64,
+        detect_form: true,
+        prompt: 'Guarda attentamente questa schermata. Commenta in modo brillante e professionale cosa vedi (pagina aperta, app, contenuti salienti) e rileva se è presente un form di richiesta o preventivo da compilare per l\'Ingegner Badr.'
+      })
+    });
+    const d = await res.json();
+    const commento = d.analysis || 'Ho osservato lo schermo, ma non ho elementi testuali specifici.';
+
+    let htmlReply = commento;
+
+    if (d.form_detected || (d.autofill_mappings && d.autofill_mappings.length > 0)) {
+      const mappings = d.autofill_mappings || [];
+      const fieldsList = mappings.map(m => `<li><strong>${m.field}:</strong> ${m.suggested_value}</li>`).join('');
+      
+      htmlReply += `\n\n📝 **MODULO/FORM RILEVATO!**\nCampi identificati per l'Ingegner Badr:\n${mappings.length ? '<ul style="margin:6px 0; padding-left:20px;">' + fieldsList + '</ul>' : 'Campi pronti per la compilazione.'}\n\n` +
+        `<div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">` +
+        `<button class="h-btn primary" onclick="executeAutofillNow()" style="background:#00ff9f; color:#000; font-weight:bold; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="zap" class="lucide-icon sm" style="stroke:#000;"></i> COMPILA FORM ADESSO</button>` +
+        `<button class="h-btn" onclick="copyBadrDataClipboard()" style="background:rgba(0,240,255,0.2); color:#00f0ff; border:1px solid #00f0ff; padding:8px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="clipboard" class="lucide-icon sm text-cyan"></i> COPIA DATI BADR</button>` +
+        `</div>`;
+      
+      window._lastAutofillScript = d.autofill_script;
+      window._lastAutofillMappings = mappings;
+    }
+
+    if (respEl) respEl.innerHTML = htmlReply.replace(/\n/g, '<br>');
+    if (respTag) respTag.textContent = 'VISION OK (120 FPS)';
+    if (typeof addEvent === 'function') {
+      addEvent('ai', commento.slice(0, 80) + '...');
+    }
+    if (window.playSpeechAudio) {
+      window.playSpeechAudio(commento.slice(0, 200));
+    }
+
+    if (lblTop) lblTop.textContent = 'ON';
+    if (dotTop) dotTop.style.background = '#00ff9f';
+
+  } catch(err) {
+    console.error('[VISION EYE ERR]:', err);
+    if (respEl) respEl.textContent = '👁️ Occhio Vision: Acquisizione annullata (' + err.message + ')';
+    if (lblTop) lblTop.textContent = 'OFF';
+    if (dotTop) dotTop.style.background = '#00f0ff';
+  } finally {
+    isVisionAnalyzing = false;
+    if (eyeBtn) eyeBtn.style.transform = 'scale(1)';
+  }
+};
+
+window.executeAutofillNow = async function() {
+  try {
+    let count = 0;
+    const inputs = document.querySelectorAll('input, textarea, select');
+    const prof = {
+      name: 'Badr El Ouariti',
+      full_name: 'Badr El Ouariti',
+      email: 'badraudi@gmail.com',
+      phone: '3888703508',
+      citta: 'Bologna',
+      city: 'Bologna',
+      indirizzo: 'Bologna & Imola',
+      address: 'Bologna & Imola',
+      mq: '65',
+      note: 'Richiesta diretta da Ingegner Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica'
+    };
+
+    inputs.forEach(inp => {
+      const name = (inp.name || inp.id || '').toLowerCase();
+      for (const [k, v] of Object.entries(prof)) {
+        if (name.includes(k)) {
+          inp.value = v;
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          count++;
+          break;
+        }
+      }
+    });
+
+    if (window._lastAutofillScript) {
+      try { eval(window._lastAutofillScript); } catch(e) {}
+    }
+
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+    alert('⚡ AUTOFILL COMPLETATO!\nCampi compilati con successo con i dati dell\'Ingegner Badr El Ouariti (+39 388 870 3508).');
+  } catch(e) {
+    alert('Errore compilazione automatica: ' + e.message);
+  }
+};
+
+window.copyBadrDataClipboard = function() {
+  const badrText = `Nome: Badr El Ouariti\nEmail: badraudi@gmail.com\nTelefono: +39 388 870 3508\nAzienda: EBGStudio & Pietro Traslochi\nCittà: Bologna / Imola (BO)\nNote: Richiesta diretta da Ingegner Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica`;
+  navigator.clipboard.writeText(badrText).then(() => {
+    alert('📋 Dati dell\'Ingegner Badr copiati negli appunti!');
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[SCREEN ENGINE] Inizializzato. Alt+S per aprire, Alt+A per analizzare.');
+  console.log('[SCREEN & EYE VISION] Inizializzato. Alt+V per OCCHIO VISION, Alt+S per pannello.');
 });
 
 })();
@@ -1230,8 +1582,194 @@ window.switchMasterView = function(view) {
       if (window.setCosmosLayout) window.setCosmosLayout('constellation');
     }, 60);
   }
+  if (window.lucide) {
+    setTimeout(() => lucide.createIcons(), 50);
+  }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) {
+    lucide.createIcons();
+    // Auto-rendering reattivo per qualsiasi nuovo elemento dinamico (chat, modal, card)
+    const observer = new MutationObserver(() => {
+      if (window.lucide) lucide.createIcons();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // ── FULL-DUPLEX LIVE VOICE CONTROLLER & STARK HUD REACTIVITY ───────────
+  let isLiveVoiceActive = false;
+
+  window.toggleLiveVoiceLink = async function() {
+    const btn = document.getElementById('btn-live-voice-link');
+    const indicator = document.getElementById('voice-link-indicator');
+    const label = document.getElementById('voice-link-label');
+    const statusText = document.getElementById('voice-dialogue-status-text');
+    const spectrum = document.getElementById('voice-live-spectrum');
+    const energyBar = document.getElementById('voice-energy-bar');
+    const arcCore = document.querySelector('.reactor-inner-core');
+
+    if (!isLiveVoiceActive) {
+      if (window.cyberAudio && window.cyberAudio.startContinuousVoice) {
+        const ok = await window.cyberAudio.startContinuousVoice(
+          // On Speech Start
+          () => {
+            if (statusText) statusText.innerText = '⚡ user speaking (listening)...';
+            if (statusText) statusText.style.color = '#00f0ff';
+            if (arcCore) arcCore.style.boxShadow = '0 0 40px #00f0ff, inset 0 0 25px #00f0ff';
+          },
+          // On Speech End
+          () => {
+            if (statusText) statusText.innerText = '✦ Jarvis thinking...';
+            if (statusText) statusText.style.color = '#ffd700';
+            if (arcCore) arcCore.style.boxShadow = '0 0 30px #ffd700, inset 0 0 20px #ffd700';
+            window.playLaserChime && window.playLaserChime();
+          },
+          // On Energy Update (64-band FFT)
+          (rms, dataArray) => {
+            if (energyBar) {
+              const pct = Math.min(100, Math.round(rms * 400));
+              energyBar.style.width = pct + '%';
+            }
+            if (arcCore) {
+              const scale = 1 + (rms * 0.4);
+              arcCore.style.transform = `scale(${scale})`;
+            }
+          }
+        );
+
+        if (ok) {
+          isLiveVoiceActive = true;
+          if (btn) btn.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.4))';
+          if (btn) btn.style.borderColor = '#ef4444';
+          if (indicator) {
+            indicator.style.background = '#ef4444';
+            indicator.style.boxShadow = '0 0 12px #ef4444';
+          }
+          if (label) label.innerText = '🔴 HOT MIC ACTIVE (Alt+M)';
+          if (statusText) statusText.innerText = '• hot mic active, speak freely, sir';
+          if (spectrum) spectrum.style.display = 'block';
+        }
+      }
+    } else {
+      if (window.cyberAudio && window.cyberAudio.stopContinuousVoice) {
+        window.cyberAudio.stopContinuousVoice();
+      }
+      isLiveVoiceActive = false;
+      if (btn) btn.style.background = 'linear-gradient(135deg, rgba(0,229,255,0.12), rgba(0,100,255,0.22))';
+      if (btn) btn.style.borderColor = '#00e5ff';
+      if (indicator) {
+        indicator.style.background = '#00e5ff';
+        indicator.style.boxShadow = '0 0 8px #00e5ff';
+      }
+      if (label) label.innerText = '🎙️ LIVE VOICE LINK (Alt+M)';
+      if (statusText) statusText.innerText = '• standby, press Alt+M to talk';
+      if (statusText) statusText.style.color = '#64748b';
+      if (spectrum) spectrum.style.display = 'none';
+      if (arcCore) {
+        arcCore.style.transform = 'scale(1)';
+        arcCore.style.boxShadow = '';
+      }
+    }
+  };
+
+  // Scorciatoia Globale Alt + M per Microfono Continuo
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+      e.preventDefault();
+      window.toggleLiveVoiceLink();
+    }
+  });
+
+  // ── STARK COMMAND PALETTE (Ctrl + K) ──────────────────────────────────
+  window.openCommandPalette = function() {
+    const p = document.getElementById('stark-cmd-palette');
+    const inp = document.getElementById('stark-cmd-input');
+    if (p) {
+      p.classList.add('open');
+      if (inp) {
+        inp.value = '';
+        setTimeout(() => inp.focus(), 50);
+      }
+      window.playUiClick && window.playUiClick();
+    }
+  };
+
+  window.closeCommandPalette = function() {
+    const p = document.getElementById('stark-cmd-palette');
+    if (p) p.classList.remove('open');
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      const p = document.getElementById('stark-cmd-palette');
+      if (p && p.classList.contains('open')) {
+        window.closeCommandPalette();
+      } else {
+        window.openCommandPalette();
+      }
+    } else if (e.key === 'Escape') {
+      window.closeCommandPalette();
+    }
+  });
+
+  // Ricerca comandi in tempo reale collegata al Fuzzy Matcher Rust
+  window.handlePaletteInput = async function(val) {
+    if (!val || val.trim() === '') return;
+    try {
+      const res = await fetch('http://localhost:9000/api/fuzzy/match-command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: val })
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.best_match) {
+          const status = document.getElementById('voice-dialogue-status-text');
+          if (status) status.innerText = `✦ Fuzzy Match: ${d.best_match} (${d.latency_us}µs)`;
+        }
+      }
+    } catch(e) {}
+  };
+});
 </script>
+
+<!-- Holographic Scanlines Overlay -->
+<div class="stark-scanlines"></div>
+
+<!-- Stark Command Palette Modal (Ctrl+K) -->
+<div id="stark-cmd-palette" class="stark-palette-backdrop" onclick="if(event.target===this)closeCommandPalette()">
+  <div class="stark-palette-modal">
+    <div class="stark-palette-input-wrap">
+      <span style="color:#00e5ff; font-size:18px;">⚡</span>
+      <input type="text" id="stark-cmd-input" class="stark-palette-input" placeholder="Digita un ordine (es: preventivo, excel, vision, clean)..." oninput="handlePaletteInput(this.value)">
+      <span style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace;">ESC per chiudere</span>
+    </div>
+    <div class="stark-palette-results">
+      <div class="stark-palette-item" onclick="window.toggleLiveVoiceLink(); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>🎙️</span><span>Attiva / Disattiva Microfono Full-Duplex (Hot Mic)</span></div>
+        <span class="stark-palette-item-shortcut">Alt+M</span>
+      </div>
+      <div class="stark-palette-item" onclick="window.captureAndCommentVision(); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>👁️</span><span>Cattura Schermo HD & Vision AI Comment</span></div>
+        <span class="stark-palette-item-shortcut">Alt+V</span>
+      </div>
+      <div class="stark-palette-item" onclick="window.executeAutofillNow(); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>⚡</span><span>Compila Campi Modulo con Profilo Badr (Sub-2µs)</span></div>
+        <span class="stark-palette-item-shortcut">Alt+F</span>
+      </div>
+      <div class="stark-palette-item" onclick="fetch('http://localhost:9000/api/math/quote-estimate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mq:75, piano_partenza:1, piano_arrivo:1, ascensore_partenza:true, ascensore_arrivo:true, km_trasferta:5})}).then(r=>r.json()).then(d=>alert('Preventivo Rust Calcolato: €' + d.total_price + ' in ' + d.execution_time_us + 'µs')); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>🧮</span><span>Calcola Preventivo Istantaneo Fast Math (4µs)</span></div>
+        <span class="stark-palette-item-shortcut">Enter</span>
+      </div>
+      <div class="stark-palette-item" onclick="window.playArcReactor && window.playArcReactor(); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>🔊</span><span>Riproduci Risonanza Magnetica Arc Reactor (Hound WAV)</span></div>
+        <span class="stark-palette-item-shortcut">Audio</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="three.min.js"></script>
 <script src="OrbitControls.js"></script>
