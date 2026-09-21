@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 VAULT_DB = os.path.join(BASE_DIR, "mail_vault.db")
 RUST_BRIDGE = "http://127.0.0.1:9000"
+SCRAPINGBEE_KEY = os.environ.get("SCRAPINGBEE_API_KEY", "9SFDK0AECW1DUPYU0BM04S7NVZB5KXR8P19ZIYC7AFSLDRO1PZNALSHO8LTQZ814B3X8BGZN0KEX8UHD")
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -62,16 +63,23 @@ def is_valid_phone(raw):
 
 
 def extract_phones(text):
+    # Rimuove esplicitamente diciture P.IVA o codici fiscali
+    clean_text = re.sub(r'(?i)p\.?\s*iva\s*[:\s]*\d+', ' ', text)
+    clean_text = re.sub(r'(?i)partita\s*iva\s*[:\s]*\d+', ' ', clean_text)
+    clean_text = re.sub(r'(?i)capitale\s*sociale\s*[:\s]*\d+', ' ', clean_text)
+    clean_text = re.sub(r'(?i)rea\s*[:\s]*\d+', ' ', clean_text)
+
     found = []
-    for m in MOBILE_RE.finditer(text):
+    # SOLO cellulari italiani personali (3xx xxx xxxx)
+    for m in MOBILE_RE.finditer(clean_text):
         c = clean_phone(m.group())
         if c and is_valid_phone(c):
-            found.append(c)
-    for m in LANDLINE_RE.finditer(text):
-        c = clean_phone(m.group())
-        if c and is_valid_phone(c):
-            found.append(c)
-    return list(dict.fromkeys(found))  # Deduplica preservando ordine
+            d = re.sub(r'[^\d]', '', c)
+            if d.startswith("39"):
+                d = d[2:]
+            if d.startswith("3") and len(d) == 10:
+                found.append(c)
+    return list(dict.fromkeys(found))
 
 
 def get_db():
@@ -99,6 +107,8 @@ def get_db():
             notes            TEXT DEFAULT ''
         )
     """)
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_url ON verified_leads_2026(post_url) WHERE post_url != ''")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_phone ON verified_leads_2026(phone) WHERE phone != 'DM_ONLY'")
     conn.commit()
     return conn
 
@@ -106,19 +116,21 @@ def get_db():
 def is_known(conn, phone=None, post_url=None):
     c = conn.cursor()
     if phone and phone != "DM_ONLY":
-        d = re.sub(r"[^\d]", "", phone)
+        d = re.sub(r"[^\d]", "", str(phone))
         if d.startswith("39"):
             d = d[2:]
+        if len(d) >= 8:
+            rows = c.execute(
+                "SELECT id FROM verified_leads_2026 WHERE REPLACE(REPLACE(REPLACE(phone,'+',''),' ',''),'-','') LIKE ?",
+                ("%" + d[-8:],)
+            ).fetchall()
+            if rows:
+                return True
+    if post_url and len(str(post_url).strip()) > 10:
+        clean_url = str(post_url).strip()
         rows = c.execute(
-            "SELECT id FROM verified_leads_2026 WHERE REPLACE(REPLACE(REPLACE(phone,'+',''),' ',''),'-','') LIKE ?",
-            ("%" + d[-8:],)
-        ).fetchall()
-        if rows:
-            return True
-    if post_url:
-        rows = c.execute(
-            "SELECT id FROM verified_leads_2026 WHERE post_url=? OR notes LIKE ?",
-            (post_url, "%" + post_url[:50] + "%")
+            "SELECT id FROM verified_leads_2026 WHERE post_url = ? OR (length(post_url) > 10 AND post_url LIKE ?)",
+            (clean_url, "%" + clean_url[:45] + "%")
         ).fetchall()
         if rows:
             return True
@@ -223,14 +235,138 @@ def osint_search_phone(name, city):
     return ""
 
 
+CLIENT_INTENT_KEYWORDS = [
+    "cerco", "cercasi", "ho bisogno", "serve", "servirebbe", "chi può", "chi puo", 
+    "chi ha un furgone", "dovrei portare", "devo spostare", "devo traslocare",
+    "quanto costa", "preventivo per", "sgomberare", "svuotare", "trasferire",
+    "qualcuno disponibile", "cerchiamo ditta", "cerco qualcuno", "richiesta preventivo"
+]
+
+COMPETITOR_BLACKLIST = [
+    "offro traslochi", "offresi", "siamo una ditta", "eseguiamo traslochi", 
+    "eseguo sgomberi", "la nostra azienda", "la nostra ditta", "contattaci per info", 
+    "lavori edili", "offriamo servizi", "p.iva", "partita iva", "s.r.l.", "srl", 
+    "snc", "ditta specializzata", "anni di esperienza", "visita il nostro sito",
+    "dolcetraslocare", "emiliana sgomberi", "roadsavior", "svuotapp"
+]
+
+def is_genuine_client_request(text):
+    t = text.lower()
+    # 1. Se contiene frasi tipiche di concorrenti, scarta categoricamente
+    if any(b in t for b in COMPETITOR_BLACKLIST):
+        return False
+    # 2. Se contiene parole di richiesta esplicita di cliente privato, accetta
+    if any(k in t for k in CLIENT_INTENT_KEYWORDS):
+        return True
+    return False
+
+def extract_author_phone_only(text):
+    """Estrae il numero SOLO se il testo indica che appartiene all'autore che scrive."""
+    t_low = text.lower()
+    # Indicatori che l'utente sta lasciando il SUO recapito
+    author_indicators = ["mio", "cell", "cellulare", "whatsapp", "chiamatemi", "contattatemi", "lascio", "tel", "numero"]
+    if not any(ind in t_low for ind in author_indicators):
+        return ""
+    phones = extract_phones(text)
+def scrape_subito_live_scrapingbee(city="bologna", query="trasloco", limit=5):
+    """
+    Estrae annunci reali di privati da Subito.it per Bologna e provincia
+    utilizzando ScrapingBee per il bypass completo del WAF Cloudflare.
+    """
+    if not SCRAPINGBEE_KEY:
+        return []
+
+    target_queries = [
+        "vendo per trasloco",
+        "sgombero cantina",
+        "cerco aiuto trasloco",
+        "regalo per sgombero"
+    ] if "trasloc" in query.lower() or "sgomb" in query.lower() else [query]
+
+    ads_found = []
+    seen_urls = set()
+
+    for q_term in target_queries:
+        if len(ads_found) >= limit:
+            break
+        search_url = f"https://www.subito.it/annunci-emilia-romagna/vendita/usato/?q={urllib.parse.quote_plus(q_term)}&r=bologna-bo"
+        try:
+            r = requests.get(
+                "https://app.scrapingbee.com/api/v1/",
+                params={
+                    "api_key": SCRAPINGBEE_KEY,
+                    "url": search_url,
+                    "render_js": "false",
+                    "country_code": "it"
+                },
+                timeout=25
+            )
+            if r.status_code != 200:
+                continue
+
+            soup = BeautifulSoup(r.text, "html.parser")
+            links = [l.get("href") for l in soup.find_all("a", href=re.compile(r"/.*-\d+\.htm")) if l.get("href")]
+            uniq_links = [u for u in dict.fromkeys(links) if u not in seen_urls][:3]
+
+            for ad_url in uniq_links:
+                seen_urls.add(ad_url)
+                if len(ads_found) >= limit:
+                    break
+                # Fetch dettaglio singolo annuncio
+                r_ad = requests.get(
+                    "https://app.scrapingbee.com/api/v1/",
+                    params={
+                        "api_key": SCRAPINGBEE_KEY,
+                        "url": ad_url,
+                        "render_js": "false",
+                        "country_code": "it"
+                    },
+                    timeout=20
+                )
+                if r_ad.status_code != 200:
+                    continue
+
+                s_ad = BeautifulSoup(r_ad.text, "html.parser")
+                h1 = s_ad.find("h1")
+                ad_title = h1.get_text(strip=True) if h1 else "Annuncio Subito Privato"
+                body_text = s_ad.get_text(" ")
+
+                # Estrazione telefoni presenti nel testo dell'annuncio
+                phones = extract_phones(body_text)
+                author_phone = phones[0] if phones else ""
+
+                # Estrai descrizione specifica
+                desc_p = []
+                for p in s_ad.find_all("p"):
+                    pt = p.get_text(strip=True)
+                    if len(pt) > 25 and not any(ign in pt.lower() for ign in ["cookie", "privacy", "copyright", "subito.it"]):
+                        desc_p.append(pt)
+                desc_text = " ".join(desc_p[:2]) if desc_p else body_text[:200]
+
+                ads_found.append({
+                    "title": ad_title,
+                    "url": ad_url,
+                    "phone": author_phone,
+                    "text": desc_text,
+                    "source": "Subito.it Live (ScrapingBee)"
+                })
+                time.sleep(0.5)
+
+        except Exception as e:
+            print(f"[ScrapingBee Subito err]: {e}")
+            continue
+
+    return ads_found
+
+
 def get_query_variants(query, city):
-    """Genera varianti di query per massimizzare la copertura dei risultati."""
+    """Genera varianti di query rigorosamente orientate alle RICHIESTE di privati."""
     return [
-        query + " " + city + " privato cellulare",
-        query + " urgente " + city + " preventivo",
-        "cerco " + query + "  " + city + " disponibile",
-        "sgombero " + city + " privato numero",
-        query + " " + city + " contatti",
+        f"\"cerco {query}\" {city} privato",
+        f"\"ho bisogno di {query}\" {city}",
+        f"\"chi fa {query}\" {city} privato",
+        f"\"devo {query}\" {city}",
+        f"\"preventivo {query}\" {city} privato"
     ]
 
 
@@ -244,76 +380,130 @@ def run(params):
     leads_out = []
     seen_phones = set()
 
-    query_variants = get_query_variants(query, city)
-
-    for q_variant in query_variants:
+    # ── LIVELLO 1: SCRAPING DIRETTO SUBITO.IT CON SCRAPINGBEE (NO CLOUDFLARE 403) ──
+    live_subito_ads = scrape_subito_live_scrapingbee(city=city, query=query, limit=limit)
+    for ad in live_subito_ads:
         if len(leads_out) >= limit:
             break
+        full_text = ad["title"] + " " + ad["text"]
+        t_low = full_text.lower()
 
-        ddg_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(q_variant)
-        try:
-            r = requests.get(ddg_url, headers=HEADERS, timeout=8)
-            soup = BeautifulSoup(r.text, "html.parser")
-        except Exception:
+        # 1. Rigoroso scarto competitor / ditte
+        if any(b in t_low for b in COMPETITOR_BLACKLIST):
             continue
 
-        items = soup.find_all("div", class_="result__body")
-        if not items:
+        # 2. Richiesta genuina di privato o vendita mobili causa trasloco
+        is_client = is_genuine_client_request(full_text) or ("vendo per trasloco" in t_low) or ("causa trasloco" in t_low)
+        if not is_client:
             continue
 
-        for item in items:
+        if is_known(conn, post_url=ad["url"]):
+            continue
+
+        service = "Trasloco Residenziale"
+        if any(k in full_text.lower() for k in ("sgombero", "cantina", "garage", "svuotare")):
+            service = "Sgombero & Smaltimento"
+        elif any(k in full_text.lower() for k in ("deposito", "custodia")):
+            service = "Deposito & Custodia Mobili"
+
+        mq = 80 if "appartamento" in full_text.lower() else 50
+        budget = mq * 9.5 if mq > 60 else 380.0
+        phone = ad["phone"]
+
+        if phone and phone not in seen_phones and not is_known(conn, phone=phone):
+            seen_phones.add(phone)
+            wa = whatsapp_link(phone, city_disp, service)
+            lead = {
+                "name": "Cliente Subito (" + ad["title"][:25].strip() + ")",
+                "phone": phone,
+                "city": city_disp,
+                "service": service,
+                "mq": mq,
+                "budget": budget,
+                "source": "Subito.it Certificato",
+                "verified_status": "NUMERO_AUTORE_CERTIFICATO",
+                "contact_type": "TELEFONO_CERTIFICATO",
+                "post_url": ad["url"],
+                "dm_template": dm_template(city_disp, service),
+                "whatsapp_link": wa,
+                "notes": ad["text"][:150],
+            }
+            save_lead(conn, lead)
+            leads_out.append(lead)
+        else:
+            dm = dm_template(city_disp, service)
+            lead = {
+                "name": "Cliente Subito (" + ad["title"][:25].strip() + ")",
+                "phone": "DM_ONLY",
+                "city": city_disp,
+                "service": service,
+                "mq": mq,
+                "budget": budget,
+                "source": "Subito.it (DM Diretto)",
+                "verified_status": "DM_READY",
+                "contact_type": "MESSENGER_DM",
+                "post_url": ad["url"],
+                "dm_template": dm,
+                "whatsapp_link": "",
+                "notes": ad["text"][:150],
+            }
+            save_lead(conn, lead)
+            leads_out.append(lead)
+
+    # ── LIVELLO 2: FALLBACK DUCKDUCKGO SE SERVONO ALTRI LEAD ──
+    if len(leads_out) < limit:
+        query_variants = get_query_variants(query, city)
+        for q_variant in query_variants:
             if len(leads_out) >= limit:
                 break
-
-            title_el   = item.find("a", class_="result__a")
-            snippet_el = item.find("a", class_="result__snippet")
-            link_el    = item.find("a", class_="result__a")
-
-            title   = title_el.get_text(strip=True)   if title_el   else "Richiesta Privata"
-            snippet = snippet_el.get_text(strip=True) if snippet_el else ""
-            link    = link_el.get("href", "")          if link_el    else ""
-
-            # Salta se gia visto questo annuncio
-            if is_known(conn, post_url=link):
+            ddg_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(q_variant)
+            try:
+                r = requests.get(ddg_url, headers=HEADERS, timeout=8)
+                soup = BeautifulSoup(r.text, "html.parser")
+            except Exception:
                 continue
 
-            full_text = title + " " + snippet
+            items = soup.find_all("div", class_="result__body")
+            if not items:
+                continue
 
-            # Tipo servizio
-            service = "Trasloco Residenziale"
-            if any(k in full_text.lower() for k in ("sgombero", "cantina", "garage")):
-                service = "Sgombero & Smaltimento"
-            elif any(k in full_text.lower() for k in ("ufficio", "azienda", "magazzino")):
-                service = "Trasloco Commerciale"
+            for item in items:
+                if len(leads_out) >= limit:
+                    break
+                title_el = item.find("a", class_="result__a")
+                snippet_el = item.find("a", class_="result__snippet")
+                link_el = item.find("a", class_="result__a")
 
-            mq = 80 if "appartamento" in full_text.lower() else 50
-            budget = mq * 9.5 if mq > 60 else 420.0
+                title = title_el.get_text(strip=True) if title_el else "Richiesta Privata"
+                snippet = snippet_el.get_text(strip=True) if snippet_el else ""
+                link = link_el.get("href", "") if link_el else ""
+                full_text = title + " " + snippet
 
-            # ── LIVELLO 1: Numero nei snippet SERP ───────────────────
-            phones = extract_phones(full_text)
+                if not is_genuine_client_request(full_text):
+                    continue
+                if is_known(conn, post_url=link):
+                    continue
 
-            # ── LIVELLO 2: Scraping pagina annuncio ──────────────────
-            if not phones and link:
-                time.sleep(0.5)
-                page_phones, author = scrape_page_for_phones(link)
-                phones = page_phones
-            else:
-                author = ""
+                service = "Trasloco Residenziale"
+                if any(k in full_text.lower() for k in ("sgombero", "cantina", "garage", "svuotare")):
+                    service = "Sgombero & Smaltimento"
 
-            if phones:
-                phone = phones[0]
-                if phone not in seen_phones and not is_known(conn, phone=phone):
+                mq = 80 if "appartamento" in full_text.lower() else 50
+                budget = mq * 9.5 if mq > 60 else 380.0
+                phone = extract_author_phone_only(full_text)
+
+                if phone and phone not in seen_phones and not is_known(conn, phone=phone):
                     seen_phones.add(phone)
                     wa = whatsapp_link(phone, city_disp, service)
                     lead = {
-                        "name": author if author else "Privato (" + title[:25].strip() + ")",
+                        "name": "Cliente Privato (" + title[:25].strip() + ")",
                         "phone": phone,
                         "city": city_disp,
                         "service": service,
                         "mq": mq,
                         "budget": budget,
-                        "source": "OSINT DuckDuckGo + Web",
-                        "verified_status": "CERTIFICATO",
+                        "source": "Post Privato Verificato",
+                        "verified_status": "NUMERO_AUTORE_CERTIFICATO",
                         "contact_type": "TELEFONO_CERTIFICATO",
                         "post_url": link,
                         "dm_template": dm_template(city_disp, service),
@@ -322,55 +512,27 @@ def run(params):
                     }
                     save_lead(conn, lead)
                     leads_out.append(lead)
-                continue
-
-            # ── LIVELLO 3: OSINT ricerca nome su web ─────────────────
-            if author:
-                osint_phone = osint_search_phone(author, city_disp)
-                if osint_phone and osint_phone not in seen_phones and not is_known(conn, phone=osint_phone):
-                    seen_phones.add(osint_phone)
-                    wa = whatsapp_link(osint_phone, city_disp, service)
+                else:
+                    dm = dm_template(city_disp, service)
                     lead = {
-                        "name": author,
-                        "phone": osint_phone,
+                        "name": "Cliente Privato (" + title[:25].strip() + ")",
+                        "phone": "DM_ONLY",
                         "city": city_disp,
                         "service": service,
                         "mq": mq,
                         "budget": budget,
-                        "source": "OSINT Web Cross-Reference",
-                        "verified_status": "OSINT_VERIFICATO",
-                        "contact_type": "TELEFONO_OSINT",
+                        "source": "Richiesta Gruppo/Web (DM)",
+                        "verified_status": "DM_READY",
+                        "contact_type": "MESSENGER_DM",
                         "post_url": link,
-                        "dm_template": dm_template(city_disp, service),
-                        "whatsapp_link": wa,
-                        "notes": "Ricavato tramite OSINT da nome autore.",
+                        "dm_template": dm,
+                        "whatsapp_link": "",
+                        "notes": snippet[:150] or "Cliente cerca il servizio. Contattare via Messenger con Magic Link.",
                     }
                     save_lead(conn, lead)
                     leads_out.append(lead)
-                    continue
 
-            # ── FALLBACK: DM_READY ────────────────────────────────────
-            if not is_known(conn, post_url=link):
-                dm = dm_template(city_disp, service)
-                lead = {
-                    "name": "Privato (" + title[:30].strip() + ")",
-                    "phone": "DM_ONLY",
-                    "city": city_disp,
-                    "service": service,
-                    "mq": mq,
-                    "budget": budget,
-                    "source": "Subito/Bakeca (DM Ready)",
-                    "verified_status": "DM_READY",
-                    "contact_type": "MESSENGER_DM",
-                    "post_url": link,
-                    "dm_template": dm,
-                    "whatsapp_link": "",
-                    "notes": "Numero non pubblico. Usa il link post per contattare via DM.",
-                }
-                save_lead(conn, lead)
-                leads_out.append(lead)
-
-        time.sleep(0.8)  # Rispetta rate limit DuckDuckGo
+            time.sleep(0.8)
 
     conn.close()
 
@@ -389,3 +551,4 @@ def run(params):
             str(n_phone) + " numeri verificati, " + str(n_dm) + " contatti DM-Ready."
         ),
     }
+

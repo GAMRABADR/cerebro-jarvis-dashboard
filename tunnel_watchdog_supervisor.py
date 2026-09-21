@@ -46,21 +46,19 @@ CLOUDFLARED_BIN = os.path.join(BASE_DIR, "cloudflared.exe")
 SERVER_PY       = os.path.join(BASE_DIR, "server.py")
 
 # Rust Bridge: seleziona automaticamente il binario compilato più di recente (mtime)
+_RUST_APEX    = os.path.join(JARVIS_DIR, "target", "release", "ebj_apex_bridge.exe")
 _RUST_RELEASE = os.path.join(JARVIS_DIR, "target", "release", "jarvis-bridge.exe")
 _RUST_DEBUG   = os.path.join(JARVIS_DIR, "target", "debug",   "jarvis-bridge.exe")
 
 def get_best_rust_bin():
-    rel_exists = os.path.exists(_RUST_RELEASE)
-    deb_exists = os.path.exists(_RUST_DEBUG)
-    if rel_exists and deb_exists:
-        return _RUST_RELEASE if os.path.getmtime(_RUST_RELEASE) >= os.path.getmtime(_RUST_DEBUG) else _RUST_DEBUG
-    elif rel_exists:
-        return _RUST_RELEASE
-    elif deb_exists:
-        return _RUST_DEBUG
+    candidates = [_RUST_APEX, _RUST_RELEASE, _RUST_DEBUG]
+    existing = [c for c in candidates if os.path.exists(c)]
+    if existing:
+        return max(existing, key=os.path.getmtime)
     return _RUST_RELEASE
 
 RUST_BRIDGE_BIN = get_best_rust_bin()
+
 
 # Telegram per alert (opzionale - non blocca se non disponibile)
 TG_BOT_TOKEN = ""
@@ -181,13 +179,15 @@ def start_server():
     return proc
 
 def start_rust_bridge():
-    if not os.path.exists(RUST_BRIDGE_BIN):
-        log(f"ERRORE: jarvis-bridge.exe non trovato in: {RUST_BRIDGE_BIN}", "ERROR")
+    bin_to_run = get_best_rust_bin()
+    if not os.path.exists(bin_to_run):
+        log(f"ERRORE: jarvis-bridge.exe non trovato in: {bin_to_run}", "ERROR")
         return None
-    log(f"🔄 Avvio/Ripristino Rust Bridge (porta 9000) → {os.path.basename(os.path.dirname(RUST_BRIDGE_BIN))}")
+    log(f"🔄 Avvio/Ripristino Rust Bridge (porta 9000) → {os.path.basename(bin_to_run)}")
     _backoff_if_crashing("rust_bridge")
     proc = subprocess.Popen(
-        [RUST_BRIDGE_BIN],
+        [bin_to_run],
+
         cwd=os.path.dirname(RUST_BRIDGE_BIN),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
