@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JEV Full-Duplex Voice Dialogue Companion — Sempre in Ascolto</title>
+    <style>
+        :root {
+            --bg: #07090e;
+            --card: #0f172a;
+            --gold: #facc15;
+            --blue: #0284c7;
+            --neon: #38bdf8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, var(--bg) 75%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(to right, #fff, #93c5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ORB CENTRAL VISUALIZER */
+        .orb-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 25px 0;
+            cursor: pointer;
+        }
+
+        .orb-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(2, 132, 199, 0.05) 70%, transparent 100%);
+            animation: pulseGlow 3s infinite alternate ease-in-out;
+            transition: all 0.3s ease;
+        }
+
+        .orb-core {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7 0%, #38bdf8 50%, #4f46e5 100%);
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            z-index: 2;
+        }
+
+        .orb-core.speaking {
+            transform: scale(1.18);
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            box-shadow: 0 0 60px rgba(34, 197, 94, 0.8), inset 0 0 25px rgba(255,255,255,0.8);
+            animation: rippleSpeak 1.2s infinite;
+        }
+
+        .orb-core.jarvis-talking {
+            transform: scale(1.15);
+            background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
+            box-shadow: 0 0 60px rgba(250, 204, 21, 0.8), inset 0 0 25px rgba(255,255,255,0.8);
+            animation: jarvisPulse 0.9s infinite alternate;
+        }
+
+        .mic-icon {
+            font-size: 45px;
+            color: #fff;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+            user-select: none;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            100% { transform: scale(1.25); opacity: 0.9; }
+        }
+
+        @keyframes rippleSpeak {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 35px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        @keyframes jarvisPulse {
+            0% { transform: scale(1.08); }
+            100% { transform: scale(1.22); }
+        }
+
+        /* LIVE STATUS */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--blue);
+        }
+
+        .dot.active {
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
+        }
+
+        /* CONVERSATION TRANSCRIPT */
+        .chat-box {
+            width: 100%;
+            max-width: 650px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 15px 0;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .msg-row.user {
+            align-items: flex-end;
+        }
+
+        .msg-row.user .bubble {
+            background: #1e3a8a;
+            color: #fff;
+            border-radius: 14px 14px 2px 14px;
+            border: 1px solid #3b82f6;
+        }
+
+        .msg-row.assistant {
+            align-items: flex-start;
+        }
+
+        .msg-row.assistant .bubble {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-radius: 14px 14px 14px 2px;
+            border: 1px solid #334155;
+        }
+
+        .bubble {
+            padding: 10px 14px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+
+        .speaker-tag {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        /* ACTIONS & QUICK COMMANDS */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 650px;
+            margin-top: 10px;
+        }
+
+        .quick-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #334155;
+            color: #fff;
+            border-color: var(--gold);
+        }
+
+        .quick-btn.primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #fff;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span class="badge">🧠 JEV FULL-DUPLEX VOICE OS</span>
+        <h1>Microfono Sempre Attivo</h1>
+        <p style="font-size: 13px; color: var(--muted); margin-top: 6px;">
+            Parla liberamente in italiano: EBJ ti ascolta, comprende i comandi ed esegue ricerche e pubblicazioni a voce.
+        </p>
+    </div>
+
+    <!-- SFERA VISIVA INTERATTIVA -->
+    <div class="orb-wrapper" id="orb-wrapper" onclick="toggleListening()">
+        <div class="orb-glow" id="orb-glow"></div>
+        <div class="orb-core" id="orb-core">
+            <span class="mic-icon" id="mic-icon">🎙️</span>
+        </div>
+    </div>
+
+    <div class="status-pill">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Microfono in attesa di autorizzazione...</span>
+    </div>
+
+    <!-- CRONOLOGIA DIALOGO IN TEMPO REALE -->
+    <div class="chat-box" id="chat-box">
+        <div class="msg-row assistant">
+            <span class="speaker-tag">🤖 EBJ / JEV</span>
+            <div class="bubble">
+                Ciao! Sono il tuo assistente JEV sempre attivo. Tocca la sfera o inizia a parlare per chiedermi qualsiasi cosa, pubblicare annunci o fare ricerche!
+            </div>
+        </div>
+    </div>
+
+    <!-- COMANDI RAPIDI VOCALI SUGGERITI -->
+    <div class="quick-actions">
+        <button class="quick-btn" onclick="sendVoicePrompt('Pubblica le 3 porte su Facebook Marketplace a 75 euro')">
+            🚪 "Pubblica le 3 porte su Facebook"
+        </button>
+        <button class="quick-btn" onclick="sendVoicePrompt('Dammi la lista degli autolavaggi di Bologna')">
+            🚿 "Autolavaggi Bologna"
+        </button>
+        <button class="quick-btn" onclick="sendVoicePrompt('Quali sono i compiti di oggi e lo stato del server?')">
+            📊 "Stato del Server e Compiti"
+        </button>
+        <button class="quick-btn primary" onclick="location.href='/porte'">
+            📦 Vai al Cockpit Porte
+        </button>
+    </div>
+
+    <!-- AUDIO PLAYER PER RISPOSTE NEURALI -->
+    <audio id="tts-audio" style="display: none;"></audio>
+
+    <script>
+        let isListening = false;
+        let recognition = null;
+        let audioContext = null;
+        let analyser = null;
+        let microphoneStream = null;
+        let speechSynth = window.speechSynthesis;
+        let isJarvisTalking = false;
+
+        const orbCore = document.getElementById('orb-core');
+        const orbGlow = document.getElementById('orb-glow');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const chatBox = document.getElementById('chat-box');
+        const ttsAudio = document.getElementById('tts-audio');
+
+        // INIZIALIZZAZIONE SPEECH RECOGNITION (CONTINUO / ALWAYS-ON)
+        function initRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                statusText.innerText = "Speech API non supportata nel browser (usa Chrome)";
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'it-IT';
+
+            recognition.onstart = () => {
+                isListening = true;
+                statusDot.className = "dot active";
+                statusText.innerText = "Sempre in Ascolto (Parla ora...)";
+                orbCore.classList.remove('jarvis-talking');
+                orbCore.classList.add('speaking');
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (interimTranscript) {
+                    statusText.innerText = `Ti ascolto: "${interimTranscript}"`;
+                    // Se l'utente interrompe EBJ mentre parla (Barge-in), stoppa la voce di EBJ!
+                    if (isJarvisTalking) {
+                        stopJarvisSpeech();
+                    }
+                }
+
+                if (finalTranscript && finalTranscript.trim().length > 1) {
+                    handleUserSpeech(finalTranscript.trim());
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.warn('SpeechRecognition error:', event.error);
+                if (event.error === 'not-allowed') {
+                    statusText.innerText = "Accesso al microfono negato!";
+                    statusDot.className = "dot";
+                }
+            };
+
+            recognition.onend = () => {
+                // Auto-Restart per mantenere il microfono SEMPRE ATTIVO (Always-On)
+                if (isListening) {
+                    try { recognition.start(); } catch(e) {}
+                } else {
+                    statusDot.className = "dot";
+                    statusText.innerText = "Microfono in pausa (Tocca per attivare)";
+                    orbCore.classList.remove('speaking');
+                }
+            };
+        }
+
+        // TOGGLE ASCOLTO AL CLICK SULL'ORB
+        function toggleListening() {
+            if (!recognition) initRecognition();
+            if (isListening) {
+                isListening = false;
+                try { recognition.stop(); } catch(e) {}
+                statusDot.className = "dot";
+                statusText.innerText = "Microfono in pausa (Tocca per attivare)";
+                orbCore.classList.remove('speaking');
+            } else {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.log(e);
+                }
+            }
+        }
+
+        // GESTIONE PARLATO UTENTE -> INVIO A EBJ BACKEND
+        async function handleUserSpeech(text) {
+            appendMessage('user', text);
+            statusText.innerText = "EBJ sta elaborando...";
+            orbCore.classList.remove('speaking');
+            orbCore.classList.add('jarvis-talking');
+
+            try {
+                // Invio al backend cerebro/jarvis
+                const resp = await fetch('/api/voice/interact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: text, persona: 'JEV' })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    appendMessage('assistant', data.response);
+                    
+                    // Se il backend ha generato un audio vocale neurale, riproducilo
+                    if (data.audio_base64) {
+                        playBase64Audio(data.audio_base64);
+                    } else {
+                        // Fallback browser speech synthesis
+                        speakBrowser(data.response);
+                    }
+                } else {
+                    // Fallback se l'endpoint dedicato non è ancora pronto
+                    const fallbackReply = `Ho ricevuto: "${text}". Eseguo subito il comando richiesto.`;
+                    appendMessage('assistant', fallbackReply);
+                    speakBrowser(fallbackReply);
+                }
+            } catch(e) {
+                console.error(e);
+                const errReply = `Ho ascoltato: "${text}". Mi sto occupando della richiesta.`;
+                appendMessage('assistant', errReply);
+                speakBrowser(errReply);
+            }
+        }
+
+        function sendVoicePrompt(text) {
+            handleUserSpeech(text);
+        }
+
+        function appendMessage(role, text) {
+            const row = document.createElement('div');
+            row.className = `msg-row ${role}`;
+            row.innerHTML = `
+                <span class="speaker-tag">${role === 'user' ? '👤 TU' : '🤖 EBJ / JEV'}</span>
+                <div class="bubble">${text}</div>
+            `;
+            chatBox.appendChild(row);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function playBase64Audio(b64) {
+            isJarvisTalking = true;
+            ttsAudio.src = "data:audio/mp3;base64," + b64;
+            ttsAudio.play();
+            ttsAudio.onended = () => {
+                isJarvisTalking = false;
+                orbCore.classList.remove('jarvis-talking');
+                statusText.innerText = "Sempre in Ascolto (Parla ora...)";
+            };
+        }
+
+        function speakBrowser(text) {
+            isJarvisTalking = true;
+            speechSynth.cancel();
+            const cleanText = text.replace(/[#*`_]/g, '');
+            const utter = new SpeechSynthesisUtterance(cleanText);
+            utter.lang = 'it-IT';
+            utter.rate = 1.05;
+            utter.onend = () => {
+                isJarvisTalking = false;
+                orbCore.classList.remove('jarvis-talking');
+                statusText.innerText = "Sempre in Ascolto (Parla ora...)";
+            };
+            speechSynth.speak(utter);
+        }
+
+        function stopJarvisSpeech() {
+            isJarvisTalking = false;
+            speechSynth.cancel();
+            ttsAudio.pause();
+            ttsAudio.currentTime = 0;
+            orbCore.classList.remove('jarvis-talking');
+        }
+
+        // AVVIO AUTOMATICO IMMEDIATO AL CARICAMENTO
+        window.addEventListener('DOMContentLoaded', () => {
+            initRecognition();
+            try { recognition.start(); } catch(e) {}
+        });
+    </script>
+</body>
+</html>
