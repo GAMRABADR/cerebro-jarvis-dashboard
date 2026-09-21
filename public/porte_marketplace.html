@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JEV Marketplace — Annuncio 3 Porte in Legno Massello</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #131b2e;
+            --border-color: #1e293b;
+            --gold: #facc15;
+            --green: #22c55e;
+            --blue: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
+            border-bottom: 2px solid var(--gold);
+            padding: 18px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .header-wrap {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            background: #0284c7;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        /* GRID LAYOUT */
+        .grid-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* PHOTO GALLERY */
+        .gallery-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .main-img-wrap {
+            width: 100%;
+            height: 380px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+            margin-bottom: 12px;
+            border: 1px solid #334155;
+        }
+
+        .main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.3s;
+        }
+
+        .main-img-wrap:hover .main-img {
+            transform: scale(1.02);
+        }
+
+        .thumb-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .thumb-img {
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .thumb-img.active, .thumb-img:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        /* DETAILS & COPYWRITING BOX */
+        .info-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .price-badge-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+        }
+
+        .price-val {
+            font-size: 26px;
+            font-weight: 900;
+            color: #22c55e;
+        }
+
+        .price-sub {
+            font-size: 11px;
+            color: #86efac;
+            font-weight: bold;
+        }
+
+        .action-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-act {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .btn-act:hover {
+            background: #334155;
+            border-color: var(--gold);
+        }
+
+        .btn-act.primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-act.launch-fb {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #1877f2 0%, #0d5cb6 100%);
+            color: #fff;
+            font-size: 15px;
+            padding: 14px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
+        }
+
+        .btn-act.launch-fb:hover {
+            transform: translateY(-2px);
+        }
+
+        /* TEXT PREVIEW */
+        .text-area-box {
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.5;
+            max-height: 220px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        /* JEV APPRAISAL CARD */
+        .appraisal-box {
+            margin-top: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--gold);
+            border-radius: 12px;
+            padding: 18px 20px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #fff;
+            border: 2px solid var(--gold);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-wrap">
+            <div>
+                <span class="brand-badge">⚡ JEV MARKETPLACE AI</span>
+                <div class="title">3 Porte per Interni in Legno Massello (Complete)</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="/marketplace_doors/porte_legno_marketplace_pack.zip" download class="btn-act primary" style="padding: 8px 14px; font-size: 12px;">
+                    📦 Scarica ZIP Foto HD
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="grid-main">
+            <!-- COLONNA SINISTRA: GALLERIA FOTO OTTIMIZZATE -->
+            <div class="gallery-box">
+                <div class="main-img-wrap">
+                    <img id="main-view" src="/marketplace_doors/porta_cover_fb_marketplace.jpg" alt="Copertina Facebook Marketplace" class="main-img">
+                </div>
+                <div class="thumb-row">
+                    <img src="/marketplace_doors/porta_cover_fb_marketplace.jpg" class="thumb-img active" onclick="switchImg(this)">
+                    <img src="/marketplace_doors/porta_1_hero_studio.jpg" class="thumb-img" onclick="switchImg(this)">
+                    <img src="/marketplace_doors/porta_2_telai_stipiti.jpg" class="thumb-img" onclick="switchImg(this)">
+                    <img src="/marketplace_doors/porta_3_chiavi_ottone.jpg" class="thumb-img" onclick="switchImg(this)">
+                    <img src="/marketplace_doors/porta_4_blocco_3_porte.jpg" class="thumb-img" onclick="switchImg(this)">
+                </div>
+                <div style="margin-top: 14px; font-size: 11px; color: #94a3b8; text-align: center;">
+                    ✨ <i>Foto ottimizzate con AI: sfondo studio ripulito, contrasto venature e badge 1:1 per feed Marketplace</i>
+                </div>
+            </div>
+
+            <!-- COLONNA DESTRA: TESTI COPIABILI & LANCIO FB -->
+            <div class="info-box">
+                <div class="price-badge-bar">
+                    <div>
+                        <div class="price-val">75 € <span style="font-size: 14px; color: #cbd5e1; font-weight: normal;">cad.</span></div>
+                        <div class="price-sub">🔥 OFFERTA BLOCCO 3 PORTE: 200 € TOTALI</div>
+                    </div>
+                    <span style="background: #15803d; color:#fff; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 4px;">
+                        RISPARMIO 75%
+                    </span>
+                </div>
+
+                <!-- TASTI COPIA RAPIDA -->
+                <div class="action-btn-row">
+                    <button class="btn-act" onclick="copyTitle()">
+                        📋 Copia Titolo
+                    </button>
+                    <button class="btn-act" onclick="copyDesc()">
+                        📋 Copia Descrizione
+                    </button>
+                </div>
+
+                <!-- TASTO DIRETTO APERTURA FACEBOOK MARKETPLACE -->
+                <a href="https://www.facebook.com/marketplace/create/item" target="_blank" class="btn-act launch-fb">
+                    🚀 Apri Facebook Marketplace e Pubblica Ora ➔
+                </a>
+
+                <div>
+                    <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">
+                        Titolo Ottimizzato per la Ricerca:
+                    </div>
+                    <input type="text" id="fb-title" readonly value="3 Porte per Interni Legno Massello con Telai, Cardini e Chiavi" style="width: 100%; background: #0b0f19; border: 1px solid #1e293b; color: #fff; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; outline: none;">
+                </div>
+
+                <div>
+                    <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">
+                        Descrizione Dettagliata (Formattata per Massima Conversione):
+                    </div>
+                    <div id="fb-desc" class="text-area-box">🚪 VENDESI: SET 3 PORTE PER INTERNI IN LEGNO MASSELLO COMPLETE DI TELAI, CARDINI E CHIAVI ORIGINALI 🚪
+
+Splendide porte da interni in vero legno massello (finitura noce classico con elegante bugnatura superiore ad arco). 
+Robuste, calde e di ottima manifattura artigianale, ideali per abitazioni, appartamenti in ristrutturazione, uffici o seconde case.
+
+Smontate con estrema cura da appartamento, già numerate e pronte per il montaggio immediato!
+
+✨ DOTAZIONE COMPLETA (RARA DA TROVARE COSÌ COMPLETA):
+✔️ 3 Ante porta in legno massello con pannelli bugnati ad arco
+✔️ Telai / stipiti completi in legno abbinato con mostrine e coprifili
+✔️ Cardini in legno/metallo originali già predisposti
+✔️ Maniglie originali in ottone dorato
+✔️ Serrature funzionanti con le loro CHIAVI in ottone originali incluse!
+
+📐 MISURE STANDARD ITALIANE (Verificabili sul posto):
+• Spessore anta robusto, battuta perfetta
+• Disponibili 3 porte gemelle coordinate
+
+💰 PREZZO AFFARE:
+• Singola porta completa (anta + telaio + cardini + maniglia + chiave): SOLO 75 € cad.!
+🔥 OFFERTA BLOCCO COMPLETO: Tutte e 3 le porte a soli 200 € complessivi!
+(Prezzo da nuove oltre 300€ a porta: risparmi più del 75%!)
+
+📍 RITIRO & TRASPORTO:
+• Ritiro a mano in zona Imola / Bologna.
+🚚 NON HAI IL FURGONE PER IL TRASPORTO?
+Nessun problema! Con il nostro servizio BadrExpress.com offriamo possibilità di CONSEGNA DIRETTA A DOMICILIO con furgone a tariffa agevolata e concordata su Bologna, Imola, Faenza e zone limitrofe!
+
+Massima serietà e trasparenza. Disponibile per qualsiasi visione sul posto.
+Primo che conferma si aggiudica l'affare!
+
+💬 Contattami subito in privato su Messenger o via messaggio per info o per bloccarle!
+
+---
+BadrExpress.com · Servizi Espressi, Logistica & Arredo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA PERIZIA JEV -->
+        <div class="appraisal-box">
+            <b style="color: var(--gold); font-size: 13px;">🧠 Perizia Tecnica JEV & Benchmark di Mercato:</b><br>
+            • <b>Materiale:</b> Vero legno massello con bugnatura superiore curva ad arco, essenza noce classico.<br>
+            • <b>Inclusi nel Kit:</b> Mostrine, stipiti completi, cardini originali, maniglie in ottone dorato e chiavi fisiche (rarissimo trovare usati completi di tutto il controtelaio e le chiavi abbinate).<br>
+            • <b>Valutazione a nuovo:</b> € 280 - € 350 a porta (valore commerciale totale del lotto nuovo: ~€ 900 - € 1.050).<br>
+            • <b>Strategia di Vendita:</b> A 75€ cadauna (o 200€ in blocco), il lotto è posizionato nel 10% degli annunci più convenienti della regione Emilia-Romagna, massimizzando i contatti e offrendo il cross-selling del trasporto furgonato tramite <b>BadrExpress.com</b>.
+        </div>
+
+        <div class="footer">
+            <b>BadrExpress.com</b> · Sistemi Autonomi di Gestione Annunci & Logistica
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Testo copiato negli appunti!</div>
+
+    <script>
+        function switchImg(el) {
+            document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-view').src = el.src;
+        }
+
+        function copyTitle() {
+            const val = document.getElementById('fb-title').value;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast("✅ Titolo copiato negli appunti!");
+            });
+        }
+
+        function copyDesc() {
+            const val = document.getElementById('fb-desc').innerText;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast("✅ Descrizione completa copiata negli appunti!");
+            });
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
