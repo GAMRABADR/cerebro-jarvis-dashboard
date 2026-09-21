@@ -334,6 +334,11 @@
                     </button>
                 </div>
 
+                <!-- TASTO AUTO-FILLER JEV 1-CLICK -->
+                <button class="btn-act primary" onclick="copyAutofillScript()" style="background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);">
+                    ⚡ Copia Script Auto-Fill JEV (per F12 Console FB)
+                </button>
+
                 <!-- TASTO DIRETTO APERTURA FACEBOOK MARKETPLACE -->
                 <a href="https://www.facebook.com/marketplace/create/item" target="_blank" class="btn-act launch-fb">
                     🚀 Apri Facebook Marketplace e Pubblica Ora ➔
@@ -423,6 +428,45 @@ BadrExpress.com · Servizi Espressi, Trasporti, Logistica & Arredo</div>
             const val = document.getElementById('fb-desc').innerText;
             navigator.clipboard.writeText(val).then(() => {
                 showToast("✅ Descrizione completa copiata negli appunti!");
+            });
+        }
+
+        function copyAutofillScript() {
+            const code = `(() => {
+    const title = '3 Porte per Interni Legno Massello con Telai, Cardini e Chiavi - Trattabili + Consegna a Domicilio';
+    const price = '75';
+    const desc = \`🚪 VENDESI: SET 3 PORTE PER INTERNI IN LEGNO MASSELLO COMPLETE DI TELAI, CARDINI E CHIAVI ORIGINALI 🚪\\n\\nSplendide porte da interni in vero legno massello (finitura noce classico con elegante bugnatura superiore ad arco).\\nRobuste, calde e di ottima manifattura artigianale, ideali per abitazioni, appartamenti in ristrutturazione, uffici o seconde case.\\n\\nSmontate con estrema cura da appartamento, già numerate e pronte per il montaggio immediato!\\n\\n✨ DOTAZIONE COMPLETA (RARA DA TROVARE COSÌ COMPLETA):\\n✔️ 3 Ante porta in legno massello con pannelli bugnati ad arco\\n✔️ Telai / stipiti completi in legno abbinato con mostrine e coprifili\\n✔️ Cardini in legno/metallo originali già predisposti\\n✔️ Maniglie originali in ottone dorato\\n✔️ Serrature perfettamente funzionanti con le loro CHIAVI in ottone originali incluse!\\n\\n📐 MISURE STANDARD ITALIANE (Verificabili sul posto):\\n• Spessore anta robusto, battuta perfetta\\n• Disponibili 3 porte gemelle coordinate\\n\\n💰 PREZZO & TRATTABILITÀ:\\n• Singola porta completa (anta + telaio + cardini + maniglia + chiave): 75 € cad.\\n• 🔥 OFFERTA BLOCCO COMPLETO: Tutte e 3 le porte a soli 200 € complessivi!\\n• 🤝 PREZZO TRATTABILE per acquisto rapido o per chi ritira tutto il blocco!\\n\\n🚚 DISPONIBILE AL TRASPORTO E CONSEGNA IN CASA:\\n• Ritiro a mano disponibile in zona Imola / Bologna.\\n• 📦 SERVIZIO TRASPORTO & CONSEGNA AL PIANO: Se non hai il furgone o non vuoi fare fatica, siamo OVVIAMENTE DISPONIBILI AL TRASPORTO con furgone e possiamo effettuare la CONSEGNA IN CASA / AL PIANO con una piccola aggiunta concordata per il servizio di trasporto e facchinaggio!\\n• Copertura trasporto rapido su Bologna, Imola, Faenza, Ravenna, Forlì e zone limitrofe.\\n\\nMassima serietà, trasparenza e puntualità. Disponibile per qualsiasi visione e prova sul posto.\\nPrimo che conferma si aggiudica l'affare!\\n\\n💬 Contattami subito in privato su Messenger o via WhatsApp/telefono per info, accordarci sul prezzo o bloccarle!\\n\\n---\\nBadrExpress.com · Servizi Espressi, Trasporti, Logistica & Arredo\`;
+
+    function fillReact(el, val) {
+        if (!el) return;
+        el.focus();
+        const setV = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        if (setV) setV.call(el, val);
+        else el.value = val;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    const tIn = document.querySelector('input[aria-label*=\"Titolo\" i], label:has(span:contains(\"Titolo\")) input, input[placeholder*=\"Titolo\" i]') || document.querySelectorAll('input[type=\"text\"]')[0];
+    if (tIn) fillReact(tIn, title);
+
+    const pIn = document.querySelector('input[aria-label*=\"Prezzo\" i], input[type=\"number\"], label:has(span:contains(\"Prezzo\")) input') || document.querySelectorAll('input[type=\"text\"]')[1];
+    if (pIn) fillReact(pIn, price);
+
+    const dIn = document.querySelector('textarea, div[role=\"textbox\"][aria-label*=\"Descrizione\" i]');
+    if (dIn) {
+        if (dIn.tagName === 'TEXTAREA') fillReact(dIn, desc);
+        else {
+            dIn.focus();
+            document.execCommand('insertText', false, desc);
+        }
+    }
+
+    console.log('✅ JEV: Annuncio Compilato con Successo!');
+    alert('⚡ JEV: Titolo, Prezzo e Descrizione compilati con successo in Facebook Marketplace!');
+})();`;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast("⚡ Script Auto-Fill copiato! Incollalo nella console di Chrome (F12)!");
             });
         }
 
