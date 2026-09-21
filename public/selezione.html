@@ -29,7 +29,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            padding-bottom: 50px;
+            padding-bottom: 60px;
         }
 
         /* BRAND HEADER */
@@ -93,19 +93,6 @@
             margin-top: 3px;
         }
 
-        .italian-flag-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #14532d;
-            border: 1px solid #22c55e;
-            color: #86efac;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
         .header-actions {
             display: flex;
             gap: 8px;
@@ -116,7 +103,7 @@
             background: #1e293b;
             color: #f8fafc;
             border: 1px solid #334155;
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-size: 12px;
             font-weight: bold;
@@ -139,11 +126,45 @@
             border: none;
         }
 
+        .btn-action-top.report {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: #fff;
+            border: none;
+        }
+
         /* CONTAINER */
         .container {
             max-width: 900px;
-            margin: 20px auto;
+            margin: 16px auto;
             padding: 0 16px;
+        }
+
+        /* CITY SELECTOR PILLS */
+        .city-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .city-pill {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .city-pill:hover, .city-pill.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
         }
 
         /* STATS COUNTER BAR */
@@ -151,7 +172,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
@@ -186,7 +207,7 @@
 
         /* SEARCH & FILTER */
         .search-bar {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             display: flex;
             gap: 10px;
         }
@@ -429,19 +450,21 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* BOTTOM FOOTER */
+        /* BOTTOM FOOTER SELEZIONE CON FIRMA ESATTA */
         .footer-note {
             text-align: center;
             font-size: 11px;
             color: #64748b;
-            margin-top: 30px;
-            line-height: 1.5;
+            margin-top: 36px;
+            line-height: 1.6;
+            border-top: 2px solid var(--gold);
+            padding-top: 16px;
         }
     </style>
 </head>
 <body>
 
-    <!-- TOP BAR BRAND UFFICIALE -->
+    <!-- TOP BAR BRAND UFFICIALE SELEZIONE -->
     <header class="brand-header">
         <div class="header-content">
             <div class="brand-info">
@@ -454,12 +477,14 @@
             </div>
 
             <div class="header-actions">
-                <span class="italian-flag-badge">🇮🇹 PRODOTTI 100% ITALIANI</span>
-                <a href="/SELEZIONE_Prospetto_Autolavaggi_Bologna.pdf" target="_blank" class="btn-action-top">
-                    📄 Scarica PDF
-                </a>
+                <button onclick="downloadPdf()" class="btn-action-top">
+                    📄 Scarica Prospetto PDF
+                </button>
+                <button onclick="sendClosureReport()" class="btn-action-top report">
+                    📊 Invia Report Chiusura
+                </button>
                 <button onclick="regenerateAndSendPdf()" class="btn-action-top primary">
-                    ⚡ Invia PDF a Badr
+                    ⚡ Invia a Badr
                 </button>
             </div>
         </div>
@@ -467,10 +492,18 @@
 
     <div class="container">
 
+        <!-- SELETTORE CITTÀ MULTI-ZONA -->
+        <div class="city-bar">
+            <div class="city-pill active" onclick="selectCity('ALL', this)">🇮🇹 Tutte le Città</div>
+            <div class="city-pill" onclick="selectCity('Bologna', this)">📍 Bologna & Romagna</div>
+            <div class="city-pill" onclick="selectCity('Milano', this)">📍 Milano & Hinterland</div>
+            <div class="city-pill" onclick="selectCity('Torino', this)">📍 Torino & Cintura</div>
+        </div>
+
         <!-- KPI SUMMARY BAR -->
         <div class="stats-grid">
             <div class="stat-card active" onclick="filterByStatus('ALL')">
-                <div class="stat-num" id="count-total">23</div>
+                <div class="stat-num" id="count-total">0</div>
                 <div class="stat-label">Totale Impianti</div>
             </div>
             <div class="stat-card" onclick="filterByStatus('DA_CHIAMARE')">
@@ -493,7 +526,7 @@
 
         <!-- SEARCH BOX -->
         <div class="search-bar">
-            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cerca per nome, via o zona (es. Imola, San Lazzaro, Self)..." oninput="applyFilters()">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Cerca per nome ditta, comune o tipo impianto (es. Imola, Detailing, Self)..." oninput="applyFilters()">
         </div>
 
         <!-- LISTA SCHEDE AUTOLAVAGGI -->
@@ -501,10 +534,14 @@
             <div style="text-align: center; padding: 40px; color: #94a3b8;">Caricamento impianti autolavaggio...</div>
         </div>
 
+        <!-- FOOTER SELEZIONE (FIRMATO SELEZIONE, IN COLLABORAZIONE CON BADREXPRESS) -->
         <div class="footer-note">
-            <b>SELEZIONE — Distribuzione e Vendita Prodotti Professionali</b><br>
+            <b style="color: #ffffff; font-size: 12px;">SELEZIONE — Distribuzione e Vendita Prodotti Professionali</b><br>
             Autolavaggi · Lavanderie · Ristorazione · Pulizie Professionali · Igiene e Sanificanti<br>
-            Coordinamento Commerciale: Badr (+39 388 870 3508 · badraudi@gmail.com)
+            🇮🇹 <b>Azienda Italiana — Selezione e Vendita Prodotti 100% Made in Italy</b><br>
+            <div style="margin-top: 6px; color: #facc15; font-weight: bold;">
+                🤝 In collaborazione con BadrExpress.com
+            </div>
         </div>
     </div>
 
@@ -512,15 +549,15 @@
     <div id="toast" class="toast">Esito aggiornato con successo!</div>
 
     <script>
-        let carWashes = [];
-        let activeFilter = 'ALL';
+        let allCarWashes = [];
+        let selectedCity = 'ALL';
+        let activeStatusFilter = 'ALL';
 
         async function loadCarWashes() {
             try {
                 const res = await fetch('/api/carwash/list');
-                carWashes = await res.json();
-                updateCounts();
-                renderCards();
+                allCarWashes = await res.json();
+                applyFilters();
             } catch (err) {
                 document.getElementById('card-list').innerHTML = `
                     <div style="background:#450a0a; color:#fca5a5; padding:20px; border-radius:10px; text-align:center;">
@@ -530,12 +567,26 @@
             }
         }
 
-        function updateCounts() {
-            const total = carWashes.length;
-            const toCall = carWashes.filter(w => !w.lead_status || w.lead_status === 'DA_CHIAMARE').length;
-            const interested = carWashes.filter(w => w.lead_status === 'INTERESSATO').length;
-            const supplied = carWashes.filter(w => w.lead_status && w.lead_status.includes('GIA_FORNITO')).length;
-            const notInterested = carWashes.filter(w => w.lead_status === 'NON_INTERESSATO').length;
+        function selectCity(city, el) {
+            selectedCity = city;
+            document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            applyFilters();
+        }
+
+        function filterByStatus(status) {
+            activeStatusFilter = status;
+            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active'));
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+            applyFilters();
+        }
+
+        function updateCounts(cityScopedList) {
+            const total = cityScopedList.length;
+            const toCall = cityScopedList.filter(w => !w.lead_status || w.lead_status === 'DA_CHIAMARE').length;
+            const interested = cityScopedList.filter(w => w.lead_status === 'INTERESSATO').length;
+            const supplied = cityScopedList.filter(w => w.lead_status && w.lead_status.includes('GIA_FORNITO')).length;
+            const notInterested = cityScopedList.filter(w => w.lead_status === 'NON_INTERESSATO').length;
 
             document.getElementById('count-total').textContent = total;
             document.getElementById('count-to-call').textContent = toCall;
@@ -544,16 +595,21 @@
             document.getElementById('count-not-interested').textContent = notInterested;
         }
 
-        function filterByStatus(status) {
-            activeFilter = status;
-            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active'));
-            if (event && event.currentTarget) event.currentTarget.classList.add('active');
-            applyFilters();
-        }
-
         function applyFilters() {
             const q = document.getElementById('search-input').value.toLowerCase().trim();
-            const filtered = carWashes.filter(w => {
+
+            // 1. Filtro Città
+            let cityScoped = allCarWashes;
+            if (selectedCity !== 'ALL') {
+                cityScoped = allCarWashes.filter(w => 
+                    (w.city && w.city.toLowerCase().includes(selectedCity.toLowerCase())) ||
+                    (w.zone && w.zone.toLowerCase().includes(selectedCity.toLowerCase()))
+                );
+            }
+            updateCounts(cityScoped);
+
+            // 2. Filtro Stato & Query ricerca
+            const filtered = cityScoped.filter(w => {
                 const matchQuery = !q || 
                     w.name.toLowerCase().includes(q) || 
                     w.address.toLowerCase().includes(q) || 
@@ -561,13 +617,13 @@
                     w.plant_type.toLowerCase().includes(q);
 
                 let matchStatus = true;
-                if (activeFilter === 'DA_CHIAMARE') {
+                if (activeStatusFilter === 'DA_CHIAMARE') {
                     matchStatus = (!w.lead_status || w.lead_status === 'DA_CHIAMARE');
-                } else if (activeFilter === 'INTERESSATO') {
+                } else if (activeStatusFilter === 'INTERESSATO') {
                     matchStatus = (w.lead_status === 'INTERESSATO');
-                } else if (activeFilter === 'GIA_FORNITO_SELECTION') {
+                } else if (activeStatusFilter === 'GIA_FORNITO_SELECTION') {
                     matchStatus = (w.lead_status && w.lead_status.includes('GIA_FORNITO'));
-                } else if (activeFilter === 'NON_INTERESSATO') {
+                } else if (activeStatusFilter === 'NON_INTERESSATO') {
                     matchStatus = (w.lead_status === 'NON_INTERESSATO');
                 }
 
@@ -577,12 +633,12 @@
             renderCards(filtered);
         }
 
-        function renderCards(list = carWashes) {
+        function renderCards(list) {
             const container = document.getElementById('card-list');
             if (list.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #94a3b8;">
-                        Nessun autolavaggio corrispondente ai filtri impostati.
+                        Nessun autolavaggio corrispondente ai filtri impostati per questa zona.
                     </div>
                 `;
                 return;
@@ -668,15 +724,13 @@
                 const res = await fetch(`/api/carwash/outcome?id=${id}&outcome=${outcome}&format=json`);
                 const data = await res.json();
                 if (data.success) {
-                    // Aggiorna stato locale
-                    const target = carWashes.find(w => w.id === id);
+                    const target = allCarWashes.find(w => w.id === id);
                     if (target) {
                         target.lead_status = outcome;
                         target.call_outcome = outcome;
                     }
-                    updateCounts();
+                    applyFilters();
 
-                    // Aggiorna badge e bottoni della card
                     const badge = document.getElementById(`badge-${id}`);
                     if (badge) {
                         badge.style.background = data.color;
@@ -700,12 +754,30 @@
             }
         }
 
+        function downloadPdf() {
+            const city = selectedCity === 'ALL' ? 'Bologna' : selectedCity;
+            window.open(`/SELEZIONE_Prospetto_Autolavaggi_${city}.pdf`, '_blank');
+        }
+
         async function regenerateAndSendPdf() {
-            showToast("🔄 Rigenerazione PDF e invio email a Badr in corso...");
+            const city = selectedCity === 'ALL' ? 'Bologna' : selectedCity;
+            showToast(`🔄 Rigenerazione prospetto (${city}) e invio a Badr...`);
             try {
-                const res = await fetch('/api/carwash/pdf/regenerate');
+                const res = await fetch(`/api/carwash/pdf/regenerate?city=${encodeURIComponent(city)}`);
                 const data = await res.json();
-                showToast("📨 PDF rigenerato e spedito con successo a badraudi@gmail.com!");
+                showToast(`📨 Prospetto ${city} spedito con successo a badraudi@gmail.com!`);
+            } catch (err) {
+                showToast(`❌ Errore: ${err.message}`);
+            }
+        }
+
+        async function sendClosureReport() {
+            const city = selectedCity === 'ALL' ? 'Bologna' : selectedCity;
+            showToast(`📊 Generazione Report di Chiusura (${city}) per SELEZIONE...`);
+            try {
+                const res = await fetch(`/api/carwash/report?city=${encodeURIComponent(city)}`);
+                const data = await res.json();
+                showToast(`✅ Report Chiusura ${city} inviato via email a badraudi@gmail.com!`);
             } catch (err) {
                 showToast(`❌ Errore: ${err.message}`);
             }
@@ -718,7 +790,7 @@
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        // Avvio automatico al caricamento
+        // Caricamento iniziale
         window.addEventListener('DOMContentLoaded', loadCarWashes);
     </script>
 </body>
