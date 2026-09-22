@@ -45,17 +45,22 @@ CF_TOKEN = "eyJhIjoiYzQ4YjA0ZGViODA1NzcwM2EyODQ5ZTZmOWY5ZWVmNjkiLCJ0IjoiZjFlNjQ4
 CLOUDFLARED_BIN = os.path.join(BASE_DIR, "cloudflared.exe")
 SERVER_PY       = os.path.join(BASE_DIR, "server.py")
 
-# Rust Bridge: seleziona automaticamente il binario compilato più di recente (mtime)
-_RUST_APEX    = os.path.join(JARVIS_DIR, "target", "release", "ebj_apex_bridge.exe")
-_RUST_RELEASE = os.path.join(JARVIS_DIR, "target", "release", "jarvis-bridge.exe")
-_RUST_DEBUG   = os.path.join(JARVIS_DIR, "target", "debug",   "jarvis-bridge.exe")
+JARVIS_DIR_ROOT    = r"D:\EBGStudioProgetti\Oracle-VPS and EBGStudio\jarvis-bridge"
+JARVIS_DIR_SUPREME = r"D:\EBGStudioProgetti\Oracle-VPS and EBGStudio\ebj-supreme\jarvis-bridge"
 
 def get_best_rust_bin():
-    candidates = [_RUST_APEX, _RUST_RELEASE, _RUST_DEBUG]
+    candidates = [
+        os.path.join(JARVIS_DIR_SUPREME, "target", "release", "ebj_apex_engine.exe"),
+        os.path.join(JARVIS_DIR_SUPREME, "target", "release", "ebj_apex_bridge.exe"),
+        os.path.join(JARVIS_DIR_SUPREME, "target", "release", "jarvis-bridge.exe"),
+        os.path.join(JARVIS_DIR_ROOT, "target", "release", "ebj_apex_bridge.exe"),
+        os.path.join(JARVIS_DIR_ROOT, "target", "release", "ebj_apex_engine.exe"),
+        os.path.join(JARVIS_DIR_ROOT, "target", "release", "jarvis-bridge.exe"),
+    ]
     existing = [c for c in candidates if os.path.exists(c)]
     if existing:
         return max(existing, key=os.path.getmtime)
-    return _RUST_RELEASE
+    return os.path.join(JARVIS_DIR_SUPREME, "target", "release", "jarvis-bridge.exe")
 
 RUST_BRIDGE_BIN = get_best_rust_bin()
 
@@ -188,7 +193,7 @@ def start_rust_bridge():
     proc = subprocess.Popen(
         [bin_to_run],
 
-        cwd=os.path.dirname(RUST_BRIDGE_BIN),
+        cwd=os.path.dirname(bin_to_run),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
