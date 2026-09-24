@@ -1390,8 +1390,8 @@
     </div>
   </div>
 
-  <script src="cyber_audio_engine.js?v=1007.0"></script>
-  <script src="app.js?v=1009.0"></script>
+  <script src="cyber_audio_engine.js?v=1010.0"></script>
+  <script src="app.js?v=1010.0"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
 <div id="screen-panel">
@@ -1885,13 +1885,13 @@ window.switchMasterView = function(view) {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) {
-    lucide.createIcons();
-    // Auto-rendering reattivo per qualsiasi nuovo elemento dinamico (chat, modal, card)
-    const observer = new MutationObserver(() => {
-      if (window.lucide) lucide.createIcons();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    try { lucide.createIcons(); } catch (err) {}
   }
+  window.refreshIcons = function() {
+    if (window.lucide) {
+      try { lucide.createIcons(); } catch (err) {}
+    }
+  };
 
   // ── FULL-DUPLEX LIVE VOICE CONTROLLER & STARK HUD REACTIVITY ───────────
   let isLiveVoiceActive = false;
@@ -2069,7 +2069,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script src="three.min.js"></script>
 <script src="OrbitControls.js"></script>
-<script src="jarvis_3d_cosmos.js?v=1007.0"></script>
+<script src="jarvis_3d_cosmos.js?v=1010.0"></script>
 <script>
   // ── PWA SERVICE WORKER & ANDROID INSTALL PROMPT ───────────────────────
   if ('serviceWorker' in navigator) {
