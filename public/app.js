@@ -1421,3 +1421,110 @@ function connectEbjRustListen() {
     window._ebjListenWs = ws;
   } catch (_) {}
 }
+
+// ── JEV PROFESSIONAL APPRAISER & VALUATION ENGINE ──────────────────
+let _lastJevAppraisal = null;
+
+window.toggleJevModal = function(show) {
+  const card = document.getElementById('card-mod-jev');
+  if (!card) return;
+  if (show === undefined) show = card.style.display === 'none';
+  card.style.display = show ? 'block' : 'none';
+  if (show) {
+    card.style.zIndex = '9999';
+    card.style.top = '120px';
+    card.style.left = Math.min(window.innerWidth - 460, Math.max(20, Math.floor(window.innerWidth / 2 - 220))) + 'px';
+  }
+};
+
+window.openMarketplaceModal = window.openJevModal = function() {
+  window.toggleJevModal(true);
+};
+
+window.executeJevAppraisal = async function() {
+  const cat = document.getElementById('jev-category')?.value || 'INFISSI_PORTE';
+  const name = document.getElementById('jev-item-name')?.value || 'Oggetto d\'arredo';
+  const qty = parseInt(document.getElementById('jev-qty')?.value || '1', 10);
+  const cond = parseFloat(document.getElementById('jev-condition')?.value || '0.85');
+  const delivery = document.getElementById('jev-delivery')?.checked !== false;
+
+  const resBox = document.getElementById('jev-results-box');
+  try {
+    const res = await fetch('/api/jev/appraise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: cat,
+        item_name: name,
+        quantity: qty,
+        condition_score: cond,
+        include_badr_delivery: delivery
+      })
+    });
+    const d = await res.json();
+    _lastJevAppraisal = d;
+
+    if (resBox) resBox.style.display = 'block';
+    const codeEl = document.getElementById('jev-res-code');
+    const liqEl = document.getElementById('jev-res-liq');
+    const fastEl = document.getElementById('jev-res-fast');
+    const fastSubEl = document.getElementById('jev-res-fast-sub');
+    const marketEl = document.getElementById('jev-res-market');
+    const stratEl = document.getElementById('jev-res-strategy');
+
+    if (codeEl) codeEl.textContent = `PRATICA: ${d.practice_code || 'JEV-PRO'}`;
+    if (liqEl) liqEl.textContent = d.liquidity_index ? d.liquidity_index.slice(0, 15) : 'A+';
+    if (fastEl) fastEl.textContent = `€ ${Math.round(d.fast_cash_price_48h_eur || d.recommended_quick_sale_price_eur || 0)}`;
+    if (fastSubEl) fastSubEl.textContent = d.recommended_bundle_price_eur ? `Blocco: € ${Math.round(d.recommended_bundle_price_eur)}` : `€ ${Math.round(d.recommended_quick_sale_price_eur || 0)} cad.`;
+    if (marketEl) marketEl.textContent = `€ ${Math.round(d.market_fair_value_30d_eur || d.market_used_average_eur || 0)}`;
+    if (stratEl) stratEl.textContent = `${d.material_nobility || 'Materiale standard'} · ${d.pricing_strategy_note || ''}`;
+
+    addEvent('rust', `💎 Perizia JEV calcolata in ${d.calculation_micros || 5}µs: ${d.practice_code}`);
+    if (window.playSpeechAudio && d.verbal_summary) {
+      window.playSpeechAudio(d.verbal_summary);
+    }
+  } catch (err) {
+    alert('Errore calcolo perizia JEV: ' + err.message);
+  }
+};
+
+window.openJevCertificate = function() {
+  const cat = document.getElementById('jev-category')?.value || 'INFISSI_PORTE';
+  const name = document.getElementById('jev-item-name')?.value || 'Oggetto d\'arredo';
+  const qty = parseInt(document.getElementById('jev-qty')?.value || '1', 10);
+  const cond = parseFloat(document.getElementById('jev-condition')?.value || '0.85');
+  const delivery = document.getElementById('jev-delivery')?.checked !== false;
+
+  fetch('/api/jev/certificate-html', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      category: cat,
+      item_name: name,
+      quantity: qty,
+      condition_score: cond,
+      include_badr_delivery: delivery
+    })
+  }).then(r => r.text()).then(html => {
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    }
+  }).catch(e => alert('Errore apertura certificato: ' + e.message));
+};
+
+window.copyJevAdText = function(platform) {
+  if (!_lastJevAppraisal) {
+    alert('Calcola prima la perizia JEV!');
+    return;
+  }
+  const text = platform === 'fb' ? _lastJevAppraisal.facebook_marketplace_description : _lastJevAppraisal.subito_description;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`✅ Testo annuncio ${platform.toUpperCase()} copiato negli appunti!`);
+    });
+  } else {
+    prompt('Copia il testo:', text);
+  }
+};

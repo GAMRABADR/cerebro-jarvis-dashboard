@@ -212,9 +212,9 @@
                 <span class="ct-code">🚛 PREVENTIVI</span>
                 <span class="ct-desc">Sgombero & Trasloco</span>
               </div>
-              <div class="cmd-tile vault-tile" onclick="openMarketplaceModal()">
-                <span class="ct-code">🏷️ MARKETPLACE</span>
-                <span class="ct-desc">Stima & Annuncio Subito/FB</span>
+              <div class="cmd-tile vault-tile" onclick="toggleJevModal(true)">
+                <span class="ct-code">💎 JEV PERIZIE</span>
+                <span class="ct-desc">Quotazione Rust & Subito/FB</span>
               </div>
             </div>
           </div>
@@ -1112,10 +1112,100 @@
         </div>
       </div>
     </div>
+
+    <!-- Scheda 5: JEV Professional Appraiser Engine -->
+    <div class="modular-window-card" id="card-mod-jev" style="display:none; top:120px; left:280px; width:440px; z-index:9999; border: 1px solid #00f0ff; box-shadow: 0 0 30px rgba(0,240,255,0.3);">
+      <div class="mwc-header ct-draggable-handle" style="background: linear-gradient(90deg, rgba(0,240,255,0.2), rgba(0,255,159,0.1));">
+        <span class="mwc-title" style="color:#00f0ff; font-weight:800; letter-spacing:0.5px;">💎 JEV PERIZIA & QUOTAZIONE PRO</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleJevModal(false)">✕</button></div>
+      </div>
+      <div class="mwc-body" style="padding:14px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.75rem; color:#94a3b8;">Motore Valutazione Rust SIMD (&lt; 10µs)</span>
+          <span class="mwc-badge live" style="background:#00ff88; color:#000; font-size:0.65rem; font-weight:bold; padding:2px 6px; border-radius:3px;">ATTIVO</span>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.72rem; color:#00f0ff; font-weight:bold; display:block; margin-bottom:4px;">CATEGORIA MERCEOLOGICA</label>
+          <select id="jev-category" class="cyber-select" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem;">
+            <option value="INFISSI_PORTE">🚪 Infissi & Porte in Legno Massello</option>
+            <option value="DIVANI_SALOTTI">🛋️ Divani, Poltrone & Salotti</option>
+            <option value="CUCINE">🍳 Cucine Componibili & Piani Cottura</option>
+            <option value="CAMERE_LETTO">🛏️ Camere da Letto & Armadi</option>
+            <option value="ELETTRODOMESTICI">⚡ Elettrodomestici & Frigoriferi</option>
+            <option value="ATTREZZATURE_LAVAGGIO">🧼 Attrezzature & Chimica Autolavaggi (SELEZIONE)</option>
+            <option value="GENERICO">📦 Altro Mobilio / Attrezzatura</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.72rem; color:#00f0ff; font-weight:bold; display:block; margin-bottom:4px;">NOME OGGETTO / DETTAGLI MATERIALI</label>
+          <input type="text" id="jev-item-name" placeholder="Es: 5 Porte noce massello inglesi con chiavi ottone" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; box-sizing:border-box;" value="5 Porte noce massello stile inglese">
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <div style="flex:1;">
+            <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px;">QUANTITÀ</label>
+            <input type="number" id="jev-qty" min="1" value="5" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; box-sizing:border-box;">
+          </div>
+          <div style="flex:1.5;">
+            <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px;">CONDIZIONE</label>
+            <select id="jev-condition" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem;">
+              <option value="1.0">Pari al Nuovo (100%)</option>
+              <option value="0.85" selected>Ottimo Stato (85%)</option>
+              <option value="0.70">Buono / Segni Lievi (70%)</option>
+              <option value="0.45">Da Restaurare (45%)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.75rem; color:#cbd5e1; display:flex; align-items:center; cursor:pointer;">
+            <input type="checkbox" id="jev-delivery" checked style="margin-right:6px;"> Includi Trasporto & Facchinaggio BadrExpress / PietroTraslochi
+          </label>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <button onclick="executeJevAppraisal()" style="flex:1; background:linear-gradient(135deg, #00f0ff, #00ff88); color:#000; font-weight:800; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; letter-spacing:0.5px;">⚡ CALCOLA PERIZIA RUST</button>
+          <button onclick="openJevCertificate()" style="background:#1e293b; color:#00f0ff; border:1px solid #00f0ff; padding:8px 10px; border-radius:4px; cursor:pointer; font-size:0.75rem; font-weight:bold;">📜 SCHEDA PDF</button>
+        </div>
+
+        <!-- Risultati JEV Live -->
+        <div id="jev-results-box" style="display:none; background:#0b1120; border:1px solid #1e293b; border-radius:6px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.7rem; color:#94a3b8;" id="jev-res-code">PRATICA: JEV-APPRAISAL-000000</span>
+            <span id="jev-res-liq" style="font-size:0.7rem; color:#00ff88; font-weight:bold;">LIQUIDITÀ A+</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div style="background:#1e293b; padding:8px; border-radius:4px; border-left:3px solid #eab308;">
+              <div style="font-size:0.65rem; color:#94a3b8; font-weight:bold;">⚡ FAST CASH (48H)</div>
+              <div style="font-size:1.15rem; font-weight:800; color:#eab308;" id="jev-res-fast">€ 0</div>
+              <div style="font-size:0.6rem; color:#cbd5e1;" id="jev-res-fast-sub">Prezzo cad. / blocco</div>
+            </div>
+            <div style="background:#1e293b; padding:8px; border-radius:4px; border-left:3px solid #00f0ff;">
+              <div style="font-size:0.65rem; color:#94a3b8; font-weight:bold;">💎 MERCATO (30GG)</div>
+              <div style="font-size:1.15rem; font-weight:800; color:#00f0ff;" id="jev-res-market">€ 0</div>
+              <div style="font-size:0.6rem; color:#cbd5e1;">Massimo realizzo</div>
+            </div>
+          </div>
+
+          <div style="font-size:0.7rem; color:#cbd5e1; margin-bottom:8px; line-height:1.3;" id="jev-res-strategy">
+            Strategia di pricing calcolata in microsecondi.
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button onclick="copyJevAdText('fb')" style="flex:1; background:#1877f2; color:#fff; border:none; padding:6px; border-radius:3px; font-size:0.7rem; cursor:pointer; font-weight:bold;">📋 Copia FB</button>
+            <button onclick="copyJevAdText('subito')" style="flex:1; background:#ff4400; color:#fff; border:none; padding:6px; border-radius:3px; font-size:0.7rem; cursor:pointer; font-weight:bold;">📋 Copia Subito</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <script src="cyber_audio_engine.js?v=1007.0"></script>
-  <script src="app.js?v=1007.0"></script>
+  <script src="app.js?v=1008.0"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
 <div id="screen-panel">
