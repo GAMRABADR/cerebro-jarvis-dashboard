@@ -2060,9 +2060,99 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="stark-palette-item-left"><span>🧮</span><span>Calcola Preventivo Istantaneo Fast Math (4µs)</span></div>
         <span class="stark-palette-item-shortcut">Enter</span>
       </div>
+      <div class="stark-palette-item" onclick="window.openQuantumMathModal && window.openQuantumMathModal(); closeCommandPalette();">
+        <div class="stark-palette-item-left"><span>📐</span><span>Solutore Matematico Quantistico (WGS-84 & Matrice Assi 3D)</span></div>
+        <span class="stark-palette-item-shortcut">Alt+Q</span>
+      </div>
       <div class="stark-palette-item" onclick="window.playArcReactor && window.playArcReactor(); closeCommandPalette();">
         <div class="stark-palette-item-left"><span>🔊</span><span>Riproduci Risonanza Magnetica Arc Reactor (Hound WAV)</span></div>
         <span class="stark-palette-item-shortcut">Audio</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALE SOLUTORE MATEMATICO QUANTISTICO (RUST WGS-84 & 3D MATRIX) ── -->
+<div id="modal-quantum-math" class="stark-palette-backdrop" onclick="if(event.target===this)closeQuantumMathModal()" style="display:none; z-index:10005;">
+  <div class="stark-palette-modal" style="max-width:680px; width:94%; background:rgba(3,8,18,0.98); border:1px solid #00f0ff; border-radius:12px; padding:20px; box-shadow:0 0 35px rgba(0,240,255,0.25);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:10px; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:22px;">📐</span>
+        <div>
+          <h3 style="color:#00f0ff; font-family:'Orbitron', sans-serif; font-size:14px; margin:0;">SOLUTORE MATEMATICO QUANTISTICO</h3>
+          <small style="color:#94a3b8; font-size:10px;">Rust SIMD · Vincenty WGS-84 Ellipsoid · 3D Load Center of Mass & Sweet-Spot Sigmoid</small>
+        </div>
+      </div>
+      <button onclick="closeQuantumMathModal()" style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer;">✕</button>
+    </div>
+
+    <!-- Parametri Input Rapidi -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:14px; font-size:11px;">
+      <div>
+        <label style="color:#64748b; display:block; margin-bottom:3px;">Superficie (m²)</label>
+        <input type="number" id="qm-surface" value="70" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(0,240,255,0.3); color:#fff; padding:6px; border-radius:6px; font-family:inherit;">
+      </div>
+      <div>
+        <label style="color:#64748b; display:block; margin-bottom:3px;">Origine</label>
+        <input type="text" id="qm-city-orig" value="Bologna" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(0,240,255,0.3); color:#fff; padding:6px; border-radius:6px; font-family:inherit;">
+      </div>
+      <div>
+        <label style="color:#64748b; display:block; margin-bottom:3px;">Destinazione</label>
+        <input type="text" id="qm-city-dest" value="Imola" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(0,240,255,0.3); color:#fff; padding:6px; border-radius:6px; font-family:inherit;">
+      </div>
+      <div>
+        <label style="color:#64748b; display:block; margin-bottom:3px;">Piani (Part/Arr)</label>
+        <div style="display:flex; gap:4px;">
+          <input type="number" id="qm-floor-orig" value="2" style="width:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(0,240,255,0.3); color:#fff; padding:6px; border-radius:6px;">
+          <input type="number" id="qm-floor-dest" value="1" style="width:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(0,240,255,0.3); color:#fff; padding:6px; border-radius:6px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Opzioni Spunte -->
+    <div style="display:flex; gap:16px; margin-bottom:14px; font-size:11px; color:#cbd5e1;">
+      <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="qm-elev-orig"> Ascensore Partenza</label>
+      <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="qm-elev-dest" checked> Ascensore Arrivo</label>
+      <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="qm-packing" checked> Imballaggio Pro</label>
+      <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="qm-urgent"> Urgente (24h)</label>
+    </div>
+
+    <!-- Bottone Azione Calcolo -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <button onclick="calculateQuantumMath()" style="background:linear-gradient(135deg, #00f0ff, #00ff9f); color:#000; border:none; padding:8px 18px; border-radius:6px; font-weight:bold; cursor:pointer; font-family:'Orbitron', sans-serif; font-size:11px;">⚡ ESEGUI RISOLUTORE RUST</button>
+      <span id="qm-latency-badge" style="font-family:'Share Tech Mono', monospace; font-size:11px; color:#64748b;">Pronto per l'elaborazione</span>
+    </div>
+
+    <!-- Risultati Matematici Vettoriali -->
+    <div id="qm-results-container" style="display:none; background:rgba(255,255,255,0.03); border:1px solid rgba(0,255,159,0.25); border-radius:8px; padding:12px; font-size:11px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <!-- Box Mezzo & Assi -->
+        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">
+          <div style="color:#00ff9f; font-weight:bold; margin-bottom:4px;">🚚 MEZZO & ASSETTO ASSI 3D</div>
+          <div id="qm-res-veh" style="color:#fff; font-weight:600; font-size:12px;">—</div>
+          <div id="qm-res-vol" style="color:#94a3b8; font-size:10px; margin-top:2px;">—</div>
+          <div id="qm-res-weight" style="color:#38bdf8; font-size:10px; margin-top:2px;">—</div>
+          <div id="qm-res-balance" style="color:#10b981; font-size:10px; margin-top:3px;">—</div>
+        </div>
+
+        <!-- Box Geodesia WGS-84 -->
+        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">
+          <div style="color:#00f0ff; font-weight:bold; margin-bottom:4px;">🌐 GEODESIA ELLITTICA WGS-84</div>
+          <div id="qm-res-dist" style="color:#fff; font-weight:600; font-size:12px;">—</div>
+          <div id="qm-res-fuel" style="color:#94a3b8; font-size:10px; margin-top:2px;">—</div>
+          <div id="qm-res-crew" style="color:#ffd700; font-size:10px; margin-top:3px;">—</div>
+        </div>
+      </div>
+
+      <!-- Prezzo Ottimale Sweet-Spot Sigmoide -->
+      <div style="background:linear-gradient(90deg, rgba(0,255,159,0.08), rgba(0,240,255,0.08)); border:1px solid rgba(0,255,159,0.4); border-radius:8px; padding:10px; text-align:center;">
+        <div style="color:#94a3b8; font-size:10px; text-transform:uppercase; letter-spacing:1px;">PREZZO OTTIMALE (SWEET-SPOT CHIUSURA)</div>
+        <div id="qm-res-sweet" style="color:#00ff9f; font-family:'Orbitron', sans-serif; font-size:24px; font-weight:bold; margin:3px 0;">—</div>
+        <div id="qm-res-sweet-prob" style="color:#38bdf8; font-size:11px; font-weight:600;">—</div>
+        <div style="display:flex; justify-content:space-around; margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; font-size:10px; color:#cbd5e1;">
+          <div>Budget Lampo: <strong id="qm-res-budget" style="color:#10b981;">—</strong></div>
+          <div>Premium Veloce: <strong id="qm-res-premium" style="color:#ffd700;">—</strong></div>
+        </div>
       </div>
     </div>
   </div>

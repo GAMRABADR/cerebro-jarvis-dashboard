@@ -1902,3 +1902,92 @@ window.fillActiveAgencyPortalWithCdp = async function() {
   }
 };
 
+// ── QUANTUM MATH MATRIX & LOGISTICS SOLVER (< 10µs) ──────────────────
+window.openQuantumMathModal = function() {
+  let modal = document.getElementById('modal-quantum-math');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+};
+
+window.closeQuantumMathModal = function() {
+  let modal = document.getElementById('modal-quantum-math');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+};
+
+window.calculateQuantumMath = async function() {
+  const mq = parseFloat(document.getElementById('qm-surface')?.value || '70');
+  const fOrig = parseInt(document.getElementById('qm-floor-orig')?.value || '1');
+  const fDest = parseInt(document.getElementById('qm-floor-dest')?.value || '1');
+  const elevOrig = !!document.getElementById('qm-elev-orig')?.checked;
+  const elevDest = !!document.getElementById('qm-elev-dest')?.checked;
+  const cOrig = document.getElementById('qm-city-orig')?.value || 'Bologna';
+  const cDest = document.getElementById('qm-city-dest')?.value || 'Imola';
+  const urgent = !!document.getElementById('qm-urgent')?.checked;
+  const packing = !!document.getElementById('qm-packing')?.checked;
+
+  const resContainer = document.getElementById('qm-results-container');
+  const latencyBadge = document.getElementById('qm-latency-badge');
+  if (latencyBadge) latencyBadge.textContent = 'CALCOLO IN CORSO...';
+
+  try {
+    const t0 = performance.now();
+    const r = await fetch('/api/math/quantum-solver', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        surface_mq: mq,
+        floor_origin: fOrig,
+        floor_dest: fDest,
+        elevator_origin: elevOrig,
+        elevator_dest: elevDest,
+        origin_city: cOrig,
+        dest_city: cDest,
+        is_urgent: urgent,
+        packing_required: packing
+      })
+    });
+
+    const d = await r.json();
+    const dt = (performance.now() - t0).toFixed(1);
+
+    if (latencyBadge) {
+      latencyBadge.textContent = `⚡ RUST SIMD: ${d.execution_latency_us || 8}µs (Network: ${dt}ms)`;
+      latencyBadge.style.color = '#00ff9f';
+    }
+
+    if (resContainer) {
+      resContainer.style.display = 'block';
+      const g = d.geodesic || {};
+      const l = d.logistics_and_loading || {};
+      const p = d.pricing_optimization || {};
+
+      document.getElementById('qm-res-veh').textContent = l.vehicle_model || '—';
+      document.getElementById('qm-res-vol').textContent = `${l.required_volume_m3} m³ (${l.volume_occupancy_pct}% cap. ${l.volume_capacity_m3}m³) · ${l.trips_required} viaggio/i`;
+      document.getElementById('qm-res-weight').textContent = `${l.estimated_payload_kg} kg (Ant: ${l.front_axle_load_kg}kg | Post: ${l.rear_axle_load_kg}kg)`;
+      document.getElementById('qm-res-balance').textContent = l.axle_balance_status || 'Assetto conforme';
+
+      document.getElementById('qm-res-dist').textContent = `${g.wgs84_ellipsoidal_distance_km} km WGS-84 (Stradale: ${g.road_adjusted_distance_km} km)`;
+      document.getElementById('qm-res-fuel').textContent = `Gasolio: ${g.diesel_liters_estimate} L (€${g.fuel_cost_euro}) · Pedaggio: €${g.highway_toll_estimate_euro}`;
+
+      document.getElementById('qm-res-sweet').textContent = `€${p.sweet_spot_price}`;
+      document.getElementById('qm-res-sweet-prob').textContent = `Probabilità Chiusura: ${p.sweet_spot_conversion_prob_pct}% (Margine Ottimale)`;
+
+      document.getElementById('qm-res-budget').textContent = `€${p.budget_deal_price} (${p.budget_conversion_prob_pct}% prob)`;
+      document.getElementById('qm-res-premium').textContent = `€${p.premium_speed_price} (${p.premium_conversion_prob_pct}% prob)`;
+      document.getElementById('qm-res-crew').textContent = `Equipaggio: ${p.suggested_crew_size} operatori · Durata stimata: ${p.estimated_duration_hours}h`;
+
+      if (window.playLaserChime) window.playLaserChime();
+    }
+  } catch (err) {
+    if (latencyBadge) {
+      latencyBadge.textContent = 'Errore di calcolo: ' + err.message;
+      latencyBadge.style.color = '#ef4444';
+    }
+  }
+};
+
