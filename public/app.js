@@ -1699,3 +1699,207 @@ window.sendB2bProposalEmail = async function() {
     alert('Errore invio proposta: ' + err.message);
   }
 };
+
+// ── RADAR LEAD INTENT (SUBITO & C2C LIVE SCANNER) ───────────────────────
+window.toggleLeadRadarModal = function(show) {
+  const card = document.getElementById('card-mod-lead-radar');
+  if (!card) return;
+  card.style.display = show ? 'block' : 'none';
+  if (show) {
+    window.loadActiveLeadsRadar();
+  }
+};
+
+window.loadActiveLeadsRadar = async function() {
+  const container = document.getElementById('radar-leads-list');
+  const countBadge = document.getElementById('radar-lead-count');
+  if (container) container.innerHTML = '<div style="color:#64748b; font-size:0.75rem; text-align:center; padding:12px;">Caricamento lead attivi in corso...</div>';
+
+  try {
+    const res = await fetch('/api/leads/radar/active?limit=30');
+    const d = await res.json();
+    const leads = d.leads || [];
+    if (countBadge) countBadge.innerText = `${leads.length} LEAD`;
+
+    if (container) {
+      if (leads.length === 0) {
+        container.innerHTML = `
+          <div style="color:#94a3b8; font-size:0.75rem; text-align:center; padding:16px; background:#0b1120; border-radius:6px; border:1px solid #1e293b;">
+            Nessun lead recente in cache.<br>Clicca su <strong>⚡ SCANSIONA ORA</strong> per intercettare nuovi privati in trasloco.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = leads.map(l => {
+        const tierColor = l.tier === 'HOT' ? '#ef4444' : (l.tier === 'WARM' ? '#f59e0b' : '#3b82f6');
+        const phone = l.phone || '';
+        const waLink = phone ? `https://wa.me/39${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Buongiorno, la contatto da BadrExpress & PietroTraslochi in merito alla sua esigenza di sgombero/trasloco a ' + l.city)}` : '';
+        const telLink = phone ? `tel:${phone}` : '';
+
+        return `
+          <div style="background:#0b1120; border:1px solid #1e293b; border-left:3px solid ${tierColor}; border-radius:6px; padding:10px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:0.7rem; font-weight:bold; color:#00f0ff;">${l.city.toUpperCase()} · ${l.service_type || 'SGOMBERO/TRASLOCO'}</span>
+              <span style="background:${tierColor}; color:#000; font-weight:900; font-size:0.6rem; padding:2px 6px; border-radius:3px;">${l.tier} (${l.priority_score})</span>
+            </div>
+            <div style="font-size:0.8rem; font-weight:bold; color:#fff; margin-bottom:4px;">${l.title}</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">${l.details || ''}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.72rem; color:#cbd5e1; font-weight:600;">📞 ${phone || 'Contatto su annuncio'}</span>
+              <div style="display:flex; gap:6px;">
+                ${phone ? `<a href="${waLink}" target="_blank" style="background:#10b981; color:#000; font-size:0.68rem; font-weight:bold; padding:4px 8px; border-radius:4px; text-decoration:none;">🟢 WHATSAPP</a>` : ''}
+                ${phone ? `<a href="${telLink}" style="background:#0284c7; color:#fff; font-size:0.68rem; font-weight:bold; padding:4px 8px; border-radius:4px; text-decoration:none;">📞 CHIAMATA</a>` : ''}
+                <button onclick="window.sendQuick('JARVIS, invia preventivo express per il lead ${l.id} a ${l.city}')" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; font-size:0.68rem; padding:4px 8px; border-radius:4px; cursor:pointer;">⚡ PREVENTIVO</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    if (container) container.innerHTML = `<div style="color:#ef4444; font-size:0.75rem;">Errore caricamento lead: ${err.message}</div>`;
+  }
+};
+
+window.triggerRadarScan = async function() {
+  const city = document.getElementById('radar-city-select')?.value || 'Bologna';
+  const statusEl = document.getElementById('radar-scan-status');
+  if (statusEl) {
+    statusEl.innerText = `🔍 Scansione annunci "causa trasloco" in corso su ${city}...`;
+    statusEl.style.color = '#00f0ff';
+  }
+
+  try {
+    const res = await fetch('/api/leads/radar/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city: city })
+    });
+    const d = await res.json();
+    if (statusEl) {
+      statusEl.innerText = `✅ Scansione completata: ${d.captured_count} lead individuati e notificati.`;
+      statusEl.style.color = '#10b981';
+    }
+    window.loadActiveLeadsRadar();
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerText = `Errore scansione: ${err.message}`;
+      statusEl.style.color = '#ef4444';
+    }
+  }
+};
+
+// ── CHROME CDP CONTROLLER SUITE ─────────────────────────────────────────
+window.toggleCdpModal = function(show) {
+  const card = document.getElementById('card-mod-cdp');
+  if (!card) return;
+  card.style.display = show ? 'block' : 'none';
+  if (show) {
+    window.checkCdpStatus();
+  }
+};
+
+window.checkCdpStatus = async function() {
+  const badge = document.getElementById('cdp-status-badge');
+  const tabsList = document.getElementById('cdp-open-tabs');
+
+  try {
+    const res = await fetch('/api/cdp/status');
+    const d = await res.json();
+    if (badge) {
+      if (d.running) {
+        badge.innerText = 'CDP CONNESSO (PORTA 9222)';
+        badge.style.background = '#10b981';
+        badge.style.color = '#000';
+      } else {
+        badge.innerText = 'CDP NON AVVIATO (PORTA 9222)';
+        badge.style.background = '#ef4444';
+        badge.style.color = '#fff';
+      }
+    }
+
+    if (d.running) {
+      const tabsRes = await fetch('/api/cdp/tabs');
+      const tabsData = await tabsRes.json();
+      if (tabsList && tabsData.tabs) {
+        tabsList.innerHTML = tabsData.tabs.map(t => `
+          <div style="font-size:0.7rem; color:#cbd5e1; background:#0f172a; padding:6px; border-radius:4px; margin-bottom:4px; border:1px solid #1e293b;">
+            <strong>${t.title || 'Scheda'}</strong><br>
+            <span style="color:#64748b;">${t.url}</span>
+          </div>
+        `).join('');
+      }
+    } else {
+      if (tabsList) tabsList.innerHTML = '<div style="color:#64748b; font-size:0.7rem;">Chrome non è ancora connesso con porta 9222. Clicca "AVVIA CHROME CDP" sotto.</div>';
+    }
+  } catch (err) {
+    if (badge) {
+      badge.innerText = 'OFFLINE';
+      badge.style.background = '#64748b';
+    }
+  }
+};
+
+window.launchChromeCdp = async function(targetUrl) {
+  const statusEl = document.getElementById('cdp-action-status');
+  if (statusEl) {
+    statusEl.innerText = 'Avvio Google Chrome con porta di debug 9222...';
+    statusEl.style.color = '#00f0ff';
+  }
+
+  try {
+    const res = await fetch('/api/cdp/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: targetUrl || 'https://eb.badrexpress.com' })
+    });
+    const d = await res.json();
+    if (statusEl) {
+      statusEl.innerText = `Stato: ${d.status} (URL CDP: ${d.cdp_url || '9222'})`;
+      statusEl.style.color = '#10b981';
+    }
+    setTimeout(window.checkCdpStatus, 1500);
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerText = 'Errore avvio CDP: ' + err.message;
+      statusEl.style.color = '#ef4444';
+    }
+  }
+};
+
+window.fillActiveAgencyPortalWithCdp = async function() {
+  const urlInp = document.getElementById('cdp-portal-url')?.value;
+  const statusEl = document.getElementById('cdp-action-status');
+  if (!urlInp) {
+    alert('Inserisci l\'URL del portale o dell\'agenzia immobiliare da compilare.');
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.innerText = 'Iniezione automatica credenziali e proposta in corso via CDP...';
+    statusEl.style.color = '#00f0ff';
+  }
+
+  try {
+    const res = await fetch('/api/cdp/fill-agency', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        portal_url: urlInp,
+        agency_name: 'Agenzia Selezionata'
+      })
+    });
+    const d = await res.json();
+    if (statusEl) {
+      statusEl.innerText = `Completato: ${d.status} (Dati inseriti via Chrome nativo)`;
+      statusEl.style.color = '#10b981';
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerText = 'Errore iniezione CDP: ' + err.message;
+      statusEl.style.color = '#ef4444';
+    }
+  }
+};
+

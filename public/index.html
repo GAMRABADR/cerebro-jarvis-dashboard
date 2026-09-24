@@ -227,6 +227,14 @@
                 <span class="ct-code">🏢 B2B IMMOBILIARI</span>
                 <span class="ct-desc">Partnership & Sgomberi Pre-Rogito</span>
               </div>
+              <div class="cmd-tile vault-tile" onclick="toggleLeadRadarModal(true)">
+                <span class="ct-code">🎯 RADAR LEAD</span>
+                <span class="ct-desc">Subito & Portali C2C Live</span>
+              </div>
+              <div class="cmd-tile vault-tile" onclick="toggleCdpModal(true)">
+                <span class="ct-code">🌐 CHROME CDP</span>
+                <span class="ct-desc">Auto-Fill & Anti-Bot Native</span>
+              </div>
             </div>
           </div>
 
@@ -1301,10 +1309,89 @@
 
       </div>
     </div>
+
+    <!-- Scheda 7: RADAR LEAD INTENT & SUBITO LIVE -->
+    <div class="modular-window-card" id="card-mod-lead-radar" style="display:none; top:120px; left:280px; width:520px; z-index:9999; border: 1px solid #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.3);">
+      <div class="mwc-header ct-draggable-handle" style="background: linear-gradient(90deg, rgba(239,68,68,0.25), rgba(0,240,255,0.1));">
+        <span class="mwc-title" style="color:#ef4444; font-weight:800; letter-spacing:0.5px;">🎯 RADAR LEAD INTENT (SUBITO &amp; PRIVATI LIVE)</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleLeadRadarModal(false)">✕</button></div>
+      </div>
+      <div class="mwc-body" style="padding:14px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.75rem; color:#94a3b8;">Scanner intent "causa trasloco" &amp; annunci svuoto casa</span>
+          <span class="mwc-badge live" id="radar-lead-count" style="background:#ef4444; color:#fff; font-size:0.65rem; font-weight:bold; padding:2px 6px; border-radius:3px;">0 LEAD</span>
+        </div>
+
+        <!-- Selettore e Scansione Live -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b; margin-bottom:12px;">
+          <div style="font-size:0.72rem; color:#00f0ff; font-weight:bold; margin-bottom:6px;">AREA GEOGRAFICA DI RICERCA</div>
+          <div style="display:flex; gap:8px;">
+            <select id="radar-city-select" style="flex:1; background:#1e293b; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem;">
+              <option value="Bologna" selected>Bologna &amp; Provincia</option>
+              <option value="Imola">Imola</option>
+              <option value="Casalecchio">Casalecchio di Reno</option>
+              <option value="San Lazzaro">San Lazzaro di Savena</option>
+              <option value="Modena">Modena</option>
+              <option value="Ferrara">Ferrara</option>
+              <option value="Ravenna">Ravenna</option>
+              <option value="Reggio Emilia">Reggio Emilia</option>
+              <option value="Milano">Milano</option>
+            </select>
+            <button onclick="triggerRadarScan()" style="background:#ef4444; color:#fff; font-weight:800; border:none; padding:6px 12px; border-radius:4px; font-size:0.75rem; cursor:pointer;">⚡ SCANSIONA ORA</button>
+          </div>
+          <div id="radar-scan-status" style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">Pronto per intercettare privati in trasloco attivo.</div>
+        </div>
+
+        <!-- Feed Lead Rilevati -->
+        <div id="radar-leads-list" style="max-height:360px; overflow-y:auto;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Scheda 8: CHROME CDP CONTROLLER & ANTI-BOT SUITE -->
+    <div class="modular-window-card" id="card-mod-cdp" style="display:none; top:140px; left:320px; width:490px; z-index:9999; border: 1px solid #00f0ff; box-shadow: 0 0 30px rgba(0,240,255,0.25);">
+      <div class="mwc-header ct-draggable-handle" style="background: linear-gradient(90deg, rgba(0,240,255,0.2), rgba(2,132,199,0.1));">
+        <span class="mwc-title" style="color:#00f0ff; font-weight:800; letter-spacing:0.5px;">🌐 CHROME CDP CONTROLLER &amp; PORTALI B2B</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleCdpModal(false)">✕</button></div>
+      </div>
+      <div class="mwc-body" style="padding:14px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.75rem; color:#94a3b8;">Controllo Browser Chrome Nativo via Port 9222</span>
+          <span class="mwc-badge" id="cdp-status-badge" style="background:#64748b; color:#fff; font-size:0.65rem; font-weight:bold; padding:2px 6px; border-radius:3px;">STATO...</span>
+        </div>
+
+        <!-- Avvio Browser Nativo -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b; margin-bottom:12px;">
+          <div style="font-size:0.72rem; color:#00f0ff; font-weight:bold; margin-bottom:4px;">1. BROWSER CHROME CON DEBUG REMOTO</div>
+          <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">
+            Permette a JARVIS di controllare Chrome autenticato per superare Cloudflare/Turnstile e compilare moduli automaticamente.
+          </div>
+          <button onclick="launchChromeCdp()" style="width:100%; background:linear-gradient(135deg, #0284c7, #00f0ff); color:#000; font-weight:800; border:none; padding:8px; border-radius:4px; font-size:0.75rem; cursor:pointer;">🚀 AVVIA CHROME CDP (PORTA 9222)</button>
+        </div>
+
+        <!-- Iniezione Automatica Portali -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b; margin-bottom:12px;">
+          <div style="font-size:0.72rem; color:#10b981; font-weight:bold; margin-bottom:4px;">2. COMPILAZIONE RAPIDA PORTALI / AGENZIE</div>
+          <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">
+            Inserisci l'URL della pagina 'Contatti' o del form dell'agenzia:
+          </div>
+          <input type="text" id="cdp-portal-url" placeholder="https://www.immobiliare.it/... oppure sito agenzia" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.75rem; margin-bottom:8px;">
+          <button onclick="fillActiveAgencyPortalWithCdp()" style="width:100%; background:#10b981; color:#000; font-weight:800; border:none; padding:8px; border-radius:4px; font-size:0.75rem; cursor:pointer;">⚡ AUTO-FILL CREDENZIALI &amp; PROPOSTA BADR</button>
+        </div>
+
+        <!-- Schede Aperte -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b;">
+          <div style="font-size:0.72rem; color:#cbd5e1; font-weight:bold; margin-bottom:6px;">SCHEDE CHROME ATTIVE:</div>
+          <div id="cdp-open-tabs" style="max-height:120px; overflow-y:auto;">
+          </div>
+          <div id="cdp-action-status" style="font-size:0.7rem; color:#00f0ff; margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="cyber_audio_engine.js?v=1007.0"></script>
-  <script src="app.js?v=1008.0"></script>
+  <script src="app.js?v=1009.0"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
 <div id="screen-panel">
