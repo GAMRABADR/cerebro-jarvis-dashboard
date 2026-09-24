@@ -50,7 +50,7 @@ html, body {
   z-index: 2000;
   overflow: visible;
   isolation: isolate;
-  backdrop-filter: blur(10px);
+  /* gpu-optimized */ transform: translateZ(0);
 }
 
 .mv-left {
@@ -127,7 +127,7 @@ html, body {
   flex-direction: column;
   padding: 6px;
   z-index: 2100;
-  backdrop-filter: blur(16px);
+  /* gpu-optimized */ transform: translateZ(0);
 }
 
 .nav-dropdown-pod:hover .nav-dropdown-menu {
@@ -306,7 +306,7 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  backdrop-filter: blur(12px);
+  /* gpu-optimized */ transform: translateZ(0);
 }
 
 .panel-header {
@@ -440,7 +440,7 @@ html, body {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.72rem;
-  backdrop-filter: blur(10px);
+  /* gpu-optimized */ transform: translateZ(0);
 }
 
 .eeh-badge {
@@ -681,7 +681,7 @@ html, body {
   position: relative;
   background: rgba(3, 10, 22, 0.88);
   border: 1px solid rgba(0, 240, 255, 0.28);
-  backdrop-filter: blur(20px);
+  /* gpu-optimized */ transform: translateZ(0);
   clip-path: polygon(
     0 10px, 10px 0,
     calc(100% - 10px) 0, 100% 10px,
@@ -913,7 +913,7 @@ html, body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(12px);
+  /* gpu-optimized */ transform: translateZ(0);
   z-index: 99999;
   display: none;
   visibility: hidden;
@@ -1089,7 +1089,7 @@ html, body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
+  /* gpu-optimized */ transform: translateZ(0);
   z-index: 9999;
   display: none;
   align-items: center;
@@ -2004,7 +2004,7 @@ svg.lucide {
   position: fixed;
   inset: 0;
   background: rgba(1, 4, 10, 0.75);
-  backdrop-filter: blur(16px);
+  /* gpu-optimized */ transform: translateZ(0);
   z-index: 10000;
   display: flex;
   align-items: flex-start;

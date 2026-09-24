@@ -457,11 +457,14 @@
   }
 
   // ── ANIMATE LOOP ──────────────────────────────────────────────────────────
+  let isCosmosAnimating = false;
+
   function animate() {
     if (document.hidden || !container || container.offsetParent === null || container.clientWidth === 0) {
-      setTimeout(() => requestAnimationFrame(animate), 400);
+      isCosmosAnimating = false;
       return;
     }
+    isCosmosAnimating = true;
     requestAnimationFrame(animate);
 
     if (controls) controls.update();
@@ -516,10 +519,20 @@
     renderer.render(scene, camera);
   }
 
-  // Inizializza non appena il DOM è pronto
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
+  // Lazy initialization: attivo SOLO quando l'utente apre esplicitamente la vista 3D Topology
+  window.initCosmos3D = function() {
+    if (!scene) {
+      init();
+    } else {
+      onWindowResize();
+      if (!isCosmosAnimating) {
+        animate();
+      }
+    }
+  };
+
+  // Se l'elemento è già visibile al caricamento, inizializza
+  if (container.offsetParent !== null && container.clientWidth > 0) {
     init();
   }
 })();

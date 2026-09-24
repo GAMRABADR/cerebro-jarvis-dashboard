@@ -14,14 +14,14 @@ let _toolCardTimer = null;
 
 const EBJ_WAKE_ACK = 'Ci sono, Ingegnere. Dimmi.';
 
-window.ebjVoiceEnabled = true;
-localStorage.setItem('ebj_voce', 'on');
-window.isConversationalMode = true;
+window.ebjVoiceEnabled = false;
+window.isConversationalMode = false;
 let _ebjCurrentAudio = null;
 let _ebjRecognition = null;
 let _ebjMicOn = false;
 let _ebjVoiceUnlocked = false;
 let _ebjWsGreeted = false;
+let _ebjRestartTimer = null;
 
 function isEbjWakePhrase(text) {
   const raw = String(text || '').trim().toLowerCase()
@@ -251,7 +251,6 @@ function unlockEbjVoice() {
   if (!_ebjVoiceUnlocked) {
     _ebjVoiceUnlocked = true;
     try { window.cyberAudio && window.cyberAudio.initContext(); } catch (_) {}
-    if (window.ebjVoiceEnabled) startEbjMic();
   }
   // Neutralize Chrome/Edge browser autoplay block
   if (window.speechSynthesis && window.speechSynthesis.paused) {
@@ -259,10 +258,10 @@ function unlockEbjVoice() {
   }
 }
 
-// Auto-unlock audio playback permissions on first user gesture anywhere
-window.addEventListener('click', () => { unlockEbjVoice(); }, { passive: true });
-window.addEventListener('keydown', () => { unlockEbjVoice(); }, { passive: true });
-window.addEventListener('touchstart', () => { unlockEbjVoice(); }, { passive: true });
+// Auto-unlock audio playback permissions una tantum al primo gesto utente
+window.addEventListener('click', () => { unlockEbjVoice(); }, { passive: true, once: true });
+window.addEventListener('keydown', () => { unlockEbjVoice(); }, { passive: true, once: true });
+window.addEventListener('touchstart', () => { unlockEbjVoice(); }, { passive: true, once: true });
 
 window.toggleConversationalMode = function() {
   const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -422,7 +421,7 @@ async function syncRustTelemetry() {
 
   } catch (err) {}
 }
-setInterval(syncRustTelemetry, 2500);
+setInterval(syncRustTelemetry, 4000);
 syncRustTelemetry();
 
 // ── 3. DISPATCH EVENT LOG ──────────────────────────────────────────

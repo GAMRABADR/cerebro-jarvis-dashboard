@@ -319,21 +319,12 @@
                     <stop offset="70%" stop-color="#0066ff" stop-opacity="0.5"/>
                     <stop offset="100%" stop-color="#001026" stop-opacity="0"/>
                   </radialGradient>
-                  <filter id="arcGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="blur1"/>
-                    <feGaussianBlur stdDeviation="6" result="blur2"/>
-                    <feMerge>
-                      <feMergeNode in="blur2"/>
-                      <feMergeNode in="blur1"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
                 </defs>
 
                 <!-- 1. ANELLO ESTERNO CON TACCHE GRADUATE 360° -->
                 <circle cx="120" cy="120" r="110" fill="none" stroke="rgba(0,240,255,0.2)" stroke-width="1.5"/>
                 <g class="arc-rot-clockwise">
-                  <circle cx="120" cy="120" r="106" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="4 8 16 8" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="106" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="4 8 16 8"/>
                   <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(0,255,159,0.4)" stroke-width="1" stroke-dasharray="2 6"/>
                   <line x1="120" y1="6" x2="120" y2="18" stroke="#00ff9f" stroke-width="2"/>
                   <line x1="120" y1="222" x2="120" y2="234" stroke="#00ff9f" stroke-width="2"/>
@@ -343,7 +334,7 @@
 
                 <!-- 2. ANELLO INTERMEDIO DENTATO (GEAR TEETH) -->
                 <g class="arc-rot-counter">
-                  <circle cx="120" cy="120" r="88" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="12 16" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="88" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="12 16"/>
                   <circle cx="120" cy="120" r="80" fill="none" stroke="rgba(255,183,3,0.45)" stroke-width="1.5" stroke-dasharray="30 20"/>
                 </g>
 
@@ -359,8 +350,8 @@
                 <!-- 5. NUCLEO AL PLASMA PULSANTE (ARC REACTOR CORE) -->
                 <g class="arc-pulse-core" id="jarvis-sphere">
                   <circle cx="120" cy="120" r="46" fill="url(#arcCoreGrad)"/>
-                  <circle cx="120" cy="120" r="42" fill="none" stroke="#ffffff" stroke-width="1.5" filter="url(#arcGlow)"/>
-                  <circle cx="120" cy="120" r="22" fill="#ffffff" filter="url(#arcGlow)"/>
+                  <circle cx="120" cy="120" r="42" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                  <circle cx="120" cy="120" r="22" fill="#ffffff"/>
                 </g>
 
                 <!-- 6. LABEL CENTRALE -->
@@ -413,7 +404,7 @@
           </div>
 
           <!-- ── APEX UNIFIED COMMAND CENTER (CONTROLLO TOTALE) ──────────────── -->
-          <div class="apex-command-dock" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #00f0ff; border-radius: 14px; padding: 14px 18px; margin: 12px 0; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); backdrop-filter: blur(12px);">
+          <div class="apex-command-dock" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #00f0ff; border-radius: 14px; padding: 14px 18px; margin: 12px 0; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); transform: translateZ(0);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00ff9f; box-shadow: 0 0 10px #00ff9f;"></span>
@@ -982,11 +973,11 @@
     <div id="cosmos-3d-container" style="position:absolute; inset:0; width:100%; height:100%; z-index:1;"></div>
 
     <!-- Floating Sleek Tooltip (Hover sui Nodi) -->
-    <div id="cosmos-tooltip" style="position:fixed; display:none; z-index:100; pointer-events:none; background:rgba(3, 10, 20, 0.92); border:1px solid #00f0ff; border-radius:10px; padding:10px 14px; backdrop-filter:blur(16px); box-shadow:0 0 20px rgba(0, 240, 255, 0.35); min-width:180px; font-family:'Outfit', sans-serif;"></div>
+    <div id="cosmos-tooltip" style="position:fixed; display:none; z-index:100; pointer-events:none; background:rgba(3, 10, 20, 0.92); border:1px solid #00f0ff; border-radius:10px; padding:10px 14px; transform: translateZ(0); box-shadow:0 0 20px rgba(0, 240, 255, 0.35); min-width:180px; font-family:'Outfit', sans-serif;"></div>
 
     <!-- Top-Left Navigation & Controls Overlay -->
     <div style="position:absolute; top:20px; left:20px; z-index:10; display:flex; flex-direction:column; gap:8px; pointer-events:auto;">
-      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.25); border-radius:12px; padding:10px 16px; backdrop-filter:blur(16px); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.25); border-radius:12px; padding:10px 16px; transform: translateZ(0); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span>
           <span style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#fff; letter-spacing:1px;">J.A.R.V.I.S. 3D CONSTELLATION</span>
@@ -1033,7 +1024,7 @@
       </div>
 
       <!-- Layout Switcher Buttons (RING, CUBE, SPHERE, CONSTELLATION) -->
-      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.2); border-radius:12px; padding:6px; display:flex; gap:4px; backdrop-filter:blur(12px);">
+      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.2); border-radius:12px; padding:6px; display:flex; gap:4px; transform: translateZ(0);">
         <button class="cosmos-btn-mode active" id="btn-layout-constellation" onclick="setCosmosLayout('constellation')">CONSTELLATION</button>
         <button class="cosmos-btn-mode" id="btn-layout-ring" onclick="setCosmosLayout('ring')">RING</button>
         <button class="cosmos-btn-mode" id="btn-layout-cube" onclick="setCosmosLayout('cube')">CUBE</button>
@@ -1048,7 +1039,7 @@
       </div>
 
       <!-- Inspector Drawer per Nodo Cliccato -->
-      <div id="cosmos-inspector-drawer" style="display:none; width:260px; background:rgba(4, 14, 26, 0.95); border:1px solid rgba(0, 240, 255, 0.35); border-radius:14px; padding:16px; backdrop-filter:blur(20px); box-shadow:0 15px 40px rgba(0,0,0,0.7);">
+      <div id="cosmos-inspector-drawer" style="display:none; width:260px; background:rgba(4, 14, 26, 0.95); border:1px solid rgba(0, 240, 255, 0.35); border-radius:14px; padding:16px; transform: translateZ(0); box-shadow:0 15px 40px rgba(0,0,0,0.7);">
       </div>
 
     </div>
@@ -1875,6 +1866,7 @@ window.switchMasterView = function(view) {
   if (view === 'topology') {
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
+      if (window.initCosmos3D) window.initCosmos3D();
       if (window.setCosmosLayout) window.setCosmosLayout('constellation');
     }, 60);
   }
@@ -2014,16 +2006,16 @@ document.addEventListener('DOMContentLoaded', () => {
   window.handlePaletteInput = async function(val) {
     if (!val || val.trim() === '') return;
     try {
-      const res = await fetch('http://localhost:9000/api/fuzzy/match-command', {
+      const res = await fetch('/api/pricing/quantum-estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: val })
+        body: JSON.stringify({ query: val, mq: 70 })
       });
       if (res.ok) {
         const d = await res.json();
-        if (d.best_match) {
-          const status = document.getElementById('voice-dialogue-status-text');
-          if (status) status.innerText = `✦ Fuzzy Match: ${d.best_match} (${d.latency_us}µs)`;
+        const status = document.getElementById('voice-dialogue-status-text');
+        if (status && d.total_price) {
+          status.innerText = `✦ Stima Rust: €${d.total_price} (${d.execution_time_us || 5}µs)`;
         }
       }
     } catch(e) {}
@@ -2055,7 +2047,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="stark-palette-item-left"><span>⚡</span><span>Compila Campi Modulo con Profilo Badr (Sub-2µs)</span></div>
         <span class="stark-palette-item-shortcut">Alt+F</span>
       </div>
-      <div class="stark-palette-item" onclick="fetch('http://localhost:9000/api/math/quote-estimate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mq:75, piano_partenza:1, piano_arrivo:1, ascensore_partenza:true, ascensore_arrivo:true, km_trasferta:5})}).then(r=>r.json()).then(d=>alert('Preventivo Rust Calcolato: €' + d.total_price + ' in ' + d.execution_time_us + 'µs')); closeCommandPalette();">
+      <div class="stark-palette-item" onclick="fetch('/api/pricing/quantum-estimate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mq:75, piano_partenza:1, piano_arrivo:1, ascensore_partenza:true, ascensore_arrivo:true, km_trasferta:5})}).then(r=>r.json()).then(d=>alert('Preventivo Rust Calcolato: €' + d.total_price + ' in ' + (d.execution_time_us || 5) + 'µs')); closeCommandPalette();">
         <div class="stark-palette-item-left"><span>🧮</span><span>Calcola Preventivo Istantaneo Fast Math (4µs)</span></div>
         <span class="stark-palette-item-shortcut">Enter</span>
       </div>
