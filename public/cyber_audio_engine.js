@@ -140,24 +140,18 @@ class CyberAudioEngine {
     this.initContext();
     if (!this.ctx) return;
     try {
-      // Chiamata all'endpoint nativo Rust /api/audio/sample/reactor_hum con fallback WebAudio
-      const audio = new Audio('http://localhost:9000/api/audio/sample/reactor_hum');
-      audio.volume = 0.6;
-      audio.play().catch(() => {
-        // Fallback WebAudio nativo
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(55, now);
-        osc.frequency.exponentialRampToValueAtTime(110, now + 0.5);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.65);
-      });
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(55, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.5);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.65);
     } catch (e) {}
   }
 
@@ -166,21 +160,17 @@ class CyberAudioEngine {
     this.initContext();
     if (!this.ctx) return;
     try {
-      const audio = new Audio('http://localhost:9000/api/audio/sample/lock_beep');
-      audio.volume = 0.5;
-      audio.play().catch(() => {
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(2400, now);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.16);
-      });
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2400, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
     } catch (e) {}
   }
 
@@ -189,22 +179,18 @@ class CyberAudioEngine {
     this.initContext();
     if (!this.ctx) return;
     try {
-      const audio = new Audio('http://localhost:9000/api/audio/sample/access_granted');
-      audio.volume = 0.55;
-      audio.play().catch(() => {
-        const now = this.ctx.currentTime;
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.06);
-          gain.gain.setValueAtTime(0.06, now + i * 0.06);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now + i * 0.06);
-          osc.stop(now + i * 0.06 + 0.22);
-        });
+      const now = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + i * 0.06);
+        gain.gain.setValueAtTime(0.06, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.06);
+        osc.stop(now + i * 0.06 + 0.22);
       });
     } catch (e) {}
   }
@@ -229,19 +215,23 @@ class CyberAudioEngine {
       this.analyser.smoothingTimeConstant = 0.4;
       this.micSource.connect(this.analyser);
 
-      // Connessione WebSocket al microkernel Rust
-      this.dialogueWs = new WebSocket('ws://localhost:9000/ws/voice-dialogue');
-      this.dialogueWs.onmessage = (ev) => {
+      // WebSocket Rust locale solo se in chiaro (evita mixed content su HTTPS)
+      if (window.location.protocol !== 'https:') {
         try {
-          const msg = JSON.parse(ev.data);
-          if (msg.type === 'VAD_SPEECH_START') {
-            this.interruptJarvisSpeaking(); // BARGE-IN IMMEDIATO
-            onSpeechStart && onSpeechStart(msg);
-          } else if (msg.type === 'VAD_SPEECH_END') {
-            onSpeechEnd && onSpeechEnd(msg);
-          }
-        } catch (e) {}
-      };
+          this.dialogueWs = new WebSocket('ws://localhost:9000/ws/voice-dialogue');
+          this.dialogueWs.onmessage = (ev) => {
+            try {
+              const msg = JSON.parse(ev.data);
+              if (msg.type === 'VAD_SPEECH_START') {
+                this.interruptJarvisSpeaking(); // BARGE-IN IMMEDIATO
+                onSpeechStart && onSpeechStart(msg);
+              } else if (msg.type === 'VAD_SPEECH_END') {
+                onSpeechEnd && onSpeechEnd(msg);
+              }
+            } catch (e) {}
+          };
+        } catch (_) {}
+      }
 
       this.isListeningActive = true;
       const dataArray = new Uint8Array(this.analyser.frequencyBinCount);

@@ -53,24 +53,46 @@ function stopEbjSpeech() {
   }
 }
 
-window.playSpeechAudio = async function(text) {
+window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   if (!window.ebjVoiceEnabled || !text) return;
   const clean = String(text).replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 420);
   if (!clean) return;
 
   const resumeMic = _ebjMicOn;
-  if (_ebjRecognition && resumeMic) {
-    try { _ebjRecognition.onend = null; _ebjRecognition.stop(); } catch (_) {}
-    _ebjMicOn = false;
-  }
+  stopEbjMic();
   stopEbjSpeech();
   unlockEbjVoice();
 
   addEvent('voice', `🔊 VOCAL SYNTHESIS: "${clean.slice(0, 50)}..."`);
   let played = false;
 
-  // 1. Edge-TTS Neural Audio via Master Server /api/tts
-  try {
+  const playBase64 = async (b64, mime = 'audio/mpeg') => {
+    try {
+      const binaryStr = atob(b64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
+      _ebjCurrentAudio = new Audio(blobUrl);
+      _ebjCurrentAudio.volume = 1.0;
+      await new Promise((resolve) => {
+        let done = false;
+        const finishAudio = () => {
+          if (!done) { done = true; URL.revokeObjectURL(blobUrl); resolve(); }
+        };
+        _ebjCurrentAudio.onended = finishAudio;
+        _ebjCurrentAudio.onerror = finishAudio;
+        _ebjCurrentAudio.play().then(() => { played = true; }).catch((err) => { finishAudio(); });
+        setTimeout(finishAudio, 15000);
+      });
+    } catch (e) {}
+  };
+
+  if (preloadedBase64 && preloadedBase64.length > 500) {
+    await playBase64(preloadedBase64);
+  } else {
+    // 1. Edge-TTS Neural Audio via Master Server /api/tts
+    try {
     const r = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,8 +134,9 @@ window.playSpeechAudio = async function(text) {
         });
       }
     }
-  } catch (err) {
-    console.warn('[TTS Server Fetch Error]:', err);
+    } catch (err) {
+      console.warn('[TTS Server Fetch Error]:', err);
+    }
   }
 
   // 2. High-Fidelity Browser SpeechSynthesis Fallback
@@ -146,7 +169,11 @@ window.playSpeechAudio = async function(text) {
     }
   }
 
-  if (window.ebjVoiceEnabled && resumeMic) startEbjMic();
+  if (window.ebjVoiceEnabled && resumeMic) {
+    setTimeout(() => {
+      if (window.ebjVoiceEnabled && !_ebjMicOn) startEbjMic();
+    }, 350);
+  }
 };
 
 let _ebjRestartTimer = null;
@@ -306,7 +333,7 @@ async function syncRustTelemetry() {
     // Fallback: direct local Rust Bridge for workstation
     if (!wsData) {
       try {
-        const rRust = await fetch('http://127.0.0.1:9000/api/telemetry', { signal: AbortSignal.timeout(500) });
+        if (window.location.protocol === 'https:') return; const rRust = await fetch('/api/telemetry/vps', { signal: AbortSignal.timeout(500) });
         if (rRust.ok) {
           const rust = await rRust.json();
           wsData = {
@@ -436,11 +463,11 @@ async function executeCommandPipeline(prompt) {
   const sphere = document.getElementById('jarvis-sphere');
   if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
 
-  const finish = (reply, tag) => {
+  const finish = (reply, tag, preloaded = null) => {
     if (respEl) respEl.textContent = reply;
     if (respTag) respTag.textContent = tag;
     addEvent('ai', String(reply).slice(0, 80) + '...');
-    if (window.playSpeechAudio) window.playSpeechAudio(reply);
+    if (window.playSpeechAudio) window.playSpeechAudio(reply, preloaded);
     const input = document.getElementById('prompt-input');
     if (input) input.focus();
   };
@@ -449,7 +476,7 @@ async function executeCommandPipeline(prompt) {
     window.isConversationalMode = true;
     finish(EBJ_WAKE_ACK, 'E.B.J. LISTEN');
     try {
-      fetch('http://127.0.0.1:9000/api/wake', {
+      if (window.location.protocol !== 'https:') fetch('http://127.0.0.1:9000/api/wake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: prompt }),
@@ -473,6 +500,7 @@ async function executeCommandPipeline(prompt) {
     const model = document.getElementById('model-select')?.value || 'auto';
     let reply = '';
     let modelTag = 'EBJ SUPREME';
+    let preloadedAudio = null;
 
     // 1. Chiamata diretta all'intelligenza vocale e operativa unificata EBJ
     try {
@@ -486,10 +514,7 @@ async function executeCommandPipeline(prompt) {
         const vData = await vRes.json();
         reply = vData.response || '';
         if (vData.audio_base64 && window.ebjVoiceEnabled) {
-          try {
-            const snd = new Audio('data:audio/mp3;base64,' + vData.audio_base64);
-            snd.play();
-          } catch (_) {}
+          preloadedAudio = vData.audio_base64;
         }
       }
     } catch (_) {}
@@ -508,7 +533,7 @@ async function executeCommandPipeline(prompt) {
       updateAiModeBadge(d);
     }
 
-    finish(reply, modelTag);
+    finish(reply, modelTag, preloadedAudio);
   } catch (err) {
     if (respEl) respEl.textContent = 'Errore di comunicazione: ' + err.message;
     if (respTag) respTag.textContent = 'ERROR';
@@ -1375,6 +1400,7 @@ window.triggerRustHeal = async function() {
 };
 
 function connectEbjRustListen() {
+  if (window.location.protocol === 'https:') return;
   try {
     const ws = new WebSocket('ws://127.0.0.1:9000/ws/ebj');
     ws.onopen = () => addEvent('rust', 'E.B.J. in ascolto sul bridge :9000');

@@ -322,6 +322,10 @@ class InteractiveNeuralGraph {
   }
 
   animate() {
+    if (document.hidden || !this.canvas || this.canvas.offsetParent === null || this.canvas.clientWidth === 0) {
+      setTimeout(() => requestAnimationFrame(() => this.animate()), 400);
+      return;
+    }
     this.time += 0.03;
     this.updatePhysics();
     const ctx = this.ctx;

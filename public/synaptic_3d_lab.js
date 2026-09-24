@@ -1038,7 +1038,7 @@ class SupremeBioNeuralCortex {
 
     // Zero-Cost Pausing when Hidden or Minimized
     if (!this.canvas || this.canvas.offsetParent === null || document.hidden) {
-      requestAnimationFrame((t) => this.animate(t));
+      setTimeout(() => requestAnimationFrame((t) => this.animate(t)), 400);
       return;
     }
 

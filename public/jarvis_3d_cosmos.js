@@ -458,6 +458,10 @@
 
   // ── ANIMATE LOOP ──────────────────────────────────────────────────────────
   function animate() {
+    if (document.hidden || !container || container.offsetParent === null || container.clientWidth === 0) {
+      setTimeout(() => requestAnimationFrame(animate), 400);
+      return;
+    }
     requestAnimationFrame(animate);
 
     if (controls) controls.update();
