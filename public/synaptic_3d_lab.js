@@ -187,8 +187,6 @@ class SupremeBioNeuralCortex {
     this.ctx.arc(0, 0, r3, 0, Math.PI * 2);
     this.ctx.stroke();
 
-    this.ctx.restore();
-  }
     this.ctx.lineWidth = 0.8;
     this.ctx.setLineDash([2, 6]);
     this.ctx.beginPath();

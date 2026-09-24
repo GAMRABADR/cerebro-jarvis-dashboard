@@ -149,10 +149,22 @@ window.playSpeechAudio = async function(text) {
   if (window.ebjVoiceEnabled && resumeMic) startEbjMic();
 };
 
+let _ebjRestartTimer = null;
+
 function stopEbjMic() {
   _ebjMicOn = false;
+  if (_ebjRestartTimer) {
+    clearTimeout(_ebjRestartTimer);
+    _ebjRestartTimer = null;
+  }
   if (_ebjRecognition) {
-    try { _ebjRecognition.onend = null; _ebjRecognition.stop(); } catch (_) {}
+    try {
+      _ebjRecognition.onend = null;
+      _ebjRecognition.onerror = null;
+      _ebjRecognition.onresult = null;
+      _ebjRecognition.stop();
+    } catch (_) {}
+    _ebjRecognition = null;
   }
 }
 
@@ -163,29 +175,49 @@ function startEbjMic() {
     return;
   }
   stopEbjMic();
-  _ebjRecognition = new SR();
-  _ebjRecognition.lang = 'it-IT';
-  _ebjRecognition.continuous = true;
-  _ebjRecognition.interimResults = false;
-  _ebjRecognition.onresult = (e) => {
-    const last = e.results[e.results.length - 1];
-    if (!last || !last.isFinal) return;
-    const text = (last[0] && last[0].transcript || '').trim();
-    if (!text || isBusy) return;
-    const input = document.getElementById('prompt-input');
-    if (input) input.value = '';
-    executeCommandPipeline(text);
-  };
-  _ebjRecognition.onerror = (ev) => {
-    if (ev.error === 'not-allowed') addEvent('sys', 'Microfono bloccato dal browser — consenti l\'audio');
-  };
-  _ebjRecognition.onend = () => {
-    if (window.ebjVoiceEnabled && _ebjMicOn) {
-      try { _ebjRecognition.start(); } catch (_) {}
-    }
-  };
-  _ebjMicOn = true;
-  try { _ebjRecognition.start(); } catch (_) {}
+
+  try {
+    _ebjRecognition = new SR();
+    _ebjRecognition.lang = 'it-IT';
+    _ebjRecognition.continuous = true;
+    _ebjRecognition.interimResults = false;
+
+    _ebjRecognition.onresult = (e) => {
+      const last = e.results[e.results.length - 1];
+      if (!last || !last.isFinal) return;
+      const text = (last[0] && last[0].transcript || '').trim();
+      if (!text || isBusy) return;
+      const input = document.getElementById('prompt-input');
+      if (input) input.value = '';
+      executeCommandPipeline(text);
+    };
+
+    _ebjRecognition.onerror = (ev) => {
+      console.warn('[Speech Recognition Error]:', ev.error);
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        _ebjMicOn = false;
+        addEvent('sys', 'Microfono bloccato dal browser — consenti l\'audio nelle impostazioni');
+      }
+    };
+
+    _ebjRecognition.onend = () => {
+      // Debounce restart a 450ms per prevenire qualsiasi freeze del thread browser
+      if (window.ebjVoiceEnabled && _ebjMicOn) {
+        if (_ebjRestartTimer) clearTimeout(_ebjRestartTimer);
+        _ebjRestartTimer = setTimeout(() => {
+          if (window.ebjVoiceEnabled && _ebjMicOn && _ebjRecognition) {
+            try { _ebjRecognition.start(); } catch (_) {}
+          }
+        }, 450);
+      }
+    };
+
+    _ebjMicOn = true;
+    _ebjRecognition.start();
+  } catch (err) {
+    console.warn('[SpeechRecognition Start Err]:', err);
+    _ebjMicOn = false;
+  }
 }
 
 function unlockEbjVoice() {
@@ -1259,6 +1291,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadModularCardsState();
   initCustomModelSelect();
   updateVadPill();
+  showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
+  connectEbjRustListen();
+  document.addEventListener('click', unlockEbjVoice, { once: true });
 });
 
 // ── AZIONE DIRETTA MARKETPLACE DA HOME CONTROLLO TOTALE ──────────────
@@ -1338,10 +1373,6 @@ window.triggerRustHeal = async function() {
     if (btn) btn.textContent = '🩹 Heal';
   }
 };
-  showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
-  connectEbjRustListen();
-  document.addEventListener('click', unlockEbjVoice, { once: true });
-});
 
 function connectEbjRustListen() {
   try {
