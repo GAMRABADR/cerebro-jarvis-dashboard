@@ -1528,3 +1528,174 @@ window.copyJevAdText = function(platform) {
     prompt('Copia il testo:', text);
   }
 };
+
+// ── B2B IMMOBILIARI & SGOMBERI AUTOPILOT ────────────────────────────
+let _b2bAgenciesList = [];
+let _currentB2bEmail = null;
+
+window.toggleB2bModal = function(show) {
+  const card = document.getElementById('card-mod-b2b');
+  if (!card) return;
+  if (show === undefined) show = card.style.display === 'none';
+  card.style.display = show ? 'block' : 'none';
+  if (show) {
+    card.style.zIndex = '9999';
+    card.style.top = '130px';
+    card.style.left = Math.min(window.innerWidth - 500, Math.max(20, Math.floor(window.innerWidth / 2 - 240))) + 'px';
+  }
+};
+
+window.scoutB2bAgencies = async function() {
+  const city = document.getElementById('b2b-city-select')?.value || 'Bologna';
+  const statusEl = document.getElementById('b2b-scout-status');
+  if (statusEl) statusEl.innerHTML = `⏳ Scansione in corso per <strong>${city}</strong> (Overpass API)...`;
+
+  try {
+    const res = await fetch(`/api/b2b/agencies?city=${encodeURIComponent(city)}&limit=30`);
+    const data = await res.json();
+    _b2bAgenciesList = data.agencies || [];
+
+    if (statusEl) {
+      statusEl.innerHTML = `✅ Censite <strong>${_b2bAgenciesList.length}</strong> agenzie a <strong>${city}</strong>!`;
+    }
+
+    const sel = document.getElementById('b2b-selected-agency');
+    const container = document.getElementById('b2b-agencies-container');
+    if (sel && container) {
+      sel.innerHTML = '';
+      _b2bAgenciesList.forEach((ag, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${ag.agency_name} (${ag.address || ag.city})`;
+        sel.appendChild(opt);
+      });
+      container.style.display = _b2bAgenciesList.length > 0 ? 'block' : 'none';
+      window.onB2bAgencySelected();
+    }
+    addEvent('sys', `B2B: Censite ${_b2bAgenciesList.length} agenzie a ${city}`);
+  } catch (err) {
+    if (statusEl) statusEl.textContent = 'Errore scouting: ' + err.message;
+  }
+};
+
+window.onB2bAgencySelected = function() {
+  const sel = document.getElementById('b2b-selected-agency');
+  const infoEl = document.getElementById('b2b-agency-info');
+  if (!sel || !_b2bAgenciesList.length) return;
+  const ag = _b2bAgenciesList[parseInt(sel.value, 10)] || _b2bAgenciesList[0];
+  if (infoEl && ag) {
+    infoEl.innerHTML = `
+      <strong>Indirizzo:</strong> ${ag.address || 'In centro'} · <strong>Città:</strong> ${ag.city}<br/>
+      <strong>Telefono:</strong> ${ag.phone || 'Non disponibile'} · <strong>Email:</strong> ${ag.email || 'Da registrare'}<br/>
+      ${ag.website ? `<a href="${ag.website}" target="_blank" style="color:#00f0ff;">Sito Web Agenzia</a>` : ''}
+    `;
+  }
+};
+
+window.calculateB2bSgombero = async function() {
+  const tipo = document.getElementById('b2b-sgombero-tipo')?.value || 'trilocale';
+  const piano = parseInt(document.getElementById('b2b-sgombero-piano')?.value || '2', 10);
+  const asc = document.getElementById('b2b-sgombero-asc')?.checked === true;
+  const resBox = document.getElementById('b2b-sgombero-res');
+
+  try {
+    const res = await fetch('/api/b2b/calculate-sgombero', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo_immobile: tipo, piano: piano, ascensore: asc })
+    });
+    const d = await res.json();
+    if (resBox) {
+      resBox.style.display = 'block';
+      resBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:#94a3b8;">Prezzo Listino Privati:</span>
+          <span style="text-decoration:line-through; color:#ef4444;">€ ${d.prezzo_listino}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="color:#10b981; font-weight:bold;">Prezzo Riservato Agenzia (-15%):</span>
+          <span style="color:#10b981; font-weight:bold; font-size:0.95rem;">€ ${d.prezzo_finale_agenzia}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:#eab308;">Provvigione Riconosciuta all'Agenzia (10%):</span>
+          <span style="color:#eab308; font-weight:bold;">€ ${d.provvigione_riconosciuta}</span>
+        </div>
+        <div style="font-size:0.65rem; color:#cbd5e1; border-top:1px solid #1e293b; padding-top:4px;">
+          ⏱️ Intervento garantito: ${d.tempistica_garantita} · Pulizia finale post-sgombero inclusa.
+        </div>
+      `;
+    }
+  } catch (err) {
+    alert('Errore calcolo sgombero B2B: ' + err.message);
+  }
+};
+
+window.previewB2bEmail = async function() {
+  const sel = document.getElementById('b2b-selected-agency');
+  const previewBox = document.getElementById('b2b-email-preview-box');
+  const city = document.getElementById('b2b-city-select')?.value || 'Bologna';
+  let agencyName = 'Agenzia Immobiliare Partner';
+  if (sel && _b2bAgenciesList.length) {
+    const ag = _b2bAgenciesList[parseInt(sel.value, 10)];
+    if (ag) agencyName = ag.agency_name;
+  }
+
+  try {
+    const res = await fetch('/api/b2b/compose-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agency_name: agencyName, city: city, contact_person: 'Responsabile Compravendite' })
+    });
+    const d = await res.json();
+    _currentB2bEmail = d;
+
+    if (previewBox) {
+      previewBox.style.display = 'block';
+      previewBox.textContent = `OGGETTO: ${d.subject}\n\n${d.body_plain}`;
+    }
+  } catch (err) {
+    alert('Errore anteprima email B2B: ' + err.message);
+  }
+};
+
+window.sendB2bProposalEmail = async function() {
+  const sel = document.getElementById('b2b-selected-agency');
+  const city = document.getElementById('b2b-city-select')?.value || 'Bologna';
+  let agencyName = 'Agenzia Partner';
+  let email = '';
+
+  if (sel && _b2bAgenciesList.length) {
+    const ag = _b2bAgenciesList[parseInt(sel.value, 10)];
+    if (ag) {
+      agencyName = ag.agency_name;
+      email = ag.email;
+    }
+  }
+
+  if (!email || email.indexOf('@') === -1) {
+    email = prompt(`Inserisci l'indirizzo email per ${agencyName}:`, 'info@' + agencyName.toLowerCase().replace(/[^a-z]/g, '') + '.it');
+    if (!email) return;
+  }
+
+  try {
+    const res = await fetch('/api/b2b/send-proposal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agency_name: agencyName,
+        to_email: email,
+        city: city,
+        contact_person: 'Titolare / Responsabile Agenzia'
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      alert(`✅ Email di convenzione inviata con successo a ${agencyName} (${email})!\nRecapiti inclusi: +39 388 870 3508 e www.badrexpress.com`);
+      addEvent('sys', `B2B: Proposta convenzione inviata a ${agencyName}`);
+    } else {
+      alert('Errore invio email: ' + (d.error || 'Verifica connessione SMTP'));
+    }
+  } catch (err) {
+    alert('Errore invio proposta: ' + err.message);
+  }
+};

@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Cache-Control" content="no-store">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#020813">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EBJ AI">
   <title>E.B.J. AI · APEX MATRIX v100.0</title>
   <link rel="stylesheet" href="style.css?v=1004.0">
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="/ebj_supreme_logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -27,6 +33,7 @@
         <span>E.B.J. AI APEX</span>
       </span>
       <span class="mv-tag">EL OUARITI BADR · MATRIX v100.0</span>
+      <button class="view-switch-btn" id="btn-install-pwa" type="button" style="border-color:#10b981; color:#10b981; margin-left:8px; padding:3px 8px; font-size:0.75rem;" onclick="installPwaApp()"><i data-lucide="download" class="lucide-icon"></i>📱 App Mobile</button>
     </div>
 
     <div class="mv-center" id="mv-center-nav">
@@ -215,6 +222,10 @@
               <div class="cmd-tile vault-tile" onclick="toggleJevModal(true)">
                 <span class="ct-code">💎 JEV PERIZIE</span>
                 <span class="ct-desc">Quotazione Rust & Subito/FB</span>
+              </div>
+              <div class="cmd-tile vault-tile" onclick="toggleB2bModal(true)">
+                <span class="ct-code">🏢 B2B IMMOBILIARI</span>
+                <span class="ct-desc">Partnership & Sgomberi Pre-Rogito</span>
               </div>
             </div>
           </div>
@@ -1202,6 +1213,94 @@
 
       </div>
     </div>
+
+    <!-- Scheda 6: B2B Agenzie Immobiliari & Sgomberi Pre-Rogito -->
+    <div class="modular-window-card" id="card-mod-b2b" style="display:none; top:130px; left:300px; width:480px; z-index:9999; border: 1px solid #10b981; box-shadow: 0 0 30px rgba(16,185,129,0.3);">
+      <div class="mwc-header ct-draggable-handle" style="background: linear-gradient(90deg, rgba(16,185,129,0.2), rgba(0,240,255,0.1));">
+        <span class="mwc-title" style="color:#10b981; font-weight:800; letter-spacing:0.5px;">🏢 B2B IMMOBILIARI &amp; SGOMBERI AUTOPILOT</span>
+        <div class="mwc-btns"><button class="mwc-btn" onclick="toggleB2bModal(false)">✕</button></div>
+      </div>
+      <div class="mwc-body" style="padding:14px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.75rem; color:#94a3b8;">Scout Overpass OSM &amp; Outreach SMTP</span>
+          <span class="mwc-badge live" style="background:#10b981; color:#000; font-size:0.65rem; font-weight:bold; padding:2px 6px; border-radius:3px;">B2B ATTIVO</span>
+        </div>
+
+        <!-- Sezione 1: Scouting Agenzie -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b; margin-bottom:12px;">
+          <div style="font-size:0.72rem; color:#10b981; font-weight:bold; margin-bottom:6px;">1. SELEZIONA CITTÀ &amp; CENSISCI AGENZIE</div>
+          <div style="display:flex; gap:8px;">
+            <select id="b2b-city-select" style="flex:1; background:#1e293b; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem;">
+              <option value="Bologna" selected>Bologna</option>
+              <option value="Imola">Imola</option>
+              <option value="Casalecchio di Reno">Casalecchio di Reno</option>
+              <option value="San Lazzaro di Savena">San Lazzaro di Savena</option>
+              <option value="Modena">Modena</option>
+              <option value="Ferrara">Ferrara</option>
+              <option value="Reggio nell'Emilia">Reggio Emilia</option>
+              <option value="Ravenna">Ravenna</option>
+              <option value="Parma">Parma</option>
+              <option value="Milano">Milano</option>
+            </select>
+            <button onclick="scoutB2bAgencies()" style="background:#10b981; color:#000; font-weight:800; border:none; padding:6px 12px; border-radius:4px; font-size:0.75rem; cursor:pointer;">🔍 CENSISCI</button>
+          </div>
+          <div id="b2b-scout-status" style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">Pronto per la ricerca agenzie sul territorio.</div>
+        </div>
+
+        <!-- Lista Agenzie Censite -->
+        <div id="b2b-agencies-container" style="display:none; margin-bottom:12px;">
+          <label style="font-size:0.72rem; color:#00f0ff; font-weight:bold; display:block; margin-bottom:4px;">AGENZIE INDIVIDUATE:</label>
+          <select id="b2b-selected-agency" onchange="onB2bAgencySelected()" style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem;">
+          </select>
+          <div id="b2b-agency-info" style="font-size:0.7rem; color:#cbd5e1; margin-top:4px; background:#0b1120; padding:6px; border-radius:4px; border:1px solid #1e293b;">
+          </div>
+        </div>
+
+        <!-- Sezione 2: Calcolatore Preventivi Sgomberi per Agenzie -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b; margin-bottom:12px;">
+          <div style="font-size:0.72rem; color:#00f0ff; font-weight:bold; margin-bottom:6px;">2. CALCOLA PREVENTIVO SGOMBERO PRE-ROGITO</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:0.68rem; color:#94a3b8;">TIPO LOCALE</label>
+              <select id="b2b-sgombero-tipo" style="width:100%; background:#1e293b; border:1px solid #334155; color:#fff; padding:5px; border-radius:4px; font-size:0.75rem;">
+                <option value="cantina">Cantina (~12mq)</option>
+                <option value="garage">Garage (~18mq)</option>
+                <option value="soffitta">Soffitta / Solaio (~20mq)</option>
+                <option value="monolocale">Monolocale (~35mq)</option>
+                <option value="bilocale">Bilocale (~55mq)</option>
+                <option value="trilocale" selected>Trilocale (~80mq)</option>
+                <option value="quadrilocale_villa">Quadrilocale / Villa (~120mq)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.68rem; color:#94a3b8;">PIANO &amp; ASCENSORE</label>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <input type="number" id="b2b-sgombero-piano" min="0" max="10" value="2" style="width:45px; background:#1e293b; border:1px solid #334155; color:#fff; padding:5px; border-radius:4px; font-size:0.75rem;">
+                <label style="font-size:0.68rem; color:#cbd5e1; cursor:pointer;"><input type="checkbox" id="b2b-sgombero-asc"> Asc.</label>
+              </div>
+            </div>
+          </div>
+          <button onclick="calculateB2bSgombero()" style="width:100%; background:linear-gradient(135deg, #0284c7, #00f0ff); color:#000; font-weight:800; border:none; padding:7px; border-radius:4px; font-size:0.75rem; cursor:pointer;">⚡ CALCOLA TARIFFE PARTNER B2B</button>
+          
+          <div id="b2b-sgombero-res" style="display:none; margin-top:8px; background:#0b1120; padding:8px; border-radius:4px; border:1px solid #1e293b; font-size:0.7rem;">
+          </div>
+        </div>
+
+        <!-- Sezione 3: Invio Proposta Personalizzata -->
+        <div style="background:#0f172a; padding:10px; border-radius:6px; border:1px solid #1e293b;">
+          <div style="font-size:0.72rem; color:#eab308; font-weight:bold; margin-bottom:6px;">3. INVIA PROPOSTA CONVENZIONE PARTNER</div>
+          <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">
+            Invia email formale con listino agevolato (-15%), provvigione (10%) e recapiti ufficiali: <strong>+39 388 870 3508</strong>.
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button onclick="previewB2bEmail()" style="flex:1; background:#1e293b; color:#00f0ff; border:1px solid #00f0ff; padding:7px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer;">👁️ ANTEPRIMA TESTO</button>
+            <button onclick="sendB2bProposalEmail()" style="flex:1; background:#10b981; color:#000; font-weight:800; border:none; padding:7px; border-radius:4px; font-size:0.75rem; cursor:pointer;">✉️ INVIA EMAIL ORA</button>
+          </div>
+          <div id="b2b-email-preview-box" style="display:none; margin-top:8px; background:#000; padding:8px; border-radius:4px; border:1px solid #334155; font-size:0.68rem; color:#cbd5e1; max-height:160px; overflow-y:auto; white-space:pre-wrap;"></div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <script src="cyber_audio_engine.js?v=1007.0"></script>
@@ -1884,5 +1983,39 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="three.min.js"></script>
 <script src="OrbitControls.js"></script>
 <script src="jarvis_3d_cosmos.js?v=1007.0"></script>
+<script>
+  // ── PWA SERVICE WORKER & ANDROID INSTALL PROMPT ───────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('[PWA] Service Worker attivo:', reg.scope);
+      }).catch((err) => {
+        console.warn('[PWA] Registrazione Service Worker non riuscita:', err);
+      });
+    });
+  }
+
+  let _deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _deferredPrompt = e;
+    const btn = document.getElementById('btn-install-pwa');
+    if (btn) btn.style.display = 'inline-flex';
+  });
+
+  window.installPwaApp = async function() {
+    if (_deferredPrompt) {
+      _deferredPrompt.prompt();
+      const choice = await _deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        const btn = document.getElementById('btn-install-pwa');
+        if (btn) btn.style.display = 'none';
+      }
+      _deferredPrompt = null;
+    } else {
+      alert('Per installare l\'app su Android:\n1. Apri il menu di Chrome (3 puntini in alto a destra)\n2. Seleziona "Aggiungi a schermata Home" o "Installa app"\nL\'app funzionerà a schermo intero come un\'applicazione nativa APK.');
+    }
+  };
+</script>
 </body>
 </html>
