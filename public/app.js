@@ -176,8 +176,6 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   }
 };
 
-let _ebjRestartTimer = null;
-
 function stopEbjMic() {
   _ebjMicOn = false;
   if (_ebjRestartTimer) {
@@ -571,7 +569,7 @@ window.toggleModularCatalog = function() {
   modal.classList.toggle('active');
 };
 
-window.toggleModule = function(modId, state) {
+window.toggleModule = function(modId, state, playSound = false) {
   const chk = document.getElementById(`chk-${modId}`);
   if (chk) chk.checked = state;
 
@@ -591,7 +589,9 @@ window.toggleModule = function(modId, state) {
   }
 
   saveModularCardsState();
-  try { window.playUiClick && window.playUiClick(); } catch(e) {}
+  if (playSound) {
+    try { window.playUiClick && window.playUiClick(); } catch(e) {}
+  }
 };
 
 window.openAllModules = function() {
