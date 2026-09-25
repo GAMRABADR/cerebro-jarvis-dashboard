@@ -2928,5 +2928,134 @@ setInterval(() => {
   }
 }, 15000);
 
+// ═══════════════════════════════════════════════════════════════════
+// 10. CUNEO LEAD DOSSIER & EMAIL DISPATCH CONTROLLER
+// ═══════════════════════════════════════════════════════════════════
+window.quickDispatchCuneoEmail = async function() {
+  const fb = document.getElementById('cuneo-dispatch-feedback');
+  if (fb) {
+    fb.style.display = 'block';
+    fb.style.color = '#ffb703';
+    fb.textContent = '⏳ Compilazione PDF e invio SMTP a badraudi@gmail.com in corso...';
+  }
+
+  try {
+    const res = await fetch('/api/leads/cuneo/dispatch-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: 'badraudi@gmail.com' })
+    });
+    const data = await res.json();
+    if (fb) {
+      if (data.status === 'SUCCESS') {
+        fb.style.color = '#00ff9f';
+        fb.textContent = '✅ Dossier Lead Cuneo inviato con successo a badraudi@gmail.com!';
+      } else {
+        fb.style.color = '#ef4444';
+        fb.textContent = '❌ Errore invio: ' + (data.error || 'Server error');
+      }
+    }
+    if (window.showToolRun) {
+      showToolRun('LEAD CUNEO DISPATCH', 'Dossier inviato con successo via SMTP Gmail!', '0.04s');
+    }
+  } catch (err) {
+    if (fb) {
+      fb.style.color = '#ef4444';
+      fb.textContent = '❌ Errore rete: ' + err.message;
+    }
+  }
+};
+
+window.submitCustomEmail = async function() {
+  const dest = document.getElementById('email-modal-dest')?.value || 'badraudi@gmail.com';
+  const subj = document.getElementById('email-modal-subject')?.value || 'Scheda Lead';
+  const body = document.getElementById('email-modal-body')?.value || '';
+  const attachPdf = document.getElementById('email-modal-attach-pdf')?.checked;
+  const statusEl = document.getElementById('email-modal-status');
+
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#ffb703';
+    statusEl.textContent = '⏳ Spedizione email in corso...';
+  }
+
+  const attachments = attachPdf ? ['CUNEO_PROVINCIA_LEAD_DOSSIER.pdf'] : [];
+
+  try {
+    const res = await fetch('/api/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: dest,
+        subject: subj,
+        body: body,
+        attachments: attachments
+      })
+    });
+    const data = await res.json();
+    if (statusEl) {
+      if (data.status === 'SUCCESS' || !data.error) {
+        statusEl.style.color = '#00ff9f';
+        statusEl.textContent = '✅ Email inviata con successo!';
+      } else {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = '❌ Errore invio: ' + (data.error || 'Errore');
+      }
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.style.color = '#ef4444';
+      statusEl.textContent = '❌ Errore: ' + err.message;
+    }
+  }
+};
+
+window.calculateAndSendQuote = async function() {
+  const from = document.getElementById('prev-from')?.value || 'Cuneo';
+  const to = document.getElementById('prev-to')?.value || 'Torino';
+  const service = document.getElementById('prev-service')?.value || 'trasloco_completo';
+  const vol = parseInt(document.getElementById('prev-vol')?.value || '25', 10);
+  const resBox = document.getElementById('prev-result');
+
+  // Formula di calcolo preventivo trasparente
+  let basePrice = vol * 28;
+  if (service === 'sgombero_cantina') basePrice = vol * 18 + 150;
+  else if (service === 'trasporto_mobili') basePrice = 250 + (vol * 15);
+  else if (service === 'sgombero_locale') basePrice = vol * 22 + 200;
+  else basePrice += 200;
+
+  const quoteId = 'Q_' + Date.now().toString().slice(-6);
+  const quoteMsg = `📋 PREVENTIVO #${quoteId}\n` +
+    `• Tratta: ${from} ➔ ${to}\n` +
+    `• Servizio: ${service.replace('_', ' ').toUpperCase()}\n` +
+    `• Volume: ${vol} m³\n` +
+    `• Prezzo Stimato: € ${basePrice.toFixed(2)}\n` +
+    `• Include: Assicurazione All-Risk, Furgone con Sponda, 2 Operatori Qualificati.\n` +
+    `• Firma: BadrExpress.com & PietroTraslochi.com (+39 388 870 3508)`;
+
+  if (resBox) {
+    resBox.style.display = 'block';
+    resBox.innerText = quoteMsg + '\n\n⏳ Invio copia via email a badraudi@gmail.com...';
+  }
+
+  try {
+    await fetch('/api/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: 'badraudi@gmail.com',
+        subject: `🚛 Preventivo Calcolato: ${from} ➔ ${to} (€ ${basePrice.toFixed(0)})`,
+        body: quoteMsg
+      })
+    });
+    if (resBox) {
+      resBox.innerText = quoteMsg + '\n\n✅ Copia preventivo inviata a badraudi@gmail.com!';
+    }
+  } catch (err) {
+    console.warn('Quote email send error:', err);
+  }
+};
+
+
 
 

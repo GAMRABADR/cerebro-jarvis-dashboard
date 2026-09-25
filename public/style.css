@@ -1613,16 +1613,78 @@ body:has(#view-kali-lab.active) .floating-modules-stage {
 }
 
 @media (max-width: 900px) {
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+
+  .master-view-bar {
+    height: auto !important;
+    min-height: 48px;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .mv-center {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .mv-center::-webkit-scrollbar { display: none; }
+
+  .mv-left, .mv-right {
+    flex: 1;
+  }
+  .mv-right {
+    justify-content: flex-end;
+  }
+
+  .jarvis-workspace {
+    height: auto !important;
+    min-height: calc(100vh - 48px);
+    overflow-y: visible !important;
+    padding: 8px !important;
+  }
+
+  .hud-container {
+    height: auto !important;
+  }
+
   .main-grid,
   .main-grid.left-collapsed,
   .main-grid.right-collapsed,
   .main-grid.left-collapsed.right-collapsed {
-    grid-template-columns: 1fr;
-    height: auto;
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    gap: 12px !important;
   }
 
   .panel-box {
-    min-height: 0;
+    min-height: auto !important;
+    max-height: none !important;
+  }
+
+  .left-panel, .center-panel, .right-panel {
+    width: 100% !important;
+  }
+
+  .tab-navigation {
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-navigation::-webkit-scrollbar { display: none; }
+
+  .fleet-agents-grid {
+    grid-template-columns: 1fr !important;
   }
 
   .kali-lab-head {

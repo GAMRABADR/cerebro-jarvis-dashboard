@@ -1051,6 +1051,118 @@
 
 
   <!-- ═══════════════════════════════════════════════════════════════
+       EMAIL & LEAD DOSSIER DISPATCH MODAL [✉️]
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-send-email">
+    <div class="modal-box holo-modal" style="max-width:700px; width:95%;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">✉️</span>
+          <div>
+            <h3 style="margin:0; font-family:'Orbitron', sans-serif; font-size:1rem; color:#00f0ff;">DISPATCH EMAIL &amp; SCHEDE LEAD</h3>
+            <small style="color:#94a3b8; font-size:0.75rem;">BadrExpress.com &amp; PietroTraslochi.com · SMTP SSL Gmail</small>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-send-email')">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding:16px; max-height:75vh; overflow-y:auto;">
+        <!-- Quick Action Buttons -->
+        <div style="background:rgba(0, 240, 255, 0.08); border:1px solid rgba(0, 240, 255, 0.25); border-radius:8px; padding:12px; margin-bottom:16px;">
+          <div style="font-size:0.75rem; color:#00ff9f; font-weight:800; font-family:'Orbitron', sans-serif; margin-bottom:6px;">🚀 AZIONI RAPIDE 1-CLICK PER CELLULARE</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="fleet-submit-btn" style="background:#0284c7; color:#fff;" onclick="quickDispatchCuneoEmail()">
+              🚛 INVIA SCHEDA LEAD CUNEO A ME (PDF)
+            </button>
+            <a href="/reports/CUNEO_PROVINCIA_LEAD_DOSSIER.pdf" target="_blank" class="fleet-submit-btn" style="background:#16a34a; color:#fff; text-decoration:none; display:inline-flex; align-items:center;">
+              📄 APRI PDF CUNEO
+            </a>
+          </div>
+          <div id="cuneo-dispatch-feedback" style="margin-top:8px; font-size:0.75rem; color:#ffb703; display:none;"></div>
+        </div>
+
+        <!-- Custom Email Form -->
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="display:block; font-size:0.72rem; color:#94a3b8; font-family:'Share Tech Mono', monospace; margin-bottom:4px;">DESTINATARIO EMAIL:</label>
+            <input type="email" id="email-modal-dest" value="badraudi@gmail.com" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:8px 10px; color:#fff; font-family:var(--font-mono); font-size:0.85rem; box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block; font-size:0.72rem; color:#94a3b8; font-family:'Share Tech Mono', monospace; margin-bottom:4px;">OGGETTO:</label>
+            <input type="text" id="email-modal-subject" value="🚛 Scheda Lead Traslochi &amp; Sgomberi — Cuneo e Provincia" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:8px 10px; color:#fff; font-family:var(--font-mono); font-size:0.85rem; box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block; font-size:0.72rem; color:#94a3b8; font-family:'Share Tech Mono', monospace; margin-bottom:4px;">MESSAGGIO / CORPO:</label>
+            <textarea id="email-modal-body" rows="4" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:8px 10px; color:#fff; font-family:var(--font-mono); font-size:0.8rem; box-sizing:border-box;">Dossier Lead Cuneo e Provincia inviato da E.B.J. AI Master.
+Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <label style="font-size:0.75rem; color:#cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="email-modal-attach-pdf" checked> Allega PDF Dossier Cuneo
+            </label>
+            <button class="fleet-submit-btn" style="background:#00ff9f; color:#01040a;" onclick="submitCustomEmail()">
+              ⚡ INVIA EMAIL ADESSO
+            </button>
+          </div>
+          <div id="email-modal-status" style="margin-top:6px; font-size:0.75rem; color:#00ff9f; display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PREVENTIVO VELOCE TRASLOCHI & SGOMBERI [🚛]
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-preventivo">
+    <div class="modal-box holo-modal" style="max-width:650px; width:95%;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">🚛</span>
+          <div>
+            <h3 style="margin:0; font-family:'Orbitron', sans-serif; font-size:1rem; color:#00ff9f;">PREVENTIVATORE INTELLIGENTE</h3>
+            <small style="color:#94a3b8; font-size:0.75rem;">BadrExpress.com &amp; PietroTraslochi.com</small>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-preventivo')">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding:16px; max-height:75vh; overflow-y:auto;">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:0.72rem; color:#94a3b8;">PARTENZA (CITTÀ/ZONA):</label>
+              <input type="text" id="prev-from" value="Cuneo" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:6px; color:#fff;">
+            </div>
+            <div>
+              <label style="font-size:0.72rem; color:#94a3b8;">DESTINAZIONE:</label>
+              <input type="text" id="prev-to" value="Torino" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:6px; color:#fff;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:0.72rem; color:#94a3b8;">TIPO SERVIZIO:</label>
+              <select id="prev-service" style="width:100%; background:#091224; border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:6px; color:#fff;">
+                <option value="trasloco_completo">Trasloco Completo (Mobili + Scatole)</option>
+                <option value="sgombero_cantina">Sgombero Cantina / Garage Pre-Rogito</option>
+                <option value="trasporto_mobili">Trasporto Singoli Mobili &amp; Elettrodomestici</option>
+                <option value="sgombero_locale">Sgombero Locale Commerciale</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.72rem; color:#94a3b8;">VOLUME STIMATO (m³):</label>
+              <input type="number" id="prev-vol" value="25" min="5" max="100" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:6px; color:#fff;">
+            </div>
+          </div>
+          <button class="fleet-submit-btn" style="background:#00ff9f; color:#01040a; width:100%; padding:10px; margin-top:8px;" onclick="calculateAndSendQuote()">
+            💰 CALCOLA PREVENTIVO &amp; INVIA VIA EMAIL
+          </button>
+          <div id="prev-result" style="margin-top:10px; padding:10px; background:rgba(0,255,159,0.08); border-left:3px solid #00ff9f; border-radius:4px; display:none; font-family:monospace; font-size:0.8rem; color:#fff;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
        MODULAR CARDS CATALOG MODAL [M]
        ═══════════════════════════════════════════════════════════════ -->
   <div class="modal-overlay" id="modal-modular-catalog">
