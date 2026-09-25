@@ -597,7 +597,7 @@ function updateAiModeBadge(data) {
 }
 
 // ── 5. MODULAR CARDS & VOICE ACTION HANDLER ────────────────────────
-const DEFAULT_ACTIVE_MODULES = ['mod-synapses', 'mod-cpu-ram', 'mod-vps'];
+const DEFAULT_ACTIVE_MODULES = ['mod-synapses'];
 
 window.toggleModularCatalog = function() {
   const modal = document.getElementById('modal-modular-catalog');
@@ -2455,12 +2455,17 @@ function setupGraphCanvasEvents(canvas) {
 
 function resizeGraphCanvas(canvas) {
   const stage = canvas.parentElement;
-  if (!stage) return;
-  canvas.width = stage.clientWidth;
-  canvas.height = stage.clientHeight;
+  const w = (stage && stage.clientWidth > 50) ? stage.clientWidth : window.innerWidth;
+  const h = (stage && stage.clientHeight > 50) ? stage.clientHeight : (window.innerHeight - 100);
+  if (w > 0 && h > 0) {
+    canvas.width = w;
+    canvas.height = h;
+  }
 }
 
 window.resetGraphView = function() {
+  const canvas = document.getElementById('neural-graph-canvas');
+  if (canvas) resizeGraphCanvas(canvas);
   _graphPan = { x: 0, y: 0 };
   _graphZoom = 1.0;
 };
@@ -2598,6 +2603,9 @@ async function syncGraphWithRustPhysics() {
 }
 
 function renderGraphCanvas(canvas) {
+  if (canvas.width < 100 || canvas.height < 100) {
+    resizeGraphCanvas(canvas);
+  }
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
