@@ -490,8 +490,44 @@ async function executeCommandPipeline(prompt) {
     return;
   }
 
-  if (respTag) respTag.textContent = 'THINKING...';
+  if (respTag) respTag.textContent = 'REFLEX...';
   if (respEl) respEl.textContent = 'Elaborazione neurale in corso...';
+
+  // 0. JEV REFLEX PRE-ROUTER RUST (< 8µs)
+  try {
+    const reflexRes = await fetch('/api/reflex/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: prompt }),
+      signal: AbortSignal.timeout(600)
+    });
+    if (reflexRes.ok) {
+      const rf = await reflexRes.json();
+      if (rf.confidence >= 0.85) {
+        if (rf.intent === 'CALL_EMERGENCY') {
+          window.startEmergencyCountdown();
+          finish(rf.spoken_ack || 'Avvio squillo telefonico d\'emergenza.', 'RUST REFLEX 2µs');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'CAMERA_VISION') {
+          window.openCameraVisionModal();
+          finish(rf.spoken_ack || 'Webcam HD attivata per analisi visiva.', 'RUST REFLEX 2µs');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'NEURAL_GRAPH') {
+          window.switchMasterView('graph');
+          finish(rf.spoken_ack || 'Aperta galassia neurale e knowledge graph 3D.', 'RUST REFLEX 2µs');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'BATTERY_SAVER_TELEGRAM') {
+          if (window.openTelegramGuardModal) window.openTelegramGuardModal();
+          finish(rf.spoken_ack || 'Pannello Telegram Guard aperto.', 'RUST REFLEX 2µs');
+          isBusy = false;
+          return;
+        }
+      }
+    }
+  } catch (_) {}
 
   try {
     const model = document.getElementById('model-select')?.value || 'auto';
@@ -973,7 +1009,8 @@ const KALI_VIEW_MAP = {
   kali: 'view-kali-lab',
   kanban: 'view-kanban',
   n8n: 'view-n8n',
-  topology: 'view-topology'
+  topology: 'view-topology',
+  graph: 'view-neural-graph'
 };
 const KALI_CAT_ALIASES = {
   recon: ['recon', 'information-gathering', 'info'],
@@ -1085,6 +1122,10 @@ window.switchMasterView = function(view) {
   if (key === 'kanban') document.getElementById('btn-view-kanban')?.classList.add('active');
   if (key === 'n8n') document.getElementById('btn-view-n8n')?.classList.add('active');
   if (key === 'topology') document.getElementById('btn-view-topology')?.classList.add('active');
+  if (key === 'graph') {
+    document.getElementById('btn-view-graph')?.classList.add('active');
+    if (window.initNeuralGraph) window.initNeuralGraph();
+  }
 
   if (key === 'kali') refreshKaliCatalog();
   toggleMobileNav(false);
@@ -2079,4 +2120,639 @@ window.sendTelegramReportNow = async function() {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => { if (window.refreshTelegramGuardStatus) window.refreshTelegramGuardStatus(); }, 1500);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 12. IRON MAN HUD COMPASS, REFLEX ENGINE & EMERGENCY CALL (JARVIS)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _hudWatchdogActive = true;
+let _hudFocusActive = true;
+let _emergencyTimer = null;
+let _emergencySecondsLeft = 3;
+let _webcamStream = null;
+
+window.setHudModel = function(el, model) {
+  document.querySelectorAll('.jcw-model-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const modelInput = document.getElementById('model-select');
+  if (modelInput) modelInput.value = model;
+
+  const topChips = document.querySelectorAll('.ms-chip');
+  topChips.forEach(c => {
+    c.classList.toggle('active', c.getAttribute('data-value') === model);
+  });
+
+  const badgeText = document.getElementById('ai-mode-text');
+  if (badgeText) {
+    if (model === 'claude-opus') badgeText.textContent = '🧠 CLAUDE OPUS 5.5';
+    else if (model === 'groq-llama70b') badgeText.textContent = '⚡ GROQ LLAMA 70B';
+    else if (model === 'qwen-27b') badgeText.textContent = '🦀 QWEN 27B LOCAL';
+    else badgeText.textContent = '🟢 CLOUD FREE (AUTO)';
+  }
+
+  if (window.playUiClick) window.playUiClick();
+};
+
+window.toggleHudWatchdog = function() {
+  _hudWatchdogActive = !_hudWatchdogActive;
+  const pill = document.getElementById('jcw-pill-watch');
+  if (pill) {
+    pill.classList.toggle('active', _hudWatchdogActive);
+    pill.style.opacity = _hudWatchdogActive ? '1' : '0.5';
+  }
+};
+
+window.toggleHudFocus = function() {
+  _hudFocusActive = !_hudFocusActive;
+  const pill = document.getElementById('jcw-pill-focus');
+  if (pill) {
+    pill.classList.toggle('active', _hudFocusActive);
+  }
+};
+
+// ── EMERGENCY 3-SECOND RING COUNTDOWN ──────────────────────────────────────
+window.startEmergencyCountdown = function() {
+  const modal = document.getElementById('modal-emergency-call');
+  const numEl = document.getElementById('ring-countdown-number');
+  const strokeEl = document.getElementById('ring-countdown-stroke');
+  const statusDesc = document.getElementById('ring-status-desc');
+  if (!modal) return;
+
+  _emergencySecondsLeft = 3;
+  if (numEl) numEl.textContent = '3';
+  if (strokeEl) strokeEl.style.strokeDashoffset = '0';
+  if (statusDesc) statusDesc.textContent = 'Squillo automatico in 3 secondi tramite gateway telefonico prioritario...';
+
+  modal.style.display = 'flex';
+  if (window.playLaserChime) window.playLaserChime();
+
+  if (_emergencyTimer) clearInterval(_emergencyTimer);
+
+  const totalLength = 326.7;
+  _emergencyTimer = setInterval(() => {
+    _emergencySecondsLeft--;
+    if (numEl) numEl.textContent = _emergencySecondsLeft;
+    if (strokeEl) {
+      const offset = totalLength * (1 - _emergencySecondsLeft / 3);
+      strokeEl.style.strokeDashoffset = offset;
+    }
+
+    if (window.playUiClick) window.playUiClick();
+
+    if (_emergencySecondsLeft <= 0) {
+      clearInterval(_emergencyTimer);
+      _emergencyTimer = null;
+      window.triggerEmergencyCallNow();
+    }
+  }, 1000);
+};
+
+window.cancelEmergencyCountdown = function() {
+  if (_emergencyTimer) {
+    clearInterval(_emergencyTimer);
+    _emergencyTimer = null;
+  }
+  const modal = document.getElementById('modal-emergency-call');
+  if (modal) modal.style.display = 'none';
+};
+
+window.triggerEmergencyCallNow = async function() {
+  if (_emergencyTimer) {
+    clearInterval(_emergencyTimer);
+    _emergencyTimer = null;
+  }
+  const numEl = document.getElementById('ring-countdown-number');
+  const statusDesc = document.getElementById('ring-status-desc');
+  if (numEl) numEl.textContent = '📞';
+  if (statusDesc) statusDesc.innerHTML = '<span style="color:#00ff9f; font-weight:bold;">SQUILLO INOLTRATO AL CELLULARE (+39 388 870 3508)!</span>';
+
+  try {
+    const res = await fetch('/api/reflex/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: 'chiama subito cellulare emergenza badr' })
+    });
+    const d = await res.json();
+    console.log('[EMERGENCY REFLEX DISPATCH]:', d);
+    if (window.playSpeechAudio) {
+      window.playSpeechAudio("Ingegnere Badr, ho inoltrato la chiamata di emergenza verso il tuo telefono.");
+    }
+  } catch (err) {
+    console.warn('[EMERGENCY DISPATCH ERROR]:', err);
+  }
+
+  setTimeout(() => {
+    const modal = document.getElementById('modal-emergency-call');
+    if (modal) modal.style.display = 'none';
+  }, 2200);
+};
+
+// ── CAMERA VISION (WEBCAM LIVE FEED) ───────────────────────────────────────
+window.openCameraVisionModal = async function() {
+  const modal = document.getElementById('modal-camera-vision');
+  const video = document.getElementById('cam-live-video');
+  const statusEl = document.getElementById('cam-stream-status');
+  if (!modal || !video) return;
+
+  modal.style.display = 'flex';
+  try {
+    _webcamStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' }
+    });
+    video.srcObject = _webcamStream;
+    if (statusEl) statusEl.textContent = '● LIVE WEBCAM ACTIVE (1080p / 60 FPS)';
+  } catch (err) {
+    console.warn('[WEBCAM ACCESS ERR]:', err);
+    if (statusEl) statusEl.textContent = '⚠️ Webcam non rilevata o permessi negati: ' + err.message;
+  }
+};
+
+window.closeCameraVisionModal = function() {
+  const modal = document.getElementById('modal-camera-vision');
+  const video = document.getElementById('cam-live-video');
+  if (_webcamStream) {
+    _webcamStream.getTracks().forEach(t => t.stop());
+    _webcamStream = null;
+  }
+  if (video) video.srcObject = null;
+  if (modal) modal.style.display = 'none';
+};
+
+window.captureWebcamAndAnalyze = async function() {
+  const video = document.getElementById('cam-live-video');
+  const fb = document.getElementById('cam-feedback-text');
+  const btn = document.getElementById('btn-cam-capture');
+  if (!video || !video.videoWidth) {
+    if (fb) fb.textContent = '⚠️ Errore: feed video non pronto.';
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const b64 = canvas.toDataURL('image/jpeg', 0.85);
+
+  if (fb) fb.textContent = '👁️ Analisi ottica neurale in corso con Vision AI...';
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/screen/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        frame_b64: b64,
+        detect_form: false,
+        prompt: "Guarda attentamente attraverso la fotocamera. Descrivi cosa vedi in modo brillante per l'Ingegner Badr: oggetti, mobili, documenti o ambiente circostante, stimando volume o valore se pertinente."
+      })
+    });
+    const d = await res.json();
+    const commento = d.analysis || 'Oggetto analizzato con successo.';
+    if (fb) fb.textContent = '✅ Analisi completata!';
+
+    const respEl = document.getElementById('resp-body');
+    const respTag = document.getElementById('resp-tag');
+    if (respTag) respTag.textContent = 'CAMERA VISION OK';
+    if (respEl) respEl.innerHTML = `<strong>📷 CAMERA VISION ANALISI:</strong><br>${commento.replace(/\n/g, '<br>')}`;
+
+    if (window.playSpeechAudio) {
+      window.playSpeechAudio(commento.slice(0, 220));
+    }
+
+    setTimeout(() => {
+      window.closeCameraVisionModal();
+    }, 1800);
+  } catch (err) {
+    if (fb) fb.textContent = 'Errore analisi: ' + err.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 13. FORCE-DIRECTED NEURAL KNOWLEDGE GRAPH ENGINE (RUST POWERED)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _graphData = { nodes: [], links: [] };
+let _graphNodes = [];
+let _graphLinks = [];
+let _graphAnimId = null;
+let _graphFilterCat = 'all';
+let _graphSearchQuery = '';
+let _selectedNode = null;
+let _graphPan = { x: 0, y: 0 };
+let _graphZoom = 1.0;
+let _isDraggingGraph = false;
+let _dragStart = { x: 0, y: 0 };
+let _draggedNode = null;
+let _repelForce = 450;
+let _springLength = 110;
+
+const CATEGORY_COLORS = {
+  router: '#00f0ff',
+  wiki: '#a3e635',
+  concepts: '#14b8a6',
+  suites: '#8b5cf6',
+  skills: '#ec4899',
+  tools: '#3b82f6',
+  worlds: '#eab308',
+  notes: '#94a3b8',
+  files: '#f97316'
+};
+
+window.initNeuralGraph = async function() {
+  const canvas = document.getElementById('neural-graph-canvas');
+  if (!canvas) return;
+
+  setupGraphCanvasEvents(canvas);
+
+  try {
+    const res = await fetch('/api/graph/neural-network');
+    if (res.ok) {
+      const data = await res.json();
+      _graphData = data;
+      _graphNodes = (data.nodes || []).map(n => ({
+        ...n,
+        x: n.x || (Math.random() - 0.5) * 600,
+        y: n.y || (Math.random() - 0.5) * 500,
+        vx: 0,
+        vy: 0,
+        radius: n.radius || 18,
+        color: CATEGORY_COLORS[n.category] || n.color || '#00f0ff'
+      }));
+      _graphLinks = data.links || [];
+
+      window.resetGraphView();
+      startGraphLoop(canvas);
+    }
+  } catch (err) {
+    console.warn('[NEURAL GRAPH LOAD ERR]:', err);
+  }
+};
+
+function setupGraphCanvasEvents(canvas) {
+  if (canvas._eventsAttached) return;
+  canvas._eventsAttached = true;
+
+  window.addEventListener('resize', () => {
+    resizeGraphCanvas(canvas);
+  });
+  resizeGraphCanvas(canvas);
+
+  canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left - canvas.width / 2 - _graphPan.x) / _graphZoom;
+    const mouseY = (e.clientY - rect.top - canvas.height / 2 - _graphPan.y) / _graphZoom;
+
+    // Check hit node
+    let hit = null;
+    for (let i = _graphNodes.length - 1; i >= 0; i--) {
+      const n = _graphNodes[i];
+      const dx = mouseX - n.x;
+      const dy = mouseY - n.y;
+      if (Math.sqrt(dx * dx + dy * dy) <= (n.radius + 6)) {
+        hit = n;
+        break;
+      }
+    }
+
+    if (hit) {
+      _draggedNode = hit;
+      selectGraphNode(hit);
+    } else {
+      _isDraggingGraph = true;
+      _dragStart = { x: e.clientX - _graphPan.x, y: e.clientY - _graphPan.y };
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (_draggedNode) {
+      const rect = canvas.getBoundingClientRect();
+      _draggedNode.x = (e.clientX - rect.left - canvas.width / 2 - _graphPan.x) / _graphZoom;
+      _draggedNode.y = (e.clientY - rect.top - canvas.height / 2 - _graphPan.y) / _graphZoom;
+      _draggedNode.vx = 0;
+      _draggedNode.vy = 0;
+    } else if (_isDraggingGraph) {
+      _graphPan.x = e.clientX - _dragStart.x;
+      _graphPan.y = e.clientY - _dragStart.y;
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    _draggedNode = null;
+    _isDraggingGraph = false;
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+    _graphZoom = Math.min(3.0, Math.max(0.25, _graphZoom * zoomFactor));
+  });
+}
+
+function resizeGraphCanvas(canvas) {
+  const stage = canvas.parentElement;
+  if (!stage) return;
+  canvas.width = stage.clientWidth;
+  canvas.height = stage.clientHeight;
+}
+
+window.resetGraphView = function() {
+  _graphPan = { x: 0, y: 0 };
+  _graphZoom = 1.0;
+};
+
+window.filterGraphCat = function(btn, cat) {
+  _graphFilterCat = cat;
+  document.querySelectorAll('.ng-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+};
+
+window.filterNeuralGraph = function(query) {
+  _graphSearchQuery = (query || '').toLowerCase().trim();
+};
+
+window.updateGraphPhysicsParams = function() {
+  const repelEl = document.getElementById('ng-repel-slider');
+  const linkEl = document.getElementById('ng-link-slider');
+  if (repelEl) _repelForce = parseFloat(repelEl.value);
+  if (linkEl) _springLength = parseFloat(linkEl.value);
+};
+
+function startGraphLoop(canvas) {
+  if (_graphAnimId) cancelAnimationFrame(_graphAnimId);
+
+  let lastSyncTime = performance.now();
+
+  function loop(now) {
+    updateLocalGraphPhysics();
+
+    // Periodic sync with Rust physics endpoint every 1.5 seconds if nodes move
+    if (now - lastSyncTime > 1500 && _graphNodes.length > 0) {
+      lastSyncTime = now;
+      syncGraphWithRustPhysics();
+    }
+
+    renderGraphCanvas(canvas);
+    _graphAnimId = requestAnimationFrame(loop);
+  }
+
+  _graphAnimId = requestAnimationFrame(loop);
+}
+
+function updateLocalGraphPhysics() {
+  const dt = 0.02;
+  const damping = 0.88;
+  const kRepel = _repelForce * 12;
+  const kSpring = 0.04;
+  const restLength = _springLength;
+
+  // Repulsion between nodes (Coulomb)
+  for (let i = 0; i < _graphNodes.length; i++) {
+    for (let j = i + 1; j < _graphNodes.length; j++) {
+      const a = _graphNodes[i];
+      const b = _graphNodes[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distSq = dx * dx + dy * dy + 100.0;
+      const dist = Math.sqrt(distSq);
+      const force = kRepel / distSq;
+      const fx = (dx / dist) * force;
+      const fy = (dy / dist) * force;
+
+      a.vx -= fx * dt;
+      a.vy -= fy * dt;
+      b.vx += fx * dt;
+      b.vy += fy * dt;
+    }
+  }
+
+  // Node lookup map
+  const nodeMap = new Map();
+  _graphNodes.forEach(n => nodeMap.set(n.id, n));
+
+  // Link attraction (Hooke's law)
+  for (const l of _graphLinks) {
+    const s = nodeMap.get(typeof l.source === 'object' ? l.source.id : l.source);
+    const t = nodeMap.get(typeof l.target === 'object' ? l.target.id : l.target);
+    if (!s || !t) continue;
+
+    const dx = t.x - s.x;
+    const dy = t.y - s.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1.0;
+    const delta = dist - restLength;
+    const force = delta * kSpring * (l.strength || 0.8);
+    const fx = (dx / dist) * force;
+    const fy = (dy / dist) * force;
+
+    s.vx += fx * dt;
+    s.vy += fy * dt;
+    t.vx -= fx * dt;
+    t.vy -= fy * dt;
+  }
+
+  // Central gravity
+  for (const n of _graphNodes) {
+    if (n === _draggedNode) continue;
+    n.vx -= n.x * 0.015 * dt;
+    n.vy -= n.y * 0.015 * dt;
+
+    n.vx *= damping;
+    n.vy *= damping;
+    n.x += n.vx;
+    n.y += n.vy;
+  }
+}
+
+async function syncGraphWithRustPhysics() {
+  try {
+    const res = await fetch('/api/graph/physics-step', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nodes: _graphNodes,
+        links: _graphLinks,
+        repel_force: _repelForce,
+        spring_length: _springLength,
+        dt: 0.016
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.nodes && Array.isArray(data.nodes)) {
+        const remoteMap = new Map();
+        data.nodes.forEach(rn => remoteMap.set(rn.id, rn));
+        _graphNodes.forEach(localNode => {
+          const r = remoteMap.get(localNode.id);
+          if (r && localNode !== _draggedNode) {
+            localNode.vx = r.vx || localNode.vx;
+            localNode.vy = r.vy || localNode.vy;
+          }
+        });
+      }
+    }
+  } catch (e) {}
+}
+
+function renderGraphCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+
+  // Apply pan & zoom
+  ctx.translate(w / 2 + _graphPan.x, h / 2 + _graphPan.y);
+  ctx.scale(_graphZoom, _graphZoom);
+
+  // Subtle coordinate grid dots
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+  const gridSize = 80;
+  for (let gx = -1200; gx <= 1200; gx += gridSize) {
+    for (let gy = -1000; gy <= 1000; gy += gridSize) {
+      ctx.fillRect(gx - 1, gy - 1, 2, 2);
+    }
+  }
+
+  const nodeMap = new Map();
+  _graphNodes.forEach(n => nodeMap.set(n.id, n));
+
+  // Draw links
+  for (const l of _graphLinks) {
+    const s = nodeMap.get(typeof l.source === 'object' ? l.source.id : l.source);
+    const t = nodeMap.get(typeof l.target === 'object' ? l.target.id : l.target);
+    if (!s || !t) continue;
+
+    const isConnectedToSelected = _selectedNode && (s.id === _selectedNode.id || t.id === _selectedNode.id);
+
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(t.x, t.y);
+    ctx.strokeStyle = isConnectedToSelected ? 'rgba(0, 255, 159, 0.75)' : 'rgba(0, 240, 255, 0.16)';
+    ctx.lineWidth = isConnectedToSelected ? 2.0 : 1.0;
+    ctx.stroke();
+  }
+
+  // Draw nodes
+  for (const n of _graphNodes) {
+    const catMatch = _graphFilterCat === 'all' || n.category === _graphFilterCat;
+    const searchMatch = !_graphSearchQuery || (n.label || '').toLowerCase().includes(_graphSearchQuery) || (n.id || '').toLowerCase().includes(_graphSearchQuery);
+    const isSelected = _selectedNode && _selectedNode.id === n.id;
+    const isDimmed = !catMatch || !searchMatch;
+
+    const alpha = isDimmed ? 0.2 : 1.0;
+    const baseColor = n.color || '#00f0ff';
+
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.radius + (isSelected ? 8 : 4), 0, Math.PI * 2);
+    ctx.fillStyle = isSelected ? 'rgba(0, 255, 159, 0.25)' : (isDimmed ? 'transparent' : 'rgba(0, 240, 255, 0.08)');
+    ctx.fill();
+
+    // Node body
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+    ctx.fillStyle = isDimmed ? 'rgba(20, 30, 45, 0.5)' : '#07152b';
+    ctx.fill();
+    ctx.strokeStyle = isSelected ? '#00ff9f' : baseColor;
+    ctx.lineWidth = isSelected ? 3.0 : 1.8;
+    ctx.globalAlpha = alpha;
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+
+    // Center jewel
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = isSelected ? '#00ff9f' : baseColor;
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    // Label
+    ctx.font = isSelected ? 'bold 11px Orbitron, sans-serif' : '10px Share Tech Mono, monospace';
+    ctx.fillStyle = isSelected ? '#00ff9f' : (isDimmed ? '#475569' : '#f8fafc');
+    ctx.textAlign = 'center';
+    ctx.fillText(n.label || n.id, n.x, n.y + n.radius + 14);
+
+    if (n.sub && !isDimmed) {
+      ctx.font = '8px Inter, sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(n.sub, n.x, n.y + n.radius + 24);
+    }
+  }
+
+  ctx.restore();
+}
+
+function selectGraphNode(node) {
+  _selectedNode = node;
+  const inspector = document.getElementById('ng-inspector');
+  if (!inspector) return;
+
+  inspector.classList.add('open');
+  document.getElementById('ngi-title').textContent = node.label || node.id;
+  const catBadge = document.getElementById('ngi-cat-badge');
+  if (catBadge) {
+    catBadge.textContent = (node.category || 'NODE').toUpperCase();
+    catBadge.style.color = node.color || '#00f0ff';
+    catBadge.style.borderColor = node.color || '#00f0ff';
+  }
+  document.getElementById('ngi-prop-id').textContent = node.id;
+
+  // Find connections
+  const connected = [];
+  for (const l of _graphLinks) {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    if (sId === node.id) connected.push({ target: tId, label: l.label, dir: 'out' });
+    if (tId === node.id) connected.push({ target: sId, label: l.label, dir: 'in' });
+  }
+
+  document.getElementById('ngi-prop-conn').textContent = connected.length;
+
+  const linksList = document.getElementById('ngi-links-list');
+  if (linksList) {
+    if (connected.length === 0) {
+      linksList.innerHTML = '<div style="color:#64748b; font-style:italic;">Nessun link sinaptico diretto.</div>';
+    } else {
+      linksList.innerHTML = connected.map(c => `
+        <div class="ngi-link-item">
+          <span>${c.dir === 'out' ? '➔' : '⬅'} <strong>${c.target}</strong></span>
+          <span style="color:#00ff9f; font-size:0.65rem;">${c.label || 'Synapse'}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  const detailsRaw = document.getElementById('ngi-details-raw');
+  if (detailsRaw) {
+    detailsRaw.textContent = JSON.stringify(node.details || {}, null, 2);
+  }
+
+  if (window.playUiClick) window.playUiClick();
+}
+
+window.closeGraphInspector = function() {
+  const inspector = document.getElementById('ng-inspector');
+  if (inspector) inspector.classList.remove('open');
+  _selectedNode = null;
+};
+
+window.executeSelectedNodeAction = function() {
+  if (!_selectedNode) return;
+  const label = _selectedNode.label || _selectedNode.id;
+  const query = `JARVIS, analizza e attiva il nodo ${label} della rete sinaptica.`;
+
+  window.switchMasterView('jarvis');
+  const promptInput = document.getElementById('prompt-input');
+  if (promptInput) {
+    promptInput.value = query;
+    if (window.sendMessage) window.sendMessage();
+  }
+};
+
 

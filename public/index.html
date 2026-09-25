@@ -50,6 +50,11 @@
         <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span><i data-lucide="compass" class="lucide-icon text-cyan"></i>ECOSYSTEM MAP
       </button>
 
+      <!-- VISTA NEURAL KNOWLEDGE GRAPH (FORCE-DIRECTED RUST) -->
+      <button class="view-switch-btn" id="btn-view-graph" onclick="switchMasterView('graph')">
+        <span class="btn-dot" style="background: #00ff9f; box-shadow: 0 0 8px #00ff9f;"></span><i data-lucide="share-2" class="lucide-icon text-emerald"></i>NEURAL GRAPH
+      </button>
+
       <!-- DROPDOWN: KANBAN -->
       <div class="nav-dropdown-pod">
         <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban">
@@ -589,6 +594,96 @@
             <button class="wing-toggle-btn" onclick="toggleRightWing()" title="Riduci/Espandi">HIDE ▶</button>
           </div>
 
+          <!-- 🌌 J.A.R.V.I.S. ARC REACTOR HUD COMPASS & REFLEX DOCK -->
+          <div class="jarvis-compass-widget" id="jarvis-hud-compass-card">
+            <div class="jcw-header">
+              <span class="jcw-title">
+                <i data-lucide="compass" class="lucide-icon text-cyan"></i>ARC COMPASS · STARK HUD
+              </span>
+              <span style="font-family:var(--font-mono); font-size:0.65rem; color:#00ff9f;" id="jcw-heading-val">HDG: 042° NNE</span>
+            </div>
+
+            <div class="jcw-compass-wrap" onclick="toggleRecording()" style="cursor:pointer;" title="Clicca per parlare con J.A.R.V.I.S.">
+              <svg class="jcw-svg" viewBox="0 0 140 140">
+                <defs>
+                  <radialGradient id="jcwCoreGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                    <stop offset="40%" stop-color="#00f0ff" stop-opacity="0.85"/>
+                    <stop offset="80%" stop-color="#0055ff" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#001026" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <!-- Compass Outermost Dial -->
+                <circle cx="70" cy="70" r="66" fill="none" stroke="rgba(0,240,255,0.25)" stroke-width="1.5"/>
+                <!-- Clockwise Rotating Gear & Coordinate Marks -->
+                <g class="jcw-rot-clockwise">
+                  <circle cx="70" cy="70" r="62" fill="none" stroke="#00f0ff" stroke-width="2" stroke-dasharray="3 6 12 6"/>
+                  <line x1="70" y1="4" x2="70" y2="12" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="70" y1="128" x2="70" y2="136" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="4" y1="70" x2="12" y2="70" stroke="#00ff9f" stroke-width="2"/>
+                  <line x1="128" y1="70" x2="136" y2="70" stroke="#00ff9f" stroke-width="2"/>
+                </g>
+                <!-- Counter-Clockwise Segmented Teeth -->
+                <g class="jcw-rot-counter">
+                  <circle cx="70" cy="70" r="50" fill="none" stroke="rgba(0,255,159,0.7)" stroke-width="2.5" stroke-dasharray="8 12"/>
+                  <circle cx="70" cy="70" r="44" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1" stroke-dasharray="20 15"/>
+                </g>
+                <!-- Fast Optical Aperture Inner Ring -->
+                <g class="jcw-rot-fast">
+                  <circle cx="70" cy="70" r="34" fill="none" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="4 16 8 8"/>
+                </g>
+                <!-- Crosshair reticle -->
+                <line x1="52" y1="70" x2="88" y2="70" stroke="rgba(0,240,255,0.5)" stroke-width="1" stroke-dasharray="2 2"/>
+                <line x1="70" y1="52" x2="70" y2="88" stroke="rgba(0,240,255,0.5)" stroke-width="1" stroke-dasharray="2 2"/>
+                <!-- Glowing Plasma Core -->
+                <g class="jcw-pulse-core" id="jcw-core-node">
+                  <circle cx="70" cy="70" r="24" fill="url(#jcwCoreGrad)"/>
+                  <circle cx="70" cy="70" r="22" fill="none" stroke="#ffffff" stroke-width="1"/>
+                  <circle cx="70" cy="70" r="10" fill="#ffffff"/>
+                </g>
+                <!-- HUD Labels -->
+                <text x="70" y="73" text-anchor="middle" fill="#01040a" font-family="'Orbitron', sans-serif" font-weight="900" font-size="7" letter-spacing="1">JARVIS</text>
+              </svg>
+            </div>
+
+            <!-- Live Status Pills: EYES, WATCH, HOLD, FOCUS, REFLEX -->
+            <div class="jcw-pills-row">
+              <span class="jcw-pill pill-eyes" id="jcw-pill-eyes" onclick="toggleScreenVision()" title="Vision Eye: Cattura e Analisi Schermo">
+                <span class="jcw-pill-dot"></span>EYES
+              </span>
+              <span class="jcw-pill active pill-watch" id="jcw-pill-watch" onclick="toggleHudWatchdog()" title="Watchdog: Monitoraggio Autonomo H24">
+                <span class="jcw-pill-dot"></span>WATCH
+              </span>
+              <span class="jcw-pill" id="jcw-pill-hold" onclick="toggleLiveVoiceLink()" title="Voice Hot-Mic: Parla Liberamente">
+                <span class="jcw-pill-dot"></span>HOLD
+              </span>
+              <span class="jcw-pill active" id="jcw-pill-focus" onclick="toggleHudFocus()" title="Focus Mode: Massima Priorità AI">
+                <span class="jcw-pill-dot"></span>FOCUS
+              </span>
+              <span class="jcw-pill active pill-reflex" id="jcw-pill-reflex" title="Jev Reflex Engine: Rust < 8µs Sub-Routing">
+                <span class="jcw-pill-dot"></span>REFLEX 2µs
+              </span>
+            </div>
+
+            <!-- Model Selection Chips (Opus 5.5, Groq, Qwen, Auto) -->
+            <div class="jcw-models-row">
+              <div class="jcw-model-chip" data-model="claude-opus" onclick="setHudModel(this, 'claude-opus')" title="Claude Opus 5.5 (Zubair JARVIS Architecture)">OPUS 5.5</div>
+              <div class="jcw-model-chip" data-model="groq-llama70b" onclick="setHudModel(this, 'groq-llama70b')" title="Groq Llama 3.3 70B (Sub-Second)">GROQ 70B</div>
+              <div class="jcw-model-chip" data-model="qwen-27b" onclick="setHudModel(this, 'qwen-27b')" title="Qwen 27B Locale Unsloth GPU">QWEN 27B</div>
+              <div class="jcw-model-chip active" data-model="auto" onclick="setHudModel(this, 'auto')" title="Auto APEX Cascade Optimizer">AUTO</div>
+            </div>
+
+            <!-- Actions: Emergency 3s Ring & Camera Vision -->
+            <div class="jcw-actions-row">
+              <button class="jcw-ring-btn" onclick="startEmergencyCountdown()" title="Chiamata di Emergenza tra 3 secondi (Retell / GSM Badr)">
+                <i data-lucide="phone-call" class="lucide-icon sm"></i>RING 3s
+              </button>
+              <button class="jcw-cam-btn" onclick="openCameraVisionModal()" title="Apri Webcam HD per Analisi Visiva Immediata">
+                <i data-lucide="camera" class="lucide-icon sm"></i>CAMERA
+              </button>
+            </div>
+          </div>
+
           <!-- TELEMETRY METRICS (DUAL NODE: ORACLE CLOUD VPS 24GB + WORKSTATION 64GB) -->
           <div class="vps-live-telemetry-hud">
             <div class="vlth-header">
@@ -650,6 +745,88 @@
         </section>
 
       </main>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW 2: FORCE-DIRECTED NEURAL KNOWLEDGE GRAPH WORKSPACE (RUST)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-neural-graph" style="display:none;">
+    <div class="neural-graph-workspace">
+      <div class="ng-top-hud">
+        <div class="ng-search-wrap">
+          <i data-lucide="search" class="lucide-icon sm ng-search-icon"></i>
+          <input type="text" id="ng-search-input" class="ng-search-input" placeholder="Search the brain... (es: Router, Docker, Badr, WGS-84)" oninput="filterNeuralGraph(this.value)">
+        </div>
+
+        <!-- 9 Category Filter Chips -->
+        <div class="ng-chips-scroll" id="ng-chips-container">
+          <button type="button" class="ng-chip active" data-cat="all" onclick="filterGraphCat(this, 'all')">ALL (33)</button>
+          <button type="button" class="ng-chip" data-cat="router" onclick="filterGraphCat(this, 'router')">ROUTER</button>
+          <button type="button" class="ng-chip" data-cat="wiki" onclick="filterGraphCat(this, 'wiki')">WIKI</button>
+          <button type="button" class="ng-chip" data-cat="concepts" onclick="filterGraphCat(this, 'concepts')">CONCEPTS</button>
+          <button type="button" class="ng-chip" data-cat="suites" onclick="filterGraphCat(this, 'suites')">SUITES</button>
+          <button type="button" class="ng-chip" data-cat="skills" onclick="filterGraphCat(this, 'skills')">SKILLS</button>
+          <button type="button" class="ng-chip" data-cat="tools" onclick="filterGraphCat(this, 'tools')">TOOLS</button>
+          <button type="button" class="ng-chip" data-cat="worlds" onclick="filterGraphCat(this, 'worlds')">WORLDS</button>
+          <button type="button" class="ng-chip" data-cat="notes" onclick="filterGraphCat(this, 'notes')">NOTES</button>
+          <button type="button" class="ng-chip" data-cat="files" onclick="filterGraphCat(this, 'files')">FILES</button>
+        </div>
+
+        <div class="ng-controls-group">
+          <div class="ng-slider-box">
+            <span>Repel:</span>
+            <input type="range" min="100" max="1200" value="450" class="ng-slider" id="ng-repel-slider" oninput="updateGraphPhysicsParams()">
+          </div>
+          <div class="ng-slider-box">
+            <span>Link:</span>
+            <input type="range" min="40" max="300" value="110" class="ng-slider" id="ng-link-slider" oninput="updateGraphPhysicsParams()">
+          </div>
+          <button class="view-switch-btn" onclick="resetGraphView()" style="padding:4px 10px; font-size:0.7rem;"><i data-lucide="crosshair" class="lucide-icon sm"></i> CENTRA</button>
+          <span style="font-family:var(--font-mono); font-size:0.7rem; color:#00ff9f;" id="ng-fps-pill">120 FPS · RUST 25µs</span>
+        </div>
+      </div>
+
+      <div class="ng-main-stage">
+        <canvas id="neural-graph-canvas"></canvas>
+        <aside class="ng-inspector" id="ng-inspector">
+          <div class="ngi-head">
+            <div>
+              <div class="ngi-title" id="ngi-title">NODE INSPECTOR</div>
+              <span class="ngi-cat-badge" id="ngi-cat-badge" style="background:rgba(0,240,255,0.2); color:#00f0ff;">SELECT A NODE</span>
+            </div>
+            <button class="ngi-close" onclick="closeGraphInspector()">✕</button>
+          </div>
+
+          <div class="ngi-prop-grid">
+            <div class="ngi-prop-card">
+              <div class="ngi-prop-lbl">ID</div>
+              <div class="ngi-prop-val" id="ngi-prop-id">—</div>
+            </div>
+            <div class="ngi-prop-card">
+              <div class="ngi-prop-lbl">CONNECTIONS</div>
+              <div class="ngi-prop-val" id="ngi-prop-conn">—</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.7rem; color:#64748b; font-weight:bold; margin-bottom:6px; text-transform:uppercase;">SYNAPTIC CONNECTIONS</div>
+            <div class="ngi-links-list" id="ngi-links-list">
+              <div style="color:#64748b; font-style:italic;">Seleziona un nodo nella galassia per analizzare i link sinaptici.</div>
+            </div>
+          </div>
+
+          <div style="flex:1;">
+            <div style="font-size:0.7rem; color:#64748b; font-weight:bold; margin-bottom:6px; text-transform:uppercase;">NODE METADATA / DETAILS</div>
+            <pre id="ngi-details-raw" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px; font-family:var(--font-mono); font-size:0.7rem; color:#38bdf8; max-height:160px; overflow-y:auto; white-space:pre-wrap;">{}</pre>
+          </div>
+
+          <button class="ngi-action-btn" id="ngi-action-btn" onclick="executeSelectedNodeAction()">
+            <i data-lucide="zap" class="lucide-icon sm"></i> ATTIVA NODO / TOOL
+          </button>
+        </aside>
+      </div>
     </div>
   </div>
 
@@ -1858,9 +2035,10 @@ window.switchMasterView = function(view) {
   const viewMap = (typeof KALI_VIEW_MAP !== 'undefined') ? KALI_VIEW_MAP : {
     'jarvis': 'view-jarvis',
     'kanban': 'view-kanban',
-    'kali': 'view-kali',
+    'kali': 'view-kali-lab',
     'topology': 'view-topology',
-    'n8n': 'view-n8n'
+    'n8n': 'view-n8n',
+    'graph': 'view-neural-graph'
   };
   const targetId = viewMap[view] || 'view-jarvis';
   document.querySelectorAll('.jarvis-workspace').forEach(w => {
@@ -1873,6 +2051,9 @@ window.switchMasterView = function(view) {
     }
   });
   if (view === 'kanban') window.refreshKanbanData();
+  if (view === 'graph') {
+    if (window.initNeuralGraph) window.initNeuralGraph();
+  }
   if (view === 'topology') {
     if (window.loadCosmos3DOnDemand) {
       window.loadCosmos3DOnDemand(() => {
@@ -2265,6 +2446,78 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
     <div id="tg-guard-action-feedback" style="margin-top:12px; font-size:0.8rem; text-align:center; min-height:18px; color:#38bdf8;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: CAMERA VISION (WEBCAM LIVE FEED & STARK RETICLE)
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="modal-camera-vision" class="cam-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeCameraVisionModal()">
+  <div class="cam-modal-box">
+    <div class="cam-modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i data-lucide="camera" class="lucide-icon text-cyan"></i>
+        <span style="font-family:var(--font-hud); font-size:0.9rem; font-weight:800; color:#00f0ff; letter-spacing:1px;">J.A.R.V.I.S. CAMERA VISION · WEBCAM HD</span>
+      </div>
+      <button onclick="closeCameraVisionModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <div class="cam-video-viewport">
+      <video id="cam-live-video" autoplay playsinline muted></video>
+      <div class="cam-reticle-overlay">
+        <div class="cam-reticle-circle"></div>
+        <div class="cam-reticle-corners"></div>
+      </div>
+      <div style="position:absolute; bottom:10px; left:12px; font-family:var(--font-mono); font-size:0.75rem; color:#00ff9f; background:rgba(0,0,0,0.6); padding:2px 8px; border-radius:4px;" id="cam-stream-status">
+        ● LIVE WEBCAM 1080p
+      </div>
+    </div>
+
+    <div class="cam-modal-footer">
+      <span style="font-size:0.75rem; color:#94a3b8;" id="cam-feedback-text">Inquadra un oggetto, documento o spazio per perizia immediata.</span>
+      <div style="display:flex; gap:8px;">
+        <button class="ring-cancel-btn" onclick="closeCameraVisionModal()" style="padding:6px 14px; font-size:0.75rem;">CHIUDI</button>
+        <button class="ngi-action-btn" onclick="captureWebcamAndAnalyze()" id="btn-cam-capture" style="margin:0; padding:6px 16px; font-size:0.75rem;">
+          <i data-lucide="scan" class="lucide-icon sm"></i> ANALIZZA CON VISION AI
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: EMERGENCY RING (3-SECOND COUNTDOWN)
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="modal-emergency-call" class="ring-modal-backdrop" style="display:none;" onclick="if(event.target===this)cancelEmergencyCountdown()">
+  <div class="ring-modal-box">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <i data-lucide="alert-triangle" class="lucide-icon text-pink"></i>
+      <span style="font-family:var(--font-hud); font-size:1rem; font-weight:900; color:#ef4444; letter-spacing:1px;">ALLERTA EMERGENZA CHIAMATA</span>
+    </div>
+
+    <p style="font-size:0.85rem; color:#cbd5e1; margin:0;">
+      Avvio squillo telefonico diretto verso l'<strong>Ingegner Badr El Ouariti</strong>:
+    </p>
+    <div style="font-family:var(--font-mono); font-size:1.1rem; color:#00ff9f; font-weight:bold; background:rgba(0,0,0,0.5); padding:6px 14px; border-radius:6px; border:1px solid rgba(0,255,159,0.3);">
+      📞 +39 388 870 3508
+    </div>
+
+    <div class="ring-countdown-circle">
+      <svg class="ring-countdown-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(239,68,68,0.2)" stroke-width="8"/>
+        <circle id="ring-countdown-stroke" cx="60" cy="60" r="52" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="326.7" stroke-dashoffset="0" stroke-linecap="round" style="transition:stroke-dashoffset 1s linear;"/>
+      </svg>
+      <span class="ring-countdown-number" id="ring-countdown-number">3</span>
+    </div>
+
+    <div style="font-size:0.75rem; color:#94a3b8;" id="ring-status-desc">
+      Squillo automatico in 3 secondi tramite gateway telefonico prioritario...
+    </div>
+
+    <div style="display:flex; gap:12px; width:100%; margin-top:6px;">
+      <button class="ring-cancel-btn" style="flex:1;" onclick="cancelEmergencyCountdown()">✕ ANNULLA</button>
+      <button class="ring-call-now-btn" style="flex:1;" onclick="triggerEmergencyCallNow()">SQUILLA ORA ⚡</button>
+    </div>
   </div>
 </div>
 

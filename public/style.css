@@ -2087,3 +2087,667 @@ svg.lucide {
   border-radius: 4px;
   border: 1px solid rgba(0, 229, 255, 0.2);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   IRON MAN ARC REACTOR HUD COMPASS & TELEMETRY WIDGET
+   ═══════════════════════════════════════════════════════════════════ */
+.jarvis-compass-widget {
+  background: rgba(4, 15, 30, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.jarvis-compass-widget::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+}
+
+.jcw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.jcw-title {
+  font-family: var(--font-hud);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #00f0ff;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jcw-compass-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 6px 0;
+}
+
+.jcw-svg {
+  width: 140px;
+  height: 140px;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.45));
+}
+
+.jcw-rot-clockwise {
+  transform-origin: 70px 70px;
+  animation: arcSpin 20s linear infinite;
+}
+
+.jcw-rot-counter {
+  transform-origin: 70px 70px;
+  animation: arcSpinCounter 14s linear infinite;
+}
+
+.jcw-rot-fast {
+  transform-origin: 70px 70px;
+  animation: arcSpin 6s linear infinite;
+}
+
+.jcw-pulse-core {
+  animation: corePulseGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes arcSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes arcSpinCounter {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes corePulseGlow {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 6px #00f0ff); }
+  50% { opacity: 1; filter: drop-shadow(0 0 16px #00ff9f); }
+}
+
+/* Status Pills (EYES, WATCH, HOLD, FOCUS, REFLEX) */
+.jcw-pills-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.jcw-pill {
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.4);
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.jcw-pill.active {
+  border-color: #00ff9f;
+  color: #00ff9f;
+  background: rgba(0, 255, 159, 0.12);
+  box-shadow: 0 0 8px rgba(0, 255, 159, 0.3);
+}
+
+.jcw-pill.active.pill-eyes {
+  border-color: #00f0ff;
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.12);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+.jcw-pill.active.pill-watch {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.jcw-pill.active.pill-reflex {
+  border-color: #ff0055;
+  color: #ff0055;
+  background: rgba(255, 0, 85, 0.12);
+  box-shadow: 0 0 8px rgba(255, 0, 85, 0.35);
+}
+
+.jcw-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Model Selector Row */
+.jcw-models-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.jcw-model-chip {
+  flex: 1;
+  font-family: var(--font-hud);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.jcw-model-chip:hover {
+  color: #cbd5e1;
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.jcw-model-chip.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 255, 159, 0.2));
+  border-color: #00f0ff;
+  color: #00f0ff;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+/* Emergency Ring / Call Action Button */
+.jcw-actions-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.jcw-ring-btn {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.4));
+  border: 1px solid #ef4444;
+  color: #f87171;
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.jcw-ring-btn:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.jcw-cam-btn {
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.jcw-cam-btn:hover {
+  background: #00f0ff;
+  color: #000;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORCE-DIRECTED NEURAL KNOWLEDGE GRAPH WORKSPACE
+   ═══════════════════════════════════════════════════════════════════ */
+.neural-graph-workspace {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  width: 100vw;
+  background: #020713;
+  position: relative;
+  overflow: hidden;
+}
+
+.ng-top-hud {
+  height: 52px;
+  background: rgba(4, 13, 26, 0.95);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  gap: 14px;
+  z-index: 10;
+}
+
+.ng-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 280px;
+}
+
+.ng-search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 14px 6px 34px;
+  color: #00f0ff;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.ng-search-input:focus {
+  border-color: #00ff9f;
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.25);
+}
+
+.ng-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.ng-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.ng-chip {
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.4);
+  color: #94a3b8;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.ng-chip:hover {
+  color: #f8fafc;
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.ng-chip.active {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.ng-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.ng-slider-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ng-slider {
+  width: 70px;
+  height: 4px;
+  accent-color: #00f0ff;
+}
+
+.ng-main-stage {
+  flex: 1;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+#neural-graph-canvas {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #06152d 0%, #010612 100%);
+  cursor: grab;
+}
+
+#neural-graph-canvas:active {
+  cursor: grabbing;
+}
+
+/* Node Inspector Sidebar */
+.ng-inspector {
+  position: absolute;
+  top: 0;
+  right: -360px;
+  width: 340px;
+  bottom: 0;
+  background: rgba(3, 11, 23, 0.95);
+  border-left: 1px solid rgba(0, 240, 255, 0.25);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+}
+
+.ng-inspector.open {
+  right: 0;
+}
+
+.ngi-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 10px;
+}
+
+.ngi-title {
+  font-family: var(--font-hud);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #00f0ff;
+}
+
+.ngi-cat-badge {
+  display: inline-block;
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.ngi-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.ngi-prop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ngi-prop-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.ngi-prop-lbl {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.ngi-prop-val {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #f8fafc;
+  margin-top: 2px;
+}
+
+.ngi-links-list {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ngi-link-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ngi-action-btn {
+  background: linear-gradient(135deg, #00f0ff, #00ff9f);
+  color: #000;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CAMERA VISION MODAL (WEBCAM LIVE FEED & TARGET RETICLE)
+   ═══════════════════════════════════════════════════════════════════ */
+.cam-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(10px);
+  z-index: 10006;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cam-modal-box {
+  width: 90%;
+  max-width: 640px;
+  background: #040d1a;
+  border: 1.5px solid #00f0ff;
+  border-radius: 14px;
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cam-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.05);
+}
+
+.cam-video-viewport {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: #000;
+  overflow: hidden;
+}
+
+#cam-live-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cam-reticle-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cam-reticle-circle {
+  width: 160px;
+  height: 160px;
+  border: 1.5px dashed #00f0ff;
+  border-radius: 50%;
+  animation: arcSpin 16s linear infinite;
+}
+
+.cam-reticle-corners {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  border: 2px solid transparent;
+  border-top-color: #00ff9f;
+  border-bottom-color: #00ff9f;
+}
+
+.cam-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(0, 240, 255, 0.25);
+  gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EMERGENCY RING 3-SECOND COUNTDOWN MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+.ring-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 2, 2, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 10008;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ring-modal-box {
+  width: 90%;
+  max-width: 440px;
+  background: #0d0406;
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: ringAlertPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ringAlertPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 60px rgba(239, 68, 68, 0.6); }
+}
+
+.ring-countdown-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ring-countdown-svg {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+}
+
+.ring-countdown-number {
+  position: absolute;
+  font-family: var(--font-hud);
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ef4444;
+  text-shadow: 0 0 15px #ef4444;
+}
+
+.ring-cancel-btn {
+  background: #1e293b;
+  border: 1px solid #64748b;
+  color: #f1f5f9;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: var(--font-hud);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ring-cancel-btn:hover {
+  background: #334155;
+  border-color: #94a3b8;
+}
+
+.ring-call-now-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: var(--font-hud);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
