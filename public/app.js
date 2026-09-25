@@ -839,6 +839,10 @@ window.switchTab = function(tab) {
   event?.target?.classList.add('active');
   const activeContent = document.getElementById(`tab-${tab}`);
   if (activeContent) activeContent.classList.add('active');
+
+  if (tab === 'fleet' && window.refreshFleetUi) {
+    window.refreshFleetUi();
+  }
 };
 
 window.switchEBMood = function(mood) {
@@ -2762,5 +2766,167 @@ window.executeSelectedNodeAction = function() {
     if (window.sendMessage) window.sendMessage();
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// 9. 7 AUTONOMOUS AI EMPLOYEES & NIGHT FLEET ENGINE (/new, /steer, /queue)
+// ═══════════════════════════════════════════════════════════════════
+window.currentFleetMode = 'new';
+
+window.setFleetMode = function(mode) {
+  window.currentFleetMode = mode;
+  ['new', 'steer', 'queue'].forEach(m => {
+    const btn = document.getElementById(`btn-fleet-mode-${m}`);
+    if (btn) btn.classList.toggle('active', m === mode);
+  });
+  const input = document.getElementById('fleet-cmd-input');
+  if (input) {
+    if (mode === 'new') input.placeholder = "Nuovo task autonomo (es. 'Estrai lead traslochi Torino')...";
+    else if (mode === 'steer') input.placeholder = "Inietta rotta in volo (es. 'Scarta furgoni sopra i 150.000 km')...";
+    else if (mode === 'queue') input.placeholder = "Accoda per la notte (es. 'Build e audit UE5.8 mentre dormo')...";
+    input.focus();
+  }
+};
+
+window.submitFleetCommand = async function() {
+  const input = document.getElementById('fleet-cmd-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const mode = window.currentFleetMode || 'new';
+  let endpoint = '/api/fleet/new';
+  let body = { prompt: text, agent: 'hermes' };
+
+  if (mode === 'steer') {
+    endpoint = '/api/fleet/steer';
+    body = { guidance: text };
+  } else if (mode === 'queue') {
+    endpoint = '/api/fleet/queue';
+    body = { prompt: text, agent: 'hermes' };
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    input.value = '';
+
+    if (window.showToolRun) {
+      showToolRun(`FLEET /${mode.toUpperCase()}`, data.message || `Comando /${mode} accettato con successo.`, '0.04s');
+    }
+    await window.refreshFleetUi();
+  } catch (err) {
+    console.error('Fleet command error:', err);
+    if (window.showToolRun) {
+      showToolRun('FLEET ERROR', `Errore esecuzione: ${err.message}`, '0.01s');
+    }
+  }
+};
+
+window.refreshFleetUi = async function() {
+  try {
+    const res = await fetch('/api/fleet/status');
+    if (!res.ok) return;
+    const status = await res.json();
+
+    // 1. Update Active Task Banner
+    const activeStatusEl = document.getElementById('fleet-active-status');
+    const activeAgentEl = document.getElementById('fleet-active-agent');
+    const activePromptEl = document.getElementById('fleet-active-prompt');
+    const steerBoxEl = document.getElementById('fleet-active-steer');
+    const steerTextEl = document.getElementById('fleet-active-steer-text');
+    const pulseDotEl = document.getElementById('fleet-pulse-dot');
+
+    if (status.active_task && status.active_task.status === 'running') {
+      const at = status.active_task;
+      if (activeStatusEl) activeStatusEl.textContent = `ESECUZIONE IN CORSO (#${at.task_id})`;
+      if (activeAgentEl) activeAgentEl.textContent = (at.agent || 'HERMES').toUpperCase();
+      if (activePromptEl) activePromptEl.textContent = at.prompt || 'Task in esecuzione...';
+      if (pulseDotEl) pulseDotEl.style.background = '#00ff9f';
+
+      if (at.steer_directive) {
+        if (steerBoxEl) steerBoxEl.style.display = 'block';
+        if (steerTextEl) steerTextEl.textContent = at.steer_directive;
+      } else {
+        if (steerBoxEl) steerBoxEl.style.display = 'none';
+      }
+    } else {
+      if (activeStatusEl) activeStatusEl.textContent = 'STANDBY - FLOTTA PRONTA';
+      if (activeAgentEl) activeAgentEl.textContent = 'HERMES DOCKER VPS';
+      if (activePromptEl) activePromptEl.textContent = 'Nessun task attivo in volo. Usa /new o /queue per avviare.';
+      if (steerBoxEl) steerBoxEl.style.display = 'none';
+      if (pulseDotEl) pulseDotEl.style.background = '#64748b';
+    }
+
+    // 2. Update Night Queue
+    const qCountEl = document.getElementById('fleet-queue-count');
+    const qListEl = document.getElementById('fleet-queue-list');
+    const queue = status.night_queue || [];
+
+    if (qCountEl) qCountEl.textContent = `${queue.length} task in coda`;
+    if (qListEl) {
+      if (queue.length === 0) {
+        qListEl.innerHTML = '<div class="fqb-empty">Nessun task accodato per la notte. Usa <b>/queue</b> per aggiungerne uno.</div>';
+      } else {
+        qListEl.innerHTML = queue.map(q => `
+          <div class="fqb-item">
+            <div class="fqb-item-info">
+              <span class="fqb-item-prompt" title="${q.prompt}">${q.prompt}</span>
+              <span class="fqb-item-meta">Agente: ${(q.agent || 'hermes').toUpperCase()} · #${q.task_id}</span>
+            </div>
+            <span style="color:#ffb703; font-size:0.62rem; font-family:var(--font-mono);">${q.created_at || 'In Coda'}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 3. Update Agent status badges if present
+    if (status.agents) {
+      const activeAgentKey = status.active_task && status.active_task.status === 'running' ? status.active_task.agent : null;
+      Object.keys(status.agents).forEach(k => {
+        const badge = document.getElementById(`badge-agent-${k.replace('_marketplace', '').replace('_code', '').replace('_pitcher', '')}`);
+        if (badge) {
+          if (k === activeAgentKey) {
+            badge.textContent = 'BUSY';
+            badge.className = 'fac-status badge-busy';
+          } else {
+            badge.textContent = 'ONLINE';
+            badge.className = 'fac-status badge-active';
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('refreshFleetUi error:', err);
+  }
+};
+
+window.quickTaskForAgent = function(agentKey) {
+  const input = document.getElementById('fleet-cmd-input');
+  if (!input) return;
+  const presets = {
+    hermes: "Esegui sync e health check su tutti gli 11 container Docker VPS",
+    openclaw: "Cerca nuovi annunci traslochi e sgomberi a Torino e Milano",
+    b2b_pitcher: "Genera email proposta SELEZIONE per autolavaggi tunnel Piemonte",
+    claude_code: "Verifica build Rust SIMD port 9000 e compila UBT EBGS",
+    sentinel: "Monitora RAM e ripara eventuali container orfani su VPS Oracle",
+    jev_marketplace: "Valuta furgone Fiat Ducato 2018 120cv con formula JEV",
+    postiz_radar: "Ascolta menzioni Discord e chat gruppi B2B nelle ultime 6 ore"
+  };
+  input.value = presets[agentKey] || `Avvia task per ${agentKey}`;
+  window.setFleetMode('new');
+};
+
+// Auto refresh fleet status every 15 seconds if fleet tab is active
+setInterval(() => {
+  const fleetTab = document.getElementById('tab-fleet');
+  if (fleetTab && fleetTab.classList.contains('active')) {
+    window.refreshFleetUi();
+  }
+}, 15000);
+
 
 

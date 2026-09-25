@@ -266,14 +266,124 @@
             </div>
           </div>
 
-          <!-- TAB 5: AGENT FLEET -->
+          <!-- TAB 5: AGENT FLEET (7 AUTONOMOUS EMPLOYEES & NIGHT FLEET) -->
           <div class="tab-content" id="tab-fleet">
-            <div class="cmd-matrix-grid">
-              <div class="cmd-tile vault-tile" onclick="sendQuick('JARVIS, sincronizza la flotta agenti')">
-                <span class="ct-code">🤖 AGENTE ZERO</span><span class="ct-desc">92.4.233.42 Status</span>
+            <div class="fleet-cockpit-container">
+              <!-- Top Controls: /new, /steer, /queue -->
+              <div class="fleet-control-bar">
+                <div class="fleet-mode-selector">
+                  <button class="fleet-mode-btn active" id="btn-fleet-mode-new" onclick="setFleetMode('new')">/new NUOVO</button>
+                  <button class="fleet-mode-btn" id="btn-fleet-mode-steer" onclick="setFleetMode('steer')">/steer GUIDA</button>
+                  <button class="fleet-mode-btn" id="btn-fleet-mode-queue" onclick="setFleetMode('queue')">/queue ACCODA</button>
+                </div>
+                <div class="fleet-input-group">
+                  <input type="text" id="fleet-cmd-input" placeholder="Task per la Flotta (es. 'Scansiona subito torino furgoni')..." onkeydown="if(event.key==='Enter') submitFleetCommand()">
+                  <button class="fleet-submit-btn" onclick="submitFleetCommand()">⚡ ESEGUI</button>
+                </div>
               </div>
-              <div class="cmd-tile vault-tile" onclick="toggleCyberTerminal()">
-                <span class="ct-code">🦀 RUST BRIDGE</span><span class="ct-desc">Port 9000 Active</span>
+
+              <!-- Active Task Banner -->
+              <div class="fleet-active-card" id="fleet-active-card">
+                <div class="fleet-active-header">
+                  <div class="fleet-active-indicator">
+                    <span class="fleet-pulse-dot" id="fleet-pulse-dot"></span>
+                    <span class="fleet-active-status" id="fleet-active-status">STANDBY - FLOTTA PRONTA</span>
+                  </div>
+                  <span class="fleet-active-agent" id="fleet-active-agent">HERMES DOCKER VPS</span>
+                </div>
+                <div class="fleet-active-prompt" id="fleet-active-prompt">Nessun task attivo in volo. Usa /new o /queue per avviare.</div>
+                <div class="fleet-active-steer" id="fleet-active-steer" style="display:none;">
+                  <span class="steer-tag">GUIDA IN CORSO:</span> <span id="fleet-active-steer-text"></span>
+                </div>
+              </div>
+
+              <!-- 7 Autonomous AI Employees Grid -->
+              <div class="fleet-agents-header">
+                <span class="fah-title">I 7 AGENTI AUTONOMI 24/7 (VPS ORACLE &amp; RUST)</span>
+                <button class="fah-refresh-btn" onclick="refreshFleetUi()">🔄 AGGIORNA</button>
+              </div>
+
+              <div class="fleet-agents-grid" id="fleet-agents-grid">
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('hermes')">
+                  <div class="fac-top">
+                    <span class="fac-icon">🧠</span>
+                    <span class="fac-status badge-active" id="badge-agent-hermes">ONLINE</span>
+                  </div>
+                  <div class="fac-name">Hermes Agent</div>
+                  <div class="fac-role">Task Master Docker VPS 24GB</div>
+                  <div class="fac-meta">Rust Bridge · Sub-50ms</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('openclaw')">
+                  <div class="fac-top">
+                    <span class="fac-icon">🦅</span>
+                    <span class="fac-status badge-active" id="badge-agent-openclaw">ONLINE</span>
+                  </div>
+                  <div class="fac-name">OpenClaw Stealth</div>
+                  <div class="fac-role">Playwright Lead Scraper</div>
+                  <div class="fac-meta">Subito · Bakeca · FB</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('b2b_pitcher')">
+                  <div class="fac-top">
+                    <span class="fac-icon">💼</span>
+                    <span class="fac-status badge-active" id="badge-agent-b2b">ONLINE</span>
+                  </div>
+                  <div class="fac-name">B2B Pitcher</div>
+                  <div class="fac-role">SELEZIONE &amp; Pre-Rogito</div>
+                  <div class="fac-meta">Autolavaggi &amp; Immobiliari</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('claude_code')">
+                  <div class="fac-top">
+                    <span class="fac-icon">🦀</span>
+                    <span class="fac-status badge-active" id="badge-agent-claude">ONLINE</span>
+                  </div>
+                  <div class="fac-name">Claude Code &amp; Apex</div>
+                  <div class="fac-role">Rust SIMD &amp; UE5.8 Dev</div>
+                  <div class="fac-meta">Git Push Autonomo</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('sentinel')">
+                  <div class="fac-top">
+                    <span class="fac-icon">🛡️</span>
+                    <span class="fac-status badge-active" id="badge-agent-sentinel">ONLINE</span>
+                  </div>
+                  <div class="fac-name">VPS Sentinel</div>
+                  <div class="fac-role">Self-Heal 11 Container</div>
+                  <div class="fac-meta">Battery Guard &amp; Telegram</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('jev_marketplace')">
+                  <div class="fac-top">
+                    <span class="fac-icon">💎</span>
+                    <span class="fac-status badge-active" id="badge-agent-jev">ONLINE</span>
+                  </div>
+                  <div class="fac-name">JEV Perizie Auto</div>
+                  <div class="fac-role">Vision 1080p &amp; Poster</div>
+                  <div class="fac-meta">Stima Usato &amp; Auto-Fill</div>
+                </div>
+
+                <div class="fleet-agent-card" onclick="quickTaskForAgent('postiz_radar')">
+                  <div class="fac-top">
+                    <span class="fac-icon">📡</span>
+                    <span class="fac-status badge-active" id="badge-agent-postiz">ONLINE</span>
+                  </div>
+                  <div class="fac-name">Postiz Social Radar</div>
+                  <div class="fac-role">Discord &amp; Lead Mentions</div>
+                  <div class="fac-meta">H24 Monitoring</div>
+                </div>
+              </div>
+
+              <!-- Night Queue Panel -->
+              <div class="fleet-queue-box">
+                <div class="fqb-header">
+                  <span class="fqb-title">🌙 NIGHT QUEUE (Lavora mentre dormi)</span>
+                  <span class="fqb-count" id="fleet-queue-count">0 task in coda</span>
+                </div>
+                <div class="fqb-list" id="fleet-queue-list">
+                  <div class="fqb-empty">Nessun task accodato per la notte. Usa <b>/queue</b> per aggiungerne uno.</div>
+                </div>
               </div>
             </div>
           </div>
