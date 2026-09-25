@@ -65,14 +65,20 @@ def get_best_rust_bin():
 RUST_BRIDGE_BIN = get_best_rust_bin()
 
 
-# Telegram per alert (opzionale - non blocca se non disponibile)
+# Telegram per alert: DISATTIVATO DI DEFAULT (Zero battery drain su cellulare, max 5/gg)
 TG_BOT_TOKEN = ""
 TG_CHAT_ID   = "7298887137"
+TG_NOTIFICATIONS_ENABLED = False # Disattivato di default come richiesto da Ing. Badr
+TG_MAX_DAILY_ALERTS = 5
+_tg_alerts_today = 0
+_tg_current_date = datetime.date.today().isoformat()
 
 try:
     from dotenv import dotenv_values
     _env = dotenv_values(os.path.join(BASE_DIR, ".env"))
     TG_BOT_TOKEN = _env.get("TELEGRAM_BOT_TOKEN", TG_BOT_TOKEN)
+    if _env.get("TELEGRAM_NOTIFICATIONS_ENABLED", "0").lower() in ("1", "true", "yes"):
+        TG_NOTIFICATIONS_ENABLED = True
 except Exception:
     pass
 
@@ -101,16 +107,27 @@ def log(msg: str, level: str = "INFO"):
     except Exception:
         pass
 
-def tg_alert(msg: str):
-    """Invia alert su Telegram se il token è configurato. Fail silenzioso."""
+def tg_alert(msg: str, force: bool = False):
+    """Invia alert su Telegram se abilitato o su richiesta esplicita/vocale. Max 5/gg."""
+    global _tg_alerts_today, _tg_current_date
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
         return
+    if not force and not TG_NOTIFICATIONS_ENABLED:
+        return # Silenziato di default
+    today = datetime.date.today().isoformat()
+    if today != _tg_current_date:
+        _tg_current_date = today
+        _tg_alerts_today = 0
+    if not force and _tg_alerts_today >= TG_MAX_DAILY_ALERTS:
+        return # Tetto massimo giornaliero raggiunto
     try:
-        requests.post(
+        r = requests.post(
             f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
             json={"chat_id": TG_CHAT_ID, "text": f"🛡️ *E.B.J. SENTINEL v3.0*\n{msg}", "parse_mode": "Markdown"},
             timeout=4
         )
+        if r.status_code == 200 and not force:
+            _tg_alerts_today += 1
     except Exception:
         pass
 

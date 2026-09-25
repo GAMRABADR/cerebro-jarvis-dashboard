@@ -1991,3 +1991,92 @@ window.calculateQuantumMath = async function() {
   }
 };
 
+// ── TELEGRAM NOTIFICATION GUARD (BATTERY SAVER & ON-DEMAND) ─────────────────
+window.openTelegramGuardModal = async function() {
+  const m = document.getElementById('modal-telegram-guard');
+  if (m) m.style.display = 'flex';
+  await refreshTelegramGuardStatus();
+};
+
+window.closeTelegramGuardModal = function() {
+  const m = document.getElementById('modal-telegram-guard');
+  if (m) m.style.display = 'none';
+};
+
+window.refreshTelegramGuardStatus = async function() {
+  try {
+    const res = await fetch('/api/telegram/status');
+    const d = await res.json();
+    const p = d.policy || {};
+    const badge = document.getElementById('tg-guard-status-badge');
+    const pillLbl = document.getElementById('lbl-tg-guard-top');
+    const pillDot = document.getElementById('dot-tg-guard-top');
+
+    if (p.notifications_enabled) {
+      if (badge) {
+        badge.textContent = `🟢 ATTIVE (${p.alerts_today || 0}/${p.max_daily_alerts || 5} inviate oggi)`;
+        badge.style.background = 'rgba(16,185,129,0.2)';
+        badge.style.color = '#10b981';
+        badge.style.borderColor = 'rgba(16,185,129,0.4)';
+      }
+      if (pillLbl) pillLbl.textContent = 'ACTIVE';
+      if (pillDot) {
+        pillDot.style.background = '#10b981';
+        pillDot.style.boxShadow = '0 0 8px #10b981';
+      }
+    } else {
+      if (badge) {
+        badge.textContent = '🔇 DISATTIVATE DI DEFAULT (Risparmio Batteria)';
+        badge.style.background = 'rgba(239,68,68,0.2)';
+        badge.style.color = '#f87171';
+        badge.style.borderColor = 'rgba(239,68,68,0.4)';
+      }
+      if (pillLbl) pillLbl.textContent = 'SILENT';
+      if (pillDot) {
+        pillDot.style.background = '#38bdf8';
+        pillDot.style.boxShadow = '0 0 8px #38bdf8';
+      }
+    }
+  } catch (e) {
+    console.warn('Errore refresh Telegram Guard:', e);
+  }
+};
+
+window.toggleTelegramGuard = async function(enable) {
+  const fb = document.getElementById('tg-guard-action-feedback');
+  if (fb) fb.textContent = 'Salvataggio preferenza in corso...';
+  try {
+    const res = await fetch('/api/telegram/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: enable })
+    });
+    const d = await res.json();
+    if (fb) fb.textContent = enable ? '🟢 Notifiche attivate (tetto max 5/giorno)' : '🔇 Notifiche silenziate (Risparmio Batteria)';
+    await refreshTelegramGuardStatus();
+  } catch (e) {
+    if (fb) fb.textContent = 'Errore modifica: ' + e.message;
+  }
+};
+
+window.sendTelegramReportNow = async function() {
+  const fb = document.getElementById('tg-guard-action-feedback');
+  if (fb) fb.textContent = 'Invio report in corso verso Telegram...';
+  try {
+    const res = await fetch('/api/telegram/send-status-report', { method: 'POST' });
+    const d = await res.json();
+    if (d.status === 'SUCCESS') {
+      if (fb) fb.textContent = '✅ Report inviato con successo al tuo cellulare!';
+    } else {
+      if (fb) fb.textContent = 'Errore invio report: ' + (d.error || 'Server error');
+    }
+  } catch (e) {
+    if (fb) fb.textContent = 'Errore connessione: ' + e.message;
+  }
+};
+
+// Auto-check all'avvio
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => { if (window.refreshTelegramGuardStatus) window.refreshTelegramGuardStatus(); }, 1500);
+});
+
