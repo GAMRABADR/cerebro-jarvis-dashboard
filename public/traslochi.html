@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BADREXPRESS & PIETRO TRASLOCHI — Cockpit Lead Radar Multi-Città</title>
+    <style>
+        :root {
+            --bg-dark: #070b14;
+            --card-bg: #0f172a;
+            --border-color: #1e293b;
+            --gold: #facc15;
+            --gold-dark: #ca8a04;
+            --cyan: #00f0ff;
+            --blue: #0284c7;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --orange: #f97316;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding-bottom: 70px;
+        }
+
+        /* BRAND HEADER */
+        .brand-header {
+            background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+            border-bottom: 3px solid var(--gold);
+            padding: 14px 20px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1050px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-badge {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--gold) 0%, #ea580c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 15px rgba(250,204,21,0.4);
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            color: var(--gold);
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            font-weight: 600;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action-top {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .btn-action-top:hover {
+            border-color: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        .btn-action-top.gold {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #000;
+            border: none;
+        }
+
+        .btn-action-top.switch-sel {
+            background: rgba(2, 132, 199, 0.2);
+            color: #38bdf8;
+            border-color: #0284c7;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1050px;
+            margin: 16px auto;
+            padding: 0 16px;
+        }
+
+        /* PRAYER SCHEDULE BANNER (SALAT 5X/DIE) */
+        .prayer-hud {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .prayer-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prayer-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .prayer-countdown {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--cyan);
+            background: rgba(0,240,255,0.08);
+            border: 1px solid rgba(0,240,255,0.25);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .prayer-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .prayer-slot {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 6px;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .prayer-slot.active {
+            border-color: var(--gold);
+            background: rgba(250, 204, 21, 0.12);
+            box-shadow: 0 0 12px rgba(250,204,21,0.25);
+        }
+
+        .prayer-slot-name {
+            font-size: 11px;
+            font-weight: 800;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+
+        .prayer-slot.active .prayer-slot-name {
+            color: var(--gold);
+        }
+
+        .prayer-slot-time {
+            font-size: 13px;
+            font-weight: 900;
+            color: #fff;
+            margin-top: 2px;
+        }
+
+        /* SWITCHBOARD COLLAPSIBLE BAR */
+        .switchboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .switchboard-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .switch-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .switch-toggle-btn {
+            background: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .switch-toggle-btn.on {
+            background: var(--green);
+            color: #000;
+        }
+
+        /* MULTI-CITY BAR */
+        .filter-section-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .city-bar, .service-bar, .status-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .city-pill, .service-pill, .status-pill {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .city-pill:hover, .city-pill.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        .service-pill:hover, .service-pill.active {
+            background: var(--blue);
+            color: #fff;
+            border-color: var(--blue);
+        }
+
+        .status-pill:hover, .status-pill.active {
+            background: var(--cyan);
+            color: #000;
+            border-color: var(--cyan);
+        }
+
+        /* STATS COUNTER BAR */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .stat-card:hover, .stat-card.active {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .stat-num {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* SEARCH BAR */
+        .search-bar {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--gold);
+        }
+
+        /* CARDS LIST */
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .lead-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.35s ease;
+            position: relative;
+        }
+
+        .lead-card:hover {
+            border-color: #3b82f6;
+        }
+
+        /* CULLING ANIMATION: SLIDE-OUT AND FADE */
+        .lead-card.culled {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            overflow: hidden;
+            border-width: 0;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .client-name {
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .city-tag {
+            background: #1e293b;
+            color: var(--gold);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+
+        .lead-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .lead-notes {
+            background: rgba(0, 0, 0, 0.25);
+            border-left: 3px solid var(--cyan);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+        }
+
+        .lead-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .service-badge {
+            background: #0284c7;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .budget-badge {
+            background: #15803d;
+            color: #86efac;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .status-badge-current {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* CALL BUTTONS ROW */
+        .contact-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-call {
+            background: #0284c7;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(2,132,199,0.3);
+            transition: 0.15s;
+        }
+
+        .btn-call:active {
+            transform: scale(0.98);
+            background: #0369a1;
+        }
+
+        .btn-wa {
+            background: #16a34a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(22,163,74,0.3);
+            transition: 0.15s;
+        }
+
+        .btn-wa:active {
+            transform: scale(0.98);
+            background: #15803d;
+        }
+
+        /* OUTCOME SELECTION BUTTONS */
+        .outcome-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .outcome-label-text {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .outcome-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .btn-outcome {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.2;
+            transition: 0.15s;
+            outline: none;
+        }
+
+        .btn-outcome.interested {
+            background: #14532d;
+            color: #86efac;
+            border-color: #22c55e;
+        }
+        .btn-outcome.interested:hover, .btn-outcome.interested.active {
+            background: #22c55e;
+            color: #000;
+        }
+
+        .btn-outcome.quote {
+            background: #0369a1;
+            color: #bae6fd;
+            border-color: #38bdf8;
+        }
+        .btn-outcome.quote:hover, .btn-outcome.quote.active {
+            background: #38bdf8;
+            color: #000;
+        }
+
+        .btn-outcome.no-answer {
+            background: #713f12;
+            color: #fde047;
+            border-color: #eab308;
+        }
+        .btn-outcome.no-answer:hover, .btn-outcome.no-answer.active {
+            background: #eab308;
+            color: #000;
+        }
+
+        .btn-outcome.not-interested {
+            background: #450a0a;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+        .btn-outcome.not-interested:hover, .btn-outcome.not-interested.active {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-outcome.bad-number {
+            background: #3b0764;
+            color: #d8b4fe;
+            border-color: #a855f7;
+        }
+        .btn-outcome.bad-number:hover, .btn-outcome.bad-number.active {
+            background: #a855f7;
+            color: #000;
+        }
+
+        .btn-outcome.fake-lead {
+            background: #2a0808;
+            color: #f87171;
+            border-color: #dc2626;
+        }
+        .btn-outcome.fake-lead:hover, .btn-outcome.fake-lead.active {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #fff;
+            border: 2px solid var(--gold);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .prayer-slots-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 4px;
+            }
+            .prayer-slot {
+                padding: 6px 2px;
+            }
+            .prayer-slot-name {
+                font-size: 9px;
+            }
+            .prayer-slot-time {
+                font-size: 11px;
+            }
+            .outcome-buttons-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BRAND HEADER -->
+    <header class="brand-header">
+        <div class="header-content">
+            <div class="brand-info">
+                <div class="brand-badge">🚚</div>
+                <div>
+                    <div class="brand-title">BADREXPRESS <span>TRASLOCHI</span></div>
+                    <div class="brand-sub">PietroTraslochi.com · Radar Multi-Città · Sync Preghiere H24</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <a href="/selezione" class="btn-action-top switch-sel" title="Passa al Cockpit Autolavaggi Selezione Forniture">
+                    ✨ Selezione Autolavaggi ↗️
+                </a>
+                <button onclick="triggerManualSync()" class="btn-action-top gold" title="Forza scansione e aggiornamento immediato">
+                    ⚡ Sync Radar Ora
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. PRAYER SYNCHRONIZATION WIDGET (SALAT 5X/DIE) -->
+        <div class="prayer-hud">
+            <div class="prayer-header-row">
+                <div class="prayer-title">
+                    🕌 AGGIORNAMENTO AUTOMATICO SINCRONIZZATO ALLE 5 PREGHIERE
+                </div>
+                <div class="prayer-countdown" id="prayer-countdown-badge">
+                    Prossimo slot: In attesa...
+                </div>
+            </div>
+
+            <div class="prayer-slots-grid" id="prayer-slots-container">
+                <div class="prayer-slot" id="slot-fajr">
+                    <div class="prayer-slot-name">Fajr</div>
+                    <div class="prayer-slot-time">05:30</div>
+                </div>
+                <div class="prayer-slot" id="slot-dhuhr">
+                    <div class="prayer-slot-name">Dhuhr</div>
+                    <div class="prayer-slot-time">13:20</div>
+                </div>
+                <div class="prayer-slot" id="slot-asr">
+                    <div class="prayer-slot-name">Asr</div>
+                    <div class="prayer-slot-time">16:50</div>
+                </div>
+                <div class="prayer-slot" id="slot-maghrib">
+                    <div class="prayer-slot-name">Maghrib</div>
+                    <div class="prayer-slot-time">19:35</div>
+                </div>
+                <div class="prayer-slot" id="slot-isha">
+                    <div class="prayer-slot-name">Isha</div>
+                    <div class="prayer-slot-time">21:05</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. SWITCHBOARD CONTROLLER SERVIZI RUST -->
+        <div class="switchboard-card">
+            <div class="switchboard-title" onclick="toggleSwitchboard()">
+                <span>⚙️ Switchboard Servizi & Scraper (Controllo Real-Time)</span>
+                <span id="sb-toggle-icon">▼</span>
+            </div>
+            <div class="switches-grid" id="switches-container">
+                <!-- Popolato dinamicamente da /api/services/status -->
+            </div>
+        </div>
+
+        <!-- 3. BARRA SELEZIONE CITTÀ -->
+        <div class="filter-section-label">📍 Filtra per Città:</div>
+        <div class="city-bar" id="city-bar">
+            <button class="city-pill active" onclick="selectCity('ALL', this)">TUTTE LE CITTÀ (<span id="c-all">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Bologna', this)">Bologna (<span id="c-bologna">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Milano', this)">Milano (<span id="c-milano">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Roma', this)">Roma (<span id="c-roma">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Torino', this)">Torino (<span id="c-torino">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Firenze', this)">Firenze (<span id="c-firenze">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Modena', this)">Modena (<span id="c-modena">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Cuneo', this)">Cuneo (<span id="c-cuneo">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Verona', this)">Verona (<span id="c-verona">0</span>)</button>
+            <button class="city-pill" onclick="selectCity('Napoli', this)">Napoli (<span id="c-napoli">0</span>)</button>
+        </div>
+
+        <!-- 4. BARRA SELEZIONE SERVIZIO -->
+        <div class="filter-section-label">🛠️ Filtra per Servizio:</div>
+        <div class="service-bar" id="service-bar">
+            <button class="service-pill active" onclick="selectService('ALL', this)">TUTTI I SERVIZI</button>
+            <button class="service-pill" onclick="selectService('Trasloco', this)">🚚 Traslochi</button>
+            <button class="service-pill" onclick="selectService('Sgombero', this)">📦 Sgomberi</button>
+            <button class="service-pill" onclick="selectService('Deposito', this)">🏬 Depositi</button>
+            <button class="service-pill" onclick="selectService('Smaltimento', this)">♻️ Smaltimento</button>
+            <button class="service-pill" onclick="selectService('Scala', this)">🪜 Scala Aerea</button>
+        </div>
+
+        <!-- 5. STATS SUMMARY BAR -->
+        <div class="stats-grid">
+            <div class="stat-card active" onclick="selectStatus('ACTIVE', this)">
+                <div class="stat-num" id="count-active" style="color:var(--cyan);">0</div>
+                <div class="stat-label">⚡ Attivi (Pronti)</div>
+            </div>
+            <div class="stat-card" onclick="selectStatus('INTERESSATO', this)">
+                <div class="stat-num" id="count-interested" style="color:var(--green);">0</div>
+                <div class="stat-label">🟢 Interessati</div>
+            </div>
+            <div class="stat-card" onclick="selectStatus('PREVENTIVO_INVIATO', this)">
+                <div class="stat-num" id="count-quote" style="color:#38bdf8;">0</div>
+                <div class="stat-label">📄 Preventivi</div>
+            </div>
+            <div class="stat-card" onclick="selectStatus('NON_RISPONDE', this)">
+                <div class="stat-num" id="count-no-answer" style="color:var(--orange);">0</div>
+                <div class="stat-label">🟡 Non Risponde</div>
+            </div>
+            <div class="stat-card" onclick="selectStatus('NON_INTERESSATO', this)">
+                <div class="stat-num" id="count-not-interested" style="color:var(--red);">0</div>
+                <div class="stat-label">🔴 Scartati</div>
+            </div>
+            <div class="stat-card" onclick="selectStatus('BLACKLIST', this)">
+                <div class="stat-num" id="count-blacklist" style="color:var(--purple);">0</div>
+                <div class="stat-label">⛔ Blacklist</div>
+            </div>
+        </div>
+
+        <!-- 6. SEARCH BAR -->
+        <div class="search-bar">
+            <input type="text" class="search-input" id="search-input" placeholder="🔍 Cerca per nome cliente, indirizzo, note o città..." oninput="handleSearch()">
+        </div>
+
+        <!-- 7. LISTA SCHEDE LEAD -->
+        <div class="card-list" id="card-list">
+            <div style="text-align:center; padding:40px; color:#94a3b8;">
+                Caricamento radar lead multi-città in corso...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let allLeads = [];
+        let selectedCity = 'ALL';
+        let selectedService = 'ALL';
+        let activeStatus = 'ACTIVE';
+        let searchQuery = '';
+
+        // CARICAMENTO INIZIALE LEAD
+        async function loadLeads() {
+            try {
+                const res = await fetch('/api/traslochi/list?status=ALL');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    allLeads = data.leads || [];
+                    updateStatsCounters();
+                    updateCityCounters();
+                    applyFilters();
+                }
+            } catch (e) {
+                showToast('Errore caricamento lead: ' + e.message);
+            }
+        }
+
+        // CARICAMENTO ORARI PREGHIERE
+        async function loadPrayerSchedule() {
+            try {
+                const res = await fetch('/api/prayer/schedule');
+                const data = await res.json();
+                if (data && data.all_prayers) {
+                    const badge = document.getElementById('prayer-countdown-badge');
+                    const next = data.next_prayer || {};
+                    const mins = next.minutes_until || 0;
+                    const hours = Math.floor(mins / 60);
+                    const remMins = mins % 60;
+                    badge.innerHTML = `Prossimo slot: <b>${next.name} (${next.label})</b> [tra ${hours}h ${remMins}m]`;
+
+                    // Evidenzia slot attivo
+                    document.querySelectorAll('.prayer-slot').forEach(s => s.classList.remove('active'));
+                    const curName = (next.name || '').toLowerCase();
+                    const targetSlot = document.getElementById(`slot-${curName}`);
+                    if (targetSlot) targetSlot.classList.add('active');
+                }
+            } catch (e) {
+                console.warn('[Prayer Schedule Err]:', e);
+            }
+        }
+
+        // CARICAMENTO SWITCHES SERVIZI
+        async function loadServicesStatus() {
+            try {
+                const res = await fetch('/api/services/status');
+                const data = await res.json();
+                const container = document.getElementById('switches-container');
+                if (data && data.services) {
+                    container.innerHTML = data.services.map(s => `
+                        <div class="switch-item">
+                            <span>${s.name}</span>
+                            <button class="switch-toggle-btn ${s.enabled ? 'on' : ''}" onclick="toggleService('${s.service_key}', ${!s.enabled})">
+                                ${s.enabled ? '● ATTIVO' : '○ SPENTO'}
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.warn('[Services Status Err]:', e);
+            }
+        }
+
+        async function toggleService(key, newState) {
+            try {
+                const res = await fetch('/api/services/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service_key: key, enabled: newState })
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    showToast(`✅ Servizio ${key} impostato su: ${newState ? 'ATTIVO' : 'SPENTO'}`);
+                    loadServicesStatus();
+                }
+            } catch (e) {
+                showToast(`❌ Errore toggle: ${e.message}`);
+            }
+        }
+
+        function toggleSwitchboard() {
+            const container = document.getElementById('switches-container');
+            const icon = document.getElementById('sb-toggle-icon');
+            const isHidden = container.style.display === 'none';
+            container.style.display = isHidden ? 'grid' : 'none';
+            icon.textContent = isHidden ? '▲' : '▼';
+        }
+
+        function selectCity(city, el) {
+            selectedCity = city;
+            document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            applyFilters();
+        }
+
+        function selectService(srv, el) {
+            selectedService = srv;
+            document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            applyFilters();
+        }
+
+        function selectStatus(status, el) {
+            activeStatus = status;
+            document.querySelectorAll('.stat-card').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            applyFilters();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const filtered = allLeads.filter(lead => {
+                // 1. Filtro Città
+                if (selectedCity !== 'ALL') {
+                    const lCity = (lead.city || '').toLowerCase();
+                    if (!lCity.includes(selectedCity.toLowerCase())) return false;
+                }
+
+                // 2. Filtro Servizio
+                if (selectedService !== 'ALL') {
+                    const lSrv = (lead.service_type || '').toLowerCase();
+                    if (!lSrv.includes(selectedService.toLowerCase())) return false;
+                }
+
+                // 3. Filtro Stato
+                const st = lead.lead_status || 'DA_CHIAMARE';
+                const isBlacklist = lead.blacklist_flag === 1 || ['NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(st);
+
+                if (activeStatus === 'ACTIVE') {
+                    // ATTIVI: Mostra solo i lead pronti o in chiamata. CULLA E NASCONDE COMPLETAMENTE TUTTI GLI SCARTATI!
+                    if (['NON_INTERESSATO', 'NON_RISPONDE', 'NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(st) || isBlacklist) {
+                        return false;
+                    }
+                } else if (activeStatus === 'INTERESSATO') {
+                    if (st !== 'INTERESSATO') return false;
+                } else if (activeStatus === 'PREVENTIVO_INVIATO') {
+                    if (st !== 'PREVENTIVO_INVIATO') return false;
+                } else if (activeStatus === 'NON_RISPONDE') {
+                    if (st !== 'NON_RISPONDE') return false;
+                } else if (activeStatus === 'NON_INTERESSATO') {
+                    if (st !== 'NON_INTERESSATO') return false;
+                } else if (activeStatus === 'BLACKLIST') {
+                    if (!isBlacklist) return false;
+                }
+
+                // 4. Query di ricerca
+                if (searchQuery) {
+                    const haystack = `${lead.client_name} ${lead.city} ${lead.service_type} ${lead.notes}`.toLowerCase();
+                    if (!haystack.includes(searchQuery)) return false;
+                }
+
+                return true;
+            });
+
+            renderCards(filtered);
+        }
+
+        function renderCards(leads) {
+            const container = document.getElementById('card-list');
+            if (leads.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        Nessun lead corrispondente ai filtri attuali.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = leads.map(l => {
+                const cleanPhone = (l.phone || '').replace(/[^0-9]/g, '');
+                const telHref = cleanPhone.startsWith('39') ? `tel:+${cleanPhone}` : `tel:+39${cleanPhone}`;
+                const waText = encodeURIComponent(`Buongiorno ${l.client_name}, la contatto da BadrExpress & Pietro Traslochi in merito alla sua richiesta di ${l.service_type} a ${l.city}. Possiamo fornirle subito un preventivo trasparente con sopralluogo gratuito. Ci può indicare data e dettagli?`);
+                const waHref = cleanPhone.startsWith('39') ? `https://wa.me/${cleanPhone}?text=${waText}` : `https://wa.me/39${cleanPhone}?text=${waText}`;
+
+                const st = l.lead_status || 'DA_CHIAMARE';
+                let statusBadge = '<span class="status-badge-current" style="background:#64748b;">DA CHIAMARE</span>';
+                if (st === 'INTERESSATO') statusBadge = '<span class="status-badge-current" style="background:#16a34a;">🟢 INTERESSATO</span>';
+                else if (st === 'PREVENTIVO_INVIATO') statusBadge = '<span class="status-badge-current" style="background:#0284c7;">📄 PREVENTIVO INVIATO</span>';
+                else if (st === 'NON_RISPONDE') statusBadge = '<span class="status-badge-current" style="background:#eab308; color:#000;">🟡 NON RISPONDE</span>';
+                else if (st === 'NON_INTERESSATO') statusBadge = '<span class="status-badge-current" style="background:#dc2626;">🔴 NON INTERESSATO</span>';
+                else if (st === 'NUMERO_INESISTENTE') statusBadge = '<span class="status-badge-current" style="background:#7c3aed;">⛔ NUMERO INESISTENTE</span>';
+                else if (st === 'LEAD_FALSO') statusBadge = '<span class="status-badge-current" style="background:#991b1b;">🚫 LEAD FALSO</span>';
+
+                return `
+                <div class="lead-card" id="lead-card-${l.id}">
+                    <div class="card-header-row">
+                        <div class="client-name">${l.client_name}</div>
+                        <div class="city-tag">📍 ${l.city}</div>
+                    </div>
+
+                    <div class="lead-details">
+                        <b>Volume:</b> ${l.volume_mq || 'Standard'} | 
+                        <b>Piano:</b> ${l.piano_partenza || 'T'} ➔ ${l.piano_arrivo || 'T'} | 
+                        <b>Ascensore:</b> ${l.ascensore ? 'Sì' : 'No'} | 
+                        <b>Fonte:</b> ${l.source || 'Radar'}
+                    </div>
+
+                    ${l.notes ? `<div class="lead-notes">💡 ${l.notes}</div>` : ''}
+
+                    <div class="lead-tags">
+                        <span class="service-badge">🚚 ${l.service_type || 'Trasloco'}</span>
+                        <span class="budget-badge">💰 Budget: €${l.estimated_budget || '350'}</span>
+                        ${statusBadge}
+                    </div>
+
+                    <!-- PULSANTI CONTATTO RAPIDO -->
+                    <div class="contact-row">
+                        <a href="${telHref}" class="btn-call">
+                            📞 CHIAMA ORA
+                        </a>
+                        <a href="${waHref}" target="_blank" class="btn-wa">
+                            💬 WhatsApp Preventivo
+                        </a>
+                    </div>
+
+                    <!-- BOTTONI ESITO CON CULLING ISTANTANEO & BLACKLIST -->
+                    <div class="outcome-box">
+                        <div class="outcome-label-text">
+                            <span>Esito Chiamata & Azione:</span>
+                            <span style="color:#64748b; font-size:10px;">${l.last_call_at ? 'Ultima: ' + l.last_call_at.substring(11, 16) : ''}</span>
+                        </div>
+                        <div class="outcome-buttons-grid">
+                            <button class="btn-outcome" style="background:#ca8a04; color:#000; font-weight:900; border-color:#facc15;" onclick="setLeadOutcome(${l.id}, 'PREVENTIVO_ACCETTATO')" title="Segna come preventivo accettato / lavoro assegnato!">
+                                🎉 Accetta Prev.
+                            </button>
+                            <button class="btn-outcome interested ${st === 'INTERESSATO' ? 'active' : ''}" onclick="setLeadOutcome(${l.id}, 'INTERESSATO')" title="Cliente interessato, sopralluogo in corso">
+                                🟢 Interessato
+                            </button>
+                            <button class="btn-outcome quote ${st === 'PREVENTIVO_INVIATO' ? 'active' : ''}" onclick="setLeadOutcome(${l.id}, 'PREVENTIVO_INVIATO')" title="Invia preventivo">
+                                📄 Preventivo
+                            </button>
+                            <button class="btn-outcome no-answer ${st === 'NON_RISPONDE' ? 'active' : ''}" onclick="setLeadOutcome(${l.id}, 'NON_RISPONDE')" title="Non risponde al telefono (rimuovi da vista attiva)">
+                                🟡 Non Risponde
+                            </button>
+                            <button class="btn-outcome not-interested ${st === 'NON_INTERESSATO' ? 'active' : ''}" onclick="setLeadOutcome(${l.id}, 'NON_INTERESSATO')" title="Non interessato (rimuovi da vista attiva)">
+                                🔴 Non Int. (Togli)
+                            </button>
+                            <button class="btn-outcome bad-number ${st === 'NUMERO_INESISTENTE' ? 'active' : ''}" onclick="setLeadOutcome(${l.id}, 'NUMERO_INESISTENTE')" title="Numero non valido / inesistente (blacklist)">
+                                ⛔ Num. Inesistente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // AGGIORNAMENTO ESITO CON CULLING IMMEDIATO DALLA VISTA ATTIVA
+        async function setLeadOutcome(id, outcome) {
+            const card = document.getElementById(`lead-card-${id}`);
+            const target = allLeads.find(l => l.id === id);
+
+            try {
+                const res = await fetch(`/api/traslochi/outcome?id=${id}&outcome=${outcome}&format=json`);
+                const data = await res.json();
+
+                if (data.success) {
+                    if (target) {
+                        target.lead_status = outcome;
+                        target.call_outcome = outcome;
+                        if (outcome === 'NUMERO_INESISTENTE' || outcome === 'LEAD_FALSO') {
+                            target.blacklist_flag = 1;
+                        }
+                    }
+
+                    // Se siamo nella vista ATTIVI e l'esito è uno di scarto/rimozione, applichiamo la CULLING ANIMATION!
+                    if (activeStatus === 'ACTIVE' && ['NON_INTERESSATO', 'NON_RISPONDE', 'NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(outcome)) {
+                        if (card) {
+                            card.classList.add('culled');
+                            setTimeout(() => {
+                                applyFilters();
+                                updateStatsCounters();
+                                updateCityCounters();
+                            }, 360);
+                        }
+                    } else {
+                        applyFilters();
+                        updateStatsCounters();
+                        updateCityCounters();
+                    }
+
+                    showToast(`✅ ${data.name}: ${data.label}`);
+                }
+            } catch (e) {
+                showToast(`❌ Errore aggiornamento: ${e.message}`);
+            }
+        }
+
+        function updateStatsCounters() {
+            let active = 0, interested = 0, quote = 0, noAnswer = 0, notInterested = 0, blacklist = 0;
+            allLeads.forEach(l => {
+                const st = l.lead_status || 'DA_CHIAMARE';
+                const isBl = l.blacklist_flag === 1 || ['NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(st);
+                if (isBl) blacklist++;
+                else if (st === 'INTERESSATO') interested++;
+                else if (st === 'PREVENTIVO_INVIATO') quote++;
+                else if (st === 'NON_RISPONDE') noAnswer++;
+                else if (st === 'NON_INTERESSATO') notInterested++;
+                else active++;
+            });
+
+            document.getElementById('count-active').textContent = active;
+            document.getElementById('count-interested').textContent = interested;
+            document.getElementById('count-quote').textContent = quote;
+            document.getElementById('count-no-answer').textContent = noAnswer;
+            document.getElementById('count-not-interested').textContent = notInterested;
+            document.getElementById('count-blacklist').textContent = blacklist;
+        }
+
+        function updateCityCounters() {
+            const counts = {};
+            allLeads.forEach(l => {
+                const c = (l.city || '').toLowerCase();
+                // solo per lead attivi
+                const st = l.lead_status || 'DA_CHIAMARE';
+                if (!['NON_INTERESSATO', 'NON_RISPONDE', 'NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(st)) {
+                    ['bologna', 'milano', 'roma', 'torino', 'firenze', 'modena', 'cuneo', 'verona', 'napoli'].forEach(k => {
+                        if (c.includes(k)) counts[k] = (counts[k] || 0) + 1;
+                    });
+                }
+            });
+
+            document.getElementById('c-all').textContent = allLeads.filter(l => !['NON_INTERESSATO', 'NON_RISPONDE', 'NUMERO_INESISTENTE', 'LEAD_FALSO'].includes(l.lead_status)).length;
+            for (const [k, v] of Object.entries(counts)) {
+                const el = document.getElementById(`c-${k}`);
+                if (el) el.textContent = v;
+            }
+        }
+
+        async function triggerManualSync() {
+            showToast('🔄 Avvio sincronizzazione multi-città forzata...');
+            try {
+                const res = await fetch('/api/traslochi/manual-refresh', { method: 'POST' });
+                const d = await res.json();
+                showToast(`✅ Sincronizzazione completata: ${d.new_leads || 0} nuovi lead aggiornati!`);
+                await loadLeads();
+            } catch (e) {
+                showToast('Errore sincronizzazione: ' + e.message);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLeads();
+            loadPrayerSchedule();
+            loadServicesStatus();
+            // Polling orari preghiera ogni 60s
+            setInterval(loadPrayerSchedule, 60000);
+        });
+    </script>
+</body>
+</html>
