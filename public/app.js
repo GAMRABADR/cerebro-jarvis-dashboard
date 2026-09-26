@@ -1013,9 +1013,12 @@ const KALI_VIEW_MAP = {
   kali: 'view-kali-lab',
   kanban: 'view-kanban',
   n8n: 'view-n8n',
+  agente0: 'view-agente-zero',
+  'agente-zero': 'view-agente-zero',
   topology: 'view-topology',
   graph: 'view-neural-graph',
-  astra: 'view-astra-3d'
+  astra: 'view-astra-3d',
+  'astra-3d': 'view-astra-3d'
 };
 const KALI_CAT_ALIASES = {
   recon: ['recon', 'information-gathering', 'info'],
@@ -1115,29 +1118,64 @@ function renderKaliCards() {
 
 window.switchMasterView = function(view) {
   const key = view === 'kali' ? 'kali' : (view || 'jarvis');
-  document.querySelectorAll('.jarvis-workspace').forEach(w => w.classList.remove('active'));
-  const target = document.getElementById(KALI_VIEW_MAP[key] || 'view-jarvis');
-  if (target) target.classList.add('active');
-  else document.getElementById('view-jarvis')?.classList.add('active');
+  const targetId = KALI_VIEW_MAP[key] || 'view-jarvis';
+
+  document.querySelectorAll('.jarvis-workspace').forEach(w => {
+    if (w.id === targetId) {
+      w.classList.add('active');
+      w.style.display = (targetId === 'view-jarvis') ? 'block' : 'flex';
+    } else {
+      w.classList.remove('active');
+      w.style.display = 'none';
+    }
+  });
 
   document.body.classList.toggle('view-kali', key === 'kali');
 
   document.querySelectorAll('.view-switch-btn').forEach(b => b.classList.remove('active'));
   if (key === 'jarvis') document.getElementById('btn-view-jarvis')?.classList.add('active');
-  if (key === 'kanban') document.getElementById('btn-view-kanban')?.classList.add('active');
-  if (key === 'n8n') document.getElementById('btn-view-n8n')?.classList.add('active');
-  if (key === 'topology') document.getElementById('btn-view-topology')?.classList.add('active');
+  if (key === 'kanban') {
+    document.getElementById('btn-view-kanban')?.classList.add('active');
+    if (window.refreshKanbanData) window.refreshKanbanData();
+  }
+  if (key === 'n8n') {
+    document.getElementById('btn-view-n8n')?.classList.add('active');
+    const f = document.getElementById('n8n-frame');
+    if (f && (!f.src || f.src === 'about:blank')) {
+      f.src = f.getAttribute('data-src') || 'http://localhost:5678';
+    }
+  }
+  if (key === 'agente0' || key === 'agente-zero') {
+    document.getElementById('btn-view-agente0')?.classList.add('active');
+    const f = document.getElementById('agente-zero-frame');
+    if (f && (!f.src || f.src === 'about:blank')) {
+      f.src = f.getAttribute('data-src') || 'http://92.4.233.42:50080';
+    }
+  }
+  if (key === 'topology') {
+    document.getElementById('btn-view-topology')?.classList.add('active');
+    if (window.loadCosmos3DOnDemand) {
+      window.loadCosmos3DOnDemand(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (window.initCosmos3D) window.initCosmos3D();
+        if (window.setCosmosLayout) window.setCosmosLayout('constellation');
+      });
+    }
+  }
   if (key === 'graph') {
     document.getElementById('btn-view-graph')?.classList.add('active');
     if (window.initNeuralGraph) window.initNeuralGraph();
   }
-  if (key === 'astra') {
+  if (key === 'astra' || key === 'astra-3d') {
     document.getElementById('btn-view-astra')?.classList.add('active');
     if (window.loadAstra3DStatus) window.loadAstra3DStatus();
   }
 
   if (key === 'kali') refreshKaliCatalog();
   toggleMobileNav(false);
+  if (window.lucide) {
+    setTimeout(() => lucide.createIcons(), 50);
+  }
 };
 
 window.toggleMobileNav = function(force) {

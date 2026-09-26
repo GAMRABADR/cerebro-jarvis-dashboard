@@ -62,7 +62,7 @@
 
       <!-- DROPDOWN: KANBAN -->
       <div class="nav-dropdown-pod">
-        <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban">
+        <button class="view-switch-btn dropdown-trigger" id="btn-view-kanban" onclick="switchMasterView('kanban')">
           <i data-lucide="layout-dashboard" class="lucide-icon"></i>KANBAN <span class="chevron">▾</span>
         </button>
         <div class="nav-dropdown-menu">
@@ -79,24 +79,29 @@
 
       <!-- DROPDOWN: N8N -->
       <div class="nav-dropdown-pod">
-        <button class="view-switch-btn dropdown-trigger" id="btn-view-n8n">
+        <button class="view-switch-btn dropdown-trigger" id="btn-view-n8n" onclick="switchMasterView('n8n')">
           <i data-lucide="git-branch" class="lucide-icon text-cyan"></i>N8N CLOUD <span class="chevron">▾</span>
         </button>
         <div class="nav-dropdown-menu">
-          <a class="dd-item" href="http://92.4.233.42:5678" target="_blank">
-            <span class="dd-icon"><i data-lucide="cloud" class="lucide-icon text-cyan"></i></span>
-            <div class="dd-text"><strong>N8N ORACLE VPS (24GB) ↗️</strong><small>92.4.233.42:5678 (Cloud Workflows)</small></div>
-          </a>
-          <a class="dd-item" href="http://127.0.0.1:5678" target="_blank">
-            <span class="dd-icon"><i data-lucide="laptop" class="lucide-icon text-emerald"></i></span>
-            <div class="dd-text"><strong>N8N LOCAL RUNNER ↗️</strong><small>127.0.0.1:5678 (64GB Workstation)</small></div>
-          </a>
           <div class="dd-item" onclick="switchMasterView('n8n')">
             <span class="dd-icon"><i data-lucide="activity" class="lucide-icon text-amber"></i></span>
             <div class="dd-text"><strong>PANNELLO FLUSSI INTEGRATO</strong><small>Monitoraggio Intake & Preventivi</small></div>
           </div>
+          <a class="dd-item" href="http://92.4.233.42:5678" target="_blank" rel="noopener noreferrer">
+            <span class="dd-icon"><i data-lucide="cloud" class="lucide-icon text-cyan"></i></span>
+            <div class="dd-text"><strong>N8N ORACLE VPS (24GB) ↗️</strong><small>92.4.233.42:5678 (Cloud Workflows)</small></div>
+          </a>
+          <a class="dd-item" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer">
+            <span class="dd-icon"><i data-lucide="laptop" class="lucide-icon text-emerald"></i></span>
+            <div class="dd-text"><strong>N8N LOCAL RUNNER ↗️</strong><small>127.0.0.1:5678 (64GB Workstation)</small></div>
+          </a>
         </div>
       </div>
+
+      <!-- VISTA AGENTE ZERO -->
+      <button class="view-switch-btn" id="btn-view-agente0" onclick="switchMasterView('agente0')" style="border-color:#8b5cf6; color:#c4b5fd;">
+        <span class="btn-dot" style="background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6;"></span><i data-lucide="bot" class="lucide-icon text-purple"></i>AGENTE ZERO
+      </button>
 
       <!-- DROPDOWN: KALI LINUX -->
       <div class="nav-dropdown-pod">
@@ -198,12 +203,12 @@
                 <span class="ct-code">📋 HERMES KANBAN</span>
                 <span class="ct-desc">Visual DAG Board Level 5</span>
               </div>
-              <div class="cmd-tile vault-tile" onclick="openAgente0Full()">
-                <span class="ct-code">🤖 AGENTE ZERO ↗️</span>
+              <div class="cmd-tile vault-tile" onclick="switchMasterView('agente0')">
+                <span class="ct-code">🤖 AGENTE ZERO</span>
                 <span class="ct-desc">Console Completa VPS</span>
               </div>
-              <div class="cmd-tile vault-tile" onclick="openN8nFull()">
-                <span class="ct-code">⚙️ N8N WORKFLOWS ↗️</span>
+              <div class="cmd-tile vault-tile" onclick="switchMasterView('n8n')">
+                <span class="ct-code">⚙️ N8N WORKFLOWS</span>
                 <span class="ct-desc">24GB Cloud Automations</span>
               </div>
               <div class="cmd-tile" onclick="toggleModule('mod-cpu-ram', true)">
@@ -1327,6 +1332,32 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
     </div>
     <div style="flex:1; border:1px solid rgba(0,240,255,0.15); border-radius:8px; overflow:hidden; position:relative; background:#0e131f;">
       <iframe id="n8n-frame" src="about:blank" data-src="http://localhost:5678" loading="lazy" style="width:100%; height:100%; border:none;" title="N8N Automation Workflows"></iframe>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW: AGENTE ZERO CONSOLE & SUB-AGENTS ORCHESTRATION
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-agente-zero" style="display:none; flex-direction:column; width:100%; height:calc(100vh - 56px); background:#060a12; padding:12px; box-sizing:border-box;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:10px 16px; background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.3); border-radius:10px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+          <h2 style="margin:0; font-size:14px; color:#a78bfa; letter-spacing:1px;">AGENTE ZERO · CONSOLLE SUB-AGENTI VPS (24GB RAM)</h2>
+          <span style="font-size:10px; color:#94a3b8;">Endpoint VPS: <code>http://92.4.233.42:50080</code> (Docker Autopilot Sub-Agent)</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a href="http://92.4.233.42:50080" target="_blank" rel="noopener noreferrer" style="padding:6px 14px; background:#8b5cf6; color:#fff; border-radius:6px; font-size:11px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          🚀 APRI IN SCHEDA COMPLETA ↗
+        </a>
+        <button onclick="const f=document.getElementById('agente-zero-frame'); if(f) f.src=f.getAttribute('data-src')||'http://92.4.233.42:50080';" style="padding:6px 12px; background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.5); color:#c4b5fd; border-radius:6px; font-size:11px; cursor:pointer;">
+          🔄 Ricarica Frame
+        </button>
+      </div>
+    </div>
+    <div style="flex:1; border:1px solid rgba(139,92,246,0.2); border-radius:8px; overflow:hidden; position:relative; background:#0a0c16;">
+      <iframe id="agente-zero-frame" src="about:blank" data-src="http://92.4.233.42:50080" loading="lazy" style="width:100%; height:100%; border:none;" title="Agente Zero Console"></iframe>
     </div>
   </div>
 
@@ -2455,56 +2486,7 @@ window.refreshKanbanData = async function() {
   }
 };
 
-// Carica kanban quando si passa alla vista
-const _origSwitchMasterView = window.switchMasterView;
-window.switchMasterView = function(view) {
-  _origSwitchMasterView && _origSwitchMasterView(view);
-  const viewMap = (typeof KALI_VIEW_MAP !== 'undefined') ? KALI_VIEW_MAP : {
-    'jarvis': 'view-jarvis',
-    'kanban': 'view-kanban',
-    'kali': 'view-kali-lab',
-    'topology': 'view-topology',
-    'n8n': 'view-n8n',
-    'graph': 'view-neural-graph',
-    'astra': 'view-astra-3d',
-    'astra-3d': 'view-astra-3d'
-  };
-  const targetId = viewMap[view] || 'view-jarvis';
-  document.querySelectorAll('.jarvis-workspace').forEach(w => {
-    if (w.id === targetId) {
-      w.style.display = 'flex';
-      w.classList.add('active');
-    } else {
-      w.style.display = 'none';
-      w.classList.remove('active');
-    }
-  });
-  if (view === 'kanban') window.refreshKanbanData();
-  if (view === 'astra' || view === 'astra-3d') {
-    if (window.loadAstra3DStatus) window.loadAstra3DStatus();
-  }
-  if (view === 'n8n') {
-    const f = document.getElementById('n8n-frame');
-    if (f && (!f.src || f.src === 'about:blank')) {
-      f.src = f.getAttribute('data-src') || 'http://localhost:5678';
-    }
-  }
-  if (view === 'graph') {
-    if (window.initNeuralGraph) window.initNeuralGraph();
-  }
-  if (view === 'topology') {
-    if (window.loadCosmos3DOnDemand) {
-      window.loadCosmos3DOnDemand(() => {
-        window.dispatchEvent(new Event('resize'));
-        if (window.initCosmos3D) window.initCosmos3D();
-        if (window.setCosmosLayout) window.setCosmosLayout('constellation');
-      });
-    }
-  }
-  if (window.lucide) {
-    setTimeout(() => lucide.createIcons(), 50);
-  }
-};
+
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) {
