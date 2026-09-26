@@ -1,0 +1,19 @@
+{
+  "id": "lead_whatsapp_pitch_generator",
+  "name": "Instant WhatsApp & CRM Pitch Generator",
+  "category": "BUSINESS_CRM",
+  "icon": "💬",
+  "triggers": [
+    "pitch whatsapp",
+    "messaggio whatsapp",
+    "bozza preventivo",
+    "crm pitch",
+    "contatta lead",
+    "messaggio cliente"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.18,
+  "description": "Generazione immediata di messaggi commerciali ad altissima conversione per WhatsApp e SMS con calcolo preventivo, personalizzati per PietroTraslochi o SELEZIONE."
+}

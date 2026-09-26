@@ -1,0 +1,20 @@
+{
+  "id": "multi_agent_blackboard_memory",
+  "name": "Multi-Agent Blackboard Shared Memory",
+  "category": "COGNITIVE_KERNEL",
+  "icon": "🧠",
+  "triggers": [
+    "blackboard",
+    "lavagna",
+    "memoria agenti",
+    "shared memory",
+    "lock risorsa",
+    "claim task",
+    "stato swarm"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.22,
+  "description": "Architettura di memoria condivisa a lavagna (Blackboard) in SQLite WAL con lock atomici, claim sui lead e messaggistica pub/sub tra agenti."
+}

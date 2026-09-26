@@ -1,0 +1,19 @@
+{
+  "id": "agent_handoff_protocol",
+  "name": "Multi-Agent Handoff & Relay Protocol",
+  "category": "MULTI_AGENT_ORCHESTRATION",
+  "icon": "🔄",
+  "triggers": [
+    "handoff",
+    "passa compito",
+    "relay agenti",
+    "chain task",
+    "flotta passaggio",
+    "delega agente"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.28,
+  "description": "Protocollo di passaggio consegne atomico tra i 7 Agenti Autonomi con serializzazione dello stato, rilascio lock e persistenza della memoria di missione."
+}

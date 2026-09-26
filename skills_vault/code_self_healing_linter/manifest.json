@@ -1,0 +1,20 @@
+{
+  "id": "code_self_healing_linter",
+  "name": "Code Self-Healing & AST Linter",
+  "category": "RUST_ACCELERATOR",
+  "icon": "🩹",
+  "triggers": [
+    "lint",
+    "self heal",
+    "fix syntax",
+    "diagnosi codice",
+    "ast check",
+    "auto fix",
+    "ripara codice"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.42,
+  "description": "Analisi statica AST e riparazione proattiva della sintassi per file Python, Rust e JavaScript prima dell'esecuzione da parte degli agenti sviluppatori."
+}
