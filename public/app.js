@@ -1358,9 +1358,6 @@ window.updateKaliTools = async function() {
 
 // INIT ON DOM READY
 document.addEventListener('DOMContentLoaded', () => {
-  if (navigator.serviceWorker) {
-    navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
-  }
   initDraggableWindows();
   loadModularCardsState();
   initCustomModelSelect();
@@ -2502,6 +2499,13 @@ function startGraphLoop(canvas) {
   let lastSyncTime = performance.now();
 
   function loop(now) {
+    if (document.hidden || !canvas || canvas.offsetParent === null || canvas.clientWidth === 0) {
+      setTimeout(() => {
+        _graphAnimId = requestAnimationFrame(loop);
+      }, 500);
+      return;
+    }
+
     updateLocalGraphPhysics();
 
     // Periodic sync with Rust physics endpoint every 1.5 seconds if nodes move

@@ -137,7 +137,16 @@ window.Astra3D = {
 
   init3DViewer() {
     const container = document.getElementById('astra-3d-viewport');
-    if (!container || this.isInitialized || typeof THREE === 'undefined') return;
+    if (!container || this.isInitialized) return;
+
+    if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+      if (window.loadCosmos3DOnDemand) {
+        window.loadCosmos3DOnDemand(() => {
+          this.init3DViewer();
+        });
+        return;
+      }
+    }
 
     this.isInitialized = true;
     const width = container.clientWidth || 600;
@@ -149,9 +158,9 @@ window.Astra3D = {
     this.camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
     this.camera.position.set(120, 100, 140);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     container.innerHTML = '';
     container.appendChild(this.renderer.domElement);
 
@@ -183,8 +192,13 @@ window.Astra3D = {
     // Load STL Binary
     this.loadStlModel('/3d_models/HTVW_281_BambuLab.stl');
 
-    // Animation Loop
+    // Animation Loop with Visibility Culling (Zero GPU usage when hidden)
     const animate = () => {
+      const containerEl = document.getElementById('astra-viewport-container');
+      if (document.hidden || !containerEl || containerEl.offsetParent === null || container.clientWidth === 0) {
+        setTimeout(() => requestAnimationFrame(animate), 500);
+        return;
+      }
       requestAnimationFrame(animate);
       if (this.controls) this.controls.update();
       this.renderer.render(this.scene, this.camera);
@@ -266,10 +280,8 @@ window.Astra3D = {
 
 window.loadAstra3DStatus = function() {
   window.Astra3D.fetchStatus();
-  setTimeout(() => window.Astra3D.init3DViewer(), 100);
 };
 
-// Auto fetch when DOM loads
-document.addEventListener('DOMContentLoaded', () => {
-  window.Astra3D.fetchStatus();
-});
+window.initAstra3DViewerOnDemand = function() {
+  window.Astra3D.init3DViewer();
+};

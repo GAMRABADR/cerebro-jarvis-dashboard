@@ -1320,13 +1320,13 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
         <a href="http://localhost:5678" target="_blank" style="padding:6px 14px; background:#ff6b35; color:#fff; border-radius:6px; font-size:11px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
           🚀 APRI IN SCHEDA COMPLETA ↗
         </a>
-        <button onclick="document.getElementById('n8n-frame').src='http://localhost:5678'" style="padding:6px 12px; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); color:#00f0ff; border-radius:6px; font-size:11px; cursor:pointer;">
+        <button onclick="const f=document.getElementById('n8n-frame'); if(f) f.src=f.getAttribute('data-src')||'http://localhost:5678';" style="padding:6px 12px; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); color:#00f0ff; border-radius:6px; font-size:11px; cursor:pointer;">
           🔄 Ricarica Frame
         </button>
       </div>
     </div>
     <div style="flex:1; border:1px solid rgba(0,240,255,0.15); border-radius:8px; overflow:hidden; position:relative; background:#0e131f;">
-      <iframe id="n8n-frame" src="http://localhost:5678" style="width:100%; height:100%; border:none;" title="N8N Automation Workflows"></iframe>
+      <iframe id="n8n-frame" src="about:blank" data-src="http://localhost:5678" loading="lazy" style="width:100%; height:100%; border:none;" title="N8N Automation Workflows"></iframe>
     </div>
   </div>
 
@@ -1988,9 +1988,7 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
 
   <script src="cyber_audio_engine.js?v=1013.0"></script>
   <script src="app.js?v=1013.0"></script>
-  <script src="three.min.js"></script>
-  <script src="OrbitControls.js"></script>
-  <script src="astra_3d_client.js?v=1.0"></script>
+  <script src="astra_3d_client.js?v=1.1"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
 <div id="screen-panel">
@@ -2467,7 +2465,9 @@ window.switchMasterView = function(view) {
     'kali': 'view-kali-lab',
     'topology': 'view-topology',
     'n8n': 'view-n8n',
-    'graph': 'view-neural-graph'
+    'graph': 'view-neural-graph',
+    'astra': 'view-astra-3d',
+    'astra-3d': 'view-astra-3d'
   };
   const targetId = viewMap[view] || 'view-jarvis';
   document.querySelectorAll('.jarvis-workspace').forEach(w => {
@@ -2480,6 +2480,15 @@ window.switchMasterView = function(view) {
     }
   });
   if (view === 'kanban') window.refreshKanbanData();
+  if (view === 'astra' || view === 'astra-3d') {
+    if (window.loadAstra3DStatus) window.loadAstra3DStatus();
+  }
+  if (view === 'n8n') {
+    const f = document.getElementById('n8n-frame');
+    if (f && (!f.src || f.src === 'about:blank')) {
+      f.src = f.getAttribute('data-src') || 'http://localhost:5678';
+    }
+  }
   if (view === 'graph') {
     if (window.initNeuralGraph) window.initNeuralGraph();
   }

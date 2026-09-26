@@ -98,8 +98,12 @@
     return nodes.find(n => n.id === id);
   }
 
-  // Render loop
+  // Render loop with Visibility Culling (Zero GPU/CPU overhead when hidden)
   function draw() {
+    if (document.hidden || !canvas || canvas.offsetParent === null || canvas.clientWidth === 0) {
+      setTimeout(() => requestAnimationFrame(draw), 500);
+      return;
+    }
     ctx.save();
     ctx.clearRect(0, 0, width, height);
 
