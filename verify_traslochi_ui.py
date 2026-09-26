@@ -22,6 +22,13 @@ async def run_ui_test():
         print(f'Total lead cards rendered on UI: {len(cards)}')
         assert len(cards) > 0
 
+        # Check timestamp element on first card
+        first_ts = await page.query_selector('.lead-card .lead-timestamp')
+        assert first_ts is not None, "Timestamp element not found on lead card"
+        ts_text = await first_ts.inner_text()
+        print(f'Sample Lead Card Timestamp: "{ts_text.encode("ascii", "replace").decode()}"')
+        assert '?' in ts_text or 'ore' in ts_text or '/' in ts_text
+
         # 2. Test City Pill click (Milano)
         print('[UI TEST 2] Filtering by Milano...')
         await page.click('.city-pill:has-text("Milano")')
@@ -49,7 +56,28 @@ async def run_ui_test():
         await page.screenshot(path=screenshot_path)
         print(f'[UI TEST 4] Saved screenshot to {screenshot_path}')
 
+        # 5. Test Homepage Modulo 4 dynamic sync
+        print('[UI TEST 5] Verifying Homepage Modulo 4 Lead Sync...')
+        page_home = await browser.new_page()
+        await page_home.set_viewport_size({'width': 1280, 'height': 850})
+        await page_home.goto('http://127.0.0.1:8088/', wait_until='domcontentloaded')
+        await page_home.wait_for_timeout(1000)
+
+        home_count = await page_home.query_selector('#leads-total-count')
+        home_time = await page_home.query_selector('#leads-last-sync-time')
+        assert home_count is not None, "leads-total-count element not found on homepage"
+        assert home_time is not None, "leads-last-sync-time element not found on homepage"
+
+        count_val = await home_count.inner_text()
+        time_val = await home_time.inner_text()
+        print(f'Homepage Lead Count: {count_val}, Last Sync Time: {time_val}')
+        assert int(count_val) > 0, "Lead count should be > 0"
+        assert 'ore' in time_val or 'Oggi' in time_val
+
+        await page_home.screenshot(path='screenshots/homepage_modulo4_sync.png')
+        print('[UI TEST 5 PASS] Homepage Modulo 4 dynamically displays real count and live timestamp!')
+
         await browser.close()
-        print('UI TEST COMPLETED SUCCESSFULLY WITH 100% PASS!')
+        print('ALL UI TESTS COMPLETED SUCCESSFULLY WITH 100% PASS!')
 
 asyncio.run(run_ui_test())

@@ -3417,6 +3417,42 @@ window.calculateAndSendQuote = async function() {
   }
 };
 
+// DYNAMIC SYNC PER MODULO 4 BADREXPRESS & PIETRO TRASLOCHI
+async function syncTraslochiLeadBanner() {
+  const countEl = document.getElementById('leads-total-count');
+  const timeEl = document.getElementById('leads-last-sync-time');
+  if (!countEl && !timeEl) return;
 
+  try {
+    const res = await fetch('/api/traslochi/list?status=ACTIVE');
+    const data = await res.json();
+    if (data && Array.isArray(data.leads)) {
+      if (countEl) {
+        countEl.textContent = data.leads.length;
+      }
+      if (timeEl) {
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        timeEl.textContent = `Oggi ${d}/${m} ore ${hh}:${mm}`;
+      }
+    }
+  } catch (e) {
+    console.warn('Errore sync traslochi lead banner:', e);
+  }
+}
 
-
+// Avvio immediato e polling ogni 30s
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      syncTraslochiLeadBanner();
+      setInterval(syncTraslochiLeadBanner, 30000);
+    });
+  } else {
+    syncTraslochiLeadBanner();
+    setInterval(syncTraslochiLeadBanner, 30000);
+  }
+}
