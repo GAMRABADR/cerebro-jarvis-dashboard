@@ -1014,7 +1014,8 @@ const KALI_VIEW_MAP = {
   kanban: 'view-kanban',
   n8n: 'view-n8n',
   topology: 'view-topology',
-  graph: 'view-neural-graph'
+  graph: 'view-neural-graph',
+  astra: 'view-astra-3d'
 };
 const KALI_CAT_ALIASES = {
   recon: ['recon', 'information-gathering', 'info'],
@@ -1129,6 +1130,10 @@ window.switchMasterView = function(view) {
   if (key === 'graph') {
     document.getElementById('btn-view-graph')?.classList.add('active');
     if (window.initNeuralGraph) window.initNeuralGraph();
+  }
+  if (key === 'astra') {
+    document.getElementById('btn-view-astra')?.classList.add('active');
+    if (window.loadAstra3DStatus) window.loadAstra3DStatus();
   }
 
   if (key === 'kali') refreshKaliCatalog();

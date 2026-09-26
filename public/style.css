@@ -3159,3 +3159,12 @@ svg.lucide {
 }
 
 
+
+/* --- ASTRA 3D STUDIO MOBILE FIX --- */
+@media (max-width: 900px) {
+  #view-astra-3d {
+    padding-top: 115px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
