@@ -3173,3 +3173,117 @@ svg.lucide {
     padding-right: 12px !important;
   }
 }
+
+/* ── SKILLS & ABILITIES MATRIX MONITOR ── */
+#view-skills-matrix {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  min-height: calc(100vh - 56px);
+  background: #030712;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+#view-skills-matrix.active {
+  display: flex !important;
+}
+
+.sk-cat-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.sk-cat-btn:hover {
+  border-color: #00f0ff;
+  color: #f8fafc;
+  background: rgba(0, 240, 255, 0.08);
+}
+.sk-cat-btn.active {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+}
+
+.sk-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+.sk-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 240, 255, 0.12);
+  background: rgba(15, 23, 42, 0.9);
+}
+.sk-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sk-color, #00f0ff), transparent);
+  opacity: 0.8;
+}
+
+.sk-trig-pill {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sk-trig-pill:hover {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #00f0ff;
+}
+
+.sk-exec-btn {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sk-exec-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+@media (max-width: 900px) {
+  #view-skills-matrix {
+    padding-top: 110px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}

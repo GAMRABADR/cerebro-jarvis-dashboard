@@ -33,12 +33,37 @@ def validate_email(email):
 
     return True, "Email valida e attiva con server DNS confermato"
 
+# Prefissi territoriali strategici Piemonte & Emilia-Romagna
+REGIONAL_PREFIXES = {
+    "0171": ("Cuneo e valli", "CUNEO_CORE"),
+    "0172": ("Savigliano, Bra, Fossano", "CUNEO_NORD"),
+    "0173": ("Alba e Langhe", "CUNEO_ALBA"),
+    "0174": ("Mondovì e Monregalese", "CUNEO_SUD"),
+    "0175": ("Saluzzo e valli", "CUNEO_OVEST"),
+    "011":  ("Torino e prima cintura", "PIEMONTE_HUB"),
+    "051":  ("Bologna e hinterland", "BOLOGNA_CORE"),
+    "0542": ("Imola e circondario", "BOLOGNA_EST"),
+    "059":  ("Modena", "EMILIA_HUB"),
+    "0544": ("Ravenna", "ROMAGNA_HUB")
+}
+
+def identify_area_code(phone):
+    clean = re.sub(r'[^0-9]', '', str(phone or ''))
+    if clean.startswith("39"):
+        clean = clean[2:]
+    for prefix, (zone_name, cluster_id) in REGIONAL_PREFIXES.items():
+        if clean.startswith(prefix):
+            return {"prefix": prefix, "zone": zone_name, "cluster": cluster_id, "is_local": True}
+    if clean.startswith("3"):
+        return {"prefix": clean[:3], "zone": "Cellulare Mobile Italia", "cluster": "MOBILE_DIRECT", "is_local": True}
+    return {"prefix": "ALTRO", "zone": "Nazionale / Internazionale", "cluster": "STANDARD", "is_local": False}
+
 def validate_phone(phone):
     phone = (phone or "").strip()
     clean_num = re.sub(r'[^0-9]', '', phone)
 
     if not clean_num or len(clean_num) < 9 or len(clean_num) > 13:
-        return False, "Lunghezza numero di telefono errata (richieste 9-10 cifre)"
+        return False, "Lunghezza numero di telefono errata (richieste 9-10 cifre)", None
 
     # Strip country code +39 if present
     local_num = clean_num
@@ -47,15 +72,17 @@ def validate_phone(phone):
 
     # Check repeating dummy numbers (0000000000, 1111111111, 123456789, etc.)
     if len(set(local_num)) <= 2 or local_num in ["123456789", "1234567890", "987654321"]:
-        return False, f"Numero fasullo o sequenza fittizia rilevata ({phone})"
+        return False, f"Numero fasullo o sequenza fittizia rilevata ({phone})", None
+
+    area_info = identify_area_code(local_num)
 
     # Italian mobile prefix check (starts with 3)
     if local_num.startswith("3"):
-        return True, f"Cellulare mobile italiano valido (+39 {local_num})"
+        return True, f"Cellulare mobile italiano valido (+39 {local_num}) [{area_info['cluster']}]", area_info
     elif local_num.startswith("0"):
-        return True, f"Numero fisso italiano valido (+39 {local_num})"
+        return True, f"Fisso certificato: {area_info['zone']} (+39 {local_num})", area_info
     else:
-        return True, f"Numero internazionale valido (+{clean_num})"
+        return True, f"Numero internazionale valido (+{clean_num})", area_info
 
 def geocode_address(address_text):
     if not address_text or len(address_text.strip()) < 3:
@@ -165,10 +192,10 @@ def execute(params=None):
         }
 
     # 2. Check Phone & Messenger availability
-    phone_ok, phone_msg = validate_phone(phone) if phone else (False, "Telefono non specificato")
+    phone_ok, phone_msg, phone_area = validate_phone(phone) if phone else (False, "Telefono non specificato", None)
     has_messenger = bool(messenger_url and ("m.me/" in messenger_url or "facebook.com/messages" in messenger_url))
 
-    checks["phone"] = {"valid": phone_ok, "detail": phone_msg}
+    checks["phone"] = {"valid": phone_ok, "detail": phone_msg, "area": phone_area}
     checks["messenger"] = {"valid": has_messenger, "detail": messenger_url if has_messenger else "Assente"}
 
     # ── STRICT BARRIER: MUST HAVE (MESSENGER OR VALID PHONE) ──
@@ -202,7 +229,11 @@ def execute(params=None):
             score -= 10
             penalties.append(f"Partenza: {geo_p_msg}")
 
-    # 5. Temporal Decay Penalty (if > 90 days)
+    # 5. Territorial Cluster Bonus
+    if phone_area and phone_area.get("is_local"):
+        score = min(100, score + 5)
+
+    # 6. Temporal Decay Penalty (if > 90 days)
     if days_old > 90:
         score -= 20
         penalties.append(f"Decadimento Temporale: Annuncio di {days_old} giorni fa")
@@ -217,9 +248,11 @@ def execute(params=None):
     if score >= 85:
         verdict = "VERIFIED_HIGH_INTENT"
         badge = "🟢 LEAD AUTENTICO AL 100%"
+        action_priority = "IMMEDIATE_1_CLICK_CALL"
     else:
         verdict = "MEDIUM_QUALITY"
         badge = "🟡 CONTATTO DISPONIBILE"
+        action_priority = "FOLLOWUP_STANDARD"
 
     clean_num = re.sub(r'[^0-9]', '', phone)
     wa_link = f"https://wa.me/39{clean_num}?text=Salve%20{urllib.parse.quote(name)}%2C%20la%20contatto%20da%20PietroTraslochi%20per%20il%20preventivo." if phone_ok else None
@@ -231,9 +264,11 @@ def execute(params=None):
         "quality_score": score,
         "verdict": verdict,
         "badge": badge,
+        "action_priority": action_priority,
+        "phone_area": phone_area,
         "checks": checks,
         "penalties": penalties,
         "messenger_url": messenger_url if has_messenger else None,
         "whatsapp_ping_link": wa_link,
-        "message": f"{badge} (Score: {score}/100) per {name}."
+        "message": f"{badge} (Score: {score}/100) per {name} [{action_priority}]."
     }

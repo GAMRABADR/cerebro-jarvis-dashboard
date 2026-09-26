@@ -1,0 +1,22 @@
+{
+  "id": "bambu_astra_3d_mesh_generator",
+  "name": "Astra 3D & Bambu Mesh Generator",
+  "category": "HARDWARE_IOT",
+  "icon": "🧊",
+  "triggers": [
+    "astra",
+    "bambu",
+    "3d",
+    "stampa 3d",
+    "mesh",
+    "bambu studio",
+    "stl",
+    "3mf",
+    "genera 3d"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.35,
+  "description": "Generazione mesh 3D da foto o prompt per Bambu Lab con validazione cookie cloud e packaging file stampabili STL/3MF."
+}

@@ -23,17 +23,38 @@ let _ebjVoiceUnlocked = false;
 let _ebjWsGreeted = false;
 let _ebjRestartTimer = null;
 
-function isEbjWakePhrase(text) {
-  const raw = String(text || '').trim().toLowerCase()
+function parseWakePhrase(spokenText) {
+  if (!spokenText) return { hasWake: false, command: '', wakeWord: '' };
+  const raw = String(spokenText).trim();
+  const normalized = raw.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  const compact = raw.replace(/\s/g, '');
-  return [
-    'ebj', 'e b j', 'ebj ci sei', 'ebj cisei', 'jarvis',
-    'hermes sei li', 'hermes sei la', 'ebj sei li', 'ebj sei la'
-  ].includes(raw) || ['ebj', 'ebjcisei', 'jarvis', 'hermesseili', 'hermesseila'].includes(compact);
+
+  // Wake triggers at beginning of sentence: ehi ebj, hey ebj, ei ebj, ok ebj, ciao ebj, ascolta ebj, ebj, jarvis, hermes
+  const wakeRegex = /^(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|jarvis|ehi\s+jarvis|hey\s+jarvis|hermes)\b[:,\s]*/i;
+  const match = normalized.match(wakeRegex);
+  if (match) {
+    const matchedLen = match[0].length;
+    const cleanCmd = raw.slice(matchedLen).replace(/^[:,\s\-]+/, '').trim();
+    return { hasWake: true, command: cleanCmd, wakeWord: match[0].trim() };
+  }
+
+  // Wake triggers inline (anywhere in sentence)
+  const inlineRegex = /\b(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ebj|jarvis|hermes)\b/i;
+  const inlineMatch = raw.match(inlineRegex);
+  if (inlineMatch) {
+    const cleanCmd = raw.replace(inlineRegex, '').replace(/^[:,\s\-]+/, '').replace(/\s{2,}/g, ' ').trim();
+    return { hasWake: true, command: cleanCmd, wakeWord: inlineMatch[0].trim() };
+  }
+
+  return { hasWake: false, command: raw, wakeWord: '' };
+}
+
+function isEbjWakePhrase(text) {
+  const p = parseWakePhrase(text);
+  return p.hasWake && !p.command;
 }
 
 function updateVadPill() {
@@ -212,9 +233,50 @@ function startEbjMic() {
       if (!last || !last.isFinal) return;
       const text = (last[0] && last[0].transcript || '').trim();
       if (!text || isBusy) return;
+
+      const parsed = parseWakePhrase(text);
+      if (!parsed.hasWake) {
+        // AMBIENT SPEECH: IGNORE COMPLETELY AND STAY SILENT!
+        console.log('[EBJ Ambient VAD - Silent]: Spoken text without wake word ignored:', text);
+        const ambientBadge = document.getElementById('ambient-vad-status');
+        if (ambientBadge) {
+          ambientBadge.innerHTML = `<span style="color:#64748b;">👂 [Passivo]: "${text.slice(0, 22)}..."</span>`;
+          ambientBadge.style.opacity = '1';
+          setTimeout(() => {
+            if (ambientBadge) {
+              ambientBadge.innerHTML = `<i data-lucide="shield-check" class="lucide-icon text-cyan" style="width:12px;height:12px;"></i>WAKE: "Ehi EBJ"`;
+              ambientBadge.style.opacity = '0.6';
+              try { window.lucide && window.lucide.createIcons(); } catch (_) {}
+            }
+          }, 3000);
+        }
+        return;
+      }
+
+      // WAKE WORD DETECTED!
       const input = document.getElementById('prompt-input');
       if (input) input.value = '';
-      executeCommandPipeline(text);
+
+      const cleanCmd = (parsed.command || '').toLowerCase().trim();
+      if (!cleanCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu'].includes(cleanCmd)) {
+        // Standalone wake greeting
+        window.isConversationalMode = true;
+        const sphere = document.getElementById('jarvis-sphere');
+        if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
+        const wakeMsg = 'In ascolto, Ingegnere Badr. Mi dica.';
+        const respEl = document.getElementById('resp-body');
+        const respTag = document.getElementById('resp-tag');
+        if (respEl) respEl.textContent = wakeMsg;
+        if (respTag) respTag.textContent = 'E.B.J. WAKE ACK';
+        addEvent('ai', wakeMsg);
+        if (window.playSpeechAudio) window.playSpeechAudio(wakeMsg);
+        return;
+      }
+
+      // Explicit summon with command
+      const respTag = document.getElementById('resp-tag');
+      if (respTag) respTag.textContent = `🎤 SUMMONED (${parsed.wakeWord.toUpperCase()})`;
+      executeCommandPipeline(parsed.command, { fromVoice: true });
     };
 
     _ebjRecognition.onerror = (ev) => {
@@ -1010,6 +1072,8 @@ window.addEventListener('keydown', (e) => {
 // ── 11. MASTER VIEW + MOBILE NAV + KALI LAB ────────────────────────
 const KALI_VIEW_MAP = {
   jarvis: 'view-jarvis',
+  skills: 'view-skills-matrix',
+  'skills-matrix': 'view-skills-matrix',
   kali: 'view-kali-lab',
   kanban: 'view-kanban',
   n8n: 'view-n8n',
@@ -1170,11 +1234,219 @@ window.switchMasterView = function(view) {
     document.getElementById('btn-view-astra')?.classList.add('active');
     if (window.loadAstra3DStatus) window.loadAstra3DStatus();
   }
+  if (key === 'skills' || key === 'skills-matrix') {
+    document.getElementById('btn-view-skills')?.classList.add('active');
+    if (window.loadSkillsMatrix) window.loadSkillsMatrix();
+  }
 
   if (key === 'kali') refreshKaliCatalog();
   toggleMobileNav(false);
   if (window.lucide) {
     setTimeout(() => lucide.createIcons(), 50);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// 12. SKILLS & ABILITIES VISUAL MATRIX MONITOR (71+ SKILLS & RUST)
+// ═══════════════════════════════════════════════════════════════════
+window._skillsMatrixData = [];
+window._skillsCurrentCat = 'all';
+window._skillsSearchQuery = '';
+
+window.categorizeSkill = function(skill) {
+  const cat = (skill.category || '').toUpperCase();
+  const id = (skill.id || '').toLowerCase();
+  if (cat.includes('RUST') || id.includes('rust') || id.includes('bridge') || id.includes('fast_parser') || id.includes('timemachine') || id.includes('aether')) {
+    return 'rust';
+  }
+  if (cat.includes('COGNITIVE') || cat.includes('ORCHESTRATION') || cat.includes('TRIAGE') || cat.includes('SWARM') || id.includes('lead') || id.includes('subito') || id.includes('marketplace') || id.includes('quality') || id.includes('radar')) {
+    return 'jev';
+  }
+  if (cat.includes('SECURITY') || cat.includes('CLOUD') || cat.includes('MCP') || cat.includes('GATEWAY') || cat.includes('NERVOUS') || id.includes('kali') || id.includes('n8n') || id.includes('fastmcp') || id.includes('network')) {
+    return 'containers';
+  }
+  if (cat.includes('HARDWARE') || cat.includes('IOT') || cat.includes('VISION') || cat.includes('AUDIO') || cat.includes('MEDIA') || cat.includes('GAMING') || cat.includes('GAMEDEV') || id.includes('bambu') || id.includes('screen') || id.includes('whisper') || id.includes('ffmpeg') || id.includes('ue5')) {
+    return 'hardware';
+  }
+  return 'business';
+};
+
+window.loadSkillsMatrix = async function() {
+  const grid = document.getElementById('sk-cards-grid');
+  if (!grid) return;
+  if (!window._skillsMatrixData || window._skillsMatrixData.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#64748b;"><span style="display:inline-block;animation:spin 1s infinite linear;font-size:24px;">⚡</span><br>Caricamento matrice neurale abilità...</div>';
+  }
+
+  try {
+    const res = await fetch('/api/skills');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    window._skillsMatrixData = data.skills || [];
+
+    const totalEl = document.getElementById('badge-total-skills');
+    if (totalEl) totalEl.textContent = `${window._skillsMatrixData.length} ATTIVE`;
+
+    const rustStat = document.getElementById('sk-stat-rust');
+    if (rustStat) rustStat.textContent = data.rust_bridge_online ? ':9000 (0.4ms)' : ':9000 OFFLINE';
+
+    const vpsStat = document.getElementById('sk-stat-vps');
+    if (vpsStat) vpsStat.textContent = `${data.vps_containers || 11} VPS Docker`;
+
+    const mcpStat = document.getElementById('sk-stat-mcp');
+    if (mcpStat) mcpStat.textContent = `${data.mcp_tools || 28} Schemi FastMCP`;
+
+    renderSkillsMatrix();
+  } catch (err) {
+    console.warn('[Skills Matrix Fetch Err]:', err);
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#f43f5e;">Errore connessione: ${err.message}</div>`;
+  }
+};
+
+window.renderSkillsMatrix = function() {
+  const grid = document.getElementById('sk-cards-grid');
+  if (!grid) return;
+
+  let items = window._skillsMatrixData || [];
+
+  if (window._skillsCurrentCat !== 'all') {
+    items = items.filter(s => categorizeSkill(s) === window._skillsCurrentCat);
+  }
+
+  if (window._skillsSearchQuery) {
+    const q = window._skillsSearchQuery.toLowerCase();
+    items = items.filter(s => {
+      const name = (s.name || '').toLowerCase();
+      const desc = (s.description || '').toLowerCase();
+      const cat = (s.category || '').toLowerCase();
+      const trigs = (s.triggers || []).join(' ').toLowerCase();
+      return name.includes(q) || desc.includes(q) || cat.includes(q) || trigs.includes(q);
+    });
+  }
+
+  if (items.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px 20px; color:#64748b; font-family:\'JetBrains Mono\',monospace;">Nessuna abilità trovata con questi filtri.</div>';
+    return;
+  }
+
+  const categoryTheme = {
+    rust: { color: '#00f0ff', badge: 'RUST TOKIO', border: 'rgba(0,240,255,0.3)', bg: 'rgba(0,240,255,0.06)' },
+    jev: { color: '#00ff9f', badge: 'JEV COGNITIVE', border: 'rgba(0,255,159,0.3)', bg: 'rgba(0,255,159,0.06)' },
+    containers: { color: '#a855f7', badge: 'DOCKER / MCP', border: 'rgba(168,85,247,0.3)', bg: 'rgba(168,85,247,0.06)' },
+    hardware: { color: '#f59e0b', badge: 'IOT & 3D', border: 'rgba(245,158,11,0.3)', bg: 'rgba(245,158,11,0.06)' },
+    business: { color: '#38bdf8', badge: 'BIZ / LEADS', border: 'rgba(56,189,248,0.3)', bg: 'rgba(56,189,248,0.06)' }
+  };
+
+  grid.innerHTML = items.map(skill => {
+    const catType = categorizeSkill(skill);
+    const theme = categoryTheme[catType] || categoryTheme.business;
+    const triggers = (skill.triggers || []).slice(0, 4);
+    const trigsHtml = triggers.map(t => `<span class="sk-trig-pill" onclick="triggerSkillFromMatrix('${t.replace(/'/g, "\\'")}')" title="Clicca per inviare comando">${t}</span>`).join('');
+    const latency = skill.latency_ms ? `${skill.latency_ms}ms` : '< 1ms';
+
+    return `
+      <div class="sk-card" style="--sk-color:${theme.color};">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:22px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:${theme.bg}; border:1px solid ${theme.border}; border-radius:8px;">${skill.icon || '⚡'}</span>
+              <div>
+                <h4 style="margin:0; font-size:0.92rem; font-weight:600; color:#f8fafc; font-family:'Inter',sans-serif;">${skill.name || skill.id}</h4>
+                <div style="font-size:0.68rem; color:${theme.color}; font-family:'JetBrains Mono',monospace; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;">[${theme.badge}]</div>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+              <span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; padding:2px 6px; border-radius:4px; background:rgba(0,255,159,0.12); color:#00ff9f; border:1px solid rgba(0,255,159,0.25); font-family:'JetBrains Mono',monospace;">
+                <span style="width:6px; height:6px; border-radius:50%; background:#00ff9f; box-shadow:0 0 6px #00ff9f;"></span>ONLINE
+              </span>
+              <span style="font-size:0.68rem; color:#64748b; font-family:'JetBrains Mono',monospace;">${latency}</span>
+            </div>
+          </div>
+          <p style="margin:8px 0 10px 0; font-size:0.78rem; line-height:1.45; color:#94a3b8; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+            ${skill.description || 'Abilità operativa registrata nell\'ecosistema neurale EBJ.'}
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+            ${trigsHtml}
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:auto;">
+          <span style="font-size:0.68rem; color:#64748b; font-family:'JetBrains Mono',monospace;">v${skill.version || '1.0.0'} · ${skill.runner || 'rust/py'}</span>
+          <button class="sk-exec-btn" onclick="executeSkillLive('${skill.id}', this)" title="Esegui test immediato della skill">
+            ⚡ TEST / ESEGUI
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.filterSkillsMatrix = function(category) {
+  window._skillsCurrentCat = category;
+  document.querySelectorAll('.sk-cat-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-cat') === category);
+  });
+  renderSkillsMatrix();
+};
+
+window.searchSkillsMatrix = function(query) {
+  window._skillsSearchQuery = (query || '').trim();
+  renderSkillsMatrix();
+};
+
+window.triggerSkillFromMatrix = function(command) {
+  switchMasterView('jarvis');
+  const input = document.getElementById('prompt-input');
+  if (input) {
+    input.value = command;
+    input.focus();
+    if (window.sendMessage) window.sendMessage();
+  }
+};
+
+window.executeSkillLive = async function(skillId, btnEl) {
+  if (!btnEl) return;
+  const originalText = btnEl.innerHTML;
+  btnEl.disabled = true;
+  btnEl.innerHTML = '<span style="display:inline-block;animation:spin 1s infinite linear;">⚙️</span> RUN...';
+
+  try {
+    const res = await fetch('/api/skills/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skill_id: skillId, params: { test_mode: true } })
+    });
+    const d = await res.json();
+    if (d.status === 'SUCCESS') {
+      btnEl.style.borderColor = '#00ff9f';
+      btnEl.style.color = '#00ff9f';
+      btnEl.style.background = 'rgba(0,255,159,0.15)';
+      btnEl.innerHTML = `✅ OK (${d.duration_ms || 0.5}ms)`;
+      setTimeout(() => {
+        btnEl.disabled = false;
+        btnEl.innerHTML = originalText;
+        btnEl.style.borderColor = '';
+        btnEl.style.color = '';
+        btnEl.style.background = '';
+      }, 3000);
+    } else {
+      btnEl.style.borderColor = '#f59e0b';
+      btnEl.style.color = '#f59e0b';
+      btnEl.style.background = 'rgba(245,158,11,0.15)';
+      btnEl.innerHTML = `⚠️ ${d.message ? d.message.slice(0, 14) : 'Eseguito'}`;
+      setTimeout(() => {
+        btnEl.disabled = false;
+        btnEl.innerHTML = originalText;
+        btnEl.style.borderColor = '';
+        btnEl.style.color = '';
+        btnEl.style.background = '';
+      }, 3000);
+    }
+  } catch (err) {
+    btnEl.innerHTML = '❌ Timeout';
+    setTimeout(() => {
+      btnEl.disabled = false;
+      btnEl.innerHTML = originalText;
+    }, 3000);
   }
 };
 

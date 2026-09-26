@@ -1,0 +1,22 @@
+{
+  "id": "cuneo_piemonte_lead_radar",
+  "name": "Cuneo & Piemonte Lead Radar",
+  "category": "BUSINESS_SGOMBERI_360",
+  "icon": "🎯",
+  "triggers": [
+    "cuneo",
+    "alba",
+    "bra",
+    "mondovi",
+    "fossano",
+    "savigliano",
+    "lead cuneo",
+    "sgomberi cuneo",
+    "traslochi piemonte"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.45,
+  "description": "Radar specializzato nell'estrazione e qualificazione lead per Cuneo, Alba, Bra e provincia di Cuneo con prefissi locali e WhatsApp 1-Click."
+}

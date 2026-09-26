@@ -40,6 +40,11 @@
         <span class="btn-dot live"></span><i data-lucide="cpu" class="lucide-icon"></i>E.B.J. CORE
       </button>
 
+      <!-- VISTA MATRICE SKILL & ABILITÀ (RUST + JEV + CONTAINERS) -->
+      <button class="view-switch-btn" id="btn-view-skills" onclick="switchMasterView('skills')" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
+        <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span><i data-lucide="layers" class="lucide-icon text-cyan"></i>SKILL MATRIX [71+]
+      </button>
+
       <!-- PREVENTIVO CLIENTE MAGNET -->
       <a href="/preventivo" target="_blank" class="view-switch-btn" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
         <span class="btn-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span><i data-lucide="target" class="lucide-icon text-emerald"></i>ACQUISIZIONE CLIENTI <i data-lucide="external-link" class="lucide-icon sm"></i>
@@ -158,6 +163,7 @@
       <button class="vad-toggle-pill active" id="btn-vad-toggle" onclick="toggleConversationalMode()" title="Chiacchierata vocale continua — clic per ON/OFF, oppure Ctrl+Spazio">
         <span class="vad-dot"></span><i data-lucide="mic" class="lucide-icon text-emerald icon-pulse" style="margin-right:2px;"></i>VOCE: <strong>ON</strong>
       </button>
+      <span class="ambient-pill" id="ambient-vad-status" title="Ascolto selettivo: risponde solo a 'Ehi EBJ' o 'EBJ'" style="font-size:0.75rem; color:#94a3b8; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:inline-flex; align-items:center; gap:4px; opacity:0.6;"><i data-lucide="shield-check" class="lucide-icon text-cyan" style="width:12px;height:12px;"></i>WAKE: "Ehi EBJ"</span>
       <button class="vad-toggle-pill" id="btn-vision-top" onclick="toggleScreenVision()" title="👁️ OCCHIO VISION: Guarda lo schermo, commenta le pagine e compila i form con i dati di Badr (Alt+V)" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.08);">
         <span class="vad-dot" id="dot-vision-top" style="background:#00f0ff; box-shadow:0 0 8px #00f0ff;"></span><i data-lucide="eye" class="lucide-icon text-cyan icon-scan" style="margin-right:2px;"></i>OCCHIO: <strong id="lbl-vision-top">OFF</strong>
       </button>
@@ -199,6 +205,10 @@
           <!-- TAB 1: HUBS -->
           <div class="tab-content active" id="tab-hubs">
             <div class="cmd-matrix-grid">
+              <div class="cmd-tile vault-tile" onclick="switchMasterView('skills')" style="border-color:#00f0ff; background:rgba(0,240,255,0.08);">
+                <span class="ct-code" style="color:#00f0ff;">⚡ SKILL & MCP MATRIX</span>
+                <span class="ct-desc">Monitor Grafico 71+ Abilità</span>
+              </div>
               <div class="cmd-tile vault-tile" onclick="switchMasterView('kanban')">
                 <span class="ct-code">📋 HERMES KANBAN</span>
                 <span class="ct-desc">Visual DAG Board Level 5</span>
@@ -884,6 +894,75 @@
         </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW: SKILLS & ABILITIES VISUAL MATRIX MONITOR (RUST + JEV)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace" id="view-skills-matrix" style="display:none; flex-direction:column; width:100%; min-height:calc(100vh - 56px); background:#030712; padding:20px; box-sizing:border-box; overflow-y:auto;">
+    <!-- SKILLS MATRIX HUD HEADER -->
+    <div class="skills-matrix-header" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px; padding:16px 20px; background:rgba(10,16,28,0.85); border:1px solid rgba(0,240,255,0.2); border-radius:12px; backdrop-filter:blur(16px); box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, rgba(0,240,255,0.2), rgba(0,255,159,0.1)); border:1px solid #00f0ff; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 0 16px rgba(0,240,255,0.3);">⚡</div>
+        <div>
+          <h2 style="margin:0; font-family:'Orbitron', sans-serif; font-size:1.25rem; color:#f8fafc; letter-spacing:1px; display:flex; align-items:center; gap:8px;">
+            MATRICE SKILL & ABILITÀ E.B.J.
+            <span style="font-size:0.75rem; padding:2px 8px; border-radius:6px; background:rgba(0,255,159,0.15); border:1px solid #00ff9f; color:#00ff9f; font-weight:normal;" id="badge-total-skills">71 ATTIVE</span>
+          </h2>
+          <div style="font-size:0.8rem; color:#94a3b8; margin-top:3px;">
+            Cuore di Comunicazione: Rust Tokio (:9000) · AI Rotator (:8096) · JEV Cognitive · Cloud Containers
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE TELEMETRY BADGES -->
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        <div class="sk-stat-card" style="padding:6px 12px; border-radius:8px; background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.2); display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#00f0ff; box-shadow:0 0 8px #00f0ff; animation:pulse 2s infinite;"></span>
+          <span style="font-size:0.72rem; color:#94a3b8;">RUST BRIDGE:</span>
+          <strong style="font-size:0.78rem; color:#00f0ff;" id="sk-stat-rust">:9000 (0.4ms)</strong>
+        </div>
+        <div class="sk-stat-card" style="padding:6px 12px; border-radius:8px; background:rgba(0,255,159,0.06); border:1px solid rgba(0,255,159,0.2); display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span>
+          <span style="font-size:0.72rem; color:#94a3b8;">AI ROTATOR:</span>
+          <strong style="font-size:0.78rem; color:#00ff9f;" id="sk-stat-ai">:8096 (Cerebras/Groq)</strong>
+        </div>
+        <div class="sk-stat-card" style="padding:6px 12px; border-radius:8px; background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.2); display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#a855f7; box-shadow:0 0 8px #a855f7;"></span>
+          <span style="font-size:0.72rem; color:#94a3b8;">CONTAINERS:</span>
+          <strong style="font-size:0.78rem; color:#c084fc;" id="sk-stat-vps">11 VPS Docker</strong>
+        </div>
+        <div class="sk-stat-card" style="padding:6px 12px; border-radius:8px; background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; box-shadow:0 0 8px #f59e0b;"></span>
+          <span style="font-size:0.72rem; color:#94a3b8;">MCP GATEWAY:</span>
+          <strong style="font-size:0.78rem; color:#fbbf24;" id="sk-stat-mcp">28 Schemi</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS & FILTER ROW -->
+    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px;">
+      <!-- SEARCH INPUT -->
+      <div style="flex:1; min-width:260px; max-width:440px; position:relative;">
+        <input type="text" id="sk-search-input" oninput="searchSkillsMatrix(this.value)" placeholder="🔍 Cerca abilità, trigger, comando..." style="width:100%; padding:10px 14px 10px 38px; border-radius:8px; background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.12); color:#f8fafc; font-size:0.85rem; outline:none; transition:border-color 0.2s; box-sizing:border-box;">
+        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:14px; color:#64748b; pointer-events:none;">⚡</span>
+      </div>
+
+      <!-- CATEGORY PILLS -->
+      <div style="display:flex; flex-wrap:wrap; gap:6px;" id="sk-category-pills">
+        <button class="sk-cat-btn active" data-cat="all" onclick="filterSkillsMatrix('all')">Tutte (71)</button>
+        <button class="sk-cat-btn" data-cat="rust" onclick="filterSkillsMatrix('rust')">🦀 Rust High-Perf</button>
+        <button class="sk-cat-btn" data-cat="jev" onclick="filterSkillsMatrix('jev')">🧠 JEV Cognitive</button>
+        <button class="sk-cat-btn" data-cat="containers" onclick="filterSkillsMatrix('containers')">☁️ Cloud & MCP</button>
+        <button class="sk-cat-btn" data-cat="hardware" onclick="filterSkillsMatrix('hardware')">🎛️ IoT & 3D</button>
+        <button class="sk-cat-btn" data-cat="business" onclick="filterSkillsMatrix('business')">💼 Biz & Lead</button>
+      </div>
+    </div>
+
+    <!-- SKILLS CARDS GRID -->
+    <div id="sk-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px; width:100%;">
+      <!-- Dynamically rendered by renderSkillsMatrix() -->
     </div>
   </div>
 
