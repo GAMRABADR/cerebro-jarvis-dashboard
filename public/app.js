@@ -22,6 +22,9 @@ let _ebjMicOn = false;
 let _ebjVoiceUnlocked = false;
 let _ebjWsGreeted = false;
 let _ebjRestartTimer = null;
+let _ebjIsSpeaking = false;
+let _ebjWatchdogInterval = null;
+let _ebjLastMicActivity = Date.now();
 
 function parseWakePhrase(spokenText) {
   if (!spokenText) return { hasWake: false, command: '', wakeWord: '' };
@@ -32,8 +35,8 @@ function parseWakePhrase(spokenText) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Wake triggers at beginning of sentence: ehi ebj, hey ebj, ei ebj, ok ebj, ciao ebj, ascolta ebj, ebj, jarvis, hermes
-  const wakeRegex = /^(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|jarvis|ehi\s+jarvis|hey\s+jarvis|hermes)\b[:,\s]*/i;
+  // Wake triggers at beginning of sentence: ehi ebj, hey ebj, ei ebj, ok ebj, ciao ebj, ascolta ebj, ebj, e b j, eb j, ebg, e b g, jarvis, ehi jarvis, hey jarvis, hermes, ehi hermes
+  const wakeRegex = /^(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|ehi\s+jarvis|hey\s+jarvis|hermes|ehi\s+hermes)\b[:,\s]*/i;
   const match = normalized.match(wakeRegex);
   if (match) {
     const matchedLen = match[0].length;
@@ -42,7 +45,7 @@ function parseWakePhrase(spokenText) {
   }
 
   // Wake triggers inline (anywhere in sentence)
-  const inlineRegex = /\b(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ebj|jarvis|hermes)\b/i;
+  const inlineRegex = /\b(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|hermes)\b/i;
   const inlineMatch = raw.match(inlineRegex);
   if (inlineMatch) {
     const cleanCmd = raw.replace(inlineRegex, '').replace(/^[:,\s\-]+/, '').replace(/\s{2,}/g, ' ').trim();
@@ -79,8 +82,8 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   const clean = String(text).replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 420);
   if (!clean) return;
 
-  const resumeMic = _ebjMicOn;
-  stopEbjMic();
+  _ebjIsSpeaking = true;
+  stopEbjMic(); // Immediate suppression during speech to prevent acoustic feedback loop
   stopEbjSpeech();
   unlockEbjVoice();
 
@@ -109,91 +112,69 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
     } catch (e) {}
   };
 
-  if (preloadedBase64 && preloadedBase64.length > 500) {
-    await playBase64(preloadedBase64);
-  } else {
-    // 1. Edge-TTS Neural Audio via Master Server /api/tts
-    try {
-    const r = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: clean, persona: currentPersonality }),
-      signal: AbortSignal.timeout(8000)
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (d.audio_base64 && d.audio_base64.length > 500) {
-        const binaryStr = atob(d.audio_base64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-        const mimeType = d.mime_type || (d.voice && d.voice.startsWith('kokoro') ? 'audio/wav' : 'audio/mpeg');
-        const blob = new Blob([bytes], { type: mimeType });
-        const blobUrl = URL.createObjectURL(blob);
-
-        _ebjCurrentAudio = new Audio(blobUrl);
-        _ebjCurrentAudio.volume = 1.0;
-
-        await new Promise((resolve) => {
-          let done = false;
-          const finishAudio = () => {
-            if (!done) {
-              done = true;
-              URL.revokeObjectURL(blobUrl);
-              resolve();
-            }
-          };
-          _ebjCurrentAudio.onended = finishAudio;
-          _ebjCurrentAudio.onerror = finishAudio;
-          _ebjCurrentAudio.play().then(() => {
-            played = true;
-          }).catch((err) => {
-            console.warn('[Audio Autoplay Blocked]:', err);
-            finishAudio();
-          });
-          // Safeguard timeout
-          setTimeout(finishAudio, 15000);
+  try {
+    if (preloadedBase64 && preloadedBase64.length > 500) {
+      await playBase64(preloadedBase64);
+    } else {
+      // 1. Edge-TTS Neural Audio via Master Server /api/tts
+      try {
+        const r = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: clean, persona: currentPersonality }),
+          signal: AbortSignal.timeout(8000)
         });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.audio_base64 && d.audio_base64.length > 500) {
+            const mimeType = d.mime_type || (d.voice && d.voice.startsWith('kokoro') ? 'audio/wav' : 'audio/mpeg');
+            await playBase64(d.audio_base64, mimeType);
+          }
+        }
+      } catch (err) {
+        console.warn('[TTS Server Fetch Error]:', err);
       }
     }
-    } catch (err) {
-      console.warn('[TTS Server Fetch Error]:', err);
+
+    // 2. High-Fidelity Browser SpeechSynthesis Fallback
+    if (!played && ('speechSynthesis' in window)) {
+      try {
+        window.speechSynthesis.cancel();
+        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = 'it-IT';
+        u.rate = 1.05;
+        u.pitch = 1.0;
+        u.volume = 1.0;
+
+        // Select Italian voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const itVoice = voices.find(v => v.lang.startsWith('it') || v.name.includes('Italian'));
+        if (itVoice) u.voice = itVoice;
+
+        await new Promise((resolve) => {
+          let finished = false;
+          u.onend = () => { if (!finished) { finished = true; resolve(); } };
+          u.onerror = () => { if (!finished) { finished = true; resolve(); } };
+          window.speechSynthesis.speak(u);
+          setTimeout(() => { if (!finished) { finished = true; resolve(); } }, 12000);
+        });
+        played = true;
+      } catch (e) {
+        console.warn('[SpeechSynthesis Error]:', e);
+      }
     }
-  }
-
-  // 2. High-Fidelity Browser SpeechSynthesis Fallback
-  if (!played && ('speechSynthesis' in window)) {
-    try {
-      window.speechSynthesis.cancel();
-      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-
-      const u = new SpeechSynthesisUtterance(clean);
-      u.lang = 'it-IT';
-      u.rate = 1.05;
-      u.pitch = 1.0;
-      u.volume = 1.0;
-
-      // Select Italian voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const itVoice = voices.find(v => v.lang.startsWith('it') || v.name.includes('Italian'));
-      if (itVoice) u.voice = itVoice;
-
-      await new Promise((resolve) => {
-        let finished = false;
-        u.onend = () => { if (!finished) { finished = true; resolve(); } };
-        u.onerror = () => { if (!finished) { finished = true; resolve(); } };
-        window.speechSynthesis.speak(u);
-        setTimeout(() => { if (!finished) { finished = true; resolve(); } }, 12000);
-      });
-      played = true;
-    } catch (e) {
-      console.warn('[SpeechSynthesis Error]:', e);
+  } finally {
+    // ALWAYS release speaking state and re-arm microphone after audio finishes
+    _ebjIsSpeaking = false;
+    if (window.ebjVoiceEnabled) {
+      setTimeout(() => {
+        if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
+          startEbjMic();
+        }
+      }, 250);
     }
-  }
-
-  if (window.ebjVoiceEnabled && resumeMic) {
-    setTimeout(() => {
-      if (window.ebjVoiceEnabled && !_ebjMicOn) startEbjMic();
-    }, 350);
   }
 };
 
@@ -205,21 +186,24 @@ function stopEbjMic() {
   }
   if (_ebjRecognition) {
     try {
+      _ebjRecognition.onstart = null;
       _ebjRecognition.onend = null;
       _ebjRecognition.onerror = null;
       _ebjRecognition.onresult = null;
-      _ebjRecognition.stop();
+      _ebjRecognition.abort();
     } catch (_) {}
     _ebjRecognition = null;
   }
 }
 
 function startEbjMic() {
+  if (_ebjIsSpeaking) return;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     addEvent('sys', 'Microfono: Web Speech non disponibile in questo browser');
     return;
   }
+  // Tear down prior instance cleanly before allocating fresh one
   stopEbjMic();
 
   try {
@@ -227,38 +211,55 @@ function startEbjMic() {
     _ebjRecognition.lang = 'it-IT';
     _ebjRecognition.continuous = true;
     _ebjRecognition.interimResults = false;
+    _ebjRecognition.maxAlternatives = 1;
+
+    _ebjRecognition.onstart = () => {
+      _ebjMicOn = true;
+      _ebjLastMicActivity = Date.now();
+      const dot = document.querySelector('#btn-vad-toggle .vad-dot');
+      if (dot) dot.style.background = '#10b981';
+      console.log('[EBJ Mic Always-On]: Online e in ascolto continuo.');
+    };
 
     _ebjRecognition.onresult = (e) => {
+      _ebjLastMicActivity = Date.now();
       const last = e.results[e.results.length - 1];
       if (!last || !last.isFinal) return;
       const text = (last[0] && last[0].transcript || '').trim();
-      if (!text || isBusy) return;
+      if (!text || isBusy || _ebjIsSpeaking) return;
 
       const parsed = parseWakePhrase(text);
       if (!parsed.hasWake) {
-        // AMBIENT SPEECH: IGNORE COMPLETELY AND STAY SILENT!
+        // AMBIENT SPEECH: REAGISCE ZERO, TACE COMPLETAMENTE!
         console.log('[EBJ Ambient VAD - Silent]: Spoken text without wake word ignored:', text);
         const ambientBadge = document.getElementById('ambient-vad-status');
         if (ambientBadge) {
-          ambientBadge.innerHTML = `<span style="color:#64748b;">👂 [Passivo]: "${text.slice(0, 22)}..."</span>`;
+          ambientBadge.innerHTML = `<span style="color:#64748b;">👂 [Passivo: "${text.slice(0, 22)}..." (EBJ tace)]</span>`;
           ambientBadge.style.opacity = '1';
           setTimeout(() => {
-            if (ambientBadge) {
+            if (ambientBadge && !_ebjIsSpeaking) {
               ambientBadge.innerHTML = `<i data-lucide="shield-check" class="lucide-icon text-cyan" style="width:12px;height:12px;"></i>WAKE: "Ehi EBJ"`;
               ambientBadge.style.opacity = '0.6';
               try { window.lucide && window.lucide.createIcons(); } catch (_) {}
             }
-          }, 3000);
+          }, 2500);
         }
         return;
       }
 
-      // WAKE WORD DETECTED!
+      // WAKE WORD DETECTED! EBJ SI ATTIVA ED ESEGUE!
+      console.log(`[EBJ Wake Word Confirmed]: Summoned with "${parsed.wakeWord}"`);
+      const ambientBadge = document.getElementById('ambient-vad-status');
+      if (ambientBadge) {
+        ambientBadge.innerHTML = `<span style="color:#00f0ff;font-weight:bold;">⚡ SVEGLIO: "${parsed.wakeWord}"</span>`;
+        ambientBadge.style.opacity = '1';
+      }
+
       const input = document.getElementById('prompt-input');
       if (input) input.value = '';
 
       const cleanCmd = (parsed.command || '').toLowerCase().trim();
-      if (!cleanCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu'].includes(cleanCmd)) {
+      if (!cleanCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu', 'mi senti', 'mi senti?'].includes(cleanCmd)) {
         // Standalone wake greeting
         window.isConversationalMode = true;
         const sphere = document.getElementById('jarvis-sphere');
@@ -285,17 +286,19 @@ function startEbjMic() {
         _ebjMicOn = false;
         addEvent('sys', 'Microfono bloccato dal browser — consenti l\'audio nelle impostazioni');
       }
+      // 'no-speech', 'aborted', 'network' are soft errors; onend handles re-instantiation
     };
 
     _ebjRecognition.onend = () => {
-      // Debounce restart a 450ms per prevenire qualsiasi freeze del thread browser
-      if (window.ebjVoiceEnabled && _ebjMicOn) {
+      _ebjMicOn = false;
+      // Fresh re-instantiation instead of re-using dead object
+      if (window.ebjVoiceEnabled && !_ebjIsSpeaking) {
         if (_ebjRestartTimer) clearTimeout(_ebjRestartTimer);
         _ebjRestartTimer = setTimeout(() => {
-          if (window.ebjVoiceEnabled && _ebjMicOn && _ebjRecognition) {
-            try { _ebjRecognition.start(); } catch (_) {}
+          if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
+            startEbjMic();
           }
-        }, 450);
+        }, 150);
       }
     };
 
@@ -304,7 +307,27 @@ function startEbjMic() {
   } catch (err) {
     console.warn('[SpeechRecognition Start Err]:', err);
     _ebjMicOn = false;
+    if (window.ebjVoiceEnabled && !_ebjIsSpeaking) {
+      if (_ebjRestartTimer) clearTimeout(_ebjRestartTimer);
+      _ebjRestartTimer = setTimeout(() => {
+        if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
+          startEbjMic();
+        }
+      }, 500);
+    }
   }
+}
+
+function initEbjMicWatchdog() {
+  if (_ebjWatchdogInterval) clearInterval(_ebjWatchdogInterval);
+  _ebjWatchdogInterval = setInterval(() => {
+    if (window.ebjVoiceEnabled && !_ebjIsSpeaking) {
+      if (!_ebjMicOn || !_ebjRecognition) {
+        console.log('[EBJ Mic Watchdog] Resuscitating idle microphone...');
+        startEbjMic();
+      }
+    }
+  }, 1200);
 }
 
 function unlockEbjVoice() {
@@ -315,6 +338,10 @@ function unlockEbjVoice() {
   // Neutralize Chrome/Edge browser autoplay block
   if (window.speechSynthesis && window.speechSynthesis.paused) {
     try { window.speechSynthesis.resume(); } catch (_) {}
+  }
+  if (window.ebjVoiceEnabled && !_ebjMicOn && !_ebjIsSpeaking) {
+    startEbjMic();
+    initEbjMicWatchdog();
   }
 }
 
@@ -329,8 +356,9 @@ window.toggleConversationalMode = function() {
     _ebjVoiceUnlocked = true;
     updateVadPill();
     startEbjMic();
+    initEbjMicWatchdog();
     window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
-    addEvent('sys', 'Voce ON — ascolto continuo');
+    addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
     return;
   }
   window.ebjVoiceEnabled = !window.ebjVoiceEnabled;
@@ -341,11 +369,16 @@ window.toggleConversationalMode = function() {
   if (window.ebjVoiceEnabled) {
     _ebjVoiceUnlocked = true;
     startEbjMic();
+    initEbjMicWatchdog();
     window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
-    addEvent('sys', 'Voce ON — ascolto continuo');
+    addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
   } else {
     stopEbjMic();
     stopEbjSpeech();
+    if (_ebjWatchdogInterval) {
+      clearInterval(_ebjWatchdogInterval);
+      _ebjWatchdogInterval = null;
+    }
     addEvent('sys', 'Voce OFF');
   }
 };
@@ -1671,7 +1704,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initDraggableWindows();
   loadModularCardsState();
   initCustomModelSelect();
+  
+  // Auto-restore voice continuous preference if saved
+  const savedVoce = localStorage.getItem('ebj_voce');
+  if (savedVoce === 'on') {
+    window.ebjVoiceEnabled = true;
+    window.isConversationalMode = true;
+    initEbjMicWatchdog();
+  }
   updateVadPill();
+
   showToolRun('E.B.J. AI v100.0 APEX', 'Ecosistema Neurale Online · Rust Tokio Hyper-Bus Attivo · 144 FPS Nativi!', '0.001s');
   connectEbjRustListen();
   document.addEventListener('click', unlockEbjVoice, { once: true });

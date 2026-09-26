@@ -1,0 +1,22 @@
+{
+  "id": "blender_headless_forge",
+  "name": "Blender 5.2 Headless 3D Studio & Mesh Forge",
+  "category": "HARDWARE_IOT",
+  "icon": "🧊",
+  "triggers": [
+    "blender",
+    "mesh 3d",
+    "render 3d",
+    "stampa 3d blender",
+    "converti 3d",
+    "stl blender",
+    "3mf bambu",
+    "crea oggetto 3d",
+    "blender script"
+  ],
+  "version": "1.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.38,
+  "description": "Esecuzione autonoma di Blender 5.2 LTS in modalità headless: modellazione procedurale, riparazione mesh per stampa 3D (Bambu Lab), conversione formati e rendering automatico."
+}

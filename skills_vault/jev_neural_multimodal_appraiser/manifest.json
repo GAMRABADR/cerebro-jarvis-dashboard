@@ -1,0 +1,23 @@
+{
+  "id": "jev_neural_multimodal_appraiser",
+  "name": "JEV Neural Multi-Category Appraiser & Copywriter",
+  "category": "BUSINESS_ARBITRAGE",
+  "icon": "💎",
+  "triggers": [
+    "jev",
+    "perizia",
+    "valutazione usato",
+    "stima oggetto",
+    "quanto vale",
+    "prezzo usato",
+    "annuncio marketplace",
+    "copywriting subito",
+    "perizia porte",
+    "perizia arredo"
+  ],
+  "version": "2.0.0",
+  "runner": "python",
+  "status": "ONLINE_OPTIMAL",
+  "latency_ms": 0.45,
+  "description": "Motore peritale e di arbitraggio JEV 2.0: perizia automatica valore nuovo/usato, posizionamento prezzo 48h e copywriting persuasivo multicanale firmato BadrExpress."
+}

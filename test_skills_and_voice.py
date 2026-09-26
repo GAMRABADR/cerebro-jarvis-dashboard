@@ -47,19 +47,40 @@ async def run_test():
         
         # 6. Test Wake Phrase parser
         print('[TEST 5] Testing Wake-Word Parser in browser context...')
-        wake_test_1 = await page.evaluate('parseWakePhrase("ehi ebj quanti preventivi abbiamo oggi?")')
-        print(f'Wake test 1 ("ehi ebj..."): {wake_test_1}')
-        assert wake_test_1['hasWake'] == True, 'Expected hasWake True'
-        
-        wake_test_ambient = await page.evaluate('parseWakePhrase("passami il sale per favore")')
-        print(f'Ambient test ("passami il sale..."): {wake_test_ambient}')
-        assert wake_test_ambient['hasWake'] == False, 'Expected hasWake False'
+        wake_cases = [
+            ("ehi ebj quanti preventivi abbiamo oggi?", True, "ehi ebj", "quanti preventivi abbiamo oggi?"),
+            ("EBJ apri i container", True, "ebj", "apri i container"),
+            ("Hey EBJ ci sei?", True, "hey ebj", "ci sei?"),
+            ("Jarvis status sistema", True, "jarvis", "status sistema"),
+            ("Hermes genera preventivo", True, "hermes", "genera preventivo"),
+            ("passami il sale per favore", False, "", "passami il sale per favore"),
+            ("come va il tempo a bologna?", False, "", "come va il tempo a bologna?"),
+            ("stavo parlando con marco al telefono", False, "", "stavo parlando con marco al telefono")
+        ]
+        for phrase, expected_wake, exp_word, exp_cmd in wake_cases:
+            res_wake = await page.evaluate(f'parseWakePhrase({repr(phrase)})')
+            print(f'Test phrase: "{phrase}" -> hasWake: {res_wake["hasWake"]}, word: "{res_wake.get("wakeWord")}"')
+            assert res_wake['hasWake'] == expected_wake, f'Failed wake check for "{phrase}"'
 
-        # 7. Take screenshot of the Skills Matrix
+        # 7. Test Voice Companion page (/voice)
+        print('[TEST 6] Testing /voice companion page...')
+        page_voice = await browser.new_page()
+        res_v = await page_voice.goto('http://127.0.0.1:8088/voice', wait_until='domcontentloaded')
+        print(f'/voice status: {res_v.status}')
+        assert res_v.status == 200, 'Expected 200 OK for /voice'
+        
+        voice_wake_test = await page_voice.evaluate('parseWakePhrase("Ehi EBJ ci sei?")')
+        assert voice_wake_test['hasWake'] == True, 'Expected hasWake True in /voice'
+        voice_ambient_test = await page_voice.evaluate('parseWakePhrase("oggi piove a milano")')
+        assert voice_ambient_test['hasWake'] == False, 'Expected hasWake False in /voice'
+        print('/voice page Wake Gating verified successfully!')
+
+        # 8. Take screenshot of the Skills Matrix
         await page.set_viewport_size({'width': 1280, 'height': 800})
         await page.screenshot(path='screenshots/skills_matrix_verified.png')
-        print('[TEST 6] Saved screenshot to screenshots/skills_matrix_verified.png')
+        print('[TEST 7] Saved screenshot to screenshots/skills_matrix_verified.png')
 
+        await page_voice.close()
         await browser.close()
         print('ALL TESTS PASSED WITH 100% SUCCESS!')
 

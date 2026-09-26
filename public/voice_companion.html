@@ -333,12 +333,53 @@
         const chatBox = document.getElementById('chat-box');
         const ttsAudio = document.getElementById('tts-audio');
 
-        // INIZIALIZZAZIONE SPEECH RECOGNITION (CONTINUO / ALWAYS-ON)
+        // PARSER WAKE WORD: EBJ / EHI EBJ / JARVIS / HERMES
+        function parseWakePhrase(spokenText) {
+            if (!spokenText) return { hasWake: false, command: '', wakeWord: '' };
+            const raw = String(spokenText).trim();
+            const normalized = raw.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            const wakeRegex = /^(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|ehi\s+jarvis|hey\s+jarvis|hermes|ehi\s+hermes)\b[:,\s]*/i;
+            const match = normalized.match(wakeRegex);
+            if (match) {
+                const matchedLen = match[0].length;
+                const cleanCmd = raw.slice(matchedLen).replace(/^[:,\s\-]+/, '').trim();
+                return { hasWake: true, command: cleanCmd, wakeWord: match[0].trim() };
+            }
+
+            const inlineRegex = /\b(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|hermes)\b/i;
+            const inlineMatch = raw.match(inlineRegex);
+            if (inlineMatch) {
+                const cleanCmd = raw.replace(inlineRegex, '').replace(/^[:,\s\-]+/, '').replace(/\s{2,}/g, ' ').trim();
+                return { hasWake: true, command: cleanCmd, wakeWord: inlineMatch[0].trim() };
+            }
+
+            return { hasWake: false, command: raw, wakeWord: '' };
+        }
+
+        let _voiceRestartTimer = null;
+
+        // INIZIALIZZAZIONE SPEECH RECOGNITION (CONTINUO / ALWAYS-ON CON GATING)
         function initRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 statusText.innerText = "Speech API non supportata nel browser (usa Chrome)";
                 return;
+            }
+
+            if (recognition) {
+                try {
+                    recognition.onstart = null;
+                    recognition.onend = null;
+                    recognition.onerror = null;
+                    recognition.onresult = null;
+                    recognition.abort();
+                } catch(_) {}
+                recognition = null;
             }
 
             recognition = new SpeechRecognition();
@@ -349,7 +390,7 @@
             recognition.onstart = () => {
                 isListening = true;
                 statusDot.className = "dot active";
-                statusText.innerText = "Sempre in Ascolto (Parla ora...)";
+                statusText.innerText = '🛡️ In Ascolto (Dì "Ehi EBJ" per attivare)';
                 orbCore.classList.remove('jarvis-talking');
                 orbCore.classList.add('speaking');
             };
@@ -366,16 +407,40 @@
                     }
                 }
 
-                if (interimTranscript) {
-                    statusText.innerText = `Ti ascolto: "${interimTranscript}"`;
-                    // Se l'utente interrompe EBJ mentre parla (Barge-in), stoppa la voce di EBJ!
-                    if (isJarvisTalking) {
-                        stopJarvisSpeech();
-                    }
+                if (interimTranscript && isJarvisTalking) {
+                    // Barge-in: se l'utente parla, ferma la sintesi
+                    stopJarvisSpeech();
                 }
 
                 if (finalTranscript && finalTranscript.trim().length > 1) {
-                    handleUserSpeech(finalTranscript.trim());
+                    const text = finalTranscript.trim();
+                    const parsed = parseWakePhrase(text);
+
+                    if (!parsed.hasWake) {
+                        // AMBIENT SPEECH: EBJ TACE E NON RISPONDE!
+                        console.log('[EBJ Voice Page - Ambient]: Parola d\'ordine assente, EBJ tace:', text);
+                        statusText.innerText = `👂 [Passivo: "${text.slice(0, 22)}..." (EBJ tace)]`;
+                        setTimeout(() => {
+                            if (!isJarvisTalking && isListening) {
+                                statusText.innerText = '🛡️ In Ascolto (Dì "Ehi EBJ" per attivare)';
+                            }
+                        }, 2500);
+                        return;
+                    }
+
+                    // WAKE WORD CONFERMATA!
+                    console.log('[EBJ Voice Page - Awakened]: Summoned with:', parsed.wakeWord);
+                    statusText.innerText = `⚡ Sveglio: "${parsed.wakeWord}"`;
+
+                    const cleanCmd = (parsed.command || '').toLowerCase().trim();
+                    if (!cleanCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu', 'mi senti', 'mi senti?'].includes(cleanCmd)) {
+                        const wakeAck = 'In ascolto, Ingegnere Badr. Mi dica.';
+                        appendMessage('assistant', wakeAck);
+                        speakBrowser(wakeAck);
+                        return;
+                    }
+
+                    handleUserSpeech(parsed.command);
                 }
             };
 
@@ -384,36 +449,45 @@
                 if (event.error === 'not-allowed') {
                     statusText.innerText = "Accesso al microfono negato!";
                     statusDot.className = "dot";
+                    isListening = false;
                 }
             };
 
             recognition.onend = () => {
-                // Auto-Restart per mantenere il microfono SEMPRE ATTIVO (Always-On)
-                if (isListening) {
-                    try { recognition.start(); } catch(e) {}
-                } else {
+                // Auto-Restart istantaneo e sicuro con nuova istanza
+                if (isListening && !isJarvisTalking) {
+                    if (_voiceRestartTimer) clearTimeout(_voiceRestartTimer);
+                    _voiceRestartTimer = setTimeout(() => {
+                        if (isListening && !isJarvisTalking) initRecognition();
+                    }, 150);
+                } else if (!isListening) {
                     statusDot.className = "dot";
                     statusText.innerText = "Microfono in pausa (Tocca per attivare)";
                     orbCore.classList.remove('speaking');
                 }
             };
+
+            try {
+                recognition.start();
+            } catch(e) {
+                console.warn('[Speech Start Err]:', e);
+            }
         }
 
         // TOGGLE ASCOLTO AL CLICK SULL'ORB
         function toggleListening() {
-            if (!recognition) initRecognition();
             if (isListening) {
                 isListening = false;
-                try { recognition.stop(); } catch(e) {}
+                if (recognition) {
+                    try { recognition.abort(); } catch(e) {}
+                    recognition = null;
+                }
                 statusDot.className = "dot";
                 statusText.innerText = "Microfono in pausa (Tocca per attivare)";
                 orbCore.classList.remove('speaking');
             } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    console.log(e);
-                }
+                isListening = true;
+                initRecognition();
             }
         }
 
@@ -463,41 +537,13 @@
                         speakBrowser(data.response);
                     }
                 } else {
-                    const fallbackReply = `Ricevuto Badr! Ho preso in carico la tua richiesta.`;
+                    const fallbackReply = `Ricevuto Ingegnere Badr! Ho preso in carico la tua richiesta.`;
                     appendMessage('assistant', fallbackReply);
                     speakBrowser(fallbackReply);
                 }
             } catch(e) {
                 console.error(e);
-                const errReply = `Ricevuto! Procedo subito.`;
-                appendMessage('assistant', errReply);
-                speakBrowser(errReply);
-            }
-        }
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: text, persona: 'JEV' })
-                });
-
-                if (resp.ok) {
-                    const data = await resp.json();
-                    appendMessage('assistant', data.response);
-                    
-                    // Se il backend ha generato un audio vocale neurale, riproducilo
-                    if (data.audio_base64) {
-                        playBase64Audio(data.audio_base64);
-                    } else {
-                        // Fallback browser speech synthesis
-                        speakBrowser(data.response);
-                    }
-                } else {
-                    // Fallback se l'endpoint dedicato non è ancora pronto
-                    const fallbackReply = `Ho ricevuto: "${text}". Eseguo subito il comando richiesto.`;
-                    appendMessage('assistant', fallbackReply);
-                    speakBrowser(fallbackReply);
-                }
-            } catch(e) {
-                console.error(e);
-                const errReply = `Ho ascoltato: "${text}". Mi sto occupando della richiesta.`;
+                const errReply = `Ricevuto Ingegnere! Procedo subito.`;
                 appendMessage('assistant', errReply);
                 speakBrowser(errReply);
             }
