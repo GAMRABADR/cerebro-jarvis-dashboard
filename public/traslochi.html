@@ -1055,7 +1055,7 @@
             container.innerHTML = leads.map(l => {
                 const cleanPhone = (l.phone || '').replace(/[^0-9]/g, '');
                 const telHref = cleanPhone.startsWith('39') ? `tel:+${cleanPhone}` : `tel:+39${cleanPhone}`;
-                const waText = encodeURIComponent(`Buongiorno ${l.client_name}, la contatto da BadrExpress & Pietro Traslochi in merito alla sua richiesta di ${l.service_type} a ${l.city}. Possiamo fornirle subito un preventivo trasparente con sopralluogo gratuito. Ci può indicare data e dettagli?`);
+                const waText = encodeURIComponent(`Buongiorno ${l.client_name}, vi contatto da BadrExpress & Pietro Traslochi in merito alla convenzione per sgomberi pre-rogito e traslochi clienti su ${l.city}. Possiamo fornirvi il nostro listino riservato alle agenzie con sopralluoghi gratuiti?`);
                 const waHref = cleanPhone.startsWith('39') ? `https://wa.me/${cleanPhone}?text=${waText}` : `https://wa.me/39${cleanPhone}?text=${waText}`;
 
                 const st = l.lead_status || 'DA_CHIAMARE';
@@ -1078,27 +1078,28 @@
                     </div>
 
                     <div class="lead-details">
-                        <b>Volume:</b> ${l.volume_mq || 'Standard'} | 
-                        <b>Piano:</b> ${l.piano_partenza || 'T'} ➔ ${l.piano_arrivo || 'T'} | 
+                        <b>Volume / Servizio:</b> ${l.volume_mq || 'Standard'} | 
+                        <b>Piani:</b> ${l.piano_partenza || 'T'} ➔ ${l.piano_arrivo || 'T'} | 
                         <b>Ascensore:</b> ${l.ascensore ? 'Sì' : 'No'} | 
                         <b>Fonte:</b> ${l.source || 'Radar'}
                     </div>
 
-                    ${l.notes ? `<div class="lead-notes">💡 ${l.notes}</div>` : ''}
+                    ${l.notes ? `<div class="lead-notes">💡 <b>Indirizzo / Note:</b> ${l.notes}</div>` : ''}
 
                     <div class="lead-tags">
                         <span class="service-badge">🚚 ${l.service_type || 'Trasloco'}</span>
-                        <span class="budget-badge">💰 Budget: €${l.estimated_budget || '350'}</span>
+                        <span class="budget-badge">💰 Budget Stimato: €${l.estimated_budget || '350'}</span>
+                        <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 800;">🏢 REALE & VERIFICATO</span>
                         ${statusBadge}
                     </div>
 
                     <!-- PULSANTI CONTATTO RAPIDO -->
                     <div class="contact-row">
-                        <a href="${telHref}" class="btn-call">
-                            📞 CHIAMA ORA
+                        <a href="${telHref}" class="btn-call" title="Chiama direttamente il numero reale dell'agenzia">
+                            📞 CHIAMA (${l.phone})
                         </a>
-                        <a href="${waHref}" target="_blank" class="btn-wa">
-                            💬 WhatsApp Preventivo
+                        <a href="${waHref}" target="_blank" class="btn-wa" title="Avvia conversazione WhatsApp se abilitato">
+                            💬 WhatsApp / Chat
                         </a>
                     </div>
 
