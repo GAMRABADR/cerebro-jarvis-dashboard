@@ -38,8 +38,8 @@
       gap: 12px;
     }
     .logo-box img {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       border: 2px solid #00f0ff;
       box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
@@ -54,6 +54,30 @@
       font-size: 0.76rem;
       color: #00f0ff;
       font-family: 'Share Tech Mono', monospace;
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-top-download {
+      background: linear-gradient(135deg, #0284c7, #00f0ff);
+      color: #000;
+      font-weight: 900;
+      font-size: 0.8rem;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+      transition: all 0.2s;
+    }
+    .btn-top-download:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
     }
     .badge-count {
       background: linear-gradient(135deg, #10b981, #059669);
@@ -112,6 +136,83 @@
       border-color: #00f0ff;
       box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
     }
+
+    /* ACTION BAR FOR PDF & EXCEL EXPORTS */
+    .export-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.08);
+    }
+    .btn-export-pdf {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #000;
+      font-weight: 900;
+      font-size: 0.88rem;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s;
+    }
+    .btn-export-pdf:hover {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      transform: translateY(-2px);
+      box-shadow: 0 0 22px rgba(16, 185, 129, 0.6);
+    }
+    .btn-export-csv {
+      background: #0b1728;
+      border: 1.5px solid #00f0ff;
+      color: #00f0ff;
+      font-weight: 800;
+      font-size: 0.84rem;
+      padding: 9px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-export-csv:hover {
+      background: rgba(0, 240, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .btn-export-print {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 0.84rem;
+      padding: 9px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-export-print:hover {
+      background: #334155;
+      color: #fff;
+    }
+    #export-status-indicator {
+      font-size: 0.82rem;
+      color: #10b981;
+      font-family: 'Share Tech Mono', monospace;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -336,10 +437,19 @@
       transform: scale(0.98);
     }
 
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      header, .controls, .banner-trust, .export-actions-row, .btn-call, .btn-wa { display: none !important; }
+      .lead-card { border: 1px solid #ccc !important; page-break-inside: avoid; background: #fff !important; color: #000 !important; }
+      .card-name, .card-service, .card-city { color: #000 !important; }
+      .card-phone-badge { color: #000 !important; background: none !important; }
+    }
+
     @media (max-width: 680px) {
       .leads-grid { grid-template-columns: 1fr; }
       .top-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
       .actions-box { grid-template-columns: 1fr; }
+      .export-actions-row { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -354,7 +464,10 @@
           <p>BadrExpress · Pietro Traslochi · SELEZIONE Detergenza</p>
         </div>
       </div>
-      <div>
+      <div class="top-actions">
+        <button class="btn-top-download" onclick="downloadFilteredPdf()" title="Scarica subito in PDF stampabile">
+          📄 SCARICA TUTTI IN PDF
+        </button>
         <span class="badge-count" id="badge-total-leads">CARICAMENTO...</span>
       </div>
     </div>
@@ -371,6 +484,20 @@
     <div class="controls">
       <div class="search-row">
         <input type="text" id="lead-search" class="search-input" placeholder="🔍 Cerca per nome azienda, telefono, via o comune..." oninput="filterLeads()">
+      </div>
+
+      <!-- ACTION BAR: EXPORT PDF STAMPABILE CON 1-CLICK CALL & EXCEL -->
+      <div class="export-actions-row">
+        <button class="btn-export-pdf" onclick="downloadFilteredPdf()" title="Scarica il PDF stampabile dei contatti filtrati con link cliccabili">
+          <span>📄</span> SCARICA PDF FILTRATO (STAMPABILE CON 1-CLICK CALL)
+        </button>
+        <button class="btn-export-csv" onclick="downloadFilteredCsv()" title="Esporta in formato compatibile con Microsoft Excel">
+          <span>📊</span> ESPORTA EXCEL (CSV)
+        </button>
+        <button class="btn-export-print" onclick="window.print()" title="Stampa direttamente su carta A4">
+          <span>🖨️</span> STAMPA SCHEDA A4
+        </button>
+        <span id="export-status-indicator"></span>
       </div>
       
       <div class="filters-row">
@@ -513,6 +640,46 @@
           </div>
         `;
       }).join('');
+    }
+
+    function downloadFilteredPdf() {
+      const q = document.getElementById('lead-search').value.trim();
+      const statusInd = document.getElementById('export-status-indicator');
+      if (statusInd) statusInd.textContent = '⏳ Generazione PDF con link 1-Click in corso...';
+      
+      const url = `/api/leads/export-pdf?category=${encodeURIComponent(_activeCategory)}&city=${encodeURIComponent(_activeCity)}&q=${encodeURIComponent(q)}`;
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Dossier_Clienti_BadrExpress_PietroTraslochi_${_activeCategory}_${_activeCity}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(() => {
+        if (statusInd) statusInd.textContent = '✅ PDF Scaricato con Successo!';
+        setTimeout(() => { if (statusInd) statusInd.textContent = ''; }, 4000);
+      }, 1500);
+    }
+
+    function downloadFilteredCsv() {
+      const q = document.getElementById('lead-search').value.trim();
+      const statusInd = document.getElementById('export-status-indicator');
+      if (statusInd) statusInd.textContent = '⏳ Esportazione Excel in corso...';
+
+      const url = `/api/leads/export-csv?category=${encodeURIComponent(_activeCategory)}&city=${encodeURIComponent(_activeCity)}&q=${encodeURIComponent(q)}`;
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Scheda_Clienti_BadrExpress_PietroTraslochi_${_activeCategory}_${_activeCity}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(() => {
+        if (statusInd) statusInd.textContent = '✅ Excel/CSV Scaricato!';
+        setTimeout(() => { if (statusInd) statusInd.textContent = ''; }, 4000);
+      }, 1200);
     }
 
     function escapeHtml(text) {
