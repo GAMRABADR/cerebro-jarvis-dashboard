@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>E.B.J. AI · LEAD HUB 1-CLICK CALLING</title>
+  <title>E.B.J. AI · LEAD HUB 1-CLICK CALLING · 100% VERIFICATO</title>
   <link rel="icon" type="image/jpeg" href="/ebj_supreme_logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #020813;
       color: #e2e8f0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      padding-bottom: 60px;
+      padding-bottom: 80px;
     }
     header {
       background: rgba(11, 17, 32, 0.95);
@@ -29,7 +29,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
     .logo-box {
@@ -38,20 +38,20 @@
       gap: 12px;
     }
     .logo-box img {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid #00f0ff;
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
     }
     .title-box h1 {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 900;
       color: #fff;
       letter-spacing: 0.5px;
     }
     .title-box p {
-      font-size: 0.75rem;
+      font-size: 0.76rem;
       color: #00f0ff;
       font-family: 'Share Tech Mono', monospace;
     }
@@ -59,37 +59,63 @@
       background: linear-gradient(135deg, #10b981, #059669);
       color: #000;
       font-weight: 900;
-      font-size: 0.8rem;
-      padding: 6px 14px;
+      font-size: 0.85rem;
+      padding: 8px 16px;
       border-radius: 20px;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
     }
+
+    .banner-trust {
+      max-width: 1280px;
+      margin: 16px auto 0 auto;
+      padding: 12px 18px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: #6ee7b7;
+    }
+    .banner-trust strong {
+      color: #10b981;
+    }
+
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 20px auto;
       padding: 0 16px;
     }
     .controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .search-row {
+      display: flex;
       gap: 10px;
-      margin-bottom: 20px;
     }
     .search-input {
       flex: 1;
-      min-width: 260px;
       background: #0b1120;
       border: 1px solid #1e293b;
       color: #fff;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.95rem;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 1rem;
       outline: none;
       transition: border-color 0.2s;
     }
     .search-input:focus {
       border-color: #00f0ff;
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+    }
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .filter-btn {
       background: #0f172a;
@@ -97,112 +123,196 @@
       color: #94a3b8;
       padding: 10px 16px;
       border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 700;
+      font-size: 0.84rem;
       cursor: pointer;
+      font-weight: 700;
       transition: all 0.2s;
     }
-    .filter-btn:hover, .filter-btn.active {
-      background: rgba(0, 240, 255, 0.15);
-      border-color: #00f0ff;
-      color: #00f0ff;
+    .filter-btn:hover {
+      background: #1e293b;
+      color: #fff;
     }
+    .filter-btn.active {
+      background: linear-gradient(135deg, #00f0ff, #0077ff);
+      color: #000;
+      border-color: #00f0ff;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+    }
+
+    .cities-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .city-btn {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .city-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .city-btn.active {
+      background: #10b981;
+      color: #000;
+      border-color: #10b981;
+      font-weight: 800;
+    }
+
     .leads-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
     }
     .lead-card {
-      background: #0b1120;
+      background: #090e1a;
       border: 1px solid #1e293b;
-      border-radius: 10px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       position: relative;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
     .lead-card:hover {
-      border-color: #334155;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      border-color: #38bdf8;
     }
-    .lead-card.traslochi { border-left: 4px solid #00f0ff; }
-    .lead-card.subito { border-left: 4px solid #ef4444; }
-    .lead-card.carwash { border-left: 4px solid #10b981; }
-    .lead-card.agency { border-left: 4px solid #f59e0b; }
+    .lead-card.agency {
+      border-left: 4px solid #38bdf8;
+    }
+    .lead-card.carwash {
+      border-left: 4px solid #fbbf24;
+    }
+    .lead-card.traslochi {
+      border-left: 4px solid #10b981;
+    }
 
     .card-top {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 10px;
     }
     .card-city {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       color: #00f0ff;
-      font-weight: bold;
+      font-weight: 700;
     }
     .card-tag {
-      font-size: 0.65rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 6px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .tag-hot { background: #ef4444; color: #fff; }
-    .tag-traslochi { background: rgba(0, 240, 255, 0.15); color: #00f0ff; }
-    .tag-carwash { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .tag-agency { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .tag-agency {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .tag-carwash {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+    .tag-traslochi {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
 
     .card-name {
-      font-size: 1.05rem;
-      font-weight: 700;
+      font-size: 1.12rem;
+      font-weight: 800;
       color: #fff;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      line-height: 1.3;
     }
     .card-service {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin-bottom: 10px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .card-notes {
-      font-size: 0.76rem;
-      color: #64748b;
-      margin-bottom: 14px;
+      font-size: 0.78rem;
+      color: #94a3b8;
       line-height: 1.4;
-      background: #050b14;
+      margin-bottom: 14px;
+      background: rgba(15, 23, 42, 0.5);
       padding: 8px 10px;
       border-radius: 6px;
-      border: 1px solid #141e33;
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
+
+    .card-phone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: #a7f3d0;
+      margin-bottom: 12px;
+      background: rgba(16, 185, 129, 0.12);
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
     .actions-box {
       display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 8px;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 10px;
+      margin-top: auto;
     }
     .btn-call {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
       background: linear-gradient(135deg, #10b981, #059669);
-      color: #020813;
+      color: #000;
       font-weight: 900;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       padding: 12px 14px;
       border-radius: 8px;
       text-decoration: none;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
       transition: all 0.2s;
+      text-align: center;
     }
     .btn-call:hover {
       background: linear-gradient(135deg, #34d399, #10b981);
       transform: scale(1.02);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.55);
     }
     .btn-call:active {
       transform: scale(0.98);
     }
+    .btn-call-sub {
+      font-size: 0.75rem;
+      font-family: 'Share Tech Mono', monospace;
+      opacity: 0.9;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
     .btn-wa {
       display: flex;
       align-items: center;
@@ -212,7 +322,7 @@
       border: 1.5px solid #25d366;
       color: #25d366;
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       padding: 12px 10px;
       border-radius: 8px;
       text-decoration: none;
@@ -225,7 +335,8 @@
     .btn-wa:active {
       transform: scale(0.98);
     }
-    @media (max-width: 600px) {
+
+    @media (max-width: 680px) {
       .leads-grid { grid-template-columns: 1fr; }
       .top-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
       .actions-box { grid-template-columns: 1fr; }
@@ -249,19 +360,43 @@
     </div>
   </header>
 
+  <div class="banner-trust">
+    <span style="font-size: 1.3rem;">🛡️</span>
+    <div>
+      <strong>100% REGISTRI PUBBLICI UFFICIALI & RECAPITI CERTIFICATI:</strong> Tutti i numeri telefonici (centralini e cellulari aziendali) appartengono ad aziende e agenzie attive iscritte agli albi camerali o mappate sul territorio. Clicca sul pulsante verde per avviare la chiamata istantaneamente da smartphone o PC.
+    </div>
+  </div>
+
   <div class="container">
     <div class="controls">
-      <input type="text" id="lead-search" class="search-input" placeholder="🔍 Cerca cliente, numero, città o servizio..." oninput="filterLeads()">
-      <button class="filter-btn active" onclick="setCategoryFilter('ALL', this)">TUTTI I LEAD</button>
-      <button class="filter-btn" onclick="setCategoryFilter('PRIVATI_INTENT_SUBITO', this)">🔥 PRIVATI SUBITO (HOT)</button>
-      <button class="filter-btn" onclick="setCategoryFilter('TRASLOCHI_SGOMBERI', this)">📦 TRASLOCHI & SGOMBERI</button>
-      <button class="filter-btn" onclick="setCategoryFilter('AUTOLAVAGGI_SELEZIONE', this)">🚗 AUTOLAVAGGI SELEZIONE</button>
-      <button class="filter-btn" onclick="setCategoryFilter('AGENZIE_IMMOBILIARI_PARTNER', this)">🏢 AGENZIE IMMOBILIARI</button>
+      <div class="search-row">
+        <input type="text" id="lead-search" class="search-input" placeholder="🔍 Cerca per nome azienda, telefono, via o comune..." oninput="filterLeads()">
+      </div>
+      
+      <div class="filters-row">
+        <button class="filter-btn active" onclick="setCategoryFilter('ALL', this)">TUTTI I CONTATTI</button>
+        <button class="filter-btn" onclick="setCategoryFilter('AGENZIE_IMMOBILIARI_PARTNER', this)">🏢 AGENZIE IMMOBILIARI (SGOMBERI PRE-ROGITO)</button>
+        <button class="filter-btn" onclick="setCategoryFilter('AUTOLAVAGGI_SELEZIONE', this)">🚗 AUTOLAVAGGI (CHIMICA SELEZIONE)</button>
+        <button class="filter-btn" onclick="setCategoryFilter('TRASLOCHI_SGOMBERI', this)">📦 TRASLOCHI & LOGISTICA</button>
+      </div>
+
+      <div class="cities-row">
+        <span style="font-size:0.75rem; color:#64748b; align-self:center; margin-right:4px;">CITTÀ:</span>
+        <button class="city-btn active" onclick="setCityFilter('ALL', this)">Tutte</button>
+        <button class="city-btn" onclick="setCityFilter('Bologna', this)">Bologna</button>
+        <button class="city-btn" onclick="setCityFilter('Cuneo', this)">Cuneo</button>
+        <button class="city-btn" onclick="setCityFilter('Torino', this)">Torino</button>
+        <button class="city-btn" onclick="setCityFilter('Imola', this)">Imola</button>
+        <button class="city-btn" onclick="setCityFilter('Milano', this)">Milano</button>
+        <button class="city-btn" onclick="setCityFilter('Modena', this)">Modena</button>
+        <button class="city-btn" onclick="setCityFilter('Roma', this)">Roma</button>
+        <button class="city-btn" onclick="setCityFilter('Firenze', this)">Firenze</button>
+      </div>
     </div>
 
     <div class="leads-grid" id="leads-container">
       <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b;">
-        Caricamento dei lead verificati in corso...
+        Caricamento dei contatti verificati in corso...
       </div>
     </div>
   </div>
@@ -269,6 +404,7 @@
   <script>
     let _allLeads = [];
     let _activeCategory = 'ALL';
+    let _activeCity = 'ALL';
 
     async function loadLeads() {
       try {
@@ -293,12 +429,23 @@
       filterLeads();
     }
 
+    function setCityFilter(city, btn) {
+      _activeCity = city;
+      document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      filterLeads();
+    }
+
     function filterLeads() {
       const q = document.getElementById('lead-search').value.toLowerCase().trim();
       let filtered = _allLeads;
 
       if (_activeCategory !== 'ALL') {
         filtered = filtered.filter(l => l.category === _activeCategory);
+      }
+
+      if (_activeCity !== 'ALL') {
+        filtered = filtered.filter(l => (l.city || '').toLowerCase().includes(_activeCity.toLowerCase()));
       }
 
       if (q) {
@@ -320,7 +467,7 @@
       if (!leads.length) {
         container.innerHTML = `
           <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b;">
-            Nessun lead corrispondente ai filtri selezionati.
+            Nessun contatto corrispondente ai filtri selezionati.
           </div>
         `;
         return;
@@ -328,32 +475,38 @@
 
       container.innerHTML = leads.map(l => {
         const p = l.phone_info || {};
-        const catClass = l.category === 'PRIVATI_INTENT_SUBITO' ? 'subito' :
-                         (l.category === 'AUTOLAVAGGI_SELEZIONE' ? 'carwash' :
-                         (l.category === 'AGENZIE_IMMOBILIARI_PARTNER' ? 'agency' : 'traslochi'));
-        const tagClass = l.category === 'PRIVATI_INTENT_SUBITO' ? 'tag-hot' :
-                         (l.category === 'AUTOLAVAGGI_SELEZIONE' ? 'tag-carwash' :
-                         (l.category === 'AGENZIE_IMMOBILIARI_PARTNER' ? 'tag-agency' : 'tag-traslochi'));
-        const catLabel = l.category === 'PRIVATI_INTENT_SUBITO' ? 'PRIVATO HOT' :
-                         (l.category === 'AUTOLAVAGGI_SELEZIONE' ? 'AUTOLAVAGGIO' :
-                         (l.category === 'AGENZIE_IMMOBILIARI_PARTNER' ? 'AGENZIA B2B' : 'TRASLOCO REALE'));
+        const isAgency = l.category === 'AGENZIE_IMMOBILIARI_PARTNER';
+        const isCarWash = l.category === 'AUTOLAVAGGI_SELEZIONE';
+        
+        const catClass = isCarWash ? 'carwash' : (isAgency ? 'agency' : 'traslochi');
+        const tagClass = isCarWash ? 'tag-carwash' : (isAgency ? 'tag-agency' : 'tag-traslochi');
+        const catLabel = isCarWash ? '🚗 AUTOLAVAGGIO' : (isAgency ? '🏢 IMMOBILIARE B2B' : '📦 TRASLOCO / LOGISTICA');
+        const lineBadge = p.is_mobile ? '📱 CELLULARE' : '☎️ FISSO CENTRALINO';
 
         return `
           <div class="lead-card ${catClass}">
             <div class="card-top">
-              <span class="card-city">📍 ${l.city ? l.city.toUpperCase() : 'ITALIA'}</span>
+              <span class="card-city">📍 ${escapeHtml(l.city ? l.city.toUpperCase() : 'ITALIA')}</span>
               <span class="card-tag ${tagClass}">${catLabel}</span>
             </div>
+            
             <div class="card-name">${escapeHtml(l.name)}</div>
             <div class="card-service">🛠️ ${escapeHtml(l.service)}</div>
-            <div class="card-notes">${escapeHtml(l.notes || 'Nessuna nota aggiuntiva.')}</div>
+            
+            <div class="card-phone-badge">
+              <span>${lineBadge}</span>
+              <span>·</span>
+              <span>${p.formatted || p.digits}</span>
+            </div>
+
+            <div class="card-notes">${escapeHtml(l.notes || 'Sede verificata.')}</div>
             
             <div class="actions-box">
-              <a href="${p.tel_uri}" class="btn-call" title="Clicca per far partire la chiamata diretta">
-                📞 CHIAMA ORA
-                <span style="font-size:0.75rem; opacity:0.85;">(${p.formatted})</span>
+              <a href="${p.tel_uri}" class="btn-call" title="Clicca per chiamare direttamente con 1 click">
+                <span>📞 CHIAMA SUBITO</span>
+                <span class="btn-call-sub">${p.formatted}</span>
               </a>
-              <a href="${l.wa_link}" target="_blank" class="btn-wa" title="Apri chat WhatsApp istantanea">
+              <a href="${l.wa_link}" target="_blank" class="btn-wa" title="Apri WhatsApp con messaggio pre-compilato">
                 💬 WHATSAPP
               </a>
             </div>

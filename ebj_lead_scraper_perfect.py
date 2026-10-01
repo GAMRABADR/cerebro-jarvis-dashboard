@@ -149,6 +149,7 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
     c = conn.cursor()
 
     leads = []
+    seen_phones = set()
 
     # 1. Lead Traslochi / Sgomberi (verified_leads_2026)
     q1 = "SELECT * FROM verified_leads_2026 WHERE COALESCE(blacklist_flag, 0) = 0"
@@ -161,14 +162,29 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
     for row in c.execute(q1, params1).fetchall():
         d = dict(row)
         ph_info = validate_and_format_phone(d.get("phone"))
-        if not ph_info:
+        if not ph_info or ph_info["digits"] in seen_phones:
             continue
-        msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi in merito alla gestione sgomberi e traslochi su {d.get('city')}."
+        seen_phones.add(ph_info["digits"])
+
+        notes_str = d.get("notes") or ""
+        is_carwash = "AUTOLAVAGG" in notes_str.upper() or "CHIMICA" in (d.get("service_type") or "").upper()
+        is_agency = "IMMOBILIARE" in (d.get("client_name") or "").upper() or "IMMOBILIARE" in (d.get("service_type") or "").upper() or "AGENZIA" in notes_str.upper()
+
+        if is_carwash:
+            cat = "AUTOLAVAGGI_SELEZIONE"
+            msg = f"Salve {d.get('client_name')}, vi contatto da SELEZIONE - Detergenza Professionale per impianti autolavaggio. In collaborazione con BadrExpress."
+        elif is_agency:
+            cat = "AGENZIE_IMMOBILIARI_PARTNER"
+            msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi per convenzione operativa sgomberi e traslochi clienti a {d.get('city')}."
+        else:
+            cat = "TRASLOCHI_SGOMBERI"
+            msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi in merito alla gestione sgomberi e traslochi su {d.get('city')}."
+
         wa_custom = f"{ph_info['wa_url']}?text={urllib.parse.quote(msg)}"
         leads.append({
             "id": f"VL-{d.get('id')}",
             "source_table": "verified_leads_2026",
-            "category": "TRASLOCHI_SGOMBERI",
+            "category": cat,
             "name": d.get("client_name"),
             "city": d.get("city"),
             "service": d.get("service_type") or "Sgombero & Trasloco",
@@ -182,7 +198,7 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
             "status": d.get("lead_status") or "DA_CHIAMARE"
         })
 
-    # 2. Privati con Intent Tracciato (captured_moving_leads)
+    # 2. Partner B2B & Intent Tracciato (captured_moving_leads)
     q2 = "SELECT * FROM captured_moving_leads WHERE 1=1"
     params2 = []
     if filter_city != "ALL":
@@ -193,17 +209,27 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
     for row in c.execute(q2, params2).fetchall():
         d = dict(row)
         ph_info = validate_and_format_phone(d.get("phone"))
-        if not ph_info:
+        if not ph_info or ph_info["digits"] in seen_phones:
             continue
-        msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi per il vostro annuncio di sgombero/trasloco a {d.get('city')}."
+        seen_phones.add(ph_info["digits"])
+
+        channel = d.get("channel", "")
+        is_agency = "IMMOBILIARE" in channel.upper() or "IMMOBILIARE" in (d.get("service_type") or "").upper() or "IMMOBILIARE" in (d.get("client_name") or "").upper()
+        cat = "AGENZIE_IMMOBILIARI_PARTNER" if is_agency else "TRASLOCHI_SGOMBERI"
+
+        if is_agency:
+            msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi per convenzione operativa sgomberi e traslochi per i vostri clienti rogito a {d.get('city')}."
+        else:
+            msg = f"Buongiorno {d.get('client_name')}, vi contatto da BadrExpress & Pietro Traslochi per il vostro servizio di sgombero/trasloco a {d.get('city')}."
+
         wa_custom = f"{ph_info['wa_url']}?text={urllib.parse.quote(msg)}"
         leads.append({
             "id": f"CM-{d.get('id')}",
             "source_table": "captured_moving_leads",
-            "category": "PRIVATI_INTENT_SUBITO",
-            "name": d.get("client_name") or "Privato in Trasloco",
+            "category": cat,
+            "name": d.get("client_name") or "Azienda Partner",
             "city": d.get("city") or "Bologna",
-            "service": d.get("service_type") or "Sgombero Rapido",
+            "service": d.get("service_type") or "Sgombero Rapido & Trasloco",
             "phone_info": ph_info,
             "wa_link": wa_custom,
             "email": "",
@@ -225,8 +251,10 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
     for row in c.execute(q3, params3).fetchall():
         d = dict(row)
         ph_info = validate_and_format_phone(d.get("phone"))
-        if not ph_info:
+        if not ph_info or ph_info["digits"] in seen_phones:
             continue
+        seen_phones.add(ph_info["digits"])
+
         msg = f"Salve {d.get('name')}, vi contatto da SELEZIONE - Distribuzione Detergenza Professionale per impianti autolavaggio. In collaborazione con BadrExpress."
         wa_custom = f"{ph_info['wa_url']}?text={urllib.parse.quote(msg)}"
         leads.append({
@@ -257,8 +285,9 @@ def get_all_verified_leads(filter_city="ALL", limit=200):
     for row in c.execute(q4, params4).fetchall():
         d = dict(row)
         ph_info = validate_and_format_phone(d.get("phone"))
-        if not ph_info:
+        if not ph_info or ph_info["digits"] in seen_phones:
             continue
+        seen_phones.add(ph_info["digits"])
         msg = f"Buongiorno {d.get('agency_name')}, vi contatto da BadrExpress & Pietro Traslochi per convenzione sgomberi e traslochi clienti su {d.get('city')}."
         wa_custom = f"{ph_info['wa_url']}?text={urllib.parse.quote(msg)}"
         leads.append({
