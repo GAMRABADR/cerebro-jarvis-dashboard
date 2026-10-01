@@ -630,13 +630,14 @@ async function executeCommandPipeline(prompt) {
     let modelTag = 'EBJ SUPREME';
     let preloadedAudio = null;
 
+    window._lastPromptTimestamp = Date.now();
     // 1. Chiamata diretta all'intelligenza vocale e operativa unificata EBJ
     try {
       const vRes = await fetch('/api/voice/interact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: prompt, persona: currentPersonality }),
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(18000)
       });
       if (vRes.ok) {
         const vData = await vRes.json();
@@ -652,7 +653,8 @@ async function executeCommandPipeline(prompt) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, model, persona: currentPersonality })
+        body: JSON.stringify({ prompt, model, persona: currentPersonality }),
+        signal: AbortSignal.timeout(20000)
       });
       const d = await res.json();
       reply = d.response || 'Nessuna risposta ricevuta.';
@@ -667,8 +669,62 @@ async function executeCommandPipeline(prompt) {
     if (respTag) respTag.textContent = 'ERROR';
   } finally {
     isBusy = false;
+    const input = document.getElementById('prompt-input');
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
     if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
   }
+}
+
+// Watchdog di autoriparazione frontend: sblocca l'interfaccia se un'operazione resta appesa > 20s
+window._lastPromptTimestamp = 0;
+setInterval(() => {
+  if (isBusy && (Date.now() - window._lastPromptTimestamp > 22000)) {
+    console.warn('[EBJ UI Watchdog]: Sblocco di emergenza intervenuto per timeout.');
+    isBusy = false;
+    _ebjIsSpeaking = false;
+    const respTag = document.getElementById('resp-tag');
+    if (respTag && (respTag.textContent === 'REFLEX...' || respTag.textContent === 'Elaborazione...')) {
+      respTag.textContent = 'ONLINE';
+    }
+    const input = document.getElementById('prompt-input');
+    if (input) {
+      input.disabled = false;
+      input.placeholder = 'Comanda E.B.J... (pronto all\'ascolto)';
+    }
+  }
+}, 4000);
+
+window.forceUnblockEbjUi = function() {
+  isBusy = false;
+  _ebjIsSpeaking = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (window._ebjCurrentAudio) {
+    try { window._ebjCurrentAudio.pause(); } catch(_) {}
+  }
+  const input = document.getElementById('prompt-input');
+  if (input) { input.disabled = false; input.focus(); }
+  const respTag = document.getElementById('resp-tag');
+  if (respTag) respTag.textContent = 'ONLINE';
+  const respEl = document.getElementById('resp-body');
+  if (respEl) respEl.textContent = 'Interfaccia sbloccata con successo. E.B.J. pronto all\'ascolto.';
+  const sphere = document.getElementById('jarvis-sphere');
+  if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+};
+
+// Sblocco rapido premendo Escape o cliccando sulla sfera
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    window.forceUnblockEbjUi();
+  }
+});
+const _sphereEl = document.getElementById('jarvis-sphere');
+if (_sphereEl) {
+  _sphereEl.addEventListener('click', () => {
+    if (isBusy) window.forceUnblockEbjUi();
+  });
 }
 
 function updateAiModeBadge(data) {
