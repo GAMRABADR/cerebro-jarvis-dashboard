@@ -2187,29 +2187,42 @@ window.loadActiveLeadsRadar = async function() {
 
       container.innerHTML = leads.map(l => {
         const tierColor = l.tier === 'HOT' ? '#ef4444' : (l.tier === 'WARM' ? '#f59e0b' : '#3b82f6');
-        const phone = l.phone || '';
-        const waLink = phone ? `https://wa.me/39${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Buongiorno, la contatto da BadrExpress & PietroTraslochi in merito alla sua esigenza di sgombero/trasloco a ' + l.city)}` : '';
-        const telLink = phone ? `tel:${phone}` : '';
+        const rawPhone = l.phone || '';
+        let cleanDigits = rawPhone.replace(/\D/g, '');
+        if (cleanDigits.startsWith('0039')) cleanDigits = cleanDigits.slice(4);
+        else if (cleanDigits.startsWith('39') && cleanDigits.length >= 11) cleanDigits = cleanDigits.slice(2);
+
+        const hasValidPhone = cleanDigits.length >= 8 && cleanDigits.length <= 11;
+        const e164 = hasValidPhone ? `+39${cleanDigits}` : '';
+        const telLink = hasValidPhone ? `tel:${e164}` : '';
+        const waLink = hasValidPhone ? `https://wa.me/39${cleanDigits}?text=${encodeURIComponent('Buongiorno, vi contatto da BadrExpress & Pietro Traslochi in merito alla gestione sgombero/trasloco a ' + l.city)}` : '';
+        const displayPhone = hasValidPhone ? (cleanDigits.startsWith('3') ? `+39 ${cleanDigits.slice(0,3)} ${cleanDigits.slice(3,6)} ${cleanDigits.slice(6)}` : `+39 ${cleanDigits}`) : (rawPhone || 'Contatto su annuncio');
 
         return `
-          <div style="background:#0b1120; border:1px solid #1e293b; border-left:3px solid ${tierColor}; border-radius:6px; padding:10px; margin-bottom:8px;">
+          <div style="background:#0b1120; border:1px solid #1e293b; border-left:3px solid ${tierColor}; border-radius:6px; padding:12px; margin-bottom:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:0.7rem; font-weight:bold; color:#00f0ff;">${l.city.toUpperCase()} · ${l.service_type || 'SGOMBERO/TRASLOCO'}</span>
-              <span style="background:${tierColor}; color:#000; font-weight:900; font-size:0.6rem; padding:2px 6px; border-radius:3px;">${l.tier} (${l.priority_score})</span>
+              <span style="font-size:0.75rem; font-weight:bold; color:#00f0ff;">${l.city ? l.city.toUpperCase() : 'BOLOGNA'} · ${l.service_type || 'SGOMBERO/TRASLOCO'}</span>
+              <span style="background:${tierColor}; color:#000; font-weight:900; font-size:0.65rem; padding:2px 6px; border-radius:3px;">${l.tier} (${l.priority_score})</span>
             </div>
-            <div style="font-size:0.8rem; font-weight:bold; color:#fff; margin-bottom:4px;">${l.title}</div>
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">${l.details || ''}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:0.72rem; color:#cbd5e1; font-weight:600;">📞 ${phone || 'Contatto su annuncio'}</span>
-              <div style="display:flex; gap:6px;">
-                ${phone ? `<a href="${waLink}" target="_blank" style="background:#10b981; color:#000; font-size:0.68rem; font-weight:bold; padding:4px 8px; border-radius:4px; text-decoration:none;">🟢 WHATSAPP</a>` : ''}
-                ${phone ? `<a href="${telLink}" style="background:#0284c7; color:#fff; font-size:0.68rem; font-weight:bold; padding:4px 8px; border-radius:4px; text-decoration:none;">📞 CHIAMATA</a>` : ''}
-                <button onclick="window.sendQuick('JARVIS, invia preventivo express per il lead ${l.id} a ${l.city}')" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; font-size:0.68rem; padding:4px 8px; border-radius:4px; cursor:pointer;">⚡ PREVENTIVO</button>
+            <div style="font-size:0.85rem; font-weight:bold; color:#fff; margin-bottom:4px;">${l.title || l.client_name}</div>
+            <div style="font-size:0.74rem; color:#94a3b8; margin-bottom:10px; line-height:1.3;">${l.details || ''}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <span style="font-size:0.78rem; color:#f8fafc; font-weight:bold;">📞 ${displayPhone}</span>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                ${hasValidPhone ? `<a href="${telLink}" style="background:#10b981; color:#020813; font-size:0.75rem; font-weight:900; padding:6px 12px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; box-shadow:0 0 10px rgba(16,185,129,0.3);">📞 CHIAMA</a>` : ''}
+                ${hasValidPhone ? `<a href="${waLink}" target="_blank" style="background:#0f172a; border:1.5px solid #25d366; color:#25d366; font-size:0.72rem; font-weight:bold; padding:5px 8px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">💬 WA</a>` : ''}
+                <button onclick="window.sendQuick('JARVIS, invia preventivo express per il lead ${l.id} a ${l.city}')" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; font-size:0.72rem; padding:5px 8px; border-radius:6px; cursor:pointer;">⚡ PREVENTIVO</button>
               </div>
             </div>
           </div>
         `;
-      }).join('');
+      }).join('') + `
+        <div style="text-align:center; margin-top:12px;">
+          <a href="/leads_chiamata_rapida.html" target="_blank" style="display:inline-block; background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; font-size:0.75rem; font-weight:bold; padding:8px 14px; border-radius:6px; text-decoration:none;">
+            🚀 APRI DIALER COMPLETO 1-CLICK (110+ LEAD VERIFICATI) ↗️
+          </a>
+        </div>
+      `;
     }
   } catch (err) {
     if (container) container.innerHTML = `<div style="color:#ef4444; font-size:0.75rem;">Errore caricamento lead: ${err.message}</div>`;
