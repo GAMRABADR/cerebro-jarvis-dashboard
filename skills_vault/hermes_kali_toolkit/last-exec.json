@@ -1,1 +1,1 @@
-{"tool": "nmap", "exit_code": 0, "status": "SUCCESS", "action": "run", "ts_unix": 1788237440, "container": "ebj-kali-engine"}
+{"tool": "update-tools.sh", "exit_code": 0, "status": "SUCCESS", "action": "update", "ts_unix": 1790462566, "container": "ebj-kali-engine"}

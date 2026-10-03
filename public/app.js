@@ -228,8 +228,36 @@ function startEbjMic() {
       const text = (last[0] && last[0].transcript || '').trim();
       if (!text || isBusy || _ebjIsSpeaking) return;
 
+      const lowerText = text.toLowerCase().trim();
+      const standbyWords = ['stop', 'basta', 'riposati', 'dormi', 'disattiva', 'spegni', 'a dopo', 'grazie ebj', 'grazie jarvis'];
+      if (window.isConversationalMode && standbyWords.some(w => lowerText === w || lowerText.startsWith(w + ' '))) {
+        window.isConversationalMode = false;
+        const msg = 'Ricevuto Ingegnere Badr, resto in standby passivo. Chiamami quando serve dicendo EBJ.';
+        const respEl = document.getElementById('resp-body');
+        const respTag = document.getElementById('resp-tag');
+        if (respEl) respEl.textContent = msg;
+        if (respTag) respTag.textContent = 'STANDBY';
+        addEvent('ai', msg);
+        if (window.playSpeechAudio) window.playSpeechAudio(msg);
+        return;
+      }
+
       const parsed = parseWakePhrase(text);
       if (!parsed.hasWake) {
+        if (window.isConversationalMode) {
+          // In modalità conversazione, EBJ è già attivo e riceve ogni battuta direttamente a mani libere!
+          console.log('[EBJ Active Dialogue]: Ricevuto comando in modalità conversazione:', text);
+          const ambientBadge = document.getElementById('ambient-vad-status');
+          if (ambientBadge) {
+            ambientBadge.innerHTML = `<span style="color:#00f0ff;font-weight:bold;">⚡ CONVERSAZIONE ATTIVA</span>`;
+            ambientBadge.style.opacity = '1';
+          }
+          const respTag = document.getElementById('resp-tag');
+          if (respTag) respTag.textContent = '🎤 DIALOGO DIRETTO';
+          executeCommandPipeline(text, { fromVoice: true });
+          return;
+        }
+
         // AMBIENT SPEECH: REAGISCE ZERO, TACE COMPLETAMENTE!
         console.log('[EBJ Ambient VAD - Silent]: Spoken text without wake word ignored:', text);
         const ambientBadge = document.getElementById('ambient-vad-status');

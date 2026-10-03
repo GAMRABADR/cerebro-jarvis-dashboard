@@ -12,10 +12,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8089/api/lead-hunter/scrape",
+        "url": "http://127.0.0.1:8088/api/lead-hunter/scrape",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ queries: ['cerco trasloco', 'devo traslocare', 'aiuto sgombero', 'cerco sgombero', 'vorrei traslocare'], platforms: ['subito.it', 'bakeca.it'], zone: 'torino' }) }}",
+        "jsonBody": "={{ JSON.stringify({ queries: ['cerco trasloco', 'devo traslocare', 'aiuto sgombero cantina', 'cerco furgone trasporto', 'trasloco appartamento bologna'], platforms: ['cronoshare.it', 'spedingo.com', 'subito.it', 'bakeca.it', 'facebook'], zone: 'bologna', zones: ['bologna', 'modena', 'reggio-emilia', 'ferrara', 'ravenna', 'imola', 'forli-cesena'] }) }}",
         "options": { "timeout": 120000 }
       },
       "id": "http-scrape",
@@ -35,6 +35,12 @@
               "leftValue": "={{ $json.classification }}",
               "operator": { "type": "string", "operation": "equals" },
               "rightValue": "CLIENT"
+            },
+            {
+              "id": "filter-competitor",
+              "leftValue": "={{ $json.is_competitor || false }}",
+              "operator": { "type": "boolean", "operation": "equals" },
+              "rightValue": false
             }
           ],
           "combinator": "and"
@@ -42,7 +48,7 @@
         "options": {}
       },
       "id": "filter-clients",
-      "name": "Solo CLIENT",
+      "name": "Solo CLIENT (No Competitor)",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.0,
       "position": [720, 300]
@@ -50,10 +56,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8089/api/lead/contact",
+        "url": "http://127.0.0.1:8088/api/lead/contact",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ lead_name: $json.title || '', phone: ($json.phones && $json.phones[0]) || null, post_text: $json.title || '', lead_data: { origine: $json.origine, destinazione: $json.destinazione, tipo: $json.tipo }, channels: ['whatsapp', 'sms', 'messenger'] }) }}",
+        "jsonBody": "={{ JSON.stringify({ lead_name: $json.title || '', phone: ($json.phones && $json.phones[0]) || null, post_text: $json.title || '', lead_data: { origine: $json.origine, destinazione: $json.destinazione, tipo: $json.tipo, zone: 'bologna' }, channels: ['whatsapp', 'sms', 'messenger'] }) }}",
         "options": { "timeout": 60000 }
       },
       "id": "http-contact",
@@ -69,7 +75,7 @@
         "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ chat_id: '-1001988134270', text: '🎯 EBJ Daily Lead Hunt\\n\\nLead trovati: ' + $('Scraping Lead Hunter').item.json.total_found + '\\nClient: ' + $('Scraping Lead Hunter').item.json.clients + '\\nContattati: ' + $input.all().length, parse_mode: 'HTML' }) }}",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '-1001988134270', text: '🎯 EBJ Daily Lead Hunt (Bologna & Dintorni)\\n\\nLead trovati: ' + $('Scraping Lead Hunter').item.json.total_found + '\\nClient Verificati: ' + $('Scraping Lead Hunter').item.json.clients + '\\nContattati: ' + $input.all().length, parse_mode: 'HTML' }) }}",
         "options": { "timeout": 10000 }
       },
       "id": "telegram-notify",
@@ -82,7 +88,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8089/api/telemetry/leads",
+        "url": "http://127.0.0.1:8088/api/telemetry/leads",
         "options": { "timeout": 10000 }
       },
       "id": "http-telemetry",
@@ -97,9 +103,9 @@
       "main": [[{ "node": "Scraping Lead Hunter", "type": "main", "index": 0 }]]
     },
     "Scraping Lead Hunter": {
-      "main": [[{ "node": "Solo CLIENT", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Solo CLIENT (No Competitor)", "type": "main", "index": 0 }]]
     },
-    "Solo CLIENT": {
+    "Solo CLIENT (No Competitor)": {
       "main": [[{ "node": "Contatto Auto Lead", "type": "main", "index": 0 }]]
     },
     "Contatto Auto Lead": {

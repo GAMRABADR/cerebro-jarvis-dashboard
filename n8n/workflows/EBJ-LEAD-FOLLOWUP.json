@@ -12,7 +12,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8089/api/lead-hunter/list?status=new&limit=50",
+        "url": "http://127.0.0.1:8088/api/lead-hunter/list?status=new&limit=50",
         "options": { "timeout": 10000 }
       },
       "id": "http-new-leads",
@@ -25,7 +25,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8089/api/lead/contact",
+        "url": "http://127.0.0.1:8088/api/lead/contact",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ lead_id: $json.id, lead_name: $json.lead_name || '', phone: $json.phone || null, email: $json.email || null, facebook_url: $json.facebook_url || null, post_text: $json.post_text || '', lead_data: { origine: $json.origine, destinazione: $json.destinazione, tipo: $json.tipo }, channels: ['sms', 'email', 'messenger'] }) }}",

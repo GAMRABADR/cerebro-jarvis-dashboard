@@ -1,0 +1,137 @@
+{
+  "name": "EBJ-BOLOGNA-LEAD-INTAKE-N8N",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-lead-intake",
+      "name": "Webhook Inbound Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "ebj-bologna-lead-intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\n// Campi base\nconst name = (body.client_name || body.name || body.nome || 'Cliente Privato').trim();\nlet phone = (body.phone || body.telefono || '').toString().trim();\nconst city = (body.city || body.citta || 'Bologna').trim();\nconst serviceType = body.service_type || body.servizio || 'Trasloco Residenziale';\nconst notes = body.notes || body.messaggio || body.richiesta || '';\nconst budget = parseFloat(body.estimated_budget || body.budget || 450.0);\nconst volumeMq = parseInt(body.volume_mq || body.mq || 50);\nconst source = body.source || body.fonte || 'Web Intake';\n\n// Normalizzazione Telefono Mobile Italiano (+39 3XX XXXXXXX)\nlet cleanPhone = phone.replace(/[^0-9+]/g, '');\nif (cleanPhone.startsWith('0039')) {\n  cleanPhone = '+39' + cleanPhone.slice(4);\n} else if (cleanPhone.startsWith('39') && cleanPhone.length >= 12) {\n  cleanPhone = '+' + cleanPhone;\n} else if (cleanPhone.startsWith('3') && cleanPhone.length === 10) {\n  cleanPhone = '+39' + cleanPhone;\n}\n\n// Verifica sintattica telefono\nconst phoneRegex = /^\\+393\\d{8,9}$/;\nconst isPhoneValid = phoneRegex.test(cleanPhone);\n\n// Filtro Anti-Competitor (ditte, agenzie, P.IVA)\nconst compKeywords = ['ditta', 'azienda', 'offriamo', 'srl', 's.r.l', 'p.iva', 'partita iva', 'preventivo gratuito', 'personale qualificato', 'flotta'];\nconst fullText = (name + ' ' + notes + ' ' + serviceType).toLowerCase();\nconst isCompetitor = compKeywords.some(kw => fullText.includes(kw));\n\n// Intento Cliente\nconst clientKeywords = ['cerco', 'devo', 'bisogno', 'aiuto', 'sgombero', 'trasloco', 'furgone', 'spostare'];\nconst hasClientIntent = clientKeywords.some(kw => fullText.includes(kw));\n\nreturn [{\n  json: {\n    client_name: name,\n    phone: isPhoneValid ? cleanPhone : 'NON_VALIDO',\n    is_phone_valid: isPhoneValid,\n    is_competitor: isCompetitor,\n    has_client_intent: hasClientIntent,\n    city: city,\n    service_type: serviceType,\n    volume_mq: volumeMq,\n    estimated_budget: budget,\n    source: source,\n    notes: notes,\n    whatsapp_link: isPhoneValid ? `https://wa.me/${cleanPhone.replace('+', '')}` : ''\n  }\n}];"
+      },
+      "id": "node-sanitize-lead",
+      "name": "Sanitizza & Filtra Anti-Competitor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "cond-valid-phone",
+              "leftValue": "={{ $json.is_phone_valid }}",
+              "operator": { "type": "boolean", "operation": "equals" },
+              "rightValue": true
+            },
+            {
+              "id": "cond-not-competitor",
+              "leftValue": "={{ $json.is_competitor }}",
+              "operator": { "type": "boolean", "operation": "equals" },
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-gate-valido",
+      "name": "Gate: Persona Reale & Contatto Certo",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.0,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:9000/api/leads/score",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $json.phone }}\",\n  \"name\": \"{{ $json.client_name }}\",\n  \"zone\": \"{{ $json.city }}\"\n}",
+        "options": { "timeout": 2000 }
+      },
+      "id": "node-rust-score",
+      "name": "Rust Microkernel Scorer :9000",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 200],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"-1001988134270\",\n  \"text\": \"🎯 <b>NUOVO LEAD VERIFICATO — BOLOGNA & PROVINCIA</b>\\n━━━━━━━━━━━━━━━━━━━━\\n👤 <b>Cliente:</b> {{ $('Sanitizza & Filtra Anti-Competitor').item.json.client_name }}\\n📞 <b>Telefono:</b> <code>{{ $('Sanitizza & Filtra Anti-Competitor').item.json.phone }}</code>\\n📍 <b>Zona:</b> {{ $('Sanitizza & Filtra Anti-Competitor').item.json.city }}\\n📦 <b>Servizio:</b> {{ $('Sanitizza & Filtra Anti-Competitor').item.json.service_type }} (~{{ $('Sanitizza & Filtra Anti-Competitor').item.json.volume_mq }} mq)\\n💰 <b>Budget Stimato:</b> €{{ $('Sanitizza & Filtra Anti-Competitor').item.json.estimated_budget }}\\n🛡️ <b>Qualità Contatto:</b> Tier {{ $json.tier || 'WARM' }} (Score: {{ $json.priority_score || 50 }}/100)\\n🌐 <b>Fonte:</b> {{ $('Sanitizza & Filtra Anti-Competitor').item.json.source }}\\n━━━━━━━━━━━━━━━━━━━━\\n💬 <a href=\\\"{{ $('Sanitizza & Filtra Anti-Competitor').item.json.whatsapp_link }}\\\">👉 Clicca qui per Chat WhatsApp Immediata</a>\",\n  \"parse_mode\": \"HTML\"\n}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "node-telegram-dispatch",
+      "name": "Dispatch Alert Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 200],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"VERIFICATO\",\n  \"client_name\": \"{{ $('Sanitizza & Filtra Anti-Competitor').item.json.client_name }}\",\n  \"phone\": \"{{ $('Sanitizza & Filtra Anti-Competitor').item.json.phone }}\",\n  \"zone\": \"{{ $('Sanitizza & Filtra Anti-Competitor').item.json.city }}\",\n  \"tier\": \"{{ $('Rust Microkernel Scorer :9000').item.json.tier || 'WARM' }}\",\n  \"priority_score\": {{ $('Rust Microkernel Scorer :9000').item.json.priority_score || 50 }},\n  \"whatsapp_opener\": \"{{ $('Rust Microkernel Scorer :9000').item.json.wa_opener || '' }}\"\n}",
+        "options": {}
+      },
+      "id": "node-webhook-response",
+      "name": "Rispondi al Webhook OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"status\": \"SCARTATO\",\n  \"reason\": \"Contatto competitor, numero di telefono non valido o richiesta non autentica.\"\n}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "node-reject-response",
+      "name": "Rispondi Scarto (Competitor/Fake)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [920, 420]
+    }
+  ],
+  "connections": {
+    "Webhook Inbound Lead": {
+      "main": [[{ "node": "Sanitizza & Filtra Anti-Competitor", "type": "main", "index": 0 }]]
+    },
+    "Sanitizza & Filtra Anti-Competitor": {
+      "main": [[{ "node": "Gate: Persona Reale & Contatto Certo", "type": "main", "index": 0 }]]
+    },
+    "Gate: Persona Reale & Contatto Certo": {
+      "main": [
+        [{ "node": "Rust Microkernel Scorer :9000", "type": "main", "index": 0 }],
+        [{ "node": "Rispondi Scarto (Competitor/Fake)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rust Microkernel Scorer :9000": {
+      "main": [[{ "node": "Dispatch Alert Telegram", "type": "main", "index": 0 }]]
+    },
+    "Dispatch Alert Telegram": {
+      "main": [[{ "node": "Rispondi al Webhook OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "ebj" }, { "name": "leads" }, { "name": "bologna" }, { "name": "intake" }]
+}
