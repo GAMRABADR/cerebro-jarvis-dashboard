@@ -121,6 +121,7 @@ def analyze_image_with_jev(image_input, task_type="furniture_moving", custom_pro
     prompt_to_use = custom_prompt or prompts.get(task_type, prompts["furniture_moving"])
 
     # Tentativo API Gemini Multimodale
+    fallback_reason = None
     if keys.get("gemini") and b64_data:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={keys['gemini']}"
@@ -142,15 +143,31 @@ def analyze_image_with_jev(image_input, task_type="furniture_moving", custom_pro
                     analysis_result = json.loads(clean_json)
                 except Exception:
                     analysis_result = {"raw_analysis": raw_text}
+            else:
+                fallback_reason = f"gemini_http_{res.status_code}"
         except Exception as e:
+            fallback_reason = f"gemini_error: {e}"
             print(f"[JEV Vision] Gemini error: {e}")
+    elif not b64_data:
+        fallback_reason = "no_image_data"
+    else:
+        fallback_reason = "no_api_key"
 
-    # Fallback deterministico JEV ad alta precisione se le quote cloud sono esaurite
-    if not analysis_result:
+    if analysis_result:
+        analysis_result["engine"] = "EBJ JEV Multimodal Vision 2026"
+        analysis_result["appraisal_source"] = "gemini_vision"
+        analysis_result["vision_applied"] = True
+    else:
+        # Il template deterministico non ha letto nulla: deve dirlo al chiamante,
+        # altrimenti una perizia cablata viene presa per una lettura della foto.
         analysis_result = _jev_deterministic_appraisal(task_type)
+        analysis_result["engine"] = "JEV deterministic template (immagine NON analizzata)"
+        analysis_result["appraisal_source"] = "deterministic_template"
+        analysis_result["vision_applied"] = False
+        analysis_result["fallback_reason"] = fallback_reason
+        analysis_result["confidence"] = 0.0
 
     analysis_result["task_type"] = task_type
-    analysis_result["engine"] = "EBJ JEV Multimodal Vision 2026"
     analysis_result["timestamp"] = int(time.time())
     return analysis_result
 
@@ -211,10 +228,14 @@ def _jev_deterministic_appraisal(task_type):
             "brand": "SELEZIONE — Distribuzione e Vendita Prodotti Professionali (in collab. BadrExpress.com)"
         }
     else:
+        # Nessun dato cablato: un OCR di fallback che restituisce un numero reale
+        # verrebbe salvato come contatto estratto dalla foto.
         return {
-            "phone_numbers": ["3888703508"],
-            "company_name": "BadrExpress Logistica",
-            "confidence": 0.90
+            "phone_numbers": [],
+            "emails": [],
+            "company_name": "",
+            "address": "",
+            "notes": "OCR non eseguito: nessuna estrazione dall'immagine. Riprovare con le quote cloud disponibili."
         }
 
 if __name__ == "__main__":
