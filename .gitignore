@@ -21,3 +21,8 @@ public/reports/*.pdf
 public/reports/*.png
 public/voice_dispatches/
 .env
+
+# Large binary files
+cloudflared.exe
+kokoro_model/
+*.onnx
