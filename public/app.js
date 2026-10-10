@@ -12,10 +12,38 @@ let terminalHistoryIndex = -1;
 let voiceHotkey = 'Ctrl+Space';
 let _toolCardTimer = null;
 
-const EBJ_WAKE_ACK = 'Ci sono, Ingegnere. Dimmi.';
+const JARVIS_WAKE_ACKS = [
+  "Ai Suoi ordini, signore. Mi dica pure.",
+  "Sì, Badr, sono qui. Come posso esserle utile?",
+  "Al Suo servizio, signore. La ascolto.",
+  "Sono qui, Badr. Sistemi operativi e pronti.",
+  "Dica pure, signore. Tutti i sensori sono allineati.",
+  "In ascolto, Badr. Cosa desidera analizzare?",
+  "Presente, signore. Qual è il piano?",
+  "Tutti i circuiti sono pronti, Badr. Mi dica."
+];
 
-window.ebjVoiceEnabled = false;
-window.isConversationalMode = false;
+function getJarvisWakeAck() {
+  return JARVIS_WAKE_ACKS[Math.floor(Math.random() * JARVIS_WAKE_ACKS.length)];
+}
+
+const JARVIS_THINKING_FILLERS = [
+  "Un attimo, signore, verifico...",
+  "Subito, Badr. Accedo ai registri...",
+  "Attenda un istante, interrogo i nodi...",
+  "Un momento solo, signore, elaboro la richiesta...",
+  "Verifico subito i dati, Badr..."
+];
+
+function getJarvisThinkingFiller() {
+  return JARVIS_THINKING_FILLERS[Math.floor(Math.random() * JARVIS_THINKING_FILLERS.length)];
+}
+
+const EBJ_WAKE_ACK = JARVIS_WAKE_ACKS[0];
+
+// Attivo di default salvo disattivazione esplicita
+window.ebjVoiceEnabled = localStorage.getItem('ebj_voce') !== 'off';
+window.isConversationalMode = localStorage.getItem('ebj_voce') !== 'off';
 let _ebjCurrentAudio = null;
 let _ebjRecognition = null;
 let _ebjMicOn = false;
@@ -35,20 +63,20 @@ function parseWakePhrase(spokenText) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Wake triggers at beginning of sentence: ehi ebj, hey ebj, ei ebj, ok ebj, ciao ebj, ascolta ebj, ebj, e b j, eb j, ebg, e b g, jarvis, ehi jarvis, hey jarvis, hermes, ehi hermes
-  const wakeRegex = /^(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|ehi\s+jarvis|hey\s+jarvis|hermes|ehi\s+hermes)\b[:,\s]*/i;
+  // Pattern unificato con tutte le variazioni fonetiche italiane di EBJ e JARVIS:
+  const wakeRegex = /^(?:(?:ehi|hey|ei|ok|ciao|ascolta|dimmi|buongiorno|buonasera)\s+)?(?:ebj|e\s+bj|e\s+b\s+j|eb\s+j|e\s+bi\s+gi|e\s+bi\s+gei|e\s+bi\s+j|ebgi|ebgei|ebg|e\s+b\s+g|e\s+bg|abj|ibj|jarvis|giarvis|iarvis|djarvis|yarvis|hermes|ermes)\b[:,\s]*/i;
   const match = normalized.match(wakeRegex);
   if (match) {
     const matchedLen = match[0].length;
-    const cleanCmd = raw.slice(matchedLen).replace(/^[:,\s\-]+/, '').trim();
+    const cleanCmd = normalized.slice(matchedLen).replace(/^[:,\s\-]+/, '').trim();
     return { hasWake: true, command: cleanCmd, wakeWord: match[0].trim() };
   }
 
-  // Wake triggers inline (anywhere in sentence)
-  const inlineRegex = /\b(?:ehi\s+ebj|hey\s+ebj|ei\s+ebj|ok\s+ebj|ciao\s+ebj|ascolta\s+ebj|ebj|e\s+b\s+j|eb\s+j|ebg|e\s+b\s+g|jarvis|hermes)\b/i;
-  const inlineMatch = raw.match(inlineRegex);
+  // Wake triggers inline (in qualsiasi punto della frase)
+  const inlineRegex = /\b(?:(?:ehi|hey|ei|ok|ciao|ascolta|dimmi)\s+)?(?:ebj|e\s+bj|e\s+b\s+j|eb\s+j|e\s+bi\s+gi|e\s+bi\s+gei|e\s+bi\s+j|ebgi|ebgei|ebg|e\s+b\s+g|abj|ibj|jarvis|giarvis|iarvis|djarvis|yarvis|hermes|ermes)\b/i;
+  const inlineMatch = normalized.match(inlineRegex);
   if (inlineMatch) {
-    const cleanCmd = raw.replace(inlineRegex, '').replace(/^[:,\s\-]+/, '').replace(/\s{2,}/g, ' ').trim();
+    const cleanCmd = normalized.replace(inlineRegex, '').replace(/^[:,\s\-]+/, '').replace(/\s{2,}/g, ' ').trim();
     return { hasWake: true, command: cleanCmd, wakeWord: inlineMatch[0].trim() };
   }
 
@@ -62,11 +90,52 @@ function isEbjWakePhrase(text) {
 
 function updateVadPill() {
   const btn = document.getElementById('btn-vad-toggle');
-  if (!btn) return;
-  const on = !!window.ebjVoiceEnabled;
-  btn.classList.toggle('active', on);
-  const strong = btn.querySelector('strong');
-  if (strong) strong.textContent = on ? 'ON' : 'OFF';
+  if (btn) {
+    const on = !!window.ebjVoiceEnabled;
+    btn.classList.toggle('active', on);
+    const strong = btn.querySelector('strong');
+    if (strong) strong.textContent = on ? 'ON' : 'OFF';
+  }
+  const bar = document.getElementById('ebj-mobile-activation-bar');
+  if (bar) {
+    const isMobile = window.innerWidth <= 900 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      bar.style.display = 'block';
+      if (_ebjMicOn && window.ebjVoiceEnabled) {
+        bar.innerHTML = '🟢 <span style="color:#10b981;font-weight:700;">EBJ IN ASCOLTO CONTINUO</span> · Dì <em>"EBJ"</em> o parla liberamente';
+        bar.style.background = 'rgba(16,185,129,0.18)';
+        bar.style.borderColor = 'rgba(16,185,129,0.4)';
+      } else if (window.ebjVoiceEnabled) {
+        bar.innerHTML = '🎤 <span style="color:#00f0ff;font-weight:700;">Tocca lo schermo per attivare l\'ascolto EBJ</span>';
+        bar.style.background = 'linear-gradient(90deg, rgba(0,240,255,0.18), rgba(16,185,129,0.18))';
+        bar.style.borderColor = 'rgba(0,240,255,0.4)';
+      } else {
+        bar.innerHTML = '🔇 <span style="color:#94a3b8;">Ascolto vocale disattivato · Tocca per attivare</span>';
+        bar.style.background = 'rgba(148,163,184,0.1)';
+        bar.style.borderColor = 'rgba(148,163,184,0.2)';
+      }
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+}
+
+let _ebjAudioCtx = null;
+let _ebjMasterAudioEl = null;
+
+function getEbjAudioContext() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx && !_ebjAudioCtx) {
+      _ebjAudioCtx = new AudioCtx();
+    }
+    if (_ebjAudioCtx && _ebjAudioCtx.state === 'suspended') {
+      _ebjAudioCtx.resume();
+    }
+  } catch (e) {
+    console.warn('[AudioContext Init Warn]:', e);
+  }
+  return _ebjAudioCtx;
 }
 
 function stopEbjSpeech() {
@@ -74,6 +143,9 @@ function stopEbjSpeech() {
   if (_ebjCurrentAudio) {
     try { _ebjCurrentAudio.pause(); } catch (_) {}
     _ebjCurrentAudio = null;
+  }
+  if (_ebjMasterAudioEl) {
+    try { _ebjMasterAudioEl.pause(); } catch (_) {}
   }
 }
 
@@ -90,45 +162,129 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   addEvent('voice', `🔊 VOCAL SYNTHESIS: "${clean.slice(0, 50)}..."`);
   let played = false;
 
-  const playBase64 = async (b64, mime = 'audio/mpeg') => {
+  const playWithWebAudio = async (arrayBuffer) => {
+    const ctx = getEbjAudioContext();
+    if (!ctx || typeof ctx.decodeAudioData !== 'function') return false;
     try {
-      const binaryStr = atob(b64);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-      const blob = new Blob([bytes], { type: mime });
-      const blobUrl = URL.createObjectURL(blob);
-      _ebjCurrentAudio = new Audio(blobUrl);
-      _ebjCurrentAudio.volume = 1.0;
-      await new Promise((resolve) => {
-        let done = false;
-        const finishAudio = () => {
-          if (!done) { done = true; URL.revokeObjectURL(blobUrl); resolve(); }
-        };
-        _ebjCurrentAudio.onended = finishAudio;
-        _ebjCurrentAudio.onerror = finishAudio;
-        _ebjCurrentAudio.play().then(() => { played = true; }).catch((err) => { finishAudio(); });
-        setTimeout(finishAudio, 15000);
+      const audioBuffer = await new Promise((res, rej) => {
+        ctx.decodeAudioData(arrayBuffer.slice(0), res, rej);
       });
-    } catch (e) {}
+      if (!audioBuffer) return false;
+
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+
+      // JARVIS Holographic DSP Master Chain:
+      // 1. Warmth Low-Shelf (+2.4dB @ 210Hz) - Tony Stark / Nino D'Agata baritone chest resonance
+      const bass = ctx.createBiquadFilter();
+      bass.type = 'lowshelf';
+      bass.frequency.value = 210;
+      bass.gain.value = 2.4;
+
+      // 2. High-Shelf De-harshing (-0.8dB @ 6500Hz) - Soften compression artifacts
+      const highs = ctx.createBiquadFilter();
+      highs.type = 'highshelf';
+      highs.frequency.value = 6500;
+      highs.gain.value = -0.8;
+
+      // 3. Holographic Broadcast Compressor - Cinematic punch & intelligibility
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18;
+      comp.knee.value = 10;
+      comp.ratio.value = 2.8;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.22;
+
+      source.connect(bass);
+      bass.connect(highs);
+      highs.connect(comp);
+      comp.connect(ctx.destination);
+
+      await new Promise((resolve) => {
+        let finished = false;
+        const onDone = () => {
+          if (!finished) {
+            finished = true;
+            resolve();
+          }
+        };
+        source.onended = onDone;
+        source.start(0);
+        setTimeout(onDone, Math.max(1000, (audioBuffer.duration * 1000) + 600));
+      });
+      return true;
+    } catch (err) {
+      console.warn('[WebAudio Decode Err]:', err);
+      return false;
+    }
+  };
+
+  const playWithAudioEl = async (srcUrl) => {
+    try {
+      if (!_ebjMasterAudioEl) unlockEbjVoice();
+      if (!_ebjMasterAudioEl) return false;
+      _ebjMasterAudioEl.src = srcUrl;
+      _ebjMasterAudioEl.volume = 1.0;
+      await new Promise((resolve, reject) => {
+        let done = false;
+        const finish = (ok) => {
+          if (!done) {
+            done = true;
+            _ebjMasterAudioEl.onended = null;
+            _ebjMasterAudioEl.onerror = null;
+            if (ok) resolve(); else reject();
+          }
+        };
+        _ebjMasterAudioEl.onended = () => finish(true);
+        _ebjMasterAudioEl.onerror = () => finish(false);
+        _ebjMasterAudioEl.play().then(() => finish(true)).catch(() => finish(false));
+        setTimeout(() => finish(true), 14000);
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
   };
 
   try {
+    // Stage 1: Preloaded base64
     if (preloadedBase64 && preloadedBase64.length > 500) {
-      await playBase64(preloadedBase64);
-    } else {
-      // 1. Edge-TTS Neural Audio via Master Server /api/tts
+      try {
+        const bin = atob(preloadedBase64);
+        const buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        played = await playWithWebAudio(buf.buffer);
+        if (!played) {
+          const blobUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
+          played = await playWithAudioEl(blobUrl);
+          URL.revokeObjectURL(blobUrl);
+        }
+      } catch (e) {
+        console.warn('[Preloaded Audio Play Err]:', e);
+      }
+    }
+
+    // Stage 2: Direct Fetch /api/tts from Master Server (Web Audio HD)
+    if (!played) {
       try {
         const r = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: clean, persona: currentPersonality }),
-          signal: AbortSignal.timeout(8000)
+          body: JSON.stringify({ text: clean, persona: currentPersonality || 'jarvis', voice_mode: currentPersonality || 'jarvis' }),
+          signal: AbortSignal.timeout(8500)
         });
         if (r.ok) {
           const d = await r.json();
           if (d.audio_base64 && d.audio_base64.length > 500) {
-            const mimeType = d.mime_type || (d.voice && d.voice.startsWith('kokoro') ? 'audio/wav' : 'audio/mpeg');
-            await playBase64(d.audio_base64, mimeType);
+            const bin = atob(d.audio_base64);
+            const buf = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+            played = await playWithWebAudio(buf.buffer);
+            if (!played) {
+              const blobUrl = URL.createObjectURL(new Blob([buf], { type: d.mime_type || 'audio/mpeg' }));
+              played = await playWithAudioEl(blobUrl);
+              URL.revokeObjectURL(blobUrl);
+            }
           }
         }
       } catch (err) {
@@ -136,44 +292,37 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       }
     }
 
-    // 2. High-Fidelity Browser SpeechSynthesis Fallback
-    if (!played && ('speechSynthesis' in window)) {
+    // Stage 3: Streaming Direct GET /api/tts via Master Audio Element
+    if (!played) {
+      try {
+        const streamUrl = `/api/tts?text=${encodeURIComponent(clean)}&persona=${encodeURIComponent(currentPersonality || 'jarvis')}&_t=${Date.now()}`;
+        played = await playWithAudioEl(streamUrl);
+      } catch (streamErr) {
+        console.warn('[Streaming Audio Fallback Err]:', streamErr);
+      }
+    }
+
+    // Stage 4: Controlled Browser SpeechSynthesis ONLY IF explicitly requested and nothing else worked
+    if (!played && ('speechSynthesis' in window) && window._ebjAllowRobotFallback) {
       try {
         window.speechSynthesis.cancel();
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-
         const u = new SpeechSynthesisUtterance(clean);
-        u.lang = 'it-IT';
-        u.rate = 1.05;
-        u.pitch = 1.0;
-        u.volume = 1.0;
-
-        // Select Italian voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const itVoice = voices.find(v => v.lang.startsWith('it') || v.name.includes('Italian'));
-        if (itVoice) u.voice = itVoice;
-
-        await new Promise((resolve) => {
-          let finished = false;
-          u.onend = () => { if (!finished) { finished = true; resolve(); } };
-          u.onerror = () => { if (!finished) { finished = true; resolve(); } };
-          window.speechSynthesis.speak(u);
-          setTimeout(() => { if (!finished) { finished = true; resolve(); } }, 12000);
-        });
+        u.lang = currentPersonality === 'jarvis_uk' ? 'en-GB' : 'it-IT';
+        u.rate = 0.95;
+        u.pitch = 0.85;
+        window.speechSynthesis.speak(u);
         played = true;
-      } catch (e) {
-        console.warn('[SpeechSynthesis Error]:', e);
-      }
+      } catch (_) {}
     }
   } finally {
-    // ALWAYS release speaking state and re-arm microphone after audio finishes
     _ebjIsSpeaking = false;
     if (window.ebjVoiceEnabled) {
       setTimeout(() => {
         if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
           startEbjMic();
         }
-      }, 250);
+      }, 200);
     }
   }
 };
@@ -218,6 +367,7 @@ function startEbjMic() {
       _ebjLastMicActivity = Date.now();
       const dot = document.querySelector('#btn-vad-toggle .vad-dot');
       if (dot) dot.style.background = '#10b981';
+      updateVadPill();
       console.log('[EBJ Mic Always-On]: Online e in ascolto continuo.');
     };
 
@@ -312,21 +462,22 @@ function startEbjMic() {
       console.warn('[Speech Recognition Error]:', ev.error);
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
         _ebjMicOn = false;
-        addEvent('sys', 'Microfono bloccato dal browser — consenti l\'audio nelle impostazioni');
+        addEvent('sys', 'Microfono bloccato dal browser — tocca lo schermo e consenti il microfono nelle impostazioni');
       }
       // 'no-speech', 'aborted', 'network' are soft errors; onend handles re-instantiation
     };
 
     _ebjRecognition.onend = () => {
       _ebjMicOn = false;
-      // Fresh re-instantiation instead of re-using dead object
+      updateVadPill();
+      // Fresh re-instantiation instead of re-using dead object - 60ms su mobile per ascolto istantaneo
       if (window.ebjVoiceEnabled && !_ebjIsSpeaking) {
         if (_ebjRestartTimer) clearTimeout(_ebjRestartTimer);
         _ebjRestartTimer = setTimeout(() => {
           if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
             startEbjMic();
           }
-        }, 150);
+        }, 60);
       }
     };
 
@@ -341,7 +492,7 @@ function startEbjMic() {
         if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
           startEbjMic();
         }
-      }, 500);
+      }, 300);
     }
   }
 }
@@ -355,28 +506,59 @@ function initEbjMicWatchdog() {
         startEbjMic();
       }
     }
-  }, 1200);
+  }, 1000);
 }
 
 function unlockEbjVoice() {
+  const ctx = getEbjAudioContext();
+  if (!_ebjMasterAudioEl) {
+    _ebjMasterAudioEl = document.getElementById('ebj-master-audio');
+    if (!_ebjMasterAudioEl) {
+      _ebjMasterAudioEl = document.createElement('audio');
+      _ebjMasterAudioEl.id = 'ebj-master-audio';
+      _ebjMasterAudioEl.setAttribute('playsinline', '');
+      _ebjMasterAudioEl.setAttribute('webkit-playsinline', '');
+      _ebjMasterAudioEl.preload = 'auto';
+      document.body.appendChild(_ebjMasterAudioEl);
+    }
+  }
+
   if (!_ebjVoiceUnlocked) {
     _ebjVoiceUnlocked = true;
+    try {
+      if (ctx) {
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+      }
+    } catch (_) {}
+    try {
+      _ebjMasterAudioEl.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      _ebjMasterAudioEl.play().catch(() => {});
+    } catch (_) {}
     try { window.cyberAudio && window.cyberAudio.initContext(); } catch (_) {}
   }
-  // Neutralize Chrome/Edge browser autoplay block
-  if (window.speechSynthesis && window.speechSynthesis.paused) {
-    try { window.speechSynthesis.resume(); } catch (_) {}
-  }
+
   if (window.ebjVoiceEnabled && !_ebjMicOn && !_ebjIsSpeaking) {
     startEbjMic();
     initEbjMicWatchdog();
   }
+  updateVadPill();
 }
 
-// Auto-unlock audio playback permissions una tantum al primo gesto utente
-window.addEventListener('click', () => { unlockEbjVoice(); }, { passive: true, once: true });
-window.addEventListener('keydown', () => { unlockEbjVoice(); }, { passive: true, once: true });
-window.addEventListener('touchstart', () => { unlockEbjVoice(); }, { passive: true, once: true });
+// Mobile & Desktop auto-unlock audio & speech su qualsiasi gesto utente
+['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, () => { unlockEbjVoice(); }, { passive: true });
+});
+
+// Ripristino istantaneo se l'utente torna sulla scheda da un'altra app mobile
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
+    startEbjMic();
+  }
+});
 
 window.toggleConversationalMode = function() {
   const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -411,17 +593,64 @@ window.toggleConversationalMode = function() {
   }
 };
 
+function updateActiveBrainUi(brainKey, label) {
+  const hidden = document.getElementById('model-select');
+  const chips = document.getElementById('ms-chips');
+  const aiModeText = document.getElementById('ai-mode-text');
+  if (hidden && brainKey) hidden.value = brainKey;
+  if (chips && brainKey) {
+    chips.querySelectorAll('.ms-chip').forEach((b) => {
+      if (b.getAttribute('data-value') === brainKey) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+  }
+  if (aiModeText && label) {
+    aiModeText.textContent = `🧠 ${label.toUpperCase()}`;
+  }
+}
+
+async function syncActiveBrainStatus() {
+  try {
+    const res = await fetch('/api/brain/status');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.active_brain) {
+        updateActiveBrainUi(data.active_brain, data.label);
+      }
+    }
+  } catch (_) {}
+}
+
 function initCustomModelSelect() {
   const hidden = document.getElementById('model-select');
   const chips = document.getElementById('ms-chips');
   if (!hidden || !chips) return;
   chips.querySelectorAll('.ms-chip').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      hidden.value = btn.getAttribute('data-value') || 'auto';
+    btn.addEventListener('click', async () => {
+      const val = btn.getAttribute('data-value') || 'auto';
+      hidden.value = val;
       chips.querySelectorAll('.ms-chip').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
+      try {
+        const r = await fetch('/api/brain/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brain: val })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.label) updateActiveBrainUi(val, d.label);
+          if (d.spoken_ack && window.ebjVoiceEnabled && window.playSpeechAudio) {
+            window.playSpeechAudio(d.spoken_ack);
+          }
+        }
+      } catch (_) {}
     });
   });
+  syncActiveBrainStatus();
 }
 
 // ── 1. CLOCK TICKER ────────────────────────────────────────────────
@@ -594,7 +823,7 @@ async function executeCommandPipeline(prompt) {
 
   if (isEbjWakePhrase(prompt)) {
     window.isConversationalMode = true;
-    finish(EBJ_WAKE_ACK, 'E.B.J. LISTEN');
+    finish(getJarvisWakeAck(), 'J.A.R.V.I.S. READY');
     try {
       if (window.location.protocol !== 'https:') fetch('http://127.0.0.1:9000/api/wake', {
         method: 'POST',
@@ -613,8 +842,8 @@ async function executeCommandPipeline(prompt) {
     return;
   }
 
-  if (respTag) respTag.textContent = 'REFLEX...';
-  if (respEl) respEl.textContent = 'Elaborazione neurale in corso...';
+  if (respTag) respTag.textContent = 'JARVIS...';
+  if (respEl) respEl.textContent = getJarvisThinkingFiller();
 
   // 0. JEV REFLEX PRE-ROUTER RUST (< 8µs)
   try {
@@ -688,10 +917,14 @@ async function executeCommandPipeline(prompt) {
       reply = d.response || 'Nessuna risposta ricevuta.';
       modelTag = (d.model_used || 'E.B.J. AI').toUpperCase();
       if (d.ui_action) window.handleAiUiAction(d.ui_action);
+      if (d.reflex && window.updateReflexStrip) window.updateReflexStrip(d.reflex, d.judge);
       updateAiModeBadge(d);
     }
 
     finish(reply, modelTag, preloadedAudio);
+    if (reply.includes('Coscienza') || reply.includes('percorsi sinaptici') || reply.includes('architettura neurale') || reply.includes('nucleo cognitivo') || modelTag.includes('BRAIN-SWITCH')) {
+      syncActiveBrainStatus();
+    }
   } catch (err) {
     if (respEl) respEl.textContent = 'Errore di comunicazione: ' + err.message;
     if (respTag) respTag.textContent = 'ERROR';
@@ -740,6 +973,66 @@ window.forceUnblockEbjUi = function() {
   if (respEl) respEl.textContent = 'Interfaccia sbloccata con successo. E.B.J. pronto all\'ascolto.';
   const sphere = document.getElementById('jarvis-sphere');
   if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+};
+
+window.toggleReflexStrip = function(e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById('ebj-reflex-strip');
+  if (el) el.classList.toggle('collapsed');
+};
+
+window.updateReflexStrip = function(rf, judge) {
+  if (!rf) return;
+  const laneTag = document.getElementById('ers-lane-tag');
+  const laneBar = document.getElementById('ers-lane-bar');
+  const laneScore = document.getElementById('ers-lane-score');
+  const laneChip = document.getElementById('ers-lane-chip');
+  const addrBar = document.getElementById('ers-addr-bar');
+  const addrScore = document.getElementById('ers-addr-score');
+  const judgeStatus = document.getElementById('ers-judge-status');
+  const stakesChip = document.getElementById('ers-stakes-chip');
+  const metaPill = document.getElementById('ers-meta-pill');
+
+  if (laneTag) laneTag.textContent = (rf.lane || 'CHAT').toUpperCase().replace('_', ' ');
+  const lConf = Math.round((rf.lane_confidence || 0.8) * 100);
+  if (laneBar) laneBar.style.width = lConf + '%';
+  if (laneScore) laneScore.textContent = lConf + '%';
+  if (laneChip) {
+    laneChip.textContent = rf.verdict || 'ACT';
+    laneChip.className = 'ers-chip ' + (rf.verdict === 'ACT' ? 'chip-act' : 'chip-warn');
+  }
+
+  const addrVal = Math.round((rf.addressed || 0.9) * 100);
+  if (addrBar) addrBar.style.width = addrVal + '%';
+  if (addrScore) addrScore.textContent = addrVal + '%';
+
+  if (metaPill) {
+    const lat = rf.latency_ms || 1.2;
+    metaPill.textContent = `⚡ 0.00€ · RUST SIMD · ${lat}ms`;
+  }
+
+  if (judge) {
+    if (judgeStatus) {
+      if (judge.blocked) {
+        judgeStatus.textContent = 'BLOCKED: CLAIM NO RECEIPT ⚠️';
+        judgeStatus.style.color = '#ef4444';
+      } else {
+        judgeStatus.textContent = 'RECEIPT VERIFIED ✅';
+        judgeStatus.style.color = '#00ff9f';
+      }
+    }
+  }
+
+  if (stakesChip) {
+    const stVal = rf.stakes || 0.1;
+    if (stVal >= 0.5) {
+      stakesChip.textContent = `HIGH STAKES (${stVal})`;
+      stakesChip.className = 'ers-chip chip-warn';
+    } else {
+      stakesChip.textContent = `SAFE (${stVal})`;
+      stakesChip.className = 'ers-chip chip-safe';
+    }
+  }
 };
 
 // Sblocco rapido premendo Escape o cliccando sulla sfera
@@ -1024,12 +1317,47 @@ window.switchTab = function(tab) {
   }
 };
 
-window.switchEBMood = function(mood) {
+window.setMood = function(mood) {
   currentPersonality = mood;
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
+  
+  const card = document.getElementById(`mood-card-${mood}`) || document.getElementById(`mood-card-${mood.replace('_', '-')}`);
+  if (card) card.classList.add('active');
   const chip = document.getElementById(`chip-${mood}`);
   if (chip) chip.classList.add('active');
+  
+  let preview = '';
+  if (mood === 'jarvis_uk') {
+    preview = "At your service, sir. British Stark AI system online.";
+  } else if (mood === 'jarvis') {
+    preview = "A sua disposizione, Ingegnere Badr. Voce Jarvis profonda attiva.";
+  } else if (mood === 'military') {
+    preview = "Comandante, protocollo tattico operativo.";
+  } else {
+    preview = "Modalità attiva, dimmi pure!";
+  }
+  
+  const respEl = document.getElementById('resp-body');
+  const respTag = document.getElementById('resp-tag');
+  if (respEl) respEl.textContent = preview;
+  if (respTag) respTag.textContent = mood.toUpperCase().replace('_', ' ');
+  
   showToolRun('PERSONALITÀ SWITCH', `Modalità ${mood.toUpperCase()} attiva.`, '0.01s');
+  if (window.playSpeechAudio) {
+    window.playSpeechAudio(preview);
+  }
+};
+window.switchEBMood = window.setMood;
+
+window.testJarvisVoice = function(mood = 'jarvis') {
+  window.setMood(mood);
+  const phrase = mood === 'jarvis_uk'
+    ? "At your service, sir. British Stark AI system online."
+    : "A sua disposizione, Ingegnere Badr. Voce Jarvis profonda attiva.";
+  if (window.playSpeechAudio) {
+    window.playSpeechAudio(phrase);
+  }
 };
 
 window.triggerNeuralSurge = function() {
@@ -1789,12 +2117,15 @@ document.addEventListener('DOMContentLoaded', () => {
   loadModularCardsState();
   initCustomModelSelect();
   
-  // Auto-restore voice continuous preference if saved
+  // Auto-restore voice continuous preference: attivo di default salvo 'off' esplicito
   const savedVoce = localStorage.getItem('ebj_voce');
-  if (savedVoce === 'on') {
+  if (savedVoce !== 'off') {
     window.ebjVoiceEnabled = true;
     window.isConversationalMode = true;
     initEbjMicWatchdog();
+  } else {
+    window.ebjVoiceEnabled = false;
+    window.isConversationalMode = false;
   }
   updateVadPill();
 
@@ -2703,7 +3034,12 @@ window.triggerEmergencyCallNow = async function() {
   }, 2200);
 };
 
-// ── CAMERA VISION (WEBCAM LIVE FEED) ───────────────────────────────────────
+// ── CAMERA VISION + HOLOGRAM AVATAR (CONTINUOUS TRACKING) ─────────────────
+let _holoPollTimer = null;
+let _holoFrameCount = 0;
+let _holoLastTs = 0;
+let _holoFps = 0;
+
 window.openCameraVisionModal = async function() {
   const modal = document.getElementById('modal-camera-vision');
   const video = document.getElementById('cam-live-video');
@@ -2713,17 +3049,23 @@ window.openCameraVisionModal = async function() {
   modal.style.display = 'flex';
   try {
     _webcamStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' }
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
     });
     video.srcObject = _webcamStream;
-    if (statusEl) statusEl.textContent = '● LIVE WEBCAM ACTIVE (1080p / 60 FPS)';
+    if (statusEl) statusEl.textContent = '\u25CF LIVE';
+    _holoFrameCount = 0;
+    _holoLastTs = performance.now();
+    _startHoloPolling();
   } catch (err) {
     console.warn('[WEBCAM ACCESS ERR]:', err);
-    if (statusEl) statusEl.textContent = '⚠️ Webcam non rilevata o permessi negati: ' + err.message;
+    if (statusEl) statusEl.textContent = '\u26A0\FE00 Webcam non disponibile';
+    _setHoloState('NO CAMERA', 'lost');
+    document.getElementById('cam-feedback-text').textContent = 'Impossibile accedere alla webcam: ' + err.message;
   }
 };
 
 window.closeCameraVisionModal = function() {
+  _stopHoloPolling();
   const modal = document.getElementById('modal-camera-vision');
   const video = document.getElementById('cam-live-video');
   if (_webcamStream) {
@@ -2732,58 +3074,116 @@ window.closeCameraVisionModal = function() {
   }
   if (video) video.srcObject = null;
   if (modal) modal.style.display = 'none';
+  const img = document.getElementById('holo-avatar-img');
+  if (img) { img.className = 'holo-avatar-img'; img.style.transform = ''; }
 };
 
-window.captureWebcamAndAnalyze = async function() {
-  const video = document.getElementById('cam-live-video');
-  const fb = document.getElementById('cam-feedback-text');
-  const btn = document.getElementById('btn-cam-capture');
-  if (!video || !video.videoWidth) {
-    if (fb) fb.textContent = '⚠️ Errore: feed video non pronto.';
-    return;
-  }
+function _startHoloPolling() {
+  _stopHoloPolling();
+  _holoPollTimer = setInterval(_captureAndSendFrame, 200);
+}
 
+function _stopHoloPolling() {
+  if (_holoPollTimer) { clearInterval(_holoPollTimer); _holoPollTimer = null; }
+}
+
+async function _captureAndSendFrame() {
+  const video = document.getElementById('cam-live-video');
+  if (!video || !video.videoWidth) return;
+
+  const TARGET_W = 320;
+  const scale = TARGET_W / video.videoWidth;
   const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = TARGET_W;
+  canvas.height = Math.round(video.videoHeight * scale);
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const b64 = canvas.toDataURL('image/jpeg', 0.85);
+  const b64 = canvas.toDataURL('image/jpeg', 0.7);
 
-  if (fb) fb.textContent = '👁️ Analisi ottica neurale in corso con Vision AI...';
-  if (btn) btn.disabled = true;
+  _holoFrameCount++;
+  const now = performance.now();
+  if (now - _holoLastTs >= 2000) {
+    _holoFps = Math.round((_holoFrameCount * 1000) / (now - _holoLastTs));
+    _holoFrameCount = 0;
+    _holoLastTs = now;
+  }
 
   try {
-    const res = await fetch('/api/screen/analyze', {
+    const res = await fetch('/api/webcam/frame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        frame_b64: b64,
-        detect_form: false,
-        prompt: "Guarda attentamente attraverso la fotocamera. Descrivi cosa vedi in modo brillante per l'Ingegner Badr: oggetti, mobili, documenti o ambiente circostante, stimando volume o valore se pertinente."
-      })
+      body: JSON.stringify({ frame_b64: b64, mirrored: true })
     });
-    const d = await res.json();
-    const commento = d.analysis || 'Oggetto analizzato con successo.';
-    if (fb) fb.textContent = '✅ Analisi completata!';
-
-    const respEl = document.getElementById('resp-body');
-    const respTag = document.getElementById('resp-tag');
-    if (respTag) respTag.textContent = 'CAMERA VISION OK';
-    if (respEl) respEl.innerHTML = `<strong>📷 CAMERA VISION ANALISI:</strong><br>${commento.replace(/\n/g, '<br>')}`;
-
-    if (window.playSpeechAudio) {
-      window.playSpeechAudio(commento.slice(0, 220));
-    }
-
-    setTimeout(() => {
-      window.closeCameraVisionModal();
-    }, 1800);
+    if (!res.ok) return;
+    const report = await res.json();
+    _applyHoloReport(report);
   } catch (err) {
-    if (fb) fb.textContent = 'Errore analisi: ' + err.message;
-  } finally {
-    if (btn) btn.disabled = false;
+    console.warn('[HOLO POLL ERR]:', err);
   }
+}
+
+function _applyHoloReport(report) {
+  const img = document.getElementById('holo-avatar-img');
+  const glow = document.getElementById('holo-glow');
+  const fb = document.getElementById('cam-feedback-text');
+  if (!img) return;
+
+  const av = report.avatar || {};
+  const yaw = av.head_yaw_deg || 0;
+  const pitch = av.head_pitch_deg || 0;
+  const scl = av.head_scale || 1.0;
+  const edx = av.eye_dx || 0;
+  const edy = av.eye_dy || 0;
+  const lock = av.lock_strength || 0;
+
+  const tx = edx * 6;
+  const ty = edy * 4;
+  img.style.transform =
+    `rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${scl.toFixed(3)})`;
+
+  let cls = 'holo-avatar-img';
+  if (av.tracking) cls += ' locked';
+  if (av.facing_user) cls += ' facing';
+  img.className = cls;
+
+  if (glow) {
+    glow.style.opacity = lock.toFixed(2);
+    glow.classList.toggle('active', lock > 0.3);
+  }
+
+  const stateMap = {
+    'no_camera': ['NO CAMERA', 'lost'],
+    'too_dark': ['BUIO', 'acquiring'],
+    'too_bright': ['TROPPA LUCE', 'acquiring'],
+    'too_blurry': ['FUOCO', 'acquiring'],
+    'too_far': ['TROPPO LONTANO', 'acquiring'],
+    'acquiring': ['ACQUISIZIONE', 'acquiring'],
+    'locked': ['LOCK', 'locked'],
+    'lost': ['PERSO', 'lost'],
+  };
+  const stateKey = (report.state || '').toLowerCase();
+  const badge = stateMap[stateKey] || [report.state_label || 'STANDBY', ''];
+  _setHoloState(badge[0], badge[1]);
+
+  if (fb && report.message) fb.textContent = report.message;
+
+  const fpsEl = document.getElementById('holo-fps');
+  const confEl = document.getElementById('holo-confidence');
+  const faceEl = document.getElementById('holo-facecount');
+  if (fpsEl) fpsEl.textContent = _holoFps + ' fps';
+  if (confEl) confEl.textContent = 'conf: ' + (report.primary ? report.primary.confidence.toFixed(2) : '--');
+  if (faceEl) faceEl.textContent = 'volti: ' + (report.face_count || 0);
+}
+
+function _setHoloState(text, cls) {
+  const badge = document.getElementById('holo-state-badge');
+  if (!badge) return;
+  badge.textContent = text;
+  badge.className = 'holo-state-badge' + (cls ? ' ' + cls : '');
+}
+
+window.captureWebcamAndAnalyze = function() {
+  window.openCameraVisionModal();
 };
 
 
@@ -3553,3 +3953,136 @@ if (typeof window !== 'undefined') {
     setInterval(syncTraslochiLeadBanner, 30000);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 🌌 PARTICLE SYSTEM BACKGROUND (Neural Network Cosmos)
+// GPU-Accelerated Canvas · 144 FPS · Zero CPU Overhead
+// ═══════════════════════════════════════════════════════════════════
+
+(function initParticleCosmos() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  const PARTICLE_COUNT = 80;
+  const CONNECTION_DISTANCE = 150;
+  const particles = [];
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+      this.radius = Math.random() * 2 + 1;
+      this.color = Math.random() > 0.5 ? '#00f0ff' : '#00ff9f';
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = this.color;
+    }
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < CONNECTION_DISTANCE) {
+          const opacity = 1 - distance / CONNECTION_DISTANCE;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0, 240, 255, ${opacity * 0.3})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    drawConnections();
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// 🎴 3D CARD TILT EFFECT (Interactive Perspective)
+// Mouse-Tracking RotateX/Y · Desktop Only
+// ═══════════════════════════════════════════════════════════════════
+
+(function initCardTilt3D() {
+  const cards = document.querySelectorAll('.fleet-agent-card, .cmd-tile, .tc-card');
+
+  cards.forEach(card => {
+    card.classList.add('card-tilt-3d');
+
+    card.addEventListener('mousemove', (e) => {
+      if (window.innerWidth < 1280) return;
+
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = ((y - centerY) / centerY) * -10;
+      const rotateY = ((x - centerX) / centerX) * 10;
+
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    });
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// 🌈 HOLOGRAPHIC BORDERS - Apply to main panels
+// ═══════════════════════════════════════════════════════════════════
+
+(function initHolographicBorders() {
+  const panels = document.querySelectorAll('.panel-box, .fleet-agent-card');
+  panels.forEach(panel => {
+    panel.classList.add('holo-border-animated');
+  });
+})();

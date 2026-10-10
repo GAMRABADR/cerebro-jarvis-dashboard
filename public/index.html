@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EBJ AI">
   <title>E.B.J. AI · APEX MATRIX v100.0</title>
-  <link rel="stylesheet" href="style.css?v=1013.0">
+  <link rel="stylesheet" href="style.css?v=1025.0">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/ebj_supreme_logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +22,11 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PARTICLE SYSTEM BACKGROUND (Neural Network Cosmos)
+       ═══════════════════════════════════════════════════════════════ -->
+  <canvas id="particle-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; opacity:0.4;"></canvas>
 
   <!-- ── MASTER TOP BAR HUD ───────────────────────────────────────── -->
   <header class="master-view-bar">
@@ -155,11 +160,12 @@
     </div>
 
     <div class="mv-right">
-      <input type="hidden" id="model-select" value="auto">
-      <div class="ms-chips" id="ms-chips" title="Motore neurale">
-        <button type="button" class="ms-chip active" data-value="auto">AUTO</button>
-        <button type="button" class="ms-chip" data-value="groq-llama70b">GROQ</button>
-        <button type="button" class="ms-chip" data-value="qwen-27b">LOCALE</button>
+      <input type="hidden" id="model-select" value="gemini">
+      <div class="ms-chips" id="ms-chips" title="Mente Neurale Attiva · Dì 'Passa a Gemini / Groq / Qwen / GPT'">
+        <button type="button" class="ms-chip active" data-value="gemini" title="Google Gemini 3.5 Flash">🧠 GEMINI</button>
+        <button type="button" class="ms-chip" data-value="groq" title="Groq Qwen 3.8 27B LPU">⚡ GROQ</button>
+        <button type="button" class="ms-chip" data-value="gpt" title="GPT OSS 120B Reasoning">🏛️ GPT</button>
+        <button type="button" class="ms-chip" data-value="auto" title="Cascata Automatica Intelligente">🔄 AUTO</button>
       </div>
       <div id="ai-mode-badge" class="ai-mode-pill cloud-free" title="Stato Rotazione AI Engine (Cloud Free Pool / Local VPS GPU)">
         <span class="ai-mode-dot"></span>
@@ -180,6 +186,9 @@
       <span class="clock-val" id="utc-clock">00:00:00</span>
     </div>
   </header>
+  <div id="ebj-mobile-activation-bar" onclick="unlockEbjVoice()" style="display:none; padding:10px 14px; background:linear-gradient(90deg, rgba(0,240,255,0.18), rgba(16,185,129,0.18)); border-bottom:1px solid rgba(0,240,255,0.3); text-align:center; font-size:0.85rem; color:#00f0ff; cursor:pointer; font-weight:600; z-index:9999; animation: pulse 2s infinite;">
+    🎤 <span id="mobile-bar-text">Tocca qui per attivare l'ascolto continuo EBJ a mani libere</span>
+  </div>
   <div class="mv-nav-backdrop" id="mv-nav-backdrop" onclick="toggleMobileNav(false)" hidden></div>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -683,6 +692,22 @@
           </div>
 
           
+          <!-- 🎙️ JARVIS DUAL VOICE CALIBRATION & TEST BAR -->
+          <div class="jarvis-voice-test-strip" id="jarvis-voice-test-strip" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; font-weight: 800; color: #00f0ff; letter-spacing: 0.5px;">🔊 CALIBRAZIONE VOCE JARVIS</span>
+              <span style="font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; padding: 2px 6px; font-weight: 700;">HD NEURAL WEB AUDIO</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button onclick="testJarvisVoice('jarvis')" class="quick-btn" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(16, 185, 129, 0.25)); border: 1px solid #00f0ff; color: #fff; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span>🇮🇹</span> <span>Ascolta Nino D'Agata (IT)</span>
+              </button>
+              <button onclick="testJarvisVoice('jarvis_uk')" class="quick-btn" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25)); border: 1px solid #818cf8; color: #fff; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span>🇬🇧</span> <span>Ascolta Paul Bettany (UK)</span>
+              </button>
+            </div>
+          </div>
+
           <!-- MOOD CARD GRID — 4 Personalita -->
           <div class="mood-card-grid" id="mood-card-grid">
 
@@ -690,26 +715,26 @@
                  onclick="setMood('jarvis')" title="Alt+1">
               <span class="mood-shortcut">Alt+1</span>
               <span class="mood-emoji">⚡</span>
-              <span class="mood-name">JARVIS</span>
-              <span class="mood-desc">Elegante · Preciso<br>Iron Man Mode</span>
+              <span class="mood-name">JARVIS (IT)</span>
+              <span class="mood-desc">Nino D'Agata · Profondo<br>Italian Butler AI</span>
+              <span class="mood-dot"></span>
+            </div>
+
+            <div class="mood-card" data-mood="jarvis_uk" id="mood-card-jarvis-uk"
+                 onclick="setMood('jarvis_uk')" title="Alt+2">
+              <span class="mood-shortcut">Alt+2</span>
+              <span class="mood-emoji">🇬🇧</span>
+              <span class="mood-name">JARVIS (UK)</span>
+              <span class="mood-desc">Paul Bettany · Original<br>British Stark Voice</span>
               <span class="mood-dot"></span>
             </div>
 
             <div class="mood-card" data-mood="military" id="mood-card-military"
-                 onclick="setMood('military')" title="Alt+2">
-              <span class="mood-shortcut">Alt+2</span>
-              <span class="mood-emoji">🛡️</span>
-              <span class="mood-name">MILITARE</span>
-              <span class="mood-desc">Tattico · Diretto<br>War Room Mode</span>
-              <span class="mood-dot"></span>
-            </div>
-
-            <div class="mood-card" data-mood="architect" id="mood-card-architect"
-                 onclick="setMood('architect')" title="Alt+3">
+                 onclick="setMood('military')" title="Alt+3">
               <span class="mood-shortcut">Alt+3</span>
-              <span class="mood-emoji">🔬</span>
-              <span class="mood-name">ARCHITECT</span>
-              <span class="mood-desc">Tecnico · Analitico<br>Senior Dev Mode</span>
+              <span class="mood-emoji">🛡️</span>
+              <span class="mood-name">TACTICAL</span>
+              <span class="mood-desc">Tattico · Autorevole<br>War Room Mode</span>
               <span class="mood-dot"></span>
             </div>
 
@@ -722,6 +747,35 @@
               <span class="mood-dot"></span>
             </div>
 
+          </div>
+
+          <!-- ⚡ E.B.J. APEX REFLEX STRIP (RUST SIMD + THE JUDGE HUD) -->
+          <div class="ebj-reflex-strip" id="ebj-reflex-strip">
+            <div class="ers-header">
+              <span class="ers-title"><i data-lucide="zap" class="lucide-icon text-cyan"></i>E.B.J. REFLEX STRIP <small>[RUST SIMD 0€]</small></span>
+              <div class="ers-pill" id="ers-meta-pill">⚡ 0.00€ · RUST NATIVE · 0.0ms</div>
+              <button class="ers-fold-btn" onclick="toggleReflexStrip(event)" title="Comprimi / Espandi">▾</button>
+            </div>
+            <div class="ers-rows" id="ers-rows-container">
+              <div class="ers-row">
+                <span class="ers-label">LANE:</span>
+                <span class="ers-val-tag" id="ers-lane-tag">CHAT GENERAL</span>
+                <div class="ers-bar-wrap"><div class="ers-bar-fill" id="ers-lane-bar" style="width: 80%;"></div></div>
+                <span class="ers-score" id="ers-lane-score">80%</span>
+                <span class="ers-chip chip-act" id="ers-lane-chip">ACT</span>
+              </div>
+              <div class="ers-row">
+                <span class="ers-label">ADDRESSED:</span>
+                <div class="ers-bar-wrap"><div class="ers-bar-fill" id="ers-addr-bar" style="width: 95%;"></div></div>
+                <span class="ers-score" id="ers-addr-score">95%</span>
+                <span class="ers-chip chip-ok" id="ers-addr-chip">DIRECT</span>
+              </div>
+              <div class="ers-row">
+                <span class="ers-label">THE JUDGE:</span>
+                <span class="ers-val-tag" id="ers-judge-status" style="color:#00ff9f;">RECEIPT VERIFIED ✅</span>
+                <span class="ers-chip chip-safe" id="ers-stakes-chip">SAFE (0.10)</span>
+              </div>
+            </div>
           </div>
 
           <!-- INPUT DOCK -->
@@ -2105,8 +2159,8 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
     </div>
   </div>
 
-  <script src="cyber_audio_engine.js?v=1013.0"></script>
-  <script src="app.js?v=1013.0"></script>
+  <script src="cyber_audio_engine.js?v=1025.0"></script>
+  <script src="app.js?v=1035.0"></script>
   <script src="astra_3d_client.js?v=1.1"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
@@ -2958,37 +3012,52 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     MODAL: CAMERA VISION (WEBCAM LIVE FEED & STARK RETICLE)
+     MODAL: CAMERA VISION (WEBCAM LIVE FEED & HOLOGRAM AVATAR)
      ═══════════════════════════════════════════════════════════════ -->
 <div id="modal-camera-vision" class="cam-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeCameraVisionModal()">
-  <div class="cam-modal-box">
+  <div class="cam-modal-box cam-modal-wide">
     <div class="cam-modal-header">
       <div style="display:flex; align-items:center; gap:8px;">
         <i data-lucide="camera" class="lucide-icon text-cyan"></i>
-        <span style="font-family:var(--font-hud); font-size:0.9rem; font-weight:800; color:#00f0ff; letter-spacing:1px;">J.A.R.V.I.S. CAMERA VISION · WEBCAM HD</span>
+        <span style="font-family:var(--font-hud); font-size:0.9rem; font-weight:800; color:#00f0ff; letter-spacing:1px;">J.A.R.V.I.S. CAMERA VISION · HOLOGRAM LINK</span>
       </div>
-      <button onclick="closeCameraVisionModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">&times;</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="holo-state-badge" class="holo-state-badge">NO SIGNAL</span>
+        <button onclick="closeCameraVisionModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">&times;</button>
+      </div>
     </div>
 
-    <div class="cam-video-viewport">
-      <video id="cam-live-video" autoplay playsinline muted></video>
-      <div class="cam-reticle-overlay">
-        <div class="cam-reticle-circle"></div>
-        <div class="cam-reticle-corners"></div>
+    <div class="cam-split-body">
+      <div class="cam-webcam-col">
+        <div class="cam-video-viewport">
+          <video id="cam-live-video" autoplay playsinline muted></video>
+          <div class="cam-reticle-overlay">
+            <div class="cam-reticle-circle"></div>
+            <div class="cam-reticle-corners"></div>
+          </div>
+          <div class="cam-stream-label" id="cam-stream-status">&#9679; WEBCAM</div>
+        </div>
+        <div class="cam-metrics-strip" id="cam-metrics-strip">
+          <span id="holo-fps">-- fps</span>
+          <span id="holo-confidence">conf: --</span>
+          <span id="holo-facecount">volti: 0</span>
+        </div>
       </div>
-      <div style="position:absolute; bottom:10px; left:12px; font-family:var(--font-mono); font-size:0.75rem; color:#00ff9f; background:rgba(0,0,0,0.6); padding:2px 8px; border-radius:4px;" id="cam-stream-status">
-        ● LIVE WEBCAM 1080p
+
+      <div class="cam-hologram-col">
+        <div class="holo-projector-base"></div>
+        <div class="holo-avatar-stage" id="holo-avatar-stage">
+          <img src="badr_hologram.png" alt="EBJ Hologram" class="holo-avatar-img" id="holo-avatar-img">
+          <div class="holo-scanlines"></div>
+          <div class="holo-glow" id="holo-glow"></div>
+        </div>
+        <div class="holo-avatar-label">UNIT-01 · EBJ HOLOGRAM</div>
       </div>
     </div>
 
     <div class="cam-modal-footer">
-      <span style="font-size:0.75rem; color:#94a3b8;" id="cam-feedback-text">Inquadra un oggetto, documento o spazio per perizia immediata.</span>
-      <div style="display:flex; gap:8px;">
-        <button class="ring-cancel-btn" onclick="closeCameraVisionModal()" style="padding:6px 14px; font-size:0.75rem;">CHIUDI</button>
-        <button class="ngi-action-btn" onclick="captureWebcamAndAnalyze()" id="btn-cam-capture" style="margin:0; padding:6px 16px; font-size:0.75rem;">
-          <i data-lucide="scan" class="lucide-icon sm"></i> ANALIZZA CON VISION AI
-        </button>
-      </div>
+      <span style="font-size:0.8rem; color:#94a3b8; flex:1;" id="cam-feedback-text">Inquadra il tuo volto per attivare il collegamento olografico.</span>
+      <button class="ring-cancel-btn" onclick="closeCameraVisionModal()" style="padding:6px 14px; font-size:0.75rem;">CHIUDI</button>
     </div>
   </div>
 </div>
