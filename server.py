@@ -7810,17 +7810,29 @@ def _patched_do_POST(self):
                 return
 
             reply_text = ""
+            model_used = "fast-path"
 
             # 1. Riconoscimento rapido comandi cambio cervello o interrogazione mente
             is_sw, sw_reply, brain_key = detect_and_handle_brain_switch(user_query)
             if is_sw:
                 reply_text = sw_reply
+                model_used = f"brain-switch:{brain_key}"
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
+                model_used = "wake-ack"
             else:
-                # Le azioni operative richiedono un tool con esito verificabile.
-                # Evita trigger su parole isolate e fatti di stato hard-coded.
-                reply_text, model_used = generate_jarvis_spoken_response(user_query, persona=req_persona)
+                # ── JEV REFLEX FAST-PATH (System One Structured Decision Layer) ──
+                try:
+                    from ebj_reflex_engine import jev_reflex_dispatch
+                    jev_match = jev_reflex_dispatch(user_query)
+                except Exception:
+                    jev_match = None
+
+                if jev_match and jev_match.get("ack"):
+                    reply_text = jev_match["ack"]
+                    model_used = f"jev-reflex:{jev_match.get('domain', 'action')}"
+                else:
+                    reply_text, model_used = generate_jarvis_spoken_response(user_query, persona=req_persona)
 
 
             # Usa il motore TTS condiviso: rispetta davvero la personalità selezionata
@@ -7852,7 +7864,7 @@ def _patched_do_POST(self):
                 "status": "SUCCESS",
                 "query": user_query,
                 "response": reply_text,
-                "model_used": model_used if not is_sw and not is_ebj_wake_phrase(user_query) else "fast-path",
+                "model_used": model_used,
                 "audio_base64": audio_b64,
                 "voice": voice_used,
                 "mime_type": mime_type,

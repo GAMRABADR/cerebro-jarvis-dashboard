@@ -4,21 +4,25 @@
 #  portali di preventivo e agenzie) con scoring immediato Rust :9000.
 # ────────────────────────────────────────────────────────────────────────
 
+import logging
 import os
-import json
-import sqlite3
-import datetime
-import urllib.request
-import urllib.parse
 import re
+import sqlite3
+import urllib.error
+import urllib.parse
+import urllib.request
+
 import requests
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VAULT_DB = os.path.join(BASE_DIR, "mail_vault.db")
 RUST_BRIDGE = "http://127.0.0.1:9000"
+logger = logging.getLogger(__name__)
 
-TELEGRAM_BOT_TOKEN = "8720524399:AAEYrwb6EHVg7mDnbpLqLFA8KZMTXKHeYE4"
-TELEGRAM_CHAT_ID = "7298887137"
+# Le credenziali arrivano esclusivamente dall'ambiente di runtime.
+# Non sono richieste per consultare il radar e non devono mai finire nel repository.
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN_JARVIS_MASTER", "")
+TELEGRAM_CHAT_ID = os.environ.get("OWNER_CHAT_ID", "")
 
 def init_radar_tables():
     conn = sqlite3.connect(VAULT_DB)
@@ -63,7 +67,13 @@ def scan_subito_moving_intent(city="bologna", max_results=10):
     # Keyword da intercettare per alta conversione
     intent_regex = re.compile(r'(trasloc|sgomber|svuot|liberare|parto|chiavi|rogito)', re.IGNORECASE)
 
+    result_limit = max(0, min(int(max_results), 100))
+    if result_limit == 0:
+        return captured_leads
+
     for q in search_queries:
+        if len(captured_leads) >= result_limit:
+            break
         encoded_q = urllib.parse.quote(q)
         url = f"https://www.google.com/search?q=site:subito.it+{encoded_q}&num=10"
         try:
@@ -88,19 +98,24 @@ def scan_subito_moving_intent(city="bologna", max_results=10):
                         lead = {
                             "channel": "SUBITO_INTENT",
                             "title": clean_title[:90],
-                            "client_name": "Privato in Trasloco",
+                            "client_name": None,
                             "phone": phone,
+                            "phone_status": "unverified" if phone else "not_found",
                             "city": city.capitalize(),
                             "service_type": "SGOMBERO / TRASLOCO",
                             "details": clean_snip[:180],
-                            "source_url": "https://www.subito.it",
-                            "tier": "HOT" if phone else "WARM",
-                            "priority_score": 90 if phone else 75
+                            "source_url": f"https://www.google.com/search?q={urllib.parse.quote('site:subito.it ' + q)}",
+                            "tier": "WARM",
+                            "priority_score": 60
                         }
                         captured_leads.append(lead)
                         _save_lead_to_db(lead)
-        except Exception as e:
-            pass
+                        if len(captured_leads) >= result_limit:
+                            break
+        except (urllib.error.URLError, TimeoutError, UnicodeDecodeError) as exc:
+            logger.warning("Radar Subito: ricerca non riuscita per %r: %s", q, exc)
+        except (sqlite3.Error, ValueError, TypeError):
+            logger.exception("Radar Subito: errore durante l'elaborazione della ricerca %r", q)
 
     return captured_leads
 
@@ -122,67 +137,14 @@ def _save_lead_to_db(lead):
     conn.close()
 
 # ── 2. CARICA TUTTI I LEAD ATTIVI DAL DB ─────────────────────────────────────
-def seed_initial_hot_leads():
-    initial_leads = [
-        {
-            "channel": "SUBITO_INTENT",
-            "title": "Causa trasloco vendo arredo completo sala + cucina",
-            "client_name": "Famiglia Bellini",
-            "phone": "3472891044",
-            "city": "Bologna",
-            "service_type": "SGOMBERO & TRASLOCO",
-            "details": "Rogito fissato tra 20 giorni in zona Mazzini. Necessità di sgombero rapido di ciò che resta e trasporto a Casalecchio.",
-            "source_url": "https://www.subito.it",
-            "tier": "HOT",
-            "priority_score": 95
-        },
-        {
-            "channel": "IMMOBILIARE_B2B",
-            "title": "Compravendita quadrilocale da liberare entro rogito",
-            "client_name": "Ag. Tempocasa San Vitale",
-            "phone": "3391823901",
-            "city": "Bologna",
-            "service_type": "SGOMBERO PRE-ROGITO",
-            "details": "Acquirente richiede appartamento libero da mobilio vecchio. 80mq al 3° piano con ascensore.",
-            "source_url": "https://www.immobiliare.it",
-            "tier": "HOT",
-            "priority_score": 92
-        },
-        {
-            "channel": "SUBITO_INTENT",
-            "title": "Svuoto appartamento per trasferimento lavoro Milano",
-            "client_name": "Marco V.",
-            "phone": "3409182736",
-            "city": "Imola",
-            "service_type": "TRASLOCO & DEPOSITO",
-            "details": "Bilocale completo da imballare e trasportare. Consegna chiavi proprietario a fine mese.",
-            "source_url": "https://www.subito.it",
-            "tier": "HOT",
-            "priority_score": 88
-        },
-        {
-            "channel": "PORTALE_PREVENTIVI",
-            "title": "Richiesta preventivo sgombero cantina + solaio",
-            "client_name": "Elena R.",
-            "phone": "3485519203",
-            "city": "Casalecchio",
-            "service_type": "SGOMBERO RAPIDO",
-            "details": "Materiale vario accumulato, circa 25mq totali, piano interrato con rampa carrabile.",
-            "source_url": "https://www.cronoshare.it",
-            "tier": "WARM",
-            "priority_score": 82
-        }
-    ]
-    for l in initial_leads:
-        _save_lead_to_db(l)
-
 def get_all_active_leads(limit=25):
+    """Restituisce solo lead effettivamente salvati dalla pipeline.
+
+    Non vengono creati lead di esempio: un radar vuoto deve mostrare chiaramente
+    che non ci sono risultati, non numeri apparentemente chiamabili.
+    """
     conn = sqlite3.connect(VAULT_DB)
     c = conn.cursor()
-    c.execute("SELECT count(*) FROM captured_moving_leads")
-    count = c.fetchone()[0]
-    if count == 0:
-        seed_initial_hot_leads()
 
     c.execute("""
         SELECT id, channel, title, client_name, phone, city, service_type, details, tier, priority_score, status, captured_at
@@ -201,6 +163,7 @@ def get_all_active_leads(limit=25):
             "title": r[2],
             "client_name": r[3],
             "phone": r[4],
+            "phone_status": "unverified" if r[4] else "not_found",
             "city": r[5],
             "service_type": r[6],
             "details": r[7],
@@ -223,9 +186,12 @@ def notify_new_lead_telegram(lead):
         f"📝 *Note:* {lead.get('details', '')[:120]}...\n\n"
         f"👉 _BadrExpress & PietroTraslochi Lead Radar_"
     )
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return False
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}
-        requests.post(url, json=payload, timeout=4)
-    except Exception:
-        pass
+        response = requests.post(url, json=payload, timeout=4)
+        return response.ok
+    except requests.RequestException:
+        return False
