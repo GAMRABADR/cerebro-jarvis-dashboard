@@ -2310,6 +2310,54 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
             f"⚡ *Comando registrato ed emesso anche sul demone dello smartphone.*"
         ), "whatsapp-send"
 
+    # ── DIRECT PHONE CALL DISPATCHER (USA IL TUO NUMERO +39 388 870 3508) ───
+    is_call_cmd = any(w in p_lower for w in ["chiama", "telefona", "avvia chiamata", "fai una chiamata", "chiama il numero", "componi"])
+    if is_call_cmd:
+        m_num = re.search(r'(\+?39)?\s*([0-9]{9,11})', prompt)
+        call_num = m_num.group(2) if m_num else ""
+        if not call_num:
+            # Check if name refers to a contact or lead
+            if "marco" in p_lower: call_num = "3478912345"
+            elif "sara" in p_lower: call_num = "3397654321"
+            elif "pietro" in p_lower: call_num = "3284263554"
+            elif "toscano" in p_lower: call_num = "0289423101"
+            elif "romana" in p_lower: call_num = "0258314560"
+
+        if call_num:
+            full_call = ("39" + call_num) if (len(call_num) == 10 and not call_num.startswith("39")) else call_num
+            tel_uri = f"tel:+{full_call}"
+            # Accoda comando call al demone smartphone di Badr (+39 388 870 3508)
+            _enqueue_android_command("call", {"number": f"+{full_call}"})
+            return (
+                f"📞 **CHIAMATA TELEFONICA AVVIATA DAL TUO NUMERO (+39 388 870 3508)**\n\n"
+                f"• 👤 **Numero Destinatario:** `+{full_call}`\n"
+                f"• 📲 **Dispositivo Mittente:** Smartphone Badr Primary (`Termux Telephony Node`)\n\n"
+                f"👉 [🟢 **CLICCA QUI PER APRIRE IL DIALER SUL DISPOSITIVO**]({tel_uri})\n\n"
+                f"⚡ *Comando di chiamata inviato istantaneamente al tuo telefono. Se hai il vivavoce o gli auricolari collegati, la conversazione si aprirà in automatico.*"
+            ), "phone-call"
+
+    # ── AUTO-REGISTRAZIONE AUTONOMA SU PORTALI IMMOBILIARI E LEAD ───────────
+    is_register_cmd = any(w in p_lower for w in ["registrati su", "iscriviti su", "crea account su", "registrazione portale", "registrami su", "onboarding"])
+    if is_register_cmd:
+        target_portal = "cronoshare"
+        for p_key in ["immobiliare", "idealista", "casa", "wikicasa", "subito", "cronoshare", "prontopro"]:
+            if p_key in p_lower:
+                target_portal = p_key
+                break
+        try:
+            reg_script = os.path.join(os.path.dirname(__file__), "real_estate_registrator.py")
+            subprocess.Popen([sys.executable, reg_script, target_portal])
+            return (
+                f"🛡️ **AGENTE AUTONOMO DI REGISTRAZIONE AVVIATO**\n\n"
+                f"• 🌐 **Portale Target:** `{target_portal.upper()}`\n"
+                f"• 👤 **Dossier:** Badr El Ouariti (`badraudi@gmail.com` | `+39 388 870 3508`)\n"
+                f"• 🏢 **Azienda:** Pietro Traslochi & BadrExpress\n"
+                f"• ⚙️ **Motore:** Playwright Stealth Headless + Auto Cookie & Form Solver\n\n"
+                f"⚡ *L'agente sta compilando i campi anagrafici e catturando gli screenshot di conferma in background.*"
+            ), "auto-registration"
+        except Exception as reg_err:
+            return f"Errore durante l'avvio della registrazione: {reg_err}", "reg-error"
+
     try:
         from skills_vault.hermes_kali_toolkit.skill import parse_user_kali, execute as kali_run
         kali_params = parse_user_kali(prompt)
