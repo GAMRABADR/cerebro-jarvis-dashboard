@@ -7510,13 +7510,22 @@ def _patched_do_POST(self):
         _ebj_bridge_relay(self, "POST", body)
         return
 
-    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone"]:
+    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone", "/api/clm/classify", "/api/jev/execute"]:
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
-            from clm_engine import rank_candidates, evaluate_system_one_decisions
-            if self.path == "/api/clm/rank":
+            if self.path == "/api/clm/classify":
+                from clm_engine import classify_intent_clm
+                query = bd.get("query") or bd.get("state") or ""
+                res = classify_intent_clm(query)
+            elif self.path == "/api/jev/execute":
+                from ebj_reflex_engine import jev_reflex_dispatch
+                query = bd.get("query") or bd.get("prompt") or ""
+                res = jev_reflex_dispatch(query) or {"matched": False, "status": "NO_REFLEX_MATCH"}
+            elif self.path == "/api/clm/rank":
+                from clm_engine import rank_candidates
                 res = rank_candidates(bd.get("state", ""), bd.get("candidates", []))
             else:
+                from clm_engine import evaluate_system_one_decisions
                 crit = bd.get("criteria") or bd.get("questions") or {}
                 res = evaluate_system_one_decisions(bd.get("state", ""), crit)
             self.send_response(200)
