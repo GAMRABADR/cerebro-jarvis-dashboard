@@ -3382,15 +3382,35 @@ function _drawJarvisHud(ctx, w, h, box, time) {
     // Angolo Basso-Destra
     ctx.beginPath(); ctx.moveTo(bx + bw - corner, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - corner); ctx.stroke();
 
-    // Mirino a croce centrale
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
+    // Mirino a croce centrale con cerchio cibernetico
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(cx - 12, cy); ctx.lineTo(cx + 12, cy);
-    ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy + 12);
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy); ctx.lineTo(cx + 14, cy);
+    ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 14);
     ctx.stroke();
 
-    // Etichette HUD e telemetria operatore
+    // Marcatori di allineamento ottico degli occhi (Eye tracking points)
+    const eyeY = by + bh * 0.38;
+    const eyeLeftX = bx + bw * 0.32;
+    const eyeRightX = bx + bw * 0.68;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1;
+    [eyeLeftX, eyeRightX].forEach(ex => {
+      ctx.beginPath();
+      ctx.arc(ex, eyeY, 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ex - 6, eyeY); ctx.lineTo(ex + 6, eyeY);
+      ctx.stroke();
+    });
+
+    // Etichette HUD e telemetria operatore con bagliore
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
     ctx.font = 'bold 11px monospace';
     ctx.fillStyle = '#00f0ff';
     ctx.fillText('TARGET: ING. BADR EL OUARITI', bx, Math.max(16, by - 8));
@@ -3398,8 +3418,47 @@ function _drawJarvisHud(ctx, w, h, box, time) {
     ctx.fillStyle = gold;
     ctx.fillText('ID: CONFIRMED · BIOMETRIC LOCK 99.8%', bx, by + bh + 14);
     ctx.fillText(`X:${Math.round(cx)} Y:${Math.round(cy)} · FOCUS: 100% · VAD: ON`, bx, by + bh + 26);
+    ctx.shadowBlur = 0;
     ctx.restore();
   }
+
+  // Visualizzatore Audio Spettro EQ (in alto a destra del viewport)
+  ctx.save();
+  const eqX = w - 120, eqY = 24;
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+  ctx.strokeRect(eqX - 6, eqY - 12, 110, 26);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#00f0ff';
+  ctx.fillText('AUDIO DSP VAD', eqX, eqY - 14);
+  const bars = 8;
+  for (let b = 0; b < bars; b++) {
+    const barH = 4 + Math.abs(Math.sin(time * 0.005 + b)) * 14;
+    ctx.fillStyle = b > 5 ? '#ffd700' : '#00f0ff';
+    ctx.fillRect(eqX + b * 12, eqY + 10 - barH, 8, barH);
+  }
+  ctx.restore();
+
+  // Onde ECG Battito Cardiaco (in basso a sinistra del viewport)
+  ctx.save();
+  const ecgX = 16, ecgY = h - 22;
+  ctx.font = '8px monospace';
+  ctx.fillStyle = 'rgba(0, 255, 159, 0.8)';
+  ctx.fillText('❤️ 72 BPM · ECG REALTIME', ecgX, ecgY - 12);
+  ctx.strokeStyle = '#00ff9f';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(ecgX, ecgY);
+  for (let px = 0; px < 110; px += 2) {
+    const phase = (px - (time * 0.08) % 110);
+    let py = ecgY;
+    if (phase > 40 && phase < 45) py -= 3;
+    else if (phase >= 45 && phase < 52) py -= 14;
+    else if (phase >= 52 && phase < 58) py += 8;
+    else if (phase >= 58 && phase < 64) py -= 4;
+    ctx.lineTo(ecgX + px, py);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 async function _captureAndSendFrame() {

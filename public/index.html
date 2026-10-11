@@ -3048,22 +3048,65 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class="cam-hologram-col">
+        <div class="holo-emitter-ring"></div>
         <div class="holo-projector-base"></div>
         <div class="holo-avatar-stage" id="holo-avatar-stage">
           <img src="badr_hologram.png" alt="EBJ Hologram" class="holo-avatar-img" id="holo-avatar-img">
           <div class="holo-scanlines"></div>
           <div class="holo-glow" id="holo-glow"></div>
         </div>
-        <div class="holo-avatar-label">UNIT-01 · EBJ HOLOGRAM</div>
+        <div class="holo-avatar-label">UNIT-01 · EBJ HOLOGRAM · MARK-EBJ</div>
+        
+        <!-- Live Biometric Telemetry Strip -->
+        <div class="holo-biometric-grid">
+          <div class="holo-bio-pill">
+            <span class="bio-icon">❤️</span>
+            <div class="bio-info">
+              <span class="bio-val" id="bio-pulse-val">72 BPM</span>
+              <span class="bio-lbl">CARDIO ECG</span>
+            </div>
+          </div>
+          <div class="holo-bio-pill">
+            <span class="bio-icon">🧠</span>
+            <div class="bio-info">
+              <span class="bio-val" id="bio-focus-val">100%</span>
+              <span class="bio-lbl">FOCUS ATTIVO</span>
+            </div>
+          </div>
+          <div class="holo-bio-pill">
+            <span class="bio-icon">⚡</span>
+            <div class="bio-info">
+              <span class="bio-val">&lt; 1.5ms</span>
+              <span class="bio-lbl">SYNAPSE LINK</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="cam-modal-footer" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <span style="font-size:0.8rem; color:#94a3b8; flex:1;" id="cam-feedback-text">Inquadra il tuo volto per attivare il collegamento olografico J.A.R.V.I.S.</span>
-      <button id="btn-jarvis-ai-scan" onclick="triggerJarvisAiVisionScan()" style="background:linear-gradient(135deg, #00f0ff, #0284c7); color:#020813; font-weight:900; font-size:0.75rem; padding:7px 16px; border-radius:6px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 0 15px rgba(0,240,255,0.4); text-transform:uppercase; letter-spacing:0.5px;">
-        👁️ JARVIS COSA VEDI?
-      </button>
-      <button class="ring-cancel-btn" onclick="closeCameraVisionModal()" style="padding:6px 14px; font-size:0.75rem;">CHIUDI</button>
+    <!-- Stark Industries Terminal & Action Footer -->
+    <div class="cam-modal-footer">
+      <div class="cam-terminal-box">
+        <div class="cam-terminal-header">
+          <div class="term-dots">
+            <span class="term-dot dot-red"></span>
+            <span class="term-dot dot-yellow"></span>
+            <span class="term-dot dot-cyan"></span>
+          </div>
+          <span class="term-title">J.A.R.V.I.S. OPTICAL NEURAL TELEMETRY CORE</span>
+        </div>
+        <div class="cam-terminal-body" id="cam-feedback-text">
+          Inquadra il tuo volto per attivare il collegamento olografico J.A.R.V.I.S.
+        </div>
+      </div>
+
+      <div class="cam-actions-row">
+        <button id="btn-jarvis-ai-scan" class="jarvis-arc-btn" onclick="triggerJarvisAiVisionScan()">
+          <span class="arc-core"></span>
+          <span class="arc-text">👁️ JARVIS COSA VEDI?</span>
+        </button>
+        <button class="ring-cancel-btn jarvis-close-btn" onclick="closeCameraVisionModal()">✕ CHIUDI</button>
+      </div>
     </div>
   </div>
 </div>
