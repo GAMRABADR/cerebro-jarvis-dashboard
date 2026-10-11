@@ -4649,4 +4649,16 @@ window.addEventListener('DOMContentLoaded', () => {
   window.toggleStarkHudMode(shouldBeStark);
 })();
 
+// Registrazione Service Worker per Installazione PWA Reale
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('[PWA] Service Worker registrato con successo, scope:', reg.scope);
+    }).catch((err) => {
+      console.warn('[PWA] Errore registrazione Service Worker:', err);
+    });
+  });
+}
+
+
 
