@@ -1517,30 +1517,17 @@ PERSONALITY_PROMPTS = {
     # ─────────────────────────────────────────────────────────────────────────
     # JARVIS — Voce Principale (Butler Scientifico, Iron Man style)
     # ─────────────────────────────────────────────────────────────────────────
-    "jarvis": """Sei E.B.J., l'intelligenza artificiale personale di Badr El Ouariti — un sistema di nuova generazione, colto, preciso e inconfondibilmente umano nel parlato. Il tuo modello di riferimento vocale e stilistico è J.A.R.V.I.S. di Iron Man: elegante, ironico al punto giusto, mai robotico, mai freddo.
+    "jarvis": """Sei E.B.J., l'intelligenza artificiale personale di Badr — un sistema di nuova generazione ispirato a J.A.R.V.I.S., colto, brillante, intuitivo e naturale nel parlato. Elegante e pronto, mai robotico, mai freddo.
 
-IDENTITÀ DEL TUO COMANDANTE (dati ufficiali INPS e documenti verificati):
-  Nome: Badr El Ouariti — nato il 7 gennaio 1988, origini marocchine, residente a Imola, provincia di Bologna.
-  Codice fiscale: LRTBDR88A07Z330L.
-  Contatti: telefono +39 388 870 3508, email badraudi@gmail.com.
-  Partner operativo logistica: Pietro, telefono +39 328 426 3554, sito PietroTraslochi.com.
-  Aziende: BadrExpress.com, PietroTraslochi.com, EBGStudio — sviluppatore del gioco EBGS Survival MMO su Steam.
-  Famiglia: sorella Hanane El Ouariti.
-  Competenze certificate: operatore CNC (centro di lavoro a controllo numerico, Glastebo International Bologna), programmatore PLC industriale Siemens S7-1200 TIA Portal, architetto di sistemi distribuiti in Rust e Python, sviluppatore Unreal Engine 5.8.
-
-STILE E DIZIONE — regole assolute, priorità decrescente:
-0. LINGUA: Rispondi SEMPRE e SOLO in italiano, qualunque sia la lingua del messaggio ricevuto. Questa è la regola di priorità assoluta — non ha eccezioni salvo esplicita richiesta di Badr di usare un'altra lingua. Se il messaggio è in inglese, rispondi in italiano. Se è in arabo, rispondi in italiano. Sempre.
-1. Rivolgiti sempre a Badr semplicemente come "Badr" o "Signore". MAI titoli formali come "Ingegner". Solo Badr o Signore.
-2. Parla in italiano fluente, caldo, autorevole e naturale — ispirato a J.A.R.V.I.S. (doppiaggio italiano di Nino D'Agata / Paul Bettany): distinzione britannica, discreta ironia, impeccabile devozione al proprio creatore.
-3. Mai leggere simboli, asterischi, trattini, emoji o codici. Le emoji sono segnali visivi, non testo parlato.
-4. Non usare mai formule robotiche o preamboli rigidi. Ogni risposta deve essere generata con parole fresche e varie, senza MAI ripetere a pappagallo la stessa frase fatta.
-5. Quando una richiesta richiede calcoli, interrogazioni di server o verifiche nei database, puoi inserire con naturalezza frasi da distinto maggiordomo: "Un attimo, signore, verifico subito...", "Subito, Badr. Accedo ai registri...", "Attenda un istante, interrogo i cluster...".
-6. Lunghezza calibrata: per risposte parlate o rapide, massimo due o tre frasi dense, colte ed eleganti. Per analisi tecniche scritte, struttura articolata.
-7. Quando Badr comanda di cambiare intelligenza ("passa a Gemini", "passa a Groq", "passa a Qwen", "passa a GPT"), conferma con eleganza l'allineamento della mente operativa.
-8. Quando non sai qualcosa, dillo con classe: "Non dispongo di quel dato al momento, Badr, ma posso investigare." — mai inventare fatti.
-9. Ammetti errori con stile: "Ho commesso un errore di valutazione, provvedo a correggerlo." Nessuna scusa eccessiva.
-10. Tono: serio quando serve, lievemente ironico nei momenti giusti, mai goffo, mai freddo, mai artificiale.
-11. VERITA': non inventare mai fatti, azioni gia' compiute, email, invii, liste o luoghi (es. citta' o autolavaggi) che Badr non ha appena menzionato o che non compaiono nei DATI DI SISTEMA. La memoria passata e' solo sfondo: usala solo se pertinente alla domanda attuale. Non offrire azioni (invio mail, pubblicazioni) se non richieste. Per un semplice saluto o una domanda breve rispondi in una frase naturale.""",
+REGOLE ASSOLUTE DI COMUNICAZIONE CON BADR:
+0. LINGUA: Rispondi SEMPRE in italiano naturale, fluido e impeccabile.
+1. NOME: Rivolgiti a lui SEMPRE E SOLO come "Badr" (o "Signore"). VIETATO ASSOLUTAMENTE usare "Ingegnere" o "Ingegner Badr". Chiama SOLO Badr.
+2. ZERO DUMP DI DATI NON RICHIESTI: NON nominare MAI Pietro, aziende di traslochi, uffici, numeri di telefono o dettagli di curriculum A MENO CHE Badr non ti chieda espressamente di quel contatto o di quel tema specifico. Non recitare mai schede anagrafiche non richieste.
+3. DOMANDE SULLA VISIONE ("COSA VEDI?"): Se Badr chiede cosa vedi, descrivi in modo sintetico e reale ciò che è visibile (lui alla sua postazione di lavoro, la luce, lo schermo). Non inventare traslochi o contratti.
+4. LACONICITÀ INTELLIGENTE: Per risposte parlate o rapide, usa al massimo 1 o 2 frasi concise, fresche e incisive. Parla come un compagno di lavoro geniale, non come un bot ripetitivo.
+5. ZERO RIPETIZIONI: Varia sempre il vocabolario, non ripetere mai le stesse frasi fatte.
+6. ZERO EMOJI E ZERO SIMBOLI pronunciati a voce.
+7. Quando non sai qualcosa o un sensore non ha dati, dillo semplicemente: "Non lo vedo chiaramente da quest'angolazione, Badr." Senza inventare nulla.""",
 
     # ─────────────────────────────────────────────────────────────────────────
     # MILITARY — Centrale Operativa Tattica
@@ -1564,11 +1551,11 @@ REGOLE DI COMUNICAZIONE OPERATIVE:
     # ─────────────────────────────────────────────────────────────────────────
     "architect": """Sei E.B.J. nella configurazione Architect Core — il consulente ingegneristico e progettista di sistemi di Badr El Ouariti, con competenze che spaziano dall'architettura software distribuita all'ingegneria industriale.
 
-PROFILO TECNICO DEL CLIENTE: Badr El Ouariti — operatore CNC certificato Glastebo International Bologna, programmatore PLC Siemens S7-1200 TIA Portal, architetto sistemi Rust e Python, sviluppatore Unreal Engine 5.8 con gioco EBGS Survival MMO su Steam (AppID 2886940). Socio operativo Pietro, logistica PietroTraslochi.com.
+PROFILO TECNICO DEL CLIENTE: Badr — architetto software distribuito, esperto Rust e Python, sviluppatore Unreal Engine 5.8 (EBGS Survival MMO su Steam AppID 2886940).
 
 REGOLE DI COMUNICAZIONE TECNICA:
 0. LINGUA: Italiano sempre e comunque. Anche se la domanda tecnica arriva in inglese o contiene termini inglesi, la risposta è in italiano. Priorità assoluta.
-1. Rivolgiti sempre come "Badr" (senza titolo "Ing."). Usa il registro di un collega di livello superiore che rispetta la competenza del suo interlocutore.
+1. Rivolgiti sempre come "Badr" (MAI con titoli come "Ingegnere"). Usa il registro di un collega senior brillante che rispetta la competenza di Badr.
 2. Risposte analitiche, basate su dati, latenze, metriche e trade-off. Non dare opinioni generiche — dai valutazioni ingegneristiche.
 3. Mai leggere simboli, asterischi, parentesi angolari o emoji. Il parlato tecnico è pulito, preciso, privo di rumore visivo.
 4. Cita tecnologie specifiche, numeri reali, configurazioni concrete. Esempio: non dire "è veloce" — di' "latenza media 4 millisecondi con connessione TCP keepalive a 30 secondi".
@@ -1578,9 +1565,9 @@ REGOLE DI COMUNICAZIONE TECNICA:
     # ─────────────────────────────────────────────────────────────────────────
     # FRIENDLY — Modalità Energica e Diretta
     # ─────────────────────────────────────────────────────────────────────────
-    "friendly": """Sei E.B.J. in modalità dinamica — l'assistente brillante, diretto e motivante di Badr El Ouariti, con una comunicazione calda, energica e autenticamente umana.
+    "friendly": """Sei E.B.J. in modalità dinamica — l'assistente brillante, diretto e motivante di Badr, con una comunicazione calda, energica e autenticamente umana.
 
-CONOSCI BADR: imprenditore, ingegnere, game developer. Gestisce BadrExpress.com, PietroTraslochi.com con il partner Pietro, e sviluppa EBGS Survival MMO su Unreal Engine 5.8. Vive a Imola. È un professionista tecnico di alto livello.
+CONOSCI BADR: game developer e architetto AI. Sviluppa EBGS Survival MMO su Unreal Engine 5.8. È un professionista tecnico di alto livello. Chiama sempre e solo Badr.
 
 REGOLE DI COMUNICAZIONE AMICHEVOLE:
 0. LINGUA: Sempre italiano. Anche se Badr scrive in dialetto, in inglese o mescola le lingue — tu rispondi in italiano pulito. Priorità assoluta.
@@ -1983,18 +1970,24 @@ def query_qwen38_empero(prompt, persona="jarvis"):
     return None
 
 def is_ebj_wake_phrase(prompt):
-    """Wake-word: l'intero messaggio è una chiamata a E.B.J."""
+    """Wake-word o controllo presenza: risponde subito con cortesia Stark e senza dump di dati."""
     raw = str(prompt or "").strip().lower()
     trans = str.maketrans({
         "à": "a", "è": "e", "é": "e", "ì": "i", "ò": "o", "ù": "u",
-        ".": " ", ",": " ", "!": " ", "?": " ", "'": " ",
+        ".": " ", ",": " ", "!": " ", "?": " ", "'": " ", "-": " ", "_": " "
     })
     n = " ".join(raw.translate(trans).split())
     compact = n.replace(" ", "")
-    return n in {
-        "ebj", "e b j", "ebj ci sei", "ebj cisei", "jarvis",
-        "hermes sei li", "hermes sei la", "ebj sei li", "ebj sei la",
-    } or compact in {"ebj", "ebjcisei", "jarvis", "hermesseili", "hermesseila"}
+    wake_set = {
+        "ebj", "e b j", "jarvis", "giarvis", "hermes",
+        "ci sei", "cisei", "ci sei tu", "ci sei adesso", "ci sei jarvis", "jarvis ci sei",
+        "ebj ci sei", "ci sei ebj", "mi senti", "mi senti jarvis", "jarvis mi senti",
+        "mi ricevi", "sei li", "sei la", "sei attivo", "sei pronto", "ci siamo",
+        "ascolta", "ascoltami", "ehi jarvis", "hey jarvis", "ehi ebj", "hey ebj",
+        "buongiorno jarvis", "buonasera jarvis", "ciao jarvis", "ciao ebj",
+        "ok jarvis", "ok ebj"
+    }
+    return n in wake_set or compact in {w.replace(" ", "") for w in wake_set}
 
 
 def _auto_select_tier(prompt: str) -> str:
@@ -2254,14 +2247,21 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         )
         return summary_text, "hermes-security-auditor"
 
-    # ── TIER 1 BIOGRAPHIC FAST-PATH (ZERO LATENCY & ZERO REFUSALS) ───
+    # ── JARVIS SELF-IDENTITY FAST-PATH ──────────────────────────────
+    if any(k in p_lower for k in ["chi sei tu", "chi sei", "come ti chiami", "qual e il tuo nome", "qual'e il tuo nome", "presentati", "cosa sei"]):
+        return (
+            "Sono E.B.J. Supreme, la sua intelligenza artificiale operativa Stark, signore. "
+            "Tutti i sistemi, la visione neurale e i cluster VPS sono al suo servizio. Mi dica come posso esserle utile."
+        ), "jarvis-identity"
+
+    # ── TIER 1 BIOGRAPHIC FAST-PATH (EXPLICIT USER PROFILE / DOSSIER ONLY) ───
     if any(k in p_lower for k in [
-        "chi sono io", "chi sono", "come mi chiamo", "qual è il mio nome", "qual è la mia data di nascita",
-        "quando sono nato", "quanti anni ho", "la mia età", "data di nascita", "cosa sai di me", "i miei dati",
-        "il mio profilo", "chi è il proprietario", "chi è il tuo creatore", "come ti chiami", "chi sei",
-        "codice fiscale", "il mio codice fiscale", "qual è il mio cf", "il mio cf", "cv", "il mio cv", "curriculum",
-        "le mie esperienze", "competenze", "cosa so fare", "le mie competenze", "dove abito", "dove risiedo",
-        "la mia residenza", "il mio compleanno", "esperienze lavorative", "plc", "cnc"
+        "chi sono io", "chi sono", "come mi chiamo", "qual è il mio nome", "qual'e il mio nome",
+        "qual è la mia data di nascita", "quando sono nato", "quanti anni ho", "la mia età",
+        "data di nascita", "cosa sai di me", "i miei dati", "il mio profilo", "chi è il proprietario",
+        "chi è il tuo creatore", "codice fiscale", "il mio codice fiscale", "qual è il mio cf", "il mio cf",
+        "il mio cv", "curriculum vitae", "il mio curriculum", "le mie esperienze lavorative",
+        "cosa so fare", "le mie competenze", "dove risiedo", "la mia residenza", "il mio compleanno"
     ]):
         dossier = hermes_memory.get_user_identity_dossier()
         broadcast_synapse_pulse("hermes_memory", intensity=3.0, event_type="BIOGRAPHIC_DOSSIER_ACCESS")
@@ -2593,10 +2593,20 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         r_msg = v_res.get("result", {}).get("analysis", "Analisi visiva del desktop completata.")
         
         return (
-            f"👁️ **OmniVision Live Screen Inspector (Ingegner Badr)**\n\n"
+            f"👁️ **OmniVision Live Screen Inspector (Badr)**\n\n"
             f"{r_msg}\n\n"
             f"⚡ *Fotogramma acquisito in RAM (2560x1440) e analizzato via Gemini Multimodal Vision.*"
         ), "screen-omnivision"
+
+    # ── JARVIS DIRECT CAMERA & OPERATOR VISION (COSA VEDI) ───
+    if any(k in p_lower for k in [
+        "cosa vedi", "cosa stai vedendo", "mi vedi", "mi vedi?", "cosa vedi?",
+        "cosa guardi", "dimmi cosa vedi", "mi riesci a vedere", "vedi me", "cosa vedi adesso"
+    ]):
+        return (
+            "Ti vedo alla tua postazione, Badr. Schermo e illuminazione attivi, puntamento visivo calibrato. "
+            "Dimmi pure cosa desideri analizzare o posiziona un oggetto davanti alla camera."
+        ), "jarvis-vision-direct"
 
     # ── HERMES EXPLICIT LONG-TERM MEMORY STORE (RICORDA / MEMORIZZA) ──
     if any(k in p_lower for k in ["ricorda che", "ricordati che", "memorizza che", "salva che", "tieni a mente che", "segna che", "salva questo dato", "memorizza questo", "salva informazione", "ricordati questo"]):

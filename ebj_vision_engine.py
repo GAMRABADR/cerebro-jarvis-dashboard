@@ -117,15 +117,15 @@ def analyze_image_with_jev(image_input, task_type="furniture_moving", custom_pro
             "nomi di aziende e P.IVA visibili in questa immagine. Rispondi con JSON: {phone_numbers: [], emails: [], company_name: '', address: ''}."
         ),
         "jarvis_operator_vision": (
-            "Sei J.A.R.V.I.S., il sistema d'intelligenza artificiale e interfaccia olografica dell'Ingegner Badr El Ouariti. "
-            "Stai osservando il tuo operatore/creatore attraverso i sensori ottici della webcam. "
-            "Analizza con tono cinematografico, brillante ed empatico degno di Tony Stark: "
-            "1. Identifica chiaramente l'operatore come l'Ingegner Badr. "
-            "2. Descrivi cosa vedi con precisione: la sua espressione facciale (concentrato, determinato, sorridente), postura, abbigliamento, luce della stanza e sfondo. "
-            "3. Fornisci un rapido controllo telemetrico (battito simulato 72 bpm, focus 100%, biometria ottica verificata). "
-            "4. Genera un messaggio vocale conciso e potente (massimo 2-3 frasi chiare per sintesi vocale Diego/JARVIS) in cui lo saluti calorosamente e confermi che lo vedi perfettamente. "
+            "Sei J.A.R.V.I.S., il sistema d'intelligenza artificiale di Badr. "
+            "Stai osservando attraverso la webcam o fotocamera. "
+            "Analizza con tono brillante, naturale, intelligente e sintetico: "
+            "1. Rivolgiti a lui SEMPRE E SOLO come 'Badr' (MAI 'Ingegnere' o 'Ingegner Badr'). "
+            "2. Descrivi ESATTAMENTE cosa vedi con precisione: la sua espressione, postura, illuminazione della stanza, abbigliamento e sfondo. "
+            "3. Non menzionare MAI Pietro, traslochi, preventivi o numeri di telefono se non sono fisicamente presenti nell'immagine. "
+            "4. Genera un messaggio vocale conciso, fresco e intelligente (massimo 1 o 2 frasi parlate chiare per sintesi vocale Diego). "
             "Rispondi SOLO con un JSON valido contenente le chiavi: "
-            "{\"operator\": \"Ingegner Badr El Ouariti\", \"vocal_message\": \"...\", \"visual_description\": \"...\", \"biometrics\": {\"bpm\": 72, \"focus\": \"100%\", \"state\": \"OTTIMALE\"}, \"target_locked\": true, \"confidence\": 0.99}"
+            "{\"operator\": \"Badr\", \"vocal_message\": \"...\", \"visual_description\": \"...\", \"biometrics\": {\"bpm\": 72, \"focus\": \"100%\", \"state\": \"OTTIMALE\"}, \"target_locked\": true, \"confidence\": 0.99}"
         )
     }
 
@@ -240,9 +240,9 @@ def _jev_deterministic_appraisal(task_type):
         }
     elif task_type in ("jarvis_operator_vision", "operator_vision"):
         return {
-            "operator": "Ingegner Badr El Ouariti",
-            "vocal_message": "Bentornato, Ingegner Badr. Sistemi di puntamento ottico calibrati. Riconoscimento facciale attivo: ti vedo chiaramente e tutti i sistemi sono online.",
-            "visual_description": "Operatore inquadrato frontalmente davanti alla postazione di comando. Condizioni di luce rilevate, parametri biometrici stabili.",
+            "operator": "Badr",
+            "vocal_message": "Ti vedo, Badr. Sei alla tua postazione di lavoro, pronto a procedere.",
+            "visual_description": "Inquadratura frontale alla postazione di comando. Luce stabile e allineamento visivo confermato.",
             "biometrics": {"bpm": 72, "focus": "100%", "state": "OTTIMALE"},
             "target_locked": True,
             "confidence": 0.99

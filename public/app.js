@@ -85,7 +85,20 @@ function parseWakePhrase(spokenText) {
 
 function isEbjWakePhrase(text) {
   const p = parseWakePhrase(text);
-  return p.hasWake && !p.command;
+  if (p.hasWake && !p.command) return true;
+  const raw = String(text || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  const wakeSolo = [
+    'ci sei', 'cisei', 'ci sei tu', 'ci sei adesso', 'ci sei jarvis', 'jarvis ci sei',
+    'ebj ci sei', 'ci sei ebj', 'mi senti', 'mi senti jarvis', 'jarvis mi senti',
+    'mi ricevi', 'sei li', 'sei la', 'sei attivo', 'sei pronto', 'ci siamo',
+    'ascolta', 'ascoltami', 'ehi jarvis', 'hey jarvis', 'ehi ebj', 'hey ebj',
+    'buongiorno jarvis', 'buonasera jarvis', 'ciao jarvis', 'ciao ebj',
+    'ok jarvis', 'ok ebj', 'jarvis', 'ebj', 'presente', 'ci sei'
+  ];
+  return wakeSolo.includes(raw);
 }
 
 function updateVadPill() {
@@ -382,7 +395,7 @@ function startEbjMic() {
       const standbyWords = ['stop', 'basta', 'riposati', 'dormi', 'disattiva', 'spegni', 'a dopo', 'grazie ebj', 'grazie jarvis'];
       if (window.isConversationalMode && standbyWords.some(w => lowerText === w || lowerText.startsWith(w + ' '))) {
         window.isConversationalMode = false;
-        const msg = 'Ricevuto Ingegnere Badr, resto in standby passivo. Chiamami quando serve dicendo EBJ.';
+        const msg = 'Ricevuto Badr, resto in standby. Chiamami quando serve dicendo EBJ.';
         const respEl = document.getElementById('resp-body');
         const respTag = document.getElementById('resp-tag');
         if (respEl) respEl.textContent = msg;
@@ -442,7 +455,7 @@ function startEbjMic() {
         window.isConversationalMode = true;
         const sphere = document.getElementById('jarvis-sphere');
         if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
-        const wakeMsg = 'In ascolto, Ingegnere Badr. Mi dica.';
+        const wakeMsg = 'In ascolto, Badr. Mi dica pure.';
         const respEl = document.getElementById('resp-body');
         const respTag = document.getElementById('resp-tag');
         if (respEl) respEl.textContent = wakeMsg;
@@ -567,7 +580,7 @@ window.toggleConversationalMode = function() {
     updateVadPill();
     startEbjMic();
     initEbjMicWatchdog();
-    window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
+    window.playSpeechAudio('Ci sono, Badr. Voce attiva.');
     addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
     return;
   }
@@ -580,7 +593,7 @@ window.toggleConversationalMode = function() {
     _ebjVoiceUnlocked = true;
     startEbjMic();
     initEbjMicWatchdog();
-    window.playSpeechAudio('Ci sono, Ingegnere. Voce attiva.');
+    window.playSpeechAudio('Ci sono, Badr. Voce attiva.');
     addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
   } else {
     stopEbjMic();
@@ -831,11 +844,6 @@ async function executeCommandPipeline(prompt) {
         body: JSON.stringify({ text: prompt }),
         signal: AbortSignal.timeout(800)
       }).catch(() => {});
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, persona: currentPersonality, model: 'auto' })
-      }).catch(() => {});
     } catch (_) {}
     isBusy = false;
     if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
@@ -847,6 +855,16 @@ async function executeCommandPipeline(prompt) {
 
   // 0. JEV REFLEX PRE-ROUTER RUST (< 8µs)
   try {
+    const requestedHologram = String(prompt || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (/\b(fammi vedere|voglio vederti|mostrati|apri ologramma|attiva ologramma|guardami|guarda me)\b/.test(requestedHologram)) {
+      window.openCameraVisionModal();
+      isBusy = false;
+      if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
+      return;
+    }
+
     const reflexRes = await fetch('/api/reflex/dispatch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1333,7 +1351,7 @@ window.setMood = function(mood) {
   if (mood === 'jarvis_uk') {
     preview = "At your service, sir. British Stark AI system online.";
   } else if (mood === 'jarvis') {
-    preview = "A sua disposizione, Ingegnere Badr. Voce Jarvis profonda attiva.";
+    preview = "A sua disposizione, Badr. Voce Jarvis pronta.";
   } else if (mood === 'military') {
     preview = "Comandante, protocollo tattico operativo.";
   } else {
@@ -1356,7 +1374,7 @@ window.testJarvisVoice = function(mood = 'jarvis') {
   window.setMood(mood);
   const phrase = mood === 'jarvis_uk'
     ? "At your service, sir. British Stark AI system online."
-    : "A sua disposizione, Ingegnere Badr. Voce Jarvis profonda attiva.";
+    : "A sua disposizione, Badr. Voce Jarvis pronta.";
   if (window.playSpeechAudio) {
     window.playSpeechAudio(phrase);
   }
@@ -3039,7 +3057,7 @@ window.triggerEmergencyCallNow = async function() {
     const d = await res.json();
     console.log('[EMERGENCY REFLEX DISPATCH]:', d);
     if (window.playSpeechAudio) {
-      window.playSpeechAudio("Ingegnere Badr, ho inoltrato la chiamata di emergenza verso il tuo telefono.");
+      window.playSpeechAudio("Badr, ho inoltrato la chiamata di emergenza verso il tuo telefono.");
     }
   } catch (err) {
     console.warn('[EMERGENCY DISPATCH ERROR]:', err);
@@ -3059,14 +3077,8 @@ let _holoFps = 0;
 let _holoCaptureBusy = false;
 let _jarvisHudAnimFrame = null;
 let _jarvisGreetedSession = false;
-let _nativeFaceDetector = null;
 let _jarvisFace = { active: false, x: 0, y: 0, w: 0, h: 0, targetX: 0, targetY: 0, targetW: 0, targetH: 0 };
-let _sampleCanvas = null;
-let _sampleCtx = null;
-
-if (typeof window !== 'undefined' && 'FaceDetector' in window) {
-  try { _nativeFaceDetector = new window.FaceDetector({ maxDetectedFaces: 1, fastMode: true }); } catch (e) {}
-}
+let _holoLastConfidence = null;
 
 function _playJarvisChime() {
   try {
@@ -3108,11 +3120,11 @@ window.openCameraVisionModal = async function() {
     });
     video.srcObject = _webcamStream;
     await video.play();
-    if (statusEl) statusEl.textContent = '● J.A.R.V.I.S. OPTICAL TRACKING · OPERATORE IDENTIFICATO';
+    if (statusEl) statusEl.textContent = '● CAMERA ATTIVA · RILEVAMENTO VOLTO LOCALE';
     _holoFrameCount = 0;
     _holoLastTs = performance.now();
     const feedback = document.getElementById('cam-feedback-text');
-    if (feedback) feedback.textContent = 'Sistemi ottici J.A.R.V.I.S. online. Calibrazione telemetrica su Ingegner Badr...';
+    if (feedback) feedback.textContent = 'Camera attiva su richiesta. I fotogrammi vengono analizzati dal bridge locale; il sistema rileva un volto ma non ne identifica la persona.';
     
     _startJarvisHudLoop();
     _startHoloPolling();
@@ -3140,6 +3152,11 @@ window.closeCameraVisionModal = function() {
   if (modal) modal.style.display = 'none';
   const img = document.getElementById('holo-avatar-img');
   if (img) { img.className = 'holo-avatar-img'; img.style.transform = ''; }
+  const stage = document.getElementById('holo-avatar-stage');
+  if (stage) { stage.style.setProperty('--eye-x', '0px'); stage.style.setProperty('--eye-y', '0px'); }
+  _jarvisFace.active = false;
+  _holoLastConfidence = null;
+  _setHoloState('CAMERA SPENTA', '');
 };
 
 function _startHoloPolling() {
@@ -3157,65 +3174,21 @@ function _startJarvisHudLoop() {
   const video = document.getElementById('cam-live-video');
   if (!canvas || !video) return;
   const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
-  if (!_sampleCanvas) {
-    _sampleCanvas = document.createElement('canvas');
-    _sampleCtx = _sampleCanvas.getContext('2d', { willReadFrequently: true });
-  }
-
-  let lastDetectTs = 0;
-  let detectBusy = false;
-
-  async function _hudFrame(now) {
+  function _hudFrame(now) {
     if (video.videoWidth > 0) {
       if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
       }
-
-      // Rilevamento volto a 15-20 FPS per prestazioni elevate, rendering HUD a 60 FPS
-      if (now - lastDetectTs > 60 && !detectBusy) {
-        lastDetectTs = now;
-        detectBusy = true;
-        _runFastFaceTracking(video).then(face => {
-          if (face) {
-            _jarvisFace.active = true;
-            _jarvisFace.targetX = face.x;
-            _jarvisFace.targetY = face.y;
-            _jarvisFace.targetW = face.w;
-            _jarvisFace.targetH = face.h;
-
-            if (!_jarvisGreetedSession) {
-              _jarvisGreetedSession = true;
-              _playJarvisChime();
-              _setHoloState('LOCKED · ING. BADR', 'locked');
-              const fb = document.getElementById('cam-feedback-text');
-              if (fb) fb.textContent = 'Operatore agganciato: Ingegner Badr El Ouariti. Telemetria ottica 60 FPS.';
-              if (typeof window.playSpeechAudio === 'function') {
-                window.playSpeechAudio("Bentornato, Ingegner Badr. Sistemi di puntamento ottico calibrati: ti vedo chiaramente.");
-              }
-            }
-          }
-          detectBusy = false;
-        }).catch(() => { detectBusy = false; });
-      }
-
-      // Interpolazione fluida della scatola di tracciamento (EMA lerp)
       if (_jarvisFace.active) {
-        const lerpFactor = 0.25;
-        _jarvisFace.x += (_jarvisFace.targetX - _jarvisFace.x) * lerpFactor;
-        _jarvisFace.y += (_jarvisFace.targetY - _jarvisFace.y) * lerpFactor;
-        _jarvisFace.w += (_jarvisFace.targetW - _jarvisFace.w) * lerpFactor;
-        _jarvisFace.h += (_jarvisFace.targetH - _jarvisFace.h) * lerpFactor;
-
-        // Guida dell'avatar olografico sincronizzato in tempo reale
-        const cx = _jarvisFace.x + _jarvisFace.w / 2;
-        const cy = _jarvisFace.y + _jarvisFace.h / 2;
-        const normX = (cx / video.videoWidth - 0.5) * 2;
-        const normY = (cy / video.videoHeight - 0.5) * 2;
-        _driveAvatarFromNorm(normX, normY);
+        const smooth = 0.3;
+        _jarvisFace.x += (_jarvisFace.targetX - _jarvisFace.x) * smooth;
+        _jarvisFace.y += (_jarvisFace.targetY - _jarvisFace.y) * smooth;
+        _jarvisFace.w += (_jarvisFace.targetW - _jarvisFace.w) * smooth;
+        _jarvisFace.h += (_jarvisFace.targetH - _jarvisFace.h) * smooth;
       }
-
       _drawJarvisHud(ctx, canvas.width, canvas.height, _jarvisFace, now);
     }
     _jarvisHudAnimFrame = requestAnimationFrame(_hudFrame);
@@ -3231,93 +3204,29 @@ function _stopJarvisHudLoop() {
   }
 }
 
-async function _runFastFaceTracking(video) {
-  // Livello 1: Rilevatore nativo Chromium (FaceDetector API hardware)
-  if (_nativeFaceDetector) {
-    try {
-      const faces = await _nativeFaceDetector.detect(video);
-      if (faces && faces.length > 0) {
-        const b = faces[0].boundingBox;
-        return { x: b.x, y: b.y, w: b.width, h: b.height, confidence: 0.99 };
-      }
-    } catch (e) {}
-  }
 
-  // Livello 2: Tracciamento cromatico/baricentro ultra-rapido (0ms su canvas 80x60)
-  const sw = 80, sh = 60;
-  _sampleCanvas.width = sw;
-  _sampleCanvas.height = sh;
-  _sampleCtx.drawImage(video, 0, 0, sw, sh);
-  const imgData = _sampleCtx.getImageData(0, 0, sw, sh);
-  const data = imgData.data;
-  let sumX = 0, sumY = 0, count = 0;
-  let minX = sw, maxX = 0, minY = sh, maxY = 0;
 
-  for (let y = 6; y < sh - 6; y += 2) {
-    for (let x = 8; x < sw - 8; x += 2) {
-      const idx = (y * sw + x) * 4;
-      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-      // Segmentazione pelle/volto robusta
-      if (r > 60 && g > 40 && b > 20 && r > g && r > b && (r - g) > 12 && (r - b) > 15) {
-        sumX += x;
-        sumY += y;
-        count++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-
-  const scaleX = video.videoWidth / sw;
-  const scaleY = video.videoHeight / sh;
-
-  if (count > 25) {
-    const cx = (sumX / count) * scaleX;
-    const cy = (sumY / count) * scaleY;
-    const bw = Math.max(130, (maxX - minX) * scaleX * 1.25);
-    const bh = Math.max(160, (maxY - minY) * scaleY * 1.35);
-    return {
-      x: Math.max(0, cx - bw / 2),
-      y: Math.max(0, cy - bh / 2),
-      w: Math.min(video.videoWidth, bw),
-      h: Math.min(video.videoHeight, bh),
-      confidence: 0.96
-    };
-  }
-
-  // Fallback garantito: inquadratura centrale a mezzo busto dell'operatore
-  return {
-    x: video.videoWidth * 0.28,
-    y: video.videoHeight * 0.15,
-    w: video.videoWidth * 0.44,
-    h: video.videoHeight * 0.65,
-    confidence: 0.90
-  };
-}
-
-function _driveAvatarFromNorm(normX, normY) {
+function _driveAvatarFromNorm(normX, normY, drive = {}) {
   const img = document.getElementById('holo-avatar-img');
   const glow = document.getElementById('holo-glow');
   if (!img) return;
 
-  const yaw = normX * 16;
-  const pitch = -normY * 12;
-  const tx = normX * 8;
-  const ty = normY * 6;
-  img.style.transform = `rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(1.05)`;
+  const x = Math.max(-1, Math.min(1, Number(normX) || 0));
+  const y = Math.max(-1, Math.min(1, Number(normY) || 0));
+  const yaw = Number.isFinite(drive.head_yaw_deg) ? drive.head_yaw_deg : x * 14;
+  const pitch = Number.isFinite(drive.head_pitch_deg) ? drive.head_pitch_deg : -y * 8;
+  const scale = Number.isFinite(drive.head_scale) ? Math.max(0.82, Math.min(1.3, drive.head_scale)) : 1;
+  img.style.transform = `rotateY(${yaw.toFixed(1)}deg) rotateX(${pitch.toFixed(1)}deg) translate(${(x * 7).toFixed(1)}px, ${(y * 5).toFixed(1)}px) scale(${scale.toFixed(2)})`;
+  const stage = document.getElementById('holo-avatar-stage');
+  if (stage) {
+    stage.style.setProperty('--eye-x', `${((Number(drive.eye_dx) || x) * 4).toFixed(1)}px`);
+    stage.style.setProperty('--eye-y', `${((Number(drive.eye_dy) || y) * 2.5).toFixed(1)}px`);
+  }
   img.className = 'holo-avatar-img locked facing';
-
   if (glow) {
-    glow.style.opacity = '0.9';
+    glow.style.opacity = String(0.35 + 0.55 * Math.max(0, Math.min(1, Number(drive.lock_strength) || 0)));
     glow.classList.add('active');
   }
-
-  const confEl = document.getElementById('holo-confidence');
-  const faceEl = document.getElementById('holo-facecount');
-  if (confEl) confEl.textContent = 'conf: 99.8%';
-  if (faceEl) faceEl.textContent = 'volti: 1 (Ing. Badr)';
 }
 
 function _drawJarvisHud(ctx, w, h, box, time) {
@@ -3337,8 +3246,8 @@ function _drawJarvisHud(ctx, w, h, box, time) {
   // Barra di telemetria superiore
   ctx.font = '10px monospace';
   ctx.fillStyle = cyan;
-  ctx.fillText('● J.A.R.V.I.S. OPTICAL ENGINE v4.0 · MARK-EBJ · 60 FPS', 16, 22);
-  ctx.fillText('BIOMETRIC SYNC: 99.8% · NEURAL PROTOCOL: ZERO-LATENCY', 16, 36);
+  ctx.fillText('E.B.J. · RILEVAMENTO VOLTO LOCALE', 16, 22);
+  ctx.fillText('NESSUNA IDENTIFICAZIONE BIOMETRICA · FRAME NON ARCHIVIATI', 16, 36);
 
   if (box && box.active) {
     const cx = box.x + box.w / 2;
@@ -3393,72 +3302,20 @@ function _drawJarvisHud(ctx, w, h, box, time) {
     ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 14);
     ctx.stroke();
 
-    // Marcatori di allineamento ottico degli occhi (Eye tracking points)
-    const eyeY = by + bh * 0.38;
-    const eyeLeftX = bx + bw * 0.32;
-    const eyeRightX = bx + bw * 0.68;
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 1;
-    [eyeLeftX, eyeRightX].forEach(ex => {
-      ctx.beginPath();
-      ctx.arc(ex, eyeY, 3, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(ex - 6, eyeY); ctx.lineTo(ex + 6, eyeY);
-      ctx.stroke();
-    });
-
-    // Etichette HUD e telemetria operatore con bagliore
+    // Etichetta di tracking: il detector trova un volto, non ne verifica l'identità.
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 8;
     ctx.font = 'bold 11px monospace';
     ctx.fillStyle = '#00f0ff';
-    ctx.fillText('TARGET: ING. BADR EL OUARITI', bx, Math.max(16, by - 8));
+    ctx.fillText('TARGET: VOLTO RILEVATO', bx, Math.max(16, by - 8));
     ctx.font = '9px monospace';
     ctx.fillStyle = gold;
-    ctx.fillText('ID: CONFIRMED · BIOMETRIC LOCK 99.8%', bx, by + bh + 14);
-    ctx.fillText(`X:${Math.round(cx)} Y:${Math.round(cy)} · FOCUS: 100% · VAD: ON`, bx, by + bh + 26);
+    ctx.fillText(`TRACKING · X:${Math.round(cx)} Y:${Math.round(cy)} · SCORE: ${Number.isFinite(_holoLastConfidence) ? _holoLastConfidence.toFixed(2) : '—'}`, bx, by + bh + 14);
     ctx.shadowBlur = 0;
     ctx.restore();
   }
 
-  // Visualizzatore Audio Spettro EQ (in alto a destra del viewport)
-  ctx.save();
-  const eqX = w - 120, eqY = 24;
-  ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-  ctx.strokeRect(eqX - 6, eqY - 12, 110, 26);
-  ctx.font = '8px monospace';
-  ctx.fillStyle = '#00f0ff';
-  ctx.fillText('AUDIO DSP VAD', eqX, eqY - 14);
-  const bars = 8;
-  for (let b = 0; b < bars; b++) {
-    const barH = 4 + Math.abs(Math.sin(time * 0.005 + b)) * 14;
-    ctx.fillStyle = b > 5 ? '#ffd700' : '#00f0ff';
-    ctx.fillRect(eqX + b * 12, eqY + 10 - barH, 8, barH);
-  }
-  ctx.restore();
 
-  // Onde ECG Battito Cardiaco (in basso a sinistra del viewport)
-  ctx.save();
-  const ecgX = 16, ecgY = h - 22;
-  ctx.font = '8px monospace';
-  ctx.fillStyle = 'rgba(0, 255, 159, 0.8)';
-  ctx.fillText('❤️ 72 BPM · ECG REALTIME', ecgX, ecgY - 12);
-  ctx.strokeStyle = '#00ff9f';
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(ecgX, ecgY);
-  for (let px = 0; px < 110; px += 2) {
-    const phase = (px - (time * 0.08) % 110);
-    let py = ecgY;
-    if (phase > 40 && phase < 45) py -= 3;
-    else if (phase >= 45 && phase < 52) py -= 14;
-    else if (phase >= 52 && phase < 58) py += 8;
-    else if (phase >= 58 && phase < 64) py -= 4;
-    ctx.lineTo(ecgX + px, py);
-  }
-  ctx.stroke();
-  ctx.restore();
 }
 
 async function _captureAndSendFrame() {
@@ -3491,19 +3348,76 @@ async function _captureAndSendFrame() {
       signal: AbortSignal.timeout(5000)
     });
     const report = await response.json();
-    if (response.ok) {
-      _applyHoloReport(report);
+    _applyHoloReport(report);
+    if (!response.ok && report.message) {
+      const feedback = document.getElementById('cam-feedback-text');
+      if (feedback) feedback.textContent = report.message;
     }
   } catch (err) {
-    // Il tracciamento HUD locale in browser mantiene comunque il lock a 60 FPS
+    const now = Date.now();
+    if (now - (_lastWebcamErrorAt || 0) > 2500) {
+      _lastWebcamErrorAt = now;
+      const feedback = document.getElementById('cam-feedback-text');
+      if (feedback) feedback.textContent = 'Bridge webcam non raggiungibile: ' + (err.name === 'TimeoutError' ? 'analisi scaduta.' : 'verifica bridge e connessione.');
+      _setHoloState('BRIDGE NON RAGGIUNGIBILE', 'lost');
+    }
   } finally {
     _holoCaptureBusy = false;
   }
 }
 
+let _lastWebcamErrorAt = 0;
+
 function _applyHoloReport(report) {
+  if (!report || typeof report !== 'object') return;
+  const state = String(report.state || 'no_camera').toLowerCase();
+  const primary = report.primary;
+  const drive = report.avatar || {};
+  const video = document.getElementById('cam-live-video');
+  const frameW = Number(report.metrics?.frame_w) || 320;
+  const frameH = Number(report.metrics?.frame_h) || 240;
+  const tracking = !!(primary && drive.tracking && (state === 'locked' || state === 'lost'));
+
+  _setHoloState(report.state_label || state.replaceAll('_', ' ').toUpperCase(), tracking ? 'locked' : (state === 'acquiring' ? 'acquiring' : 'lost'));
   const fpsEl = document.getElementById('holo-fps');
-  if (fpsEl) fpsEl.textContent = (_holoFps || 60) + ' fps';
+  if (fpsEl) fpsEl.textContent = `analisi ${Number(report.metrics?.detect_ms) || 0} ms`;
+  const confEl = document.getElementById('holo-confidence');
+  if (confEl) confEl.textContent = primary ? `score dlib: ${Number(primary.confidence).toFixed(2)}` : 'volto: in ricerca';
+  const faceEl = document.getElementById('holo-facecount');
+  if (faceEl) faceEl.textContent = `volti rilevati: ${Number(report.face_count) || 0}`;
+
+  const feedback = document.getElementById('cam-feedback-text');
+  if (feedback && report.message) feedback.textContent = report.message;
+  if (tracking && video?.videoWidth) {
+    const sx = video.videoWidth / frameW;
+    const sy = video.videoHeight / frameH;
+    _jarvisFace.active = true;
+    _jarvisFace.targetX = Number(primary.x) * sx;
+    _jarvisFace.targetY = Number(primary.y) * sy;
+    _jarvisFace.targetW = Number(primary.w) * sx;
+    _jarvisFace.targetH = Number(primary.h) * sy;
+    _holoLastConfidence = Number(primary.confidence);
+    _driveAvatarFromNorm(primary.offset_x, primary.offset_y, drive);
+    if (!_jarvisGreetedSession) {
+      _jarvisGreetedSession = true;
+      _playJarvisChime();
+    }
+  } else {
+    _jarvisFace.active = false;
+    _holoLastConfidence = null;
+    const img = document.getElementById('holo-avatar-img');
+    const glow = document.getElementById('holo-glow');
+    if (img) {
+      img.className = 'holo-avatar-img';
+      img.style.transform = '';
+    }
+    const stage = document.getElementById('holo-avatar-stage');
+    if (stage) {
+      stage.style.setProperty('--eye-x', '0px');
+      stage.style.setProperty('--eye-y', '0px');
+    }
+    if (glow) glow.classList.remove('active');
+  }
 }
 
 function _setHoloState(text, cls) {
@@ -3527,9 +3441,7 @@ window.triggerJarvisAiVisionScan = async function() {
     btn.innerHTML = '⚡ SCANSIONE NEURALE IN CORSO...';
     btn.style.opacity = '0.7';
   }
-  if (fb) {
-    fb.innerHTML = '👁️ <span style="color:#00f0ff;">JARVIS sta analizzando il tuo volto e la scena...</span>';
-  }
+  if (fb) fb.textContent = 'Analisi della scena richiesta: il frame verrà inviato al servizio di visione configurato.';
 
   try {
     const canvas = document.createElement('canvas');
@@ -3546,25 +3458,19 @@ window.triggerJarvisAiVisionScan = async function() {
       signal: AbortSignal.timeout(18000)
     });
     const data = await res.json();
-    const vocalMsg = data.vocal_message || data.visual_description || 'Ingegner Badr, ti vedo chiaramente. Tutti i sistemi della Mark E.B.J. sono ai tuoi comandi.';
-    const visDesc = data.visual_description || vocalMsg;
+    if (!res.ok || data.status === 'error') throw new Error(data.error || `Vision HTTP ${res.status}`);
+    const vocalMsg = data.vocal_message || data.visual_description || '';
+    const visDesc = data.visual_description || 'Il servizio ha ricevuto il frame ma non ha restituito una descrizione.';
 
     if (fb) {
-      fb.innerHTML = `<strong>J.A.R.V.I.S.:</strong> ${visDesc}`;
+      fb.textContent = `E.B.J.: ${visDesc}`;
       fb.style.color = '#00f0ff';
     }
-
-    _playJarvisChime();
-    if (typeof window.playSpeechAudio === 'function') {
-      window.playSpeechAudio(vocalMsg);
-    }
+    if (vocalMsg && typeof window.playSpeechAudio === 'function') window.playSpeechAudio(vocalMsg);
   } catch (err) {
     console.warn('[JARVIS AI SCAN ERR]:', err);
-    const fallbackMsg = "Ti vedo perfettamente, Ingegner Badr. Telemetria ottica agganciata al 100%.";
-    if (fb) fb.innerHTML = `<strong>J.A.R.V.I.S.:</strong> ${fallbackMsg}`;
-    if (typeof window.playSpeechAudio === 'function') {
-      window.playSpeechAudio(fallbackMsg);
-    }
+    const message = `Analisi non disponibile: ${err.message || 'servizio di visione non raggiungibile.'}`;
+    if (fb) fb.textContent = message;
   } finally {
     if (btn) {
       btn.disabled = false;
