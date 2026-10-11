@@ -6327,6 +6327,29 @@ class JarvisHandler(BaseHTTPRequestHandler):
 
 
 
+        # ── CLM CONTRASTIVE SYSTEM ONE APIS (NVIDIA CLM-8B INTEGRATION) ───
+        if self.path == '/api/clm/rank':
+            try:
+                from clm_engine import rank_candidates
+                state = data.get("state", "")
+                candidates = data.get("candidates", [])
+                res = rank_candidates(state, candidates)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)})
+            return
+
+        if self.path in ['/api/clm/decide', '/api/clm/systemone']:
+            try:
+                from clm_engine import evaluate_system_one_decisions
+                state = data.get("state", "")
+                criteria = data.get("criteria") or data.get("questions") or {}
+                res = evaluate_system_one_decisions(state, criteria)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)})
+            return
+
         if self.path == '/api/skills/execute':
             s_id = data.get('skill_id', '')
             params = data.get('params', {})
@@ -7486,6 +7509,29 @@ def _patched_do_POST(self):
     if self.path.startswith(BRIDGE_RELAY_PREFIXES):
         _ebj_bridge_relay(self, "POST", body)
         return
+
+    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone"]:
+        try:
+            bd = _json.loads(body.decode("utf-8")) if body else {}
+            from clm_engine import rank_candidates, evaluate_system_one_decisions
+            if self.path == "/api/clm/rank":
+                res = rank_candidates(bd.get("state", ""), bd.get("candidates", []))
+            else:
+                crit = bd.get("criteria") or bd.get("questions") or {}
+                res = evaluate_system_one_decisions(bd.get("state", ""), crit)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps(res).encode())
+            return
+        except Exception as err:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({"status": "ERROR", "error": str(err)}).encode())
+            return
 
     # ── SCREEN ANALYZE (AI Vision) ──────────────────────────────────────────
     
