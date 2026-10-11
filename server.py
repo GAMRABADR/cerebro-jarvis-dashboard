@@ -1823,11 +1823,11 @@ def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvi
         "Sei J.A.R.V.I.S., il fidato e raffinato assistente personale di Badr El Ouariti. "
         "Rispondi al comando vocale in modo impeccabile, naturale, caloroso ed elegante. "
         "NON usare risposte prefabbricate o robotiche. Rispondi in italiano colloquiale raffinato. "
-        "Se la risposta richiede una verifica o elaborazione, puoi includere con naturalezza formule eleganti "
-        "(come 'Un attimo, signore, verifico...', 'Subito Badr, accedo ai registri...', 'Attenda un istante...'). "
-        "Massimo 2 frasi parlate, niente markdown, niente asterischi, niente emoji, niente elenchi puntati. "
-        "Usa SOLO i fatti presenti in DATI DI SISTEMA o nella richiesta attuale: non inventare azioni, invii, email o luoghi, "
-        "e non riprendere argomenti vecchi se non richiesti. Ai saluti rispondi con una frase breve e naturale."
+        "Rispondi direttamente alla richiesta corrente: non sostituire la risposta con un riassunto generico e non omettere passaggi necessari. "
+        "Se la richiesta è ambigua, fai una domanda di chiarimento breve. Se chiede un'azione, distingui chiaramente tra azione completata, "
+        "azione avviata e azione non disponibile; non dichiarare di averla eseguita senza una conferma reale. "
+        "Usa italiano naturale e conciso, senza markdown, emoji o preamboli prolissi. La risposta può avere tutti i dettagli necessari, "
+        "ma evita ripetizioni. Usa SOLO i fatti forniti o verificabili: non inventare azioni, invii, email, luoghi o stati di sistema."
     )
     if extra_facts:
         llm_prompt = f"{sys_instruction}\n\n[DATI DI SISTEMA EFFETTIVI]:\n{extra_facts}\n\nRichiesta di Badr: {user_query}\nRisposta parlata di JARVIS:"
@@ -1835,27 +1835,21 @@ def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvi
         llm_prompt = f"{sys_instruction}\n\nRichiesta di Badr: {user_query}\nRisposta parlata di JARVIS:"
 
     try:
-        add_to_conversation_history("user", user_query)
         raw_ans, model_used = query_active_brain(llm_prompt, persona=persona)
-        if raw_ans:
+        if raw_ans and raw_ans.strip():
             clean = re.sub(r'[*#_`~>|]', '', raw_ans)
             clean = re.sub(r'https?://\S+', '', clean)
-            clean = re.sub(r'\s+', ' ', clean).strip()
-            clean = clean.strip('"\'')
-            sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', clean) if s.strip()]
-            short_speech = " ".join(sentences[:2]).strip()
-            if short_speech:
-                add_to_conversation_history("assistant", short_speech)
-                return short_speech, model_used
+            clean = re.sub(r'\s+', ' ', clean).strip().strip('"\'')
+            add_to_conversation_history("user", user_query)
+            add_to_conversation_history("assistant", clean)
+            return clean, model_used
     except Exception as e:
         print(f"[generate_jarvis_spoken_response err]: {e}")
 
-    fallbacks = [
-        "Certamente, signore. Sto coordinando la richiesta attraverso i nodi del sistema.",
-        "Al Suo servizio, Badr. Tutti i parametri sono sotto controllo.",
-        "Subito, signore. I processi sono in esecuzione come da Sue istruzioni."
-    ]
-    return random.choice(fallbacks), "fallback"
+    unavailable = "Non riesco a completare la richiesta in questo momento: il modello non ha restituito una risposta. Riprova tra poco."
+    add_to_conversation_history("user", user_query)
+    add_to_conversation_history("assistant", unavailable)
+    return unavailable, "unavailable"
 
 
 def query_local_model(prompt, model="auto", persona="jarvis"):
@@ -3979,8 +3973,14 @@ class JarvisHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, HEAD")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
     def do_GET(self):
         clean_path = self.path.split('?')[0].rstrip('/')
@@ -5604,9 +5604,17 @@ class JarvisHandler(BaseHTTPRequestHandler):
             import lead_intent_radar as radar
             from urllib.parse import urlparse, parse_qs
             qs = parse_qs(urlparse(self.path).query)
-            limit = int(qs.get("limit", [30])[0])
+            try:
+                limit = max(1, min(int(qs.get("limit", [30])[0]), 100))
+            except (TypeError, ValueError):
+                limit = 30
             leads = radar.get_all_active_leads(limit)
-            self.send_json({"total": len(leads), "leads": leads})
+            self.send_json({
+                "total": len(leads),
+                "leads": leads,
+                "provenance": "stored_pipeline_only",
+                "notice": "Il radar mostra solo record salvati dalla pipeline: nessun lead demo viene generato quando non ci sono risultati."
+            })
             return
 
         if self.path.startswith('/api/cdp/status'):
@@ -5859,6 +5867,7 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     self.send_json({"status": "ERROR", "message": "Query vocale vuota."})
                     return
 
+                q_lower = user_query.lower()
                 # 1. Riconoscimento rapido comandi cambio cervello o interrogazione mente
                 is_sw, sw_reply, brain_key = detect_and_handle_brain_switch(user_query)
                 if is_sw:
@@ -7572,6 +7581,9 @@ def _patched_do_POST(self):
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
             user_query = bd.get("query", "").strip()
+            req_persona = str(bd.get("persona") or current_eb_personality)
+            if req_persona not in PERSONALITY_PROMPTS:
+                req_persona = "jarvis"
             if not user_query:
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -7580,7 +7592,6 @@ def _patched_do_POST(self):
                 self.wfile.write(_json.dumps({"status": "ERROR", "message": "Query vocale vuota."}).encode())
                 return
 
-            q_lower = user_query.lower()
             reply_text = ""
 
             # 1. Riconoscimento rapido comandi cambio cervello o interrogazione mente
@@ -7590,95 +7601,31 @@ def _patched_do_POST(self):
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
             else:
-                extra_facts = None
-                if any(w in q_lower for w in ["container", "notifiche", "notifica", "telegram", "report vps", "silenzio", "batteria", "scarica"]):
-                    if any(w in q_lower for w in ["invia", "manda", "spedisci", "telegram", "report"]):
-                        def _bg_send_report():
-                            try:
-                                key_path = r"d:\EBGStudioProgetti\Oracle-VPS and EBGStudio\controllo\keys\vps_ssh_key.key"
-                                if os.path.exists(key_path):
-                                    subprocess.run(["ssh.exe", "-n", "-i", key_path, "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5", "ubuntu@92.4.233.42", "python3 /home/ubuntu/ebj-workers/telegram_rate_guard.py --report"], capture_output=True, timeout=12)
-                            except Exception:
-                                pass
-                        threading.Thread(target=_bg_send_report, daemon=True).start()
-                        extra_facts = "Tutti gli 11 container Docker e i tunnel Cloudflare sono attivi e sani sulla VPS. Notifiche automatiche silenziate per non scaricare la batteria del telefono di Badr. Report completo appena inviato su Telegram."
-                    elif any(w in q_lower for w in ["disattiva", "spegni", "silenzia", "silenzio"]):
-                        extra_facts = "Notifiche automatiche Telegram disattivate con successo su richiesta vocale per proteggere la batteria dello smartphone."
-                    else:
-                        extra_facts = "Gli 11 container Docker sulla VPS Oracle sono operativi e sani. Notifiche automatiche silenziate per risparmio energetico batteria."
-
-                elif any(w in q_lower for w in ["chi sei", "come funzioni", "chi è jev", "chi e jev", "differenza"]):
-                    extra_facts = "EBJ Supreme è l'assistente unificato di Badr El Ouariti. Badr interagisce unicamente con EBJ. All'interno operano JEV per perizie e annunci Marketplace, il motore Rust SIMD per estrazione lead e le intelligenze artificiali a cascata (Gemini, Groq, Qwen, GPT)."
-
-                elif any(w in q_lower for w in ["pubblica", "facebook", "marketplace", "porte"]):
-                    def _run_bg_pub():
-                        try:
-                            s = os.path.join(os.path.dirname(__file__), "fb_marketplace_publisher.py")
-                            subprocess.run([sys.executable, s, "--submit"], capture_output=True, timeout=120)
-                        except Exception:
-                            pass
-                    threading.Thread(target=_run_bg_pub, daemon=True).start()
-                    extra_facts = "Avviata la pubblicazione su Facebook Marketplace delle 3 porte in legno massello a 75 euro trattabili con consegna a domicilio BadrExpress tramite il modulo interno JEV."
-
-                elif any(w in q_lower for w in ["autolavaggi", "bologna", "selezione", "lavaggio", "chimica"]):
-                    extra_facts = "Estratti e ordinati 23 autolavaggi di Bologna e provincia. Prospetto PDF SELEZIONE pronto e recapitato a badraudi@gmail.com, consultabile sul cockpit."
-
-                elif any(w in q_lower for w in ["lead", "clienti", "commenti", "radar", "facebook lead", "trova numeri", "scansiona", "estrai"]):
-                    def _bg_scan_leads():
-                        try:
-                            r_bin = os.path.abspath(os.path.join(DIR, "..", "ebj-supreme", "rust-agents", "target", "release", "lead-extractor.exe"))
-                            if os.path.exists(r_bin):
-                                subprocess.run([r_bin, "--test", "Cerco ditta traslochi da Bologna a Milano con urgenza cel 3 4 8 . 9 8 7 6 5 4 3 budget 500 euro"], capture_output=True, timeout=3)
-                        except Exception:
-                            pass
-                    threading.Thread(target=_bg_scan_leads, daemon=True).start()
-                    extra_facts = "Radar Lead Rust SIMD attivo su commenti Facebook e web: de-offuscamento numeri di telefono e scansione tratte in sub-millisecondo."
-
-                elif any(w in q_lower for w in ["stato", "server", "compiti", "task", "come va"]):
-                    extra_facts = "Sistema EBJ Supreme operativo al 100%: tunnel Cloudflare attivo su eb.badrexpress.com, porta 8088 online, supervisore sentinella vigile."
-
-                reply_text, model_used = generate_jarvis_spoken_response(user_query, extra_facts=extra_facts)
+                # Le azioni operative richiedono un tool con esito verificabile.
+                # Evita trigger su parole isolate e fatti di stato hard-coded.
+                reply_text, model_used = generate_jarvis_spoken_response(user_query, persona=req_persona)
 
 
-            # Generazione Audio Neurale JARVIS (it-IT-GiuseppeMultilingualNeural -5Hz pitch, fallback Diego)
+            # Usa il motore TTS condiviso: rispetta davvero la personalità selezionata
+            # (voce, velocità e pitch) e applica i fallback configurati in un solo posto.
             audio_b64 = None
+            voice_used = None
+            mime_type = "audio/mpeg"
             try:
                 import asyncio as _asyncio
-                import edge_tts as _edge_tts
-                async def _gen_tts(text_to_speak):
-                    # Rimozione caratteri speciali per parlato pulito
-                    clean_spoken = re.sub(r'[*#_`~>|]', '', text_to_speak)
-                    clean_spoken = re.sub(r'https?://\S+', '', clean_spoken)
-                    candidates = [
-                        ("en-GB-RyanNeural", "-2%", "-2Hz"),
-                        ("it-IT-GiuseppeMultilingualNeural", "+0%", "-6Hz")
-                    ] if (locals().get('req_persona') or current_eb_personality) in ("jarvis_uk", "uk", "british") else [
-                        ("it-IT-GiuseppeMultilingualNeural", "+0%", "-6Hz"),
-                        ("it-IT-DiegoNeural", "+1%", "-6Hz"),
-                        ("en-GB-RyanNeural", "-2%", "-2Hz")
-                    ]
-                    for v_name, r_val, p_val in candidates:
-                        try:
-                            communicate = _edge_tts.Communicate(clean_spoken, v_name, rate=r_val, pitch=p_val)
-                            audio_chunks = []
-                            async for chunk in communicate.stream():
-                                if chunk["type"] == "audio":
-                                    audio_chunks.append(chunk["data"])
-                            if audio_chunks:
-                                return b"".join(audio_chunks)
-                        except Exception:
-                            continue
-                    return None
                 _loop = _asyncio.new_event_loop()
                 _asyncio.set_event_loop(_loop)
                 try:
-                    audio_bytes = _loop.run_until_complete(_asyncio.wait_for(_gen_tts(reply_text), timeout=5.5))
+                    audio_b64, voice_used, mime_type = _loop.run_until_complete(
+                        _asyncio.wait_for(
+                            generate_speech_audio(reply_text, voice_mode=req_persona),
+                            timeout=8.0,
+                        )
+                    )
                 finally:
                     _loop.close()
-                if audio_bytes:
-                    audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
             except Exception as tts_err:
-                print(f"[VOICE] Edge-TTS error: {tts_err}")
+                print(f"[VOICE] Sintesi non disponibile ({req_persona}): {type(tts_err).__name__}: {tts_err}")
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -7688,7 +7635,11 @@ def _patched_do_POST(self):
                 "status": "SUCCESS",
                 "query": user_query,
                 "response": reply_text,
-                "audio_base64": audio_b64
+                "model_used": model_used if not is_sw and not is_ebj_wake_phrase(user_query) else "fast-path",
+                "audio_base64": audio_b64,
+                "voice": voice_used,
+                "mime_type": mime_type,
+                "persona": req_persona
             }).encode())
             return
         except Exception as e:
@@ -8105,25 +8056,34 @@ def _patched_do_POST(self):
                     genai.configure(api_key=gemini_key)
                     img_bytes = base64.b64decode(frame_b64)
                     img = PIL.Image.open(_io.BytesIO(img_bytes))
-                    model = genai.GenerativeModel("gemini-1.5-flash")
+                    vision_model = os.environ.get("GEMINI_VISION_MODEL", "gemini-2.5-flash")
+                    model = genai.GenerativeModel(vision_model)
                     resp = model.generate_content([vision_prompt, img])
-                    analysis = resp.text
+                    analysis = (getattr(resp, "text", "") or "").strip()
                 except Exception as eg:
                     print(f"[SCREEN VISION] Gemini error: {eg}")
 
-            # Fallback a Groq o analisi euristica se Gemini offline
+            # Nessuna descrizione fittizia se manca il provider o la risposta.
             if not analysis:
-                analysis = "👁️ **AG-JARVIS VISION:** Schermata acquisita con successo. Rilevata finestra attiva del browser/desktop."
+                self.send_response(503)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(_json.dumps({
+                    "status": "vision_unavailable",
+                    "error": "Analisi immagine non disponibile: configura GEMINI_API_KEY e verifica il modello GEMINI_VISION_MODEL."
+                }).encode())
+                return
 
-            # Rilevamento automatico campi form tramite keyword
+            # Il prompt contiene sempre le parole 'form' e 'preventivo': non
+            # deve mai essere usato come prova che la schermata contenga un form.
             detected_fields = []
-            low_text = (analysis + " " + custom_prompt).lower()
+            low_text = analysis.lower()
             candidate_fields = ["nome", "cognome", "email", "telefono", "cellulare", "città", "indirizzo", "mq", "note", "messaggio"]
             for cf in candidate_fields:
-                if cf in low_text or "form" in low_text or "preventivo" in low_text or "modulo" in low_text:
+                if cf in low_text:
                     detected_fields.append(cf)
 
-            form_detected = ("form" in low_text or "modulo" in low_text or "preventivo" in low_text or len(detected_fields) >= 2)
+            form_detected = any(w in low_text for w in ("form", "modulo", "preventivo")) or len(detected_fields) >= 2
 
             # Match con dati di Badr via micro-bridge Rust (:9000/api/form/match-fields < 2us)
             autofill_data = {}
@@ -8340,13 +8300,13 @@ def _patched_do_POST(self):
             self._send_json({"error": str(e)}, status=500)
         return
 
-    # ── JEV MULTIMODAL VISION & APPRAISAL ──────────────────────────────────────
-    if self.path in ["/api/vision/analyze", "/api/vision/stima-mobili"]:
+    # ── JEV & JARVIS MULTIMODAL VISION & OPERATOR CAMERA APPRAISAL ───────────
+    if self.path in ["/api/vision/analyze", "/api/vision/stima-mobili", "/api/camera/jarvis-vision"]:
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
             from ebj_vision_engine import analyze_image_with_jev
-            image_data = bd.get("image") or bd.get("image_base64") or bd.get("image_path") or bd.get("photo")
-            task_type = bd.get("task_type") or bd.get("task") or "furniture_moving"
+            image_data = bd.get("image") or bd.get("image_base64") or bd.get("frame_b64") or bd.get("image_path") or bd.get("photo")
+            task_type = bd.get("task_type") or bd.get("task") or ("jarvis_operator_vision" if self.path == "/api/camera/jarvis-vision" else "furniture_moving")
             custom_prompt = bd.get("prompt")
             vis_res = analyze_image_with_jev(image_data, task_type=task_type, custom_prompt=custom_prompt)
             self._send_json(vis_res)

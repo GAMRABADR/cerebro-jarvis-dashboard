@@ -2160,7 +2160,7 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
   </div>
 
   <script src="cyber_audio_engine.js?v=1025.0"></script>
-  <script src="app.js?v=1035.0"></script>
+  <script src="app.js?v=1036.0"></script>
   <script src="astra_3d_client.js?v=1.1"></script>
 
 <!-- ── SCREEN SHARE LIVE PANEL ────────────────────────────────────── -->
@@ -2449,13 +2449,15 @@ window.toggleScreenVision = async function() {
       })
     });
     const d = await res.json();
-    const commento = d.analysis || 'Ho osservato lo schermo, ma non ho elementi testuali specifici.';
+    if (!res.ok || d.status !== 'ok') throw new Error(d.error || `Analisi non disponibile (HTTP ${res.status})`);
+    const escapeVisionText = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    const commento = d.analysis || 'Analisi completata senza descrizione.';
 
     let htmlReply = commento;
 
     if (d.form_detected || (d.autofill_mappings && d.autofill_mappings.length > 0)) {
       const mappings = d.autofill_mappings || [];
-      const fieldsList = mappings.map(m => `<li><strong>${m.field}:</strong> ${m.suggested_value}</li>`).join('');
+      const fieldsList = mappings.map(m => `<li><strong>${escapeVisionText(m.field)}:</strong> ${escapeVisionText(m.suggested_value)}</li>`).join('');
       
       htmlReply += `\n\n📝 **MODULO/FORM RILEVATO!**\nCampi identificati per l'Ingegner Badr:\n${mappings.length ? '<ul style="margin:6px 0; padding-left:20px;">' + fieldsList + '</ul>' : 'Campi pronti per la compilazione.'}\n\n` +
         `<div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">` +
@@ -2467,8 +2469,8 @@ window.toggleScreenVision = async function() {
       window._lastAutofillMappings = mappings;
     }
 
-    if (respEl) respEl.innerHTML = htmlReply.replace(/\n/g, '<br>');
-    if (respTag) respTag.textContent = 'VISION OK (120 FPS)';
+    if (respEl) respEl.innerHTML = escapeVisionText(commento).replace(/\n/g, '<br>') + (htmlReply.includes('MODULO/FORM RILEVATO!') ? htmlReply.slice(htmlReply.indexOf('📝 **MODULO/FORM RILEVATO!**')).replace(/\n/g, '<br>') : '');
+    if (respTag) respTag.textContent = 'VISION OK';
     if (typeof addEvent === 'function') {
       addEvent('ai', commento.slice(0, 80) + '...');
     }
@@ -3029,8 +3031,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <div class="cam-split-body">
       <div class="cam-webcam-col">
-        <div class="cam-video-viewport">
+        <div class="cam-video-viewport" style="position:relative;">
           <video id="cam-live-video" autoplay playsinline muted></video>
+          <canvas id="cam-hud-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
           <div class="cam-reticle-overlay">
             <div class="cam-reticle-circle"></div>
             <div class="cam-reticle-corners"></div>
@@ -3055,8 +3058,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
 
-    <div class="cam-modal-footer">
-      <span style="font-size:0.8rem; color:#94a3b8; flex:1;" id="cam-feedback-text">Inquadra il tuo volto per attivare il collegamento olografico.</span>
+    <div class="cam-modal-footer" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span style="font-size:0.8rem; color:#94a3b8; flex:1;" id="cam-feedback-text">Inquadra il tuo volto per attivare il collegamento olografico J.A.R.V.I.S.</span>
+      <button id="btn-jarvis-ai-scan" onclick="triggerJarvisAiVisionScan()" style="background:linear-gradient(135deg, #00f0ff, #0284c7); color:#020813; font-weight:900; font-size:0.75rem; padding:7px 16px; border-radius:6px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 0 15px rgba(0,240,255,0.4); text-transform:uppercase; letter-spacing:0.5px;">
+        👁️ JARVIS COSA VEDI?
+      </button>
       <button class="ring-cancel-btn" onclick="closeCameraVisionModal()" style="padding:6px 14px; font-size:0.75rem;">CHIUDI</button>
     </div>
   </div>
