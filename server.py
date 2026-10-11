@@ -3403,7 +3403,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         n8n_res = trigger_n8n_webhook("create-skill-forge", {"prompt": prompt, "skill_name": skill_name})
         broadcast_synapse_pulse("n8n_workflows_engine", intensity=2.2, event_type="N8N_SKILL_FORGE")
         return (
-            f"⚙️ **n8n Autonomous AI Skill Forge Avviato (Ingegner Badr):**\n\n"
+            f"⚙️ **n8n Autonomous AI Skill Forge Avviato (Badr):**\n\n"
             f"🛠️ **Workflow:** `EBGS - Autonomous AI Skill Forge` (`create-skill-forge`)\n"
             f"📦 **Output:** Generazione automatica di `manifest.json` e `skill.py` nel Vault.\n"
             f"✅ **Stato Dispatch n8n:** Trasmesso al motore di workflow su Oracle Cloud VPS."
@@ -3413,7 +3413,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         n8n_res = trigger_n8n_webhook("generate-viral-concept", {"topic": prompt, "platform": "TikTok/YouTube Shorts"})
         broadcast_synapse_pulse("n8n_workflows_engine", intensity=2.0, event_type="N8N_VIRAL_CONCEPT")
         return (
-            f"🎬 **n8n AI Viral Video Concept Studio (Ingegner Badr):**\n\n"
+            f"🎬 **n8n AI Viral Video Concept Studio (Badr):**\n\n"
             f"📱 **Workflow:** `EBGS - AI Viral Shorts & Video Concept Studio`\n"
             f"🎯 **Hook & Struttura:** Script ad alto tasso di retention con prompt immagini e ganci psicologici generati con Gemini AI.\n"
             f"🚀 **Stato:** Inviato a Discord Hub & Notifica Telegram."
@@ -3423,7 +3423,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         n8n_res = trigger_n8n_webhook("translate-subtitles-audio", {"text": prompt, "languages": ["en", "fr", "de", "es", "ar"]})
         broadcast_synapse_pulse("n8n_workflows_engine", intensity=1.8, event_type="N8N_AUDIO_TRANSLATE")
         return (
-            f"🌍 **n8n Multilingual Studio (Ingegner Badr):**\n\n"
+            f"🌍 **n8n Multilingual Studio (Badr):**\n\n"
             f"🎧 **Workflow:** `EBGS - Multilingual Audio & Subtitle Translation Studio`\n"
             f"🗣️ **Lingue Target:** EN, FR, DE, ES, AR.\n"
             f"✅ **Stato:** Elaborazione parallela attiva in n8n."
@@ -7510,10 +7510,17 @@ def _patched_do_POST(self):
         _ebj_bridge_relay(self, "POST", body)
         return
 
-    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone", "/api/clm/classify", "/api/jev/execute"]:
+    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone", "/api/clm/classify", "/api/jev/execute", "/api/jev/triage", "/api/jev/batch"]:
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
-            if self.path == "/api/clm/classify":
+            if self.path in ["/api/jev/triage", "/api/jev/batch"]:
+                from ebj_reflex_engine import triage_batch_messages
+                msgs = bd.get("messages") or bd.get("items") or bd.get("batch") or []
+                if isinstance(msgs, list):
+                    res = triage_batch_messages(msgs)
+                else:
+                    res = {"status": "ERROR", "message": "Formato messaggi non valido: attesa una lista"}
+            elif self.path == "/api/clm/classify":
                 from clm_engine import classify_intent_clm
                 query = bd.get("query") or bd.get("state") or ""
                 res = classify_intent_clm(query)
