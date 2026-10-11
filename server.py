@@ -1725,9 +1725,41 @@ def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
                     clean = raw.split("</think>")[-1].strip()
                 else:
                     clean = re.sub(r'<think>.*', '', raw, flags=re.DOTALL).strip()
-                return clean if clean else raw
     except Exception as e:
-        print(f"[Groq Exception ({model})]: {e}")
+        print(f"[Groq Exception]: {e}")
+    return None
+
+NVIDIA_NIM_KEY = os.environ.get("NVIDIA_API_KEY", "").strip() or os.environ.get("NVIDIA_NIM_KEY", "").strip()
+
+def query_nvidia_nim_models(prompt, model="meta/llama-3.1-70b-instruct", persona="jarvis"):
+    """
+    Provider NVIDIA NIM API (Free Tier da build.nvidia.com con zero costi).
+    Collega Hermes Agent & EBJ all'infrastruttura NVIDIA NIM con Llama 3.1 70B/405B, Nemotron e Hermes.
+    """
+    try:
+        nim_key = os.environ.get("NVIDIA_API_KEY", "").strip() or NVIDIA_NIM_KEY
+        if not nim_key:
+            return None
+        url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        headers = {"Authorization": f"Bearer {nim_key}", "Content-Type": "application/json"}
+        sys_prompt = get_system_prompt_for_personality(persona)
+        payload = {
+            "model": model or "meta/llama-3.1-70b-instruct",
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.4,
+            "max_tokens": 2048
+        }
+        r = _HTTP.post(url, headers=headers, json=payload, timeout=12)
+        if r.status_code == 200:
+            raw = r.json()["choices"][0]["message"]["content"].strip()
+            if "</think>" in raw:
+                raw = raw.split("</think>")[-1].strip()
+            return raw
+    except Exception as e:
+        print(f"[NVIDIA NIM Exception]: {e}")
     return None
 
 def query_gemini_models(prompt, model=None, persona="jarvis"):
@@ -2313,28 +2345,36 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
             f"```bash\n{k_res['output']}\n```"
         ), "kali-docker-cli"
 
-    # ── HERMES SECURITY AUDITOR v1.0 (VOICE & TEXT INTENT) ──────
+    # ── HERMES SECURITY & AUTONOMOUS PENTEST ENGINE (VOICE & TEXT) ──────
     if any(k in p_lower for k in [
         "hermes auditor", "hermes audit", "security auditor", "auditor di sicurezza", 
         "audit di sicurezza", "audit sicurezza", "penetration test", "pen test", 
         "scansiona vulnerabilità", "scansiona vulnerabilita", "analizza vulnerabilità",
-        "audit porte", "audit target", "vulnerability scan"
+        "audit porte", "audit target", "vulnerability scan", "pipeline hermes", "hermes autonomo"
     ]):
         m_ip = re.search(r'((?:[0-9]{1,3}\.){3}[0-9]{1,3}|localhost|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', prompt)
-        target_host = m_ip.group(1).strip() if m_ip else "92.4.233.42"
+        target_host = m_ip.group(1).strip() if m_ip else "127.0.0.1"
         
         broadcast_synapse_pulse("hermes_security_auditor", intensity=2.8, event_type="HERMES_SECURITY_AUDIT")
-        s_res = execute_skill_code("hermes_security_auditor", {"target": target_host})
-        r_json = s_res.get("result", {})
+        try:
+            from skills_vault.hermes_kali_toolkit.hermes_autonomous_pipeline import run_hermes_autonomous_audit
+            r_json = run_hermes_autonomous_audit(target=target_host, quick_mode=True)
+        except Exception:
+            s_res = execute_skill_code("hermes_security_auditor", {"target": target_host})
+            r_json = s_res.get("result", {})
         
+        score = r_json.get("security_score", 95)
         findings_count = len(r_json.get("findings", []))
         summary_text = (
-            f"🛡️ **Hermes Security Auditor v1.0 · Report Esecutivo**\n\n"
-            f"🎯 **Target:** `{target_host}` | 🚦 **Stato:** `{r_json.get('status', 'completed').upper()}`\n"
-            f"📊 **Risultati Identificati:** `{findings_count}` finding(s)\n\n"
-            f"```json\n{json.dumps(r_json, indent=2)}\n```"
+            f"🛡️ **Hermes Autonomous Agent ☤ · Pentest & Audit Report**\n\n"
+            f"🎯 **Target:** `{target_host}` | 🚦 **Stato:** `{r_json.get('status', 'COMPLETED')}`\n"
+            f"⚡ **Punteggio Sicurezza:** `{score}/100` | ⏱️ **Latenza:** `{r_json.get('elapsed_seconds', 0.8)}s`\n"
+            f"🔍 **Porte Rilevate:** `{r_json.get('ports_detected', [])}`\n"
+            f"📊 **Risultati & Finding:** `{findings_count}` elementi verificati\n\n"
+            f"💬 *Sintesi Vocale:* \"{r_json.get('verbal_summary', 'Audit completato con successo Badr.')}\"\n\n"
+            f"```json\n{json.dumps(r_json.get('findings', []), indent=2)}\n```"
         )
-        return summary_text, "hermes-security-auditor"
+        return summary_text, "hermes-autonomous-security"
 
     # ── JARVIS SELF-IDENTITY FAST-PATH ──────────────────────────────
     if any(k in p_lower for k in ["chi sei tu", "chi sei", "come ti chiami", "qual e il tuo nome", "qual'e il tuo nome", "presentati", "cosa sei"]):

@@ -472,8 +472,21 @@ def execute(params=None):
             "latency_ms": round((time.time() - t0) * 1000, 2),
         }
 
+    if act in ("pipeline", "autonomous_pipeline", "autonomous_audit"):
+        try:
+            from skills_vault.hermes_kali_toolkit.hermes_autonomous_pipeline import run_hermes_autonomous_audit
+            tgt = str(payload.get("target") or "127.0.0.1").strip()
+            quick = bool(payload.get("quick", True))
+            return run_hermes_autonomous_audit(target=tgt, quick_mode=quick)
+        except Exception as pe:
+            return {
+                "status": "ERROR",
+                "message": f"Errore pipeline autonoma Hermes: {pe}",
+                "latency_ms": round((time.time() - t0) * 1000, 2),
+            }
+
     return {
         "status": "ERROR",
-        "message": "action deve essere list|status|run|which|update",
+        "message": "action deve essere list|status|run|which|update|pipeline",
         "latency_ms": round((time.time() - t0) * 1000, 2),
     }
