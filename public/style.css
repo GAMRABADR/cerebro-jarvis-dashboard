@@ -2900,6 +2900,8 @@ svg.lucide {
 }
 
 .holo-avatar-img {
+  position: relative;
+  z-index: 1;
   width: 220px;
   height: auto;
   transform-style: preserve-3d;
@@ -2908,6 +2910,24 @@ svg.lucide {
   opacity: 0.35;
   will-change: transform;
 }
+
+.holo-eye-tracker {
+  position: absolute;
+  z-index: 4;
+  width: 12px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse, #d9ffff 0 16%, #00f0ff 36%, rgba(0, 240, 255, .12) 72%);
+  box-shadow: 0 0 7px rgba(0, 240, 255, .9);
+  transform: translate(var(--eye-x, 0px), var(--eye-y, 0px));
+  transition: transform 90ms linear, opacity 180ms ease;
+}
+
+.holo-avatar-img.locked ~ .holo-eye-tracker { opacity: .9; }
+.holo-eye-left { left: 35%; top: 40%; }
+.holo-eye-right { left: 59%; top: 40%; }
 
 .holo-avatar-img.locked {
   opacity: 0.95;
@@ -2920,6 +2940,7 @@ svg.lucide {
 
 .holo-scanlines {
   position: absolute;
+  z-index: 3;
   inset: 0;
   background: repeating-linear-gradient(
     0deg,
@@ -3882,5 +3903,183 @@ svg.lucide {
   .card-tilt-3d {
     transform: none !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ⚡ STARK CINEMATIC HUD & DYNAMIC THEMES (60 FPS FLUIDITY)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Dynamic Color Themes */
+body.theme-stark-cyan {
+  --neon-cyan: #00f0ff;
+  --neon-green: #00ff9f;
+  --border-neon: rgba(0, 240, 255, 0.28);
+}
+
+body.theme-stark-gold {
+  --neon-cyan: #ffb703;
+  --neon-green: #ff0055;
+  --border-neon: rgba(255, 183, 3, 0.35);
+}
+
+body.theme-matrix-emerald {
+  --neon-cyan: #00ff9f;
+  --neon-green: #10b981;
+  --border-neon: rgba(0, 255, 159, 0.35);
+}
+
+body.theme-crimson-surge {
+  --neon-cyan: #ef4444;
+  --neon-green: #f97316;
+  --border-neon: rgba(239, 68, 68, 0.35);
+}
+
+/* Theme Picker & HUD Toggle UI */
+.theme-picker-pod {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.theme-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-dot:hover {
+  transform: scale(1.25);
+}
+
+.theme-dot.active {
+  border-color: #ffffff;
+  box-shadow: 0 0 8px currentColor;
+  transform: scale(1.15);
+}
+
+.theme-dot.stark-cyan { background: #00f0ff; color: #00f0ff; }
+.theme-dot.stark-gold { background: #ffb703; color: #ffb703; }
+.theme-dot.matrix-emerald { background: #00ff9f; color: #00ff9f; }
+.theme-dot.crimson-surge { background: #ef4444; color: #ef4444; }
+
+.stark-hud-toggle-btn {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(0, 255, 159, 0.12));
+  border: 1.5px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.stark-hud-toggle-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(0, 255, 159, 0.25));
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+/* STARK HUD CINEMATIC MODE OVERRIDES (Zero Clutter, 100% Focus) */
+body.stark-hud-mode .mv-center {
+  display: none !important;
+}
+
+body.stark-hud-mode .left-panel,
+body.stark-hud-mode .right-panel {
+  display: none !important;
+}
+
+body.stark-hud-mode .main-grid {
+  grid-template-columns: 1fr !important;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 10px;
+}
+
+body.stark-hud-mode .center-panel {
+  width: 100%;
+}
+
+body.stark-hud-mode .jarvis-arc-hud-container {
+  max-width: 280px;
+  margin: 0 auto 10px auto;
+  cursor: pointer;
+}
+
+body.stark-hud-mode .jarvis-arc-svg {
+  filter: drop-shadow(0 0 35px var(--neon-cyan));
+  transform: scale(1.08);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.stark-hud-mode .jarvis-arc-hud-container:hover .jarvis-arc-svg {
+  transform: scale(1.14);
+}
+
+/* Audio Visualizer Spectrum Bars */
+.jarvis-audio-spectrum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  margin: 8px 0 12px 0;
+}
+
+.jas-bar {
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--neon-cyan) 0%, var(--neon-green) 100%);
+  border-radius: 3px;
+  transform: scaleY(0.2);
+  transform-origin: bottom center;
+  transition: transform 0.06s ease, opacity 0.06s ease;
+  will-change: transform, opacity;
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+
+/* Floating Quick Tool Dock for Stark Mode */
+.stark-quick-dock {
+  display: none;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 8px;
+}
+
+body.stark-hud-mode .stark-quick-dock {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.sqd-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-neon);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.sqd-btn:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  transform: translateY(-2px);
 }
 

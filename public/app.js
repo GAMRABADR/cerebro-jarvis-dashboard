@@ -162,12 +162,42 @@ function stopEbjSpeech() {
   }
 }
 
+let _spectrumAnimTimer = null;
+function animateJarvisSpectrum(active = true, intensity = 1.0) {
+  const bars = document.querySelectorAll('#jarvis-audio-spectrum .jas-bar');
+  if (!bars || bars.length === 0) return;
+  if (!active) {
+    if (_spectrumAnimTimer) {
+      clearInterval(_spectrumAnimTimer);
+      _spectrumAnimTimer = null;
+    }
+    bars.forEach(b => {
+      b.style.transform = 'scaleY(0.2)';
+      b.style.opacity = '0.4';
+    });
+    return;
+  }
+  if (_spectrumAnimTimer) return;
+  _spectrumAnimTimer = setInterval(() => {
+    bars.forEach((b, idx) => {
+      const rand = Math.random();
+      const wave = Math.sin((Date.now() / 140) + idx * 0.45) * 0.5 + 0.5;
+      const h = Math.max(0.2, (rand * 0.55 + wave * 0.45) * intensity);
+      b.style.transform = `scaleY(${h.toFixed(2)})`;
+      b.style.opacity = (0.5 + h * 0.5).toFixed(2);
+    });
+  }, 45);
+}
+
+window.animateJarvisSpectrum = animateJarvisSpectrum;
+
 window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   if (!window.ebjVoiceEnabled || !text) return;
   const clean = String(text).replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1500);
   if (!clean) return;
 
   _ebjIsSpeaking = true;
+  animateJarvisSpectrum(true, 1.0);
   stopEbjMic(); // Immediate suppression during speech to prevent acoustic feedback loop
   stopEbjSpeech();
   unlockEbjVoice();
@@ -175,10 +205,22 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   addEvent('voice', `🔊 VOCAL SYNTHESIS: "${clean.slice(0, 50)}..."`);
   let played = false;
 
+  // Watchdog garantito per evitare freeze dell'ascolto
+  const watchdogMs = Math.max(5000, (clean.length * 110) + 1200);
+  const speechWatchdog = setTimeout(() => {
+    if (_ebjIsSpeaking) {
+      console.warn('[Speech Watchdog]: Forzato reset speaking lock dopo', watchdogMs, 'ms');
+      _ebjIsSpeaking = false;
+      animateJarvisSpectrum(false);
+      if (window.ebjVoiceEnabled && !_ebjMicOn) startEbjMic();
+    }
+  }, watchdogMs);
+
   const playWithWebAudio = async (arrayBuffer) => {
     const ctx = getEbjAudioContext();
     if (!ctx || typeof ctx.decodeAudioData !== 'function') return false;
     try {
+      if (ctx.state === 'suspended') await ctx.resume();
       const audioBuffer = await new Promise((res, rej) => {
         ctx.decodeAudioData(arrayBuffer.slice(0), res, rej);
       });
@@ -188,19 +230,19 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       source.buffer = audioBuffer;
 
       // JARVIS Holographic DSP Master Chain:
-      // 1. Warmth Low-Shelf (+2.4dB @ 210Hz) - Tony Stark / Nino D'Agata baritone chest resonance
+      // 1. Warmth Low-Shelf (+2.4dB @ 210Hz) - Tony Stark baritone chest resonance
       const bass = ctx.createBiquadFilter();
       bass.type = 'lowshelf';
       bass.frequency.value = 210;
       bass.gain.value = 2.4;
 
-      // 2. High-Shelf De-harshing (-0.8dB @ 6500Hz) - Soften compression artifacts
+      // 2. High-Shelf De-harshing (-0.8dB @ 6500Hz)
       const highs = ctx.createBiquadFilter();
       highs.type = 'highshelf';
       highs.frequency.value = 6500;
       highs.gain.value = -0.8;
 
-      // 3. Holographic Broadcast Compressor - Cinematic punch & intelligibility
+      // 3. Holographic Broadcast Compressor - Cinematic punch
       const comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -18;
       comp.knee.value = 10;
@@ -223,7 +265,7 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
         };
         source.onended = onDone;
         source.start(0);
-        setTimeout(onDone, Math.max(1000, (audioBuffer.duration * 1000) + 600));
+        setTimeout(onDone, Math.max(800, (audioBuffer.duration * 1000) + 400));
       });
       return true;
     } catch (err) {
@@ -315,21 +357,28 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       }
     }
 
-    // Stage 4: Controlled Browser SpeechSynthesis ONLY IF explicitly requested and nothing else worked
-    if (!played && ('speechSynthesis' in window) && window._ebjAllowRobotFallback) {
+    // Stage 4: Controlled Browser SpeechSynthesis (Guaranteed speech output)
+    if (!played && ('speechSynthesis' in window)) {
       try {
         window.speechSynthesis.cancel();
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
         const u = new SpeechSynthesisUtterance(clean);
         u.lang = currentPersonality === 'jarvis_uk' ? 'en-GB' : 'it-IT';
-        u.rate = 0.95;
-        u.pitch = 0.85;
-        window.speechSynthesis.speak(u);
+        u.rate = 1.0;
+        u.pitch = 0.95;
+        await new Promise((res) => {
+          u.onend = res;
+          u.onerror = res;
+          window.speechSynthesis.speak(u);
+          setTimeout(res, Math.max(1200, (clean.length * 90) + 400));
+        });
         played = true;
       } catch (_) {}
     }
   } finally {
+    clearTimeout(speechWatchdog);
     _ebjIsSpeaking = false;
+    animateJarvisSpectrum(false);
     if (window.ebjVoiceEnabled) {
       setTimeout(() => {
         if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
@@ -372,7 +421,7 @@ function startEbjMic() {
     _ebjRecognition = new SR();
     _ebjRecognition.lang = 'it-IT';
     _ebjRecognition.continuous = true;
-    _ebjRecognition.interimResults = false;
+    _ebjRecognition.interimResults = true;
     _ebjRecognition.maxAlternatives = 1;
 
     _ebjRecognition.onstart = () => {
@@ -381,21 +430,47 @@ function startEbjMic() {
       const dot = document.querySelector('#btn-vad-toggle .vad-dot');
       if (dot) dot.style.background = '#10b981';
       updateVadPill();
-      console.log('[EBJ Mic Always-On]: Online e in ascolto continuo.');
+      console.log('[EBJ Mic Always-On]: Online e in ascolto continuo a mani libere.');
     };
 
     _ebjRecognition.onresult = (e) => {
       _ebjLastMicActivity = Date.now();
-      const last = e.results[e.results.length - 1];
-      if (!last || !last.isFinal) return;
-      const text = (last[0] && last[0].transcript || '').trim();
-      if (!text || isBusy || _ebjIsSpeaking) return;
+      let interimTranscript = '';
+      let finalTranscript = '';
 
+      for (let i = e.resultIndex; i < e.results.length; ++i) {
+        const item = e.results[i];
+        if (item.isFinal) {
+          finalTranscript += (item[0] && item[0].transcript || '') + ' ';
+        } else {
+          interimTranscript += (item[0] && item[0].transcript || '') + ' ';
+        }
+      }
+
+      interimTranscript = interimTranscript.trim();
+      finalTranscript = finalTranscript.trim();
+
+      // Feedback visivo immediato a 60 FPS mentre Badr sta parlando
+      if (interimTranscript) {
+        animateJarvisSpectrum(true, 0.7);
+        const respEl = document.getElementById('resp-body');
+        const respTag = document.getElementById('resp-tag');
+        if (respTag) respTag.textContent = '🎙️ ASCOLTO LIVE';
+        if (respEl) {
+          respEl.innerHTML = `<span style="color:#00f0ff;font-weight:600;"><i data-lucide="mic" class="lucide-icon" style="display:inline;vertical-align:middle;margin-right:6px;"></i>In ascolto, Badr: "${interimTranscript}..."</span>`;
+        }
+      }
+
+      if (!finalTranscript) return;
+      const text = finalTranscript;
+      if (isBusy || _ebjIsSpeaking) return;
+
+      animateJarvisSpectrum(false);
       const lowerText = text.toLowerCase().trim();
       const standbyWords = ['stop', 'basta', 'riposati', 'dormi', 'disattiva', 'spegni', 'a dopo', 'grazie ebj', 'grazie jarvis'];
-      if (window.isConversationalMode && standbyWords.some(w => lowerText === w || lowerText.startsWith(w + ' '))) {
+      if (standbyWords.some(w => lowerText === w || lowerText.startsWith(w + ' '))) {
         window.isConversationalMode = false;
-        const msg = 'Ricevuto Badr, resto in standby. Chiamami quando serve dicendo EBJ.';
+        const msg = 'Ricevuto Badr, resto in standby. Chiamami quando serve.';
         const respEl = document.getElementById('resp-body');
         const respTag = document.getElementById('resp-tag');
         if (respEl) respEl.textContent = msg;
@@ -406,52 +481,21 @@ function startEbjMic() {
       }
 
       const parsed = parseWakePhrase(text);
-      if (!parsed.hasWake) {
-        if (window.isConversationalMode) {
-          // In modalità conversazione, EBJ è già attivo e riceve ogni battuta direttamente a mani libere!
-          console.log('[EBJ Active Dialogue]: Ricevuto comando in modalità conversazione:', text);
-          const ambientBadge = document.getElementById('ambient-vad-status');
-          if (ambientBadge) {
-            ambientBadge.innerHTML = `<span style="color:#00f0ff;font-weight:bold;">⚡ CONVERSAZIONE ATTIVA</span>`;
-            ambientBadge.style.opacity = '1';
-          }
-          const respTag = document.getElementById('resp-tag');
-          if (respTag) respTag.textContent = '🎤 DIALOGO DIRETTO';
-          executeCommandPipeline(text, { fromVoice: true });
-          return;
-        }
-
-        // AMBIENT SPEECH: REAGISCE ZERO, TACE COMPLETAMENTE!
-        console.log('[EBJ Ambient VAD - Silent]: Spoken text without wake word ignored:', text);
-        const ambientBadge = document.getElementById('ambient-vad-status');
-        if (ambientBadge) {
-          ambientBadge.innerHTML = `<span style="color:#64748b;">👂 [Passivo: "${text.slice(0, 22)}..." (EBJ tace)]</span>`;
-          ambientBadge.style.opacity = '1';
-          setTimeout(() => {
-            if (ambientBadge && !_ebjIsSpeaking) {
-              ambientBadge.innerHTML = `<i data-lucide="shield-check" class="lucide-icon text-cyan" style="width:12px;height:12px;"></i>WAKE: "Ehi EBJ"`;
-              ambientBadge.style.opacity = '0.6';
-              try { window.lucide && window.lucide.createIcons(); } catch (_) {}
-            }
-          }, 2500);
-        }
-        return;
-      }
-
-      // WAKE WORD DETECTED! EBJ SI ATTIVA ED ESEGUE!
-      console.log(`[EBJ Wake Word Confirmed]: Summoned with "${parsed.wakeWord}"`);
-      const ambientBadge = document.getElementById('ambient-vad-status');
-      if (ambientBadge) {
-        ambientBadge.innerHTML = `<span style="color:#00f0ff;font-weight:bold;">⚡ SVEGLIO: "${parsed.wakeWord}"</span>`;
-        ambientBadge.style.opacity = '1';
+      let cmdToRun = '';
+      if (parsed.hasWake) {
+        cmdToRun = (parsed.command || '').trim();
+        console.log(`[EBJ Wake Summoned]: "${parsed.wakeWord}" -> "${cmdToRun}"`);
+      } else {
+        // Nessun silenziamento: qualunque comando vocale pronunciato viene eseguito direttamente!
+        cmdToRun = text;
+        console.log('[EBJ Voice Direct Command]:', text);
       }
 
       const input = document.getElementById('prompt-input');
       if (input) input.value = '';
 
-      const cleanCmd = (parsed.command || '').toLowerCase().trim();
-      if (!cleanCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu', 'mi senti', 'mi senti?'].includes(cleanCmd)) {
-        // Standalone wake greeting
+      const lowerCmd = cmdToRun.toLowerCase().trim();
+      if (!lowerCmd || ['ci sei', 'cisei', 'sei li', 'sei la', 'ci sei?', 'ci sei tu', 'mi senti', 'mi senti?'].includes(lowerCmd)) {
         window.isConversationalMode = true;
         const sphere = document.getElementById('jarvis-sphere');
         if (sphere) sphere.style.boxShadow = '0 0 50px rgba(0, 240, 255, 0.9)';
@@ -459,16 +503,17 @@ function startEbjMic() {
         const respEl = document.getElementById('resp-body');
         const respTag = document.getElementById('resp-tag');
         if (respEl) respEl.textContent = wakeMsg;
-        if (respTag) respTag.textContent = 'E.B.J. WAKE ACK';
+        if (respTag) respTag.textContent = 'E.B.J. PRONTO';
         addEvent('ai', wakeMsg);
         if (window.playSpeechAudio) window.playSpeechAudio(wakeMsg);
         return;
       }
 
-      // Explicit summon with command
+      // Esecuzione immediata del comando vocale
+      window.isConversationalMode = true;
       const respTag = document.getElementById('resp-tag');
-      if (respTag) respTag.textContent = `🎤 SUMMONED (${parsed.wakeWord.toUpperCase()})`;
-      executeCommandPipeline(parsed.command, { fromVoice: true });
+      if (respTag) respTag.textContent = '⚡ VOCAL PIPELINE';
+      executeCommandPipeline(cmdToRun, { fromVoice: true });
     };
 
     _ebjRecognition.onerror = (ev) => {
@@ -581,7 +626,7 @@ window.toggleConversationalMode = function() {
     startEbjMic();
     initEbjMicWatchdog();
     window.playSpeechAudio('Ci sono, Badr. Voce attiva.');
-    addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
+    addEvent('sys', 'Voce ON — ascolto continuo mani libere attivo');
     return;
   }
   window.ebjVoiceEnabled = !window.ebjVoiceEnabled;
@@ -594,7 +639,7 @@ window.toggleConversationalMode = function() {
     startEbjMic();
     initEbjMicWatchdog();
     window.playSpeechAudio('Ci sono, Badr. Voce attiva.');
-    addEvent('sys', 'Voce ON — microfono sempre attivo (reagisce su "Ehi EBJ")');
+    addEvent('sys', 'Voce ON — ascolto continuo mani libere attivo');
   } else {
     stopEbjMic();
     stopEbjSpeech();
@@ -605,6 +650,7 @@ window.toggleConversationalMode = function() {
     addEvent('sys', 'Voce OFF');
   }
 };
+window.toggleRecording = window.toggleConversationalMode;
 
 function updateActiveBrainUi(brainKey, label) {
   const hidden = document.getElementById('model-select');
@@ -4295,8 +4341,6 @@ if (typeof window !== 'undefined') {
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fillStyle = this.color;
       ctx.fill();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = this.color;
     }
   }
 
@@ -4316,7 +4360,7 @@ if (typeof window !== 'undefined') {
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0, 240, 255, ${opacity * 0.3})`;
+          ctx.strokeStyle = `rgba(0, 240, 255, ${opacity * 0.25})`;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }
@@ -4324,7 +4368,19 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  function animate() {
+  let _lastFrameTime = 0;
+  function animate(timestamp) {
+    if (document.hidden) {
+      requestAnimationFrame(animate);
+      return;
+    }
+    // Cap at ~60 FPS smooth rendering to save GPU/CPU cycles
+    if (timestamp - _lastFrameTime < 14) {
+      requestAnimationFrame(animate);
+      return;
+    }
+    _lastFrameTime = timestamp;
+
     ctx.clearRect(0, 0, width, height);
 
     particles.forEach(p => {
@@ -4336,7 +4392,7 @@ if (typeof window !== 'undefined') {
     requestAnimationFrame(animate);
   }
 
-  animate();
+  requestAnimationFrame(animate);
 
   window.addEventListener('resize', () => {
     width = canvas.width = window.innerWidth;
@@ -4386,4 +4442,50 @@ if (typeof window !== 'undefined') {
   panels.forEach(panel => {
     panel.classList.add('holo-border-animated');
   });
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// ⚡ STARK CINEMATIC HUD MODE & DYNAMIC THEME ENGINE
+// 60 FPS Focused Experience · Customizable Neon Schemes
+// ═══════════════════════════════════════════════════════════════════
+
+window.toggleStarkHudMode = function(forceState = null) {
+  const isCurrentlyStark = document.body.classList.contains('stark-hud-mode');
+  const newState = forceState !== null ? !!forceState : !isCurrentlyStark;
+
+  document.body.classList.toggle('stark-hud-mode', newState);
+  localStorage.setItem('ebj_stark_mode', newState ? 'on' : 'off');
+
+  const btn = document.getElementById('btn-stark-mode');
+  if (btn) {
+    btn.classList.toggle('active', newState);
+    btn.innerHTML = newState 
+      ? '<i data-lucide="zap" class="lucide-icon text-cyan"></i>⚡ STARK HUD' 
+      : '<i data-lucide="layout" class="lucide-icon"></i>🛠️ PRO CONSOLE';
+    try { window.lucide && window.lucide.createIcons(); } catch (_) {}
+  }
+};
+
+window.setThemePreset = function(themeName) {
+  const validThemes = ['stark-cyan', 'stark-gold', 'matrix-emerald', 'crimson-surge'];
+  if (!validThemes.includes(themeName)) themeName = 'stark-cyan';
+
+  validThemes.forEach(t => document.body.classList.remove(`theme-${t}`));
+  document.body.classList.add(`theme-${themeName}`);
+  localStorage.setItem('ebj_theme', themeName);
+
+  document.querySelectorAll('.theme-dot').forEach(dot => {
+    dot.classList.toggle('active', dot.getAttribute('data-theme') === themeName);
+  });
+};
+
+// Auto-initialize Stark HUD & Theme on startup
+(function initStarkHudAndTheme() {
+  const savedTheme = localStorage.getItem('ebj_theme') || 'stark-cyan';
+  window.setThemePreset(savedTheme);
+
+  // Default to Stark HUD Mode on first load for a pristine 60 FPS experience
+  const savedStark = localStorage.getItem('ebj_stark_mode');
+  const shouldBeStark = savedStark !== 'off';
+  window.toggleStarkHudMode(shouldBeStark);
 })();

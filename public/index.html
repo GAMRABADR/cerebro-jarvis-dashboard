@@ -82,7 +82,7 @@
         </button>
         <div class="nav-dropdown-menu">
           <div class="dd-item" onclick="switchMasterView('kanban')">
-            <span class="dd-icon"><i data-lucide="trello" class="lucide-icon text-cyan"></i></span>
+            <span class="dd-icon"><i data-lucide="layout-dashboard" class="lucide-icon text-cyan"></i></span>
             <div class="dd-text"><strong>HERMES MASTER KANBAN</strong><small>Visual DAG Pipeline & Task Board</small></div>
           </div>
           <div class="dd-item" onclick="switchMasterView('kali')">
@@ -160,6 +160,19 @@
     </div>
 
     <div class="mv-right">
+      <!-- ⚡ STARK HUD MINIMAL TOGGLE -->
+      <button class="view-switch-btn stark-hud-toggle-btn active" id="btn-stark-mode" type="button" onclick="toggleStarkHudMode()" title="Commuta tra Vista STARK Minimale e Console Pro Avanzata">
+        <i data-lucide="zap" class="lucide-icon text-cyan"></i>⚡ STARK HUD
+      </button>
+
+      <!-- 🎨 DYNAMIC THEME PICKER -->
+      <div class="theme-picker-pod" id="theme-picker" title="Seleziona Tema Cromatico">
+        <button class="theme-dot stark-cyan active" data-theme="stark-cyan" type="button" onclick="setThemePreset('stark-cyan')" title="Stark Cyan"></button>
+        <button class="theme-dot stark-gold" data-theme="stark-gold" type="button" onclick="setThemePreset('stark-gold')" title="Iron Gold"></button>
+        <button class="theme-dot matrix-emerald" data-theme="matrix-emerald" type="button" onclick="setThemePreset('matrix-emerald')" title="Matrix Emerald"></button>
+        <button class="theme-dot crimson-surge" data-theme="crimson-surge" type="button" onclick="setThemePreset('crimson-surge')" title="Crimson Core"></button>
+      </div>
+
       <input type="hidden" id="model-select" value="gemini">
       <div class="ms-chips" id="ms-chips" title="Mente Neurale Attiva · Dì 'Passa a Gemini / Groq / Qwen / GPT'">
         <button type="button" class="ms-chip active" data-value="gemini" title="Google Gemini 3.5 Flash">🧠 GEMINI</button>
@@ -569,8 +582,18 @@
               <span class="resp-tag" id="resp-tag">STANDBY 144 FPS</span>
             </div>
             <div class="resp-body" id="resp-body">
-              Pronto a ricevere ordini, Ingegner Badr. L'ecosistema v100.0 APEX è attivo con accelerazione GPU pura e Rust Tokio Micro-Bridge. Tocca la Sfera o premi [Ctrl+Spazio] per parlare!
+              Pronto a ricevere ordini, Badr. Sistema vocale attivo a mani libere con latenza minima. Parla liberamente o tocca l'Arc Reactor per eseguire qualsiasi operazione!
             </div>
+          </div>
+
+          <!-- ⚡ STARK QUICK FLOATING DOCK (Accessibile in Modalità Minimale) -->
+          <div class="stark-quick-dock" id="stark-quick-dock">
+            <button class="sqd-btn" type="button" onclick="toggleCyberTerminal()"><i data-lucide="terminal" class="lucide-icon text-emerald"></i>Terminale [T]</button>
+            <button class="sqd-btn" type="button" onclick="toggleModularCatalog()"><i data-lucide="boxes" class="lucide-icon text-cyan"></i>Moduli [M]</button>
+            <button class="sqd-btn" type="button" onclick="switchMasterView('kanban')"><i data-lucide="layout-dashboard" class="lucide-icon text-amber"></i>Kanban</button>
+            <button class="sqd-btn" type="button" onclick="switchMasterView('n8n')"><i data-lucide="git-branch" class="lucide-icon text-cyan"></i>N8N Flussi</button>
+            <button class="sqd-btn" type="button" onclick="openCommandPalette()"><i data-lucide="command" class="lucide-icon text-amber"></i>Comandi [Ctrl+K]</button>
+            <button class="sqd-btn" type="button" onclick="toggleStarkHudMode(false)"><i data-lucide="maximize-2" class="lucide-icon text-cyan"></i>Espandi Tutto</button>
           </div>
 
           <!-- ── APEX UNIFIED COMMAND CENTER (CONTROLLO TOTALE) ──────────────── -->
@@ -2445,7 +2468,7 @@ window.toggleScreenVision = async function() {
       body: JSON.stringify({
         frame_b64: b64,
         detect_form: true,
-        prompt: 'Guarda attentamente questa schermata. Commenta in modo brillante e professionale cosa vedi (pagina aperta, app, contenuti salienti) e rileva se è presente un form di richiesta o preventivo da compilare per l\'Ingegner Badr.'
+        prompt: 'Guarda attentamente questa schermata. Commenta in modo brillante e professionale cosa vedi (pagina aperta, app, contenuti salienti) e rileva se è presente un form di richiesta o preventivo da compilare per Badr.'
       })
     });
     const d = await res.json();
@@ -2459,7 +2482,7 @@ window.toggleScreenVision = async function() {
       const mappings = d.autofill_mappings || [];
       const fieldsList = mappings.map(m => `<li><strong>${escapeVisionText(m.field)}:</strong> ${escapeVisionText(m.suggested_value)}</li>`).join('');
       
-      htmlReply += `\n\n📝 **MODULO/FORM RILEVATO!**\nCampi identificati per l'Ingegner Badr:\n${mappings.length ? '<ul style="margin:6px 0; padding-left:20px;">' + fieldsList + '</ul>' : 'Campi pronti per la compilazione.'}\n\n` +
+      htmlReply += `\n\n📝 **MODULO/FORM RILEVATO!**\nCampi identificati per Badr:\n${mappings.length ? '<ul style="margin:6px 0; padding-left:20px;">' + fieldsList + '</ul>' : 'Campi pronti per la compilazione.'}\n\n` +
         `<div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">` +
         `<button class="h-btn primary" onclick="executeAutofillNow()" style="background:#00ff9f; color:#000; font-weight:bold; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="zap" class="lucide-icon sm" style="stroke:#000;"></i> COMPILA FORM ADESSO</button>` +
         `<button class="h-btn" onclick="copyBadrDataClipboard()" style="background:rgba(0,240,255,0.2); color:#00f0ff; border:1px solid #00f0ff; padding:8px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="clipboard" class="lucide-icon sm text-cyan"></i> COPIA DATI BADR</button>` +
@@ -2506,7 +2529,7 @@ window.executeAutofillNow = async function() {
       indirizzo: 'Bologna & Imola',
       address: 'Bologna & Imola',
       mq: '65',
-      note: 'Richiesta diretta da Ingegner Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica'
+      note: 'Richiesta diretta da Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica'
     };
 
     inputs.forEach(inp => {
@@ -2529,16 +2552,16 @@ window.executeAutofillNow = async function() {
     if (typeof confetti === 'function') {
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
     }
-    alert('⚡ AUTOFILL COMPLETATO!\nCampi compilati con successo con i dati dell\'Ingegner Badr El Ouariti (+39 388 870 3508).');
+    alert('⚡ AUTOFILL COMPLETATO!\nCampi compilati con successo con i dati di Badr El Ouariti (+39 388 870 3508).');
   } catch(e) {
     alert('Errore compilazione automatica: ' + e.message);
   }
 };
 
 window.copyBadrDataClipboard = function() {
-  const badrText = `Nome: Badr El Ouariti\nEmail: badraudi@gmail.com\nTelefono: +39 388 870 3508\nAzienda: EBGStudio & Pietro Traslochi\nCittà: Bologna / Imola (BO)\nNote: Richiesta diretta da Ingegner Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica`;
+  const badrText = `Nome: Badr El Ouariti\nEmail: badraudi@gmail.com\nTelefono: +39 388 870 3508\nAzienda: BadrExpress\nCittà: Bologna / Imola (BO)\nNote: Richiesta diretta da Badr - Preventivo e disponibilità immediata con furgone e sponda idraulica`;
   navigator.clipboard.writeText(badrText).then(() => {
-    alert('📋 Dati dell\'Ingegner Badr copiati negli appunti!');
+    alert('📋 Dati di Badr copiati negli appunti!');
   });
 };
 
@@ -3051,35 +3074,18 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="holo-emitter-ring"></div>
         <div class="holo-projector-base"></div>
         <div class="holo-avatar-stage" id="holo-avatar-stage">
-          <img src="badr_hologram.png" alt="EBJ Hologram" class="holo-avatar-img" id="holo-avatar-img">
+          <img src="badr_hologram.png" alt="Avatar olografico E.B.J." class="holo-avatar-img" id="holo-avatar-img">
+          <span class="holo-eye-tracker holo-eye-left" aria-hidden="true"></span>
+          <span class="holo-eye-tracker holo-eye-right" aria-hidden="true"></span>
           <div class="holo-scanlines"></div>
           <div class="holo-glow" id="holo-glow"></div>
         </div>
         <div class="holo-avatar-label">UNIT-01 · EBJ HOLOGRAM · MARK-EBJ</div>
         
-        <!-- Live Biometric Telemetry Strip -->
-        <div class="holo-biometric-grid">
-          <div class="holo-bio-pill">
-            <span class="bio-icon">❤️</span>
-            <div class="bio-info">
-              <span class="bio-val" id="bio-pulse-val">72 BPM</span>
-              <span class="bio-lbl">CARDIO ECG</span>
-            </div>
-          </div>
-          <div class="holo-bio-pill">
-            <span class="bio-icon">🧠</span>
-            <div class="bio-info">
-              <span class="bio-val" id="bio-focus-val">100%</span>
-              <span class="bio-lbl">FOCUS ATTIVO</span>
-            </div>
-          </div>
-          <div class="holo-bio-pill">
-            <span class="bio-icon">⚡</span>
-            <div class="bio-info">
-              <span class="bio-val">&lt; 1.5ms</span>
-              <span class="bio-lbl">SYNAPSE LINK</span>
-            </div>
-          </div>
+        <div class="holo-biometric-grid" aria-label="Stato del tracking webcam">
+          <div class="holo-bio-pill"><span class="bio-icon">👁</span><div class="bio-info"><span class="bio-val">Dlib locale</span><span class="bio-lbl">RILEVAMENTO VOLTO</span></div></div>
+          <div class="holo-bio-pill"><span class="bio-icon">◎</span><div class="bio-info"><span class="bio-val">Attivo su consenso</span><span class="bio-lbl">TRACKING SGUARDO AVATAR</span></div></div>
+          <div class="holo-bio-pill"><span class="bio-icon">⌁</span><div class="bio-info"><span class="bio-val">Solo memoria volatile</span><span class="bio-lbl">NESSUN SALVATAGGIO FRAME</span></div></div>
         </div>
       </div>
     </div>
@@ -3122,7 +3128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <p style="font-size:0.85rem; color:#cbd5e1; margin:0;">
-      Avvio squillo telefonico diretto verso l'<strong>Ingegner Badr El Ouariti</strong>:
+      Avvio squillo telefonico diretto verso <strong>Badr El Ouariti</strong>:
     </p>
     <div style="font-family:var(--font-mono); font-size:1.1rem; color:#00ff9f; font-weight:bold; background:rgba(0,0,0,0.5); padding:6px 14px; border-radius:6px; border:1px solid rgba(0,255,159,0.3);">
       📞 +39 388 870 3508

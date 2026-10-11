@@ -2260,18 +2260,21 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
                     full_num = ("39" + clean_num) if not clean_num.startswith("39") else clean_num
                     msg_text = prompt.replace(m_num.group(0), "").replace("invia", "").replace("messaggio", "").replace("dicendo", "").strip() or "Ciao, ti contatto da BadrExpress."
 
-        wa_link = f"https://wa.me/{full_num}?text={urllib.parse.quote(msg_text)}"
+        enc_txt = urllib.parse.quote(msg_text)
+        wa_app_link = f"whatsapp://send?phone={full_num}&text={enc_txt}"
+        wa_web_link = f"https://web.whatsapp.com/send?phone={full_num}&text={enc_txt}"
         
         # Queue to smartphone if registered
         _enqueue_android_command("whatsapp", {"number": full_num, "text": msg_text})
         _enqueue_android_command("sms", {"number": full_num, "text": msg_text})
 
         return (
-            f"✅ **MESSAGGIO WHATSAPP PRONTO PER L'INVIO (Badr)**\n\n"
+            f"✅ **MESSAGGIO WHATSAPP PRONTO (Badr)**\n\n"
             f"• 👤 **Destinatario:** `{target}` (`+{full_num}`)\n"
             f"• 💬 **Testo:** *\"{msg_text}\"*\n\n"
-            f"👉 [🟢 **TOCCA QUI PER APRIRE E INVIARE IL MESSAGGIO SU WHATSAPP**]({wa_link})\n\n"
-            f"⚡ *Comando registrato ed emesso sul bus del tuo smartphone.*"
+            f"👉 [🟢 **APRI NELL'APP WHATSAPP DESKTOP (Consigliato)**]({wa_app_link})\n"
+            f"👉 [🌐 **Apri su WhatsApp Web**]({wa_web_link})\n\n"
+            f"⚡ *Comando registrato ed emesso anche sul demone dello smartphone.*"
         ), "whatsapp-send"
 
     try:
@@ -3389,7 +3392,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
     # ── SYSTEM CLOCK & TIME INTENT ───────────────────────────
     if any(k in p_lower for k in ["che ora è", "che ore sono", "ora esatta", "ora attuale", "che giorno è", "data di oggi", "dimmi l'ora", "dimmi l ora", "orario attuale", "orario corrente", "ora di sistema"]):
         time_res = execute_skill_code("windows_file_commander", {"action": "time"})
-        return time_res.get("result", {}).get("human_readable", f"Ingegner Badr, sono esattamente le {datetime.datetime.now().strftime('%H:%M:%S')}."), "system-clock"
+        return time_res.get("result", {}).get("human_readable", f"Badr, sono esattamente le {datetime.datetime.now().strftime('%H:%M:%S')}."), "system-clock"
 
     # ── WINDOWS FILE EXPLORER & ORGANIZER ─────────────────────
     if any(k in p_lower for k in ["esplora", "elenca file", "mostra i file", "lista file", "contenuto cartella", "esplora file", "esplora disco", "apri cartella", "mostra cartella", "cosa c'è", "cosa ce", "file in", "cartelle in", "disco c", "disco d", "disco e"]):
@@ -8167,7 +8170,7 @@ def _patched_do_POST(self):
 
             vision_prompt = (
                 custom_prompt if custom_prompt else
-                "Sei AG-JARVIS-E.B.J., l'assistente IA visivo personale dell'Ingegner Badr.\n"
+                "Sei AG-JARVIS-E.B.J., l'assistente IA visivo personale di Badr.\n"
                 "Guarda attentamente questa schermata del desktop/browser dell'utente e fai due cose:\n"
                 "1. COMMENTO: Descrivi in modo conciso, brillante e professionale cosa sta vedendo l'utente (che sito/app è aperta, cosa c'è scritto, punti salienti).\n"
                 "2. MODULO/FORM: Rileva se nella schermata è presente un form di contatto, preventivo, registrazione o checkout con campi di input da compilare.\n"
