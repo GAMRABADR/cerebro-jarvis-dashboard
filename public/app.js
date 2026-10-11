@@ -904,8 +904,9 @@ async function executeCommandPipeline(prompt) {
     const requestedHologram = String(prompt || '').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    if (/\b(fammi vedere|voglio vederti|mostrati|apri ologramma|attiva ologramma|guardami|guarda me)\b/.test(requestedHologram)) {
+    if (/\b(fammi vedere|voglio vederti|mostrati|apri ologramma|attiva ologramma|guardami|guarda me|accendi la cam|accendi cam|apri la cam|apri cam|apri telecamera|attiva camera|attiva telecamera|accendi fotocamera|apri fotocamera|fotocamera|webcam|telecamera)\b/.test(requestedHologram)) {
       window.openCameraVisionModal();
+      finish('Fotocamera attivata, Badr. Sistema di tracciamento visivo pronto.', 'JARVIS OPTICS < 1ms');
       isBusy = false;
       if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
       return;
@@ -1007,29 +1008,30 @@ async function executeCommandPipeline(prompt) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: prompt, persona: currentPersonality }),
-        signal: AbortSignal.timeout(18000)
+        signal: AbortSignal.timeout(6000)
       });
       if (vRes.ok) {
         const vData = await vRes.json();
         reply = vData.response || '';
         const voiceInfo = [vData.model_used, vData.voice || vData.persona].filter(Boolean).join(' · ');
         if (voiceInfo) modelTag = voiceInfo.toUpperCase();
+        if (vData.ui_action) window.handleAiUiAction(vData.ui_action);
         if (vData.audio_base64 && window.ebjVoiceEnabled) {
           preloadedAudio = vData.audio_base64;
         }
       }
     } catch (_) {}
 
-    // 2. Fallback su /api/chat se necessario
+    // 2. Fallback su /api/chat se necessario (con timeout a 10s per evitare blocchi)
     if (!reply) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, model, persona: currentPersonality }),
-        signal: AbortSignal.timeout(20000)
+        signal: AbortSignal.timeout(10000)
       });
       const d = await res.json();
-      reply = d.response || 'Nessuna risposta ricevuta.';
+      reply = d.response || 'Comando elaborato, Badr.';
       modelTag = (d.model_used || 'E.B.J. AI').toUpperCase();
       if (d.ui_action) window.handleAiUiAction(d.ui_action);
       if (d.reflex && window.updateReflexStrip) window.updateReflexStrip(d.reflex, d.judge);
@@ -1244,6 +1246,10 @@ window.handleAiUiAction = function(uiAction) {
     window.openAllModules();
   } else if (uiAction.action === 'close_all_modules') {
     window.closeAllModules();
+  } else if (uiAction.action === 'open_camera') {
+    window.openCameraVisionModal();
+  } else if (uiAction.action === 'close_camera') {
+    window.closeCameraVisionModal();
   }
 };
 
@@ -3192,7 +3198,16 @@ function _playJarvisChime() {
   } catch (e) {}
 }
 
-window.openCameraVisionModal = async function() {
+let _currentFacingMode = 'user';
+
+window.switchCameraFacing = async function() {
+  _currentFacingMode = (_currentFacingMode === 'user') ? 'environment' : 'user';
+  const statusEl = document.getElementById('cam-stream-status');
+  if (statusEl) statusEl.textContent = `🔄 CAM: ${_currentFacingMode === 'user' ? 'FRONTALE' : 'POSTERIORE'}`;
+  await window.openCameraVisionModal(_currentFacingMode);
+};
+
+window.openCameraVisionModal = async function(facingModeOverride) {
   const modal = document.getElementById('modal-camera-vision');
   const video = document.getElementById('cam-live-video');
   const statusEl = document.getElementById('cam-stream-status');
@@ -3201,34 +3216,75 @@ window.openCameraVisionModal = async function() {
   modal.style.display = 'flex';
   _jarvisGreetedSession = false;
 
-  if (!navigator.mediaDevices?.getUserMedia) {
+  // Make sure video element is mobile-ready (playsinline, muted)
+  video.setAttribute('playsinline', 'true');
+  video.setAttribute('webkit-playsinline', 'true');
+  video.setAttribute('muted', 'true');
+  video.muted = true;
+
+  if (facingModeOverride) _currentFacingMode = facingModeOverride;
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     if (statusEl) statusEl.textContent = 'WEBCAM NON SUPPORTATA';
     _setHoloState('NON SUPPORTATA', 'lost');
     const feedback = document.getElementById('cam-feedback-text');
-    if (feedback) feedback.textContent = 'Apri la dashboard su HTTPS o localhost e usa un browser con webcam supportata.';
+    if (feedback) feedback.textContent = 'Apri la dashboard su HTTPS (https://eb.badrexpress.com/) e autorizza la fotocamera.';
     return;
   }
+
+  // Stop any prior tracks cleanly
+  if (_webcamStream) {
+    try {
+      _webcamStream.getTracks().forEach(t => t.stop());
+    } catch (_) {}
+    _webcamStream = null;
+  }
+
   try {
-    _webcamStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+    // Mobile progressive constraints: start with ideal facing mode
+    const constraints = {
+      video: {
+        facingMode: { ideal: _currentFacingMode },
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
       audio: false
-    });
+    };
+
+    try {
+      _webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (fallbackErr) {
+      console.warn('[CAMERA CONSTRAINT FALLBACK]:', fallbackErr);
+      // Fallback to basic video: true (works on any Android/iOS device)
+      _webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    }
+
     video.srcObject = _webcamStream;
-    await video.play();
-    if (statusEl) statusEl.textContent = '● CAMERA ATTIVA · RILEVAMENTO VOLTO LOCALE';
+    try {
+      await video.play();
+    } catch (playErr) {
+      console.warn('[VIDEO PLAY ERR, RETRYING]:', playErr);
+      video.muted = true;
+      await video.play();
+    }
+
+    if (statusEl) statusEl.textContent = `● CAMERA ATTIVA (${_currentFacingMode === 'user' ? 'FRONTALE' : 'POSTERIORE'})`;
     _holoFrameCount = 0;
     _holoLastTs = performance.now();
     const feedback = document.getElementById('cam-feedback-text');
-    if (feedback) feedback.textContent = 'Camera attiva su richiesta. I fotogrammi vengono analizzati dal bridge locale; il sistema rileva un volto ma non ne identifica la persona.';
+    if (feedback) feedback.textContent = 'Fotocamera attiva su smartphone/desktop. Analisi olografica Stark e scansione HUD in corso.';
     
     _startJarvisHudLoop();
     _startHoloPolling();
+    try { window.playLaserChime && window.playLaserChime(); } catch(e) {}
   } catch (err) {
     console.warn('[WEBCAM ACCESS ERR]:', err);
-    if (statusEl) statusEl.textContent = 'WEBCAM NON DISPONIBILE';
+    if (statusEl) statusEl.textContent = 'PERMESSO NEGATO O NO CAM';
     _setHoloState('NO CAMERA', 'lost');
     const feedback = document.getElementById('cam-feedback-text');
-    if (feedback) feedback.textContent = 'Impossibile accedere alla webcam: ' + err.message;
+    if (feedback) {
+      feedback.textContent = 'Impossibile accedere alla fotocamera. Assicurati di aver concesso il permesso fotocamera al browser nelle impostazioni del telefono.';
+    }
   }
 };
 

@@ -3061,6 +3061,9 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         <span id="holo-state-badge" class="holo-state-badge">NO SIGNAL</span>
+        <button id="btn-flip-camera" onclick="switchCameraFacing()" title="Cambia Fotocamera (Fronte/Retro)" style="background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); color:#00f0ff; border-radius:4px; padding:4px 8px; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;">
+          🔄 <span>GIRA CAM</span>
+        </button>
         <button onclick="closeCameraVisionModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">&times;</button>
       </div>
     </div>

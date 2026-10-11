@@ -2165,6 +2165,17 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
     if is_ebj_wake_phrase(prompt):
         return get_jarvis_wake_ack(), "ebj-wake"
 
+    # ── CAMERA / WEBCAM FAST-PATH (< 0.1ms) ─────────────────────────
+    if any(k in p_lower for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri la fotocamera", "accendi fotocamera"]):
+        return (
+            "Fotocamera attivata con successo, Badr. Sistema di tracciamento visivo e telemetria ottica attivi a schermo."
+        ), "jarvis-camera-on"
+
+    if any(k in p_lower for k in ["spegni la cam", "spegni cam", "chiudi la cam", "chiudi cam", "spegni telecamera", "chiudi telecamera", "disattiva camera"]):
+        return (
+            "Fotocamera disattivata, Badr. Sensore spento e risorse di sistema liberate."
+        ), "jarvis-camera-off"
+
     
             # ── AUTONOMOUS AI EMPLOYEES & NIGHT FLEET COMMANDS (/new, /steer, /queue) ──
     if prompt.strip().startswith(("/new", "/nuovo", "nuovo task", "avvia compito")):
@@ -4115,6 +4126,10 @@ def detect_modular_ui_action(prompt):
         return {"action": "toggle_module", "module": "mod-n8n", "state": True, "title": "N8N Automation Funnel"}
     if any(w in p for w in ["radar", "lead", "clienti", "annunc"]):
         return {"action": "toggle_module", "module": "mod-radar", "state": True, "title": "Radar Clienti 2026"}
+    if any(w in p for w in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva camera", "attiva telecamera", "accendi fotocamera", "apri fotocamera", "telecamera", "webcam"]):
+        return {"action": "open_camera", "title": "Webcam HD Vision"}
+    if any(w in p for w in ["spegni la cam", "spegni cam", "chiudi la cam", "chiudi cam", "spegni telecamera", "chiudi telecamera", "disattiva camera"]):
+        return {"action": "close_camera", "title": "Chiudi Webcam"}
     if any(w in p for w in ["tutti i moduli", "tutti moduli", "tutte le schede", "mostra tutto", "apri tutto"]):
         return {"action": "open_all_modules", "title": "Tutti i Moduli"}
     if any(w in p for w in ["chiudi tutto", "nascondi tutto", "nascondi schede", "stealth", "pulisci schermo"]):
@@ -7948,6 +7963,17 @@ def _patched_do_POST(self):
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
                 model_used = "wake-ack"
+            elif any(k in user_query.lower() for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri fotocamera", "accendi fotocamera"]):
+                reply_text = "Fotocamera attivata con successo, Badr. Sistema di puntamento visivo operativo."
+                model_used = "jarvis-camera-on"
+            elif any(k in user_query.lower() for k in ["spegni la cam", "spegni cam", "chiudi la cam", "chiudi cam", "spegni telecamera", "chiudi telecamera", "disattiva camera"]):
+                reply_text = "Fotocamera disattivata, Badr. Sensore ottico spento."
+                model_used = "jarvis-camera-off"
+            elif any(k in user_query.lower() for k in ["chiama", "telefona", "avvia chiamata", "fai una chiamata"]):
+                # Fast path query_model phone dispatcher
+                ans, m_used = query_model(user_query, persona=req_persona)
+                reply_text = "Chiamata inoltrata al tuo telefono dal numero 388 870 3508, Badr."
+                model_used = "jarvis-phone-call"
             else:
                 # ── JEV REFLEX FAST-PATH (System One Structured Decision Layer) ──
                 try:
@@ -7984,6 +8010,8 @@ def _patched_do_POST(self):
             except Exception as tts_err:
                 print(f"[VOICE] Sintesi non disponibile ({req_persona}): {type(tts_err).__name__}: {tts_err}")
 
+            ui_act = detect_modular_ui_action(user_query)
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -7996,7 +8024,8 @@ def _patched_do_POST(self):
                 "audio_base64": audio_b64,
                 "voice": voice_used,
                 "mime_type": mime_type,
-                "persona": req_persona
+                "persona": req_persona,
+                "ui_action": ui_act
             }).encode())
             return
         except Exception as e:

@@ -1,5 +1,5 @@
 # 🌌 HERMES AGENT & JARVIS · HOLOGRAPHIC LONG-TERM MEMORY VAULT
-*Ultima sincronizzazione automatica: 2026-10-11 17:11:46*
+*Ultima sincronizzazione automatica: 2026-10-11 19:05:33*
 
 Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, sincronizzata con SQLite Vector/FTS.
 
@@ -372,6 +372,8 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Interazione Utente** `★★★★★`: Dammi un piano rapido per i preventivi di oggi *(Registrato: 2026-10-01 02:58:16)*
 - **Interazione Utente** `★★★★★`: Tuttavia il capo fece pane ma anche solo un panino *(Registrato: 2026-10-11 11:17:06)*
 - **Interazione Utente** `★★★★★`: Dimmi quando hai inviato *(Registrato: 2026-10-11 14:05:59)*
+- **Interazione Utente** `★★★★★`: chiama Marco *(Registrato: 2026-10-11 16:25:55)*
+- **Interazione Utente** `★★★★★`: accendi la cam *(Registrato: 2026-10-11 17:03:28)*
 
 ## 📂 Categoria: `BUSINESS_SGOMBERI`
 
