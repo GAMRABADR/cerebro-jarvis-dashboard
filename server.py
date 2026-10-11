@@ -275,6 +275,23 @@ def detect_and_handle_brain_switch(prompt_text):
 
     return False, "", ""
 
+# ── ANDROID SMARTPHONE HARDWARE NODE STATE & TELEMETRY ────────────────────────
+_ANDROID_DEVICE_STATE = {
+    "device_id": "badr-smartphone-primary",
+    "status": "DISCONNECTED",
+    "last_seen": 0,
+    "battery": {},
+    "location": {},
+    "notifications_count": 0,
+    "pending_commands": []
+}
+
+def _enqueue_android_command(action, params):
+    global _ANDROID_DEVICE_STATE
+    cmd = {"action": action, "params": params, "id": str(time.time())}
+    _ANDROID_DEVICE_STATE["pending_commands"].append(cmd)
+    if len(_ANDROID_DEVICE_STATE["pending_commands"]) > 30:
+        _ANDROID_DEVICE_STATE["pending_commands"] = _ANDROID_DEVICE_STATE["pending_commands"][-30:]
 
 # ── VAULT CATEGORIES & DATABASE SPECS ────────────────────────────────────────
 VAULT_CATEGORIE = {
@@ -2184,9 +2201,78 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
                 + f"📜 *Cronologia recente:*\n{prev_msgs_text}\n\n"
                 + "✅ *Tutti i turni rimangono attivi nel buffer neurale in RAM.*"
             )
-            return res_text, "short-term-memory"
         else:
-            return "Signore, questo è il primo messaggio della sessione attiva.", "short-term-memory"
+            return "Badr, questo è il primo messaggio della sessione attiva.", "short-term-memory"
+
+    # ── WHATSAPP BUSINESS & MESSAGING COMMANDS ────────────────────────
+    if any(k in p_lower for k in [
+        "wazap messaggi", "whatsapp messaggi", "messaggi whatsapp", "leggi messaggi",
+        "wazap", "whatsapp", "i miei messaggi", "messaggi ricevuti", "stato whatsapp", "messaggi clienti"
+    ]) and not any(k in p_lower for k in ["invia", "manda", "scrivi", "pubblica"]):
+        phone_st = _ANDROID_DEVICE_STATE.get("status", "DISCONNECTED")
+        batt = _ANDROID_DEVICE_STATE.get("battery", {}).get("percentage", "--")
+        loc = _ANDROID_DEVICE_STATE.get("location", {})
+        gps_txt = f"{loc.get('latitude', 0):.4f}, {loc.get('longitude', 0):.4f}" if loc else "In attesa segnale"
+
+        return (
+            "📱 **CENTRO CONTROLLO WHATSAPP & DISPOSITIVO MOBILE (Badr)**\n\n"
+            f"• 📲 **Stato Smartphone:** `{phone_st}` (Batteria: `{batt}%` | GPS: `{gps_txt}`)\n"
+            f"• 🟢 **Canale WhatsApp Business:** Protocollo Multi-Device e Intent Android attivo\n\n"
+            "**Cosa posso eseguire per te adesso:**\n"
+            "1. **Inviare un messaggio:** dimmi *'Invia messaggio a 348... dicendo [testo]'*\n"
+            "2. **Chiamare un cliente:** dimmi *'Chiama il numero 348...'*\n"
+            "3. **Inviare a un contatto:** dimmi *'Scrivi su WhatsApp a [nome/numero]: [testo]'*\n\n"
+            "💡 *Per collegare il tuo smartphone in 1 secondo tramite Termux:* `curl -sSL https://eb.badrexpress.com/mobile/install_ebj_mobile.sh | bash`"
+        ), "whatsapp-hub"
+
+    is_send_msg = any(w in p_lower for w in [
+        "invia messaggio", "manda messaggio", "scrivi messaggio",
+        "invia un messaggio", "manda un messaggio", "invia whatsapp", "manda whatsapp",
+        "invia a me stesso", "manda a me stesso", "invia a mestesso", "manda a mestesso",
+        "scrivi a", "scrivi su whatsapp", "messaggio a", "whatsapp a", "a me stesso", "a mestesso"
+    ]) and any(w in p_lower for w in ["whatsapp", "wazap", "messaggio", "sms", "me stesso", "mestesso"])
+
+    if is_send_msg:
+        target = "Badr"
+        full_num = "393888703508"
+        msg_text = "Test operativo di trasmissione da E.B.J. Supreme per Badr"
+
+        is_self = any(w in p_lower for w in ["me stesso", "mestesso", "a me", "al mio numero", "al mio telefono", "sul mio whatsapp"])
+        if is_self:
+            target = "Badr (Te stesso)"
+            full_num = "393888703508"
+            m_self_txt = re.search(r'(?:dicendo|testo|con\s+testo)\s*[:\s]?\s*(.+)$', prompt, re.IGNORECASE)
+            if m_self_txt:
+                msg_text = m_self_txt.group(1).strip()
+        else:
+            m_cmd = re.search(r'(?:invia|manda|scrivi)(?:\s+un)?(?:\s+messaggio|\s+whatsapp)?\s+(?:a|su)\s+([0-9\+\s]+|[a-zA-Z\s]+?)(?:\s*:\s*|\s+dicendo\s+|\s+con\s+testo\s+)(.+)$', prompt, re.IGNORECASE)
+            if m_cmd:
+                target = m_cmd.group(1).strip()
+                msg_text = m_cmd.group(2).strip()
+                clean_num = "".join(c for c in target if c.isdigit())
+                if clean_num:
+                    full_num = ("39" + clean_num) if (len(clean_num) == 10 and not clean_num.startswith("39")) else clean_num
+            else:
+                m_num = re.search(r'(\+?39)?\s*([0-9]{9,11})', prompt)
+                if m_num:
+                    clean_num = m_num.group(2)
+                    target = clean_num
+                    full_num = ("39" + clean_num) if not clean_num.startswith("39") else clean_num
+                    msg_text = prompt.replace(m_num.group(0), "").replace("invia", "").replace("messaggio", "").replace("dicendo", "").strip() or "Ciao, ti contatto da BadrExpress."
+
+        wa_link = f"https://wa.me/{full_num}?text={urllib.parse.quote(msg_text)}"
+        
+        # Queue to smartphone if registered
+        _enqueue_android_command("whatsapp", {"number": full_num, "text": msg_text})
+        _enqueue_android_command("sms", {"number": full_num, "text": msg_text})
+
+        return (
+            f"✅ **MESSAGGIO WHATSAPP PRONTO PER L'INVIO (Badr)**\n\n"
+            f"• 👤 **Destinatario:** `{target}` (`+{full_num}`)\n"
+            f"• 💬 **Testo:** *\"{msg_text}\"*\n\n"
+            f"👉 [🟢 **TOCCA QUI PER APRIRE E INVIARE IL MESSAGGIO SU WHATSAPP**]({wa_link})\n\n"
+            f"⚡ *Comando registrato ed emesso sul bus del tuo smartphone.*"
+        ), "whatsapp-send"
 
     try:
         from skills_vault.hermes_kali_toolkit.skill import parse_user_kali, execute as kali_run
@@ -3436,7 +3522,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         return msg, "autonomous-email-triage"
 
     # ── PROFESSIONAL SMART EMAIL ORCHESTRATOR ────────────────
-    if any(k in p_lower for k in ["invia email", "invia l'email", "invia mail", "manda email", "manda la mail", "spedisci email", "invia preventivo", "invia a", "invia posta", "invia il cv", "invia il mio cv", "invia cv", "manda il cv", "manda cv", "spedisci cv", "curriculum", "allega cv"]):
+    if any(k in p_lower for k in ["invia email", "invia l'email", "invia mail", "manda email", "manda la mail", "spedisci email", "invia preventivo via mail", "invia posta", "invia il cv", "invia il mio cv", "invia cv", "manda il cv", "manda cv", "spedisci cv"]) and not any(w in p_lower for w in ["whatsapp", "wazap", "sms", "messaggio"]):
         broadcast_synapse_pulse("real_smtp_mailer", intensity=2.0, event_type="EMAIL_DISPATCH_TRIGGER")
         
         # 1. Extract recipient email if present, otherwise default to Badr
@@ -4002,6 +4088,17 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 "active_brain": cur_b,
                 "label": lbl,
                 "available_brains": BRAIN_ENGINE_NAMES
+            })
+        if clean_path in ('/api/device/android/status', '/api/device/status'):
+            self.send_json(_ANDROID_DEVICE_STATE)
+            return
+
+        if clean_path == '/api/whatsapp/status':
+            self.send_json({
+                "status": "ONLINE",
+                "mode": "multi-device-intent",
+                "registered_device": _ANDROID_DEVICE_STATE.get("status") == "ONLINE",
+                "phone_telemetry": _ANDROID_DEVICE_STATE
             })
             return
 
@@ -5849,6 +5946,27 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 })
             except Exception as e:
                 self.send_json({"status": "ERROR", "error": str(e)})
+        # ── ANDROID SMARTPHONE HARDWARE NODE ENDPOINTS ───────────────────
+        if self.path == '/api/device/android/telemetry':
+            global _ANDROID_DEVICE_STATE
+            _ANDROID_DEVICE_STATE["status"] = "ONLINE"
+            _ANDROID_DEVICE_STATE["last_seen"] = time.time()
+            if "battery" in data:
+                _ANDROID_DEVICE_STATE["battery"] = data["battery"]
+            if "location" in data:
+                _ANDROID_DEVICE_STATE["location"] = data["location"]
+            if "notifications_count" in data:
+                _ANDROID_DEVICE_STATE["notifications_count"] = data["notifications_count"]
+            pending = list(_ANDROID_DEVICE_STATE["pending_commands"])
+            _ANDROID_DEVICE_STATE["pending_commands"] = []
+            self.send_json({"status": "SUCCESS", "pending_commands": pending})
+            return
+
+        if self.path == '/api/device/android/command':
+            act = data.get("action", "")
+            params = data.get("params", {})
+            _enqueue_android_command(act, params)
+            self.send_json({"status": "SUCCESS", "enqueued": act, "params": params})
             return
 
         # ── REAL ESTATE & UNIVERSAL ONBOARDING AGENT ─────────────────────────
