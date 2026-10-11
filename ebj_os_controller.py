@@ -41,6 +41,8 @@ _APP_MAP = {
     "paint": "mspaint"
 }
 
+APP_TARGETS = _APP_MAP
+
 def launch_application(app_name: str) -> Dict[str, Any]:
     """Avvia un'applicazione su Windows/Linux."""
     clean_name = app_name.lower().strip()

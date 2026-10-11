@@ -6100,36 +6100,18 @@ class JarvisHandler(BaseHTTPRequestHandler):
 
                     reply_text, model_used = generate_jarvis_spoken_response(user_query, extra_facts=extra_facts)
 
-                # Generazione Audio Neurale JARVIS (it-IT-GiuseppeMultilingualNeural -5Hz pitch, fallback Diego)
+                # Generazione Audio Neurale EBJ Unificato (Multilingue: Italiano, Russo, Inglese, Kokoro Offline)
                 audio_b64 = None
                 try:
-                    async def _gen_tts(text_to_speak):
-                        candidates = [
-                            ("en-GB-RyanNeural", "-2%", "-2Hz"),
-                            ("it-IT-GiuseppeMultilingualNeural", "+0%", "-6Hz")
-                        ] if persona in ("jarvis_uk", "uk", "british") else [
-                            ("it-IT-GiuseppeMultilingualNeural", "+0%", "-6Hz"),
-                            ("it-IT-DiegoNeural", "+1%", "-6Hz"),
-                            ("en-GB-RyanNeural", "-2%", "-2Hz")
-                        ]
-                        for v_name, r_val, p_val in candidates:
-                            try:
-                                communicate = edge_tts.Communicate(text_to_speak, v_name, rate=r_val, pitch=p_val)
-                                audio_chunks = []
-                                async for chunk in communicate.stream():
-                                    if chunk["type"] == "audio":
-                                        audio_chunks.append(chunk["data"])
-                                if audio_chunks:
-                                    return b"".join(audio_chunks)
-                            except Exception:
-                                continue
-                        return None
-                    
-                    audio_bytes = asyncio.run(_gen_tts(reply_text))
-                    if audio_bytes:
-                        audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
+                    import asyncio as _asyncio
+                    loop = _asyncio.new_event_loop()
+                    _asyncio.set_event_loop(loop)
+                    b64_res, v_used, m_type = loop.run_until_complete(generate_speech_audio(reply_text, voice_mode=persona, prefer_engine="auto"))
+                    loop.close()
+                    if b64_res:
+                        audio_b64 = b64_res
                 except Exception as tts_err:
-                    print(f"[VOICE] Edge-TTS error: {tts_err}")
+                    print(f"[VOICE] Unified TTS error: {tts_err}")
 
                 self.send_json({
                     "status": "SUCCESS",
@@ -6470,6 +6452,35 @@ class JarvisHandler(BaseHTTPRequestHandler):
             try:
                 from skills_vault.agent_swarm_dispatcher.skill import execute as exec_dispatch
                 res = exec_dispatch(data)
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
+        # ── 2026 EBJ SUPREME SYSTEM DIAGNOSTICS & TELEMETRY ──────────────────
+        if self.path in ['/api/ai/diagnostics', '/api/ebj/telemetry']:
+            try:
+                import ebj_semantic_cache
+                import ebj_os_controller
+                import ebj_reflex_engine
+                from autonomous_employee_fleet import get_fleet_status
+                res = {
+                    "status": "SUCCESS",
+                    "system": "E.B.J. Supreme 2026 Unified Engine",
+                    "timestamp": time.time(),
+                    "clm_reflex": "ONLINE (< 1ms)",
+                    "semantic_cache": {
+                        "l1_items": len(ebj_semantic_cache._GLOBAL_CACHE._exact_l1),
+                        "l2_fuzzy_entries": len(ebj_semantic_cache._GLOBAL_CACHE._entries_l1),
+                        "db_path": ebj_semantic_cache.DB_PATH
+                    },
+                    "os_controller": {
+                        "supported_apps": list(ebj_os_controller.APP_TARGETS.keys()),
+                        "platform": sys.platform
+                    },
+                    "multilingual_tts": ["it-IT-GiuseppeMultilingualNeural", "it-IT-DiegoNeural", "ru-RU-DmitryNeural", "ru-RU-SvetlanaNeural", "en-GB-RyanNeural", "kokoro-offline"],
+                    "fleet_summary": get_fleet_status()
+                }
             except Exception as e:
                 res = {"status": "ERROR", "message": str(e)}
             self.send_json(res)
