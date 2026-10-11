@@ -542,6 +542,20 @@
               </svg>
             </div>
 
+            <!-- 🎬 MARK-LV HUD VIDEO STAGE (VIDEO WHERE THE FACE IS) -->
+            <div id="jarvis-hud-video-stage" style="display:none; position:relative; width:100%; max-width:540px; margin:0 auto 16px auto; background:#010915; border:1px solid #00f0ff; border-radius:12px; overflow:hidden; box-shadow:0 0 30px rgba(0,240,255,0.3); z-index:100;">
+              <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,240,255,0.08); padding:6px 12px; border-bottom:1px solid rgba(0,240,255,0.2);">
+                <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:#00f0ff; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+                  <span style="width:6px; height:6px; border-radius:50%; background:#00ff9f;"></span> HUD MEDIA STAGE · MARK-LV
+                </span>
+                <div style="display:flex; gap:8px;">
+                  <button id="btn-hud-video-mute" onclick="window.toggleHudVideoMute()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:#fff; border-radius:4px; font-size:10px; padding:2px 8px; cursor:pointer;">AUDIO OFF (MUTED)</button>
+                  <button onclick="window.closeHudVideo()" style="background:rgba(255,60,60,0.2); border:1px solid #ff4444; color:#ff4444; border-radius:4px; font-size:10px; padding:2px 8px; cursor:pointer;">✕ CHIUDI</button>
+                </div>
+              </div>
+              <div id="jarvis-hud-video-frame" style="width:100%; height:300px; display:flex; align-items:center; justify-content:center; background:#000;"></div>
+            </div>
+
             <!-- 7. AUDIO SPECTRUM VISUALIZER IN TEMPO REALE -->
             <div class="jarvis-audio-spectrum" id="jarvis-audio-spectrum">
               <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>

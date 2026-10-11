@@ -7583,7 +7583,7 @@ def _patched_do_POST(self):
     if self.path == "/api/reflex/dispatch":
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
-            query = bd.get("query", "").strip()
+            query = (bd.get("query", "") or bd.get("text", "")).strip()
             rust_data = None
             try:
                 import requests as _rq

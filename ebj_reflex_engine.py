@@ -375,6 +375,31 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = {"fleet": "autonomous_employee_fleet", "status": "ENQUEUED"}
         ack_text = "Ho assegnato l'incarico alla flotta autonoma di impiegati AI, Badr: esecuzione notturna in background avviata."
 
+    # 15. OS APP LAUNCH (Mark-LV Desktop Execution)
+    elif intent == "OS_APP_LAUNCH":
+        import ebj_os_controller as eoc
+        raw_app = re.sub(r'^(?:ebj|jarvis|apri|lancia|avvia|il|la|lo|per favore)[,\s]*', '', prompt, flags=re.IGNORECASE).strip()
+        app_res = eoc.launch_application(raw_app or "chrome")
+        details = app_res
+        ack_text = f"Ho avviato l'applicazione {raw_app or 'richiesta'} sul desktop, Badr."
+
+    # 16. OS MEDIA & SYSTEM CONTROL (Mark-LV Audio/Screen)
+    elif intent == "OS_MEDIA_CONTROL":
+        import ebj_os_controller as eoc
+        if "screenshot" in prompt.lower() or "schermo" in prompt.lower():
+            sc_res = eoc.take_desktop_screenshot()
+            details = sc_res
+            ack_text = "Ho catturato lo screenshot del desktop, salvato nei tuoi file, Badr."
+        else:
+            audio_res = eoc.control_system_audio(prompt)
+            details = audio_res
+            ack_text = "Comando audio di sistema eseguito con successo, Badr."
+
+    # 17. HUD VIDEO PLAY (Mark-LV Video-on-HUD Surface)
+    elif intent == "HUD_VIDEO_PLAY":
+        details = {"video_hud": True, "query": prompt, "start_muted": True}
+        ack_text = "Carico il video direttamente al centro della plancia HUD, Badr."
+
     else:
         ack_text = "Comando ricevuto e registrato, Badr. Procedo con l'operazione."
 
@@ -448,6 +473,12 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
             matched, intent, domain, action = True, "CAMERA_VISION", "VISION", "HUD_INSPECT"
         elif any(k in p_lower for k in ["flotta", "subagente", "task notturno", "background"]):
             matched, intent, domain, action = True, "FLEET_DISPATCH", "AGENT_FLEET", "DISPATCH_TASK"
+        elif any(p_lower.startswith(k) for k in ["apri ", "lancia ", "avvia "]) and any(w in p_lower for w in ["chrome", "telegram", "whatsapp", "discord", "spotify", "code", "vscode", "terminale", "calcolatrice", "blocco note", "esplora risorse"]):
+            matched, intent, domain, action = True, "OS_APP_LAUNCH", "OS_DESKTOP", "LAUNCH_APP"
+        elif any(k in p_lower for k in ["volume", "muto", "silenzia audio", "screenshot", "cattura schermo"]):
+            matched, intent, domain, action = True, "OS_MEDIA_CONTROL", "OS_DESKTOP", "CONTROL_AUDIO_SCREEN"
+        elif any(k in p_lower for k in ["riproduci video", "metti il trailer", "video youtube", "metti il video"]):
+            matched, intent, domain, action = True, "HUD_VIDEO_PLAY", "MEDIA_HUD", "PLAY_VIDEO_HUD"
 
     if not matched:
         return None

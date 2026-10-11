@@ -238,6 +238,34 @@ CLM_INTENT_CATALOG: Dict[str, Dict[str, Any]] = {
             "assegna il compito alla flotta", "manda all'agente in background", "delega al subagente",
             "avvia un impiegato autonomo per questo lavoro", "crea un task nella coda flotta", "lavoro notturno flotta"
         ]
+    },
+    "OS_APP_LAUNCH": {
+        "domain": "OS_DESKTOP",
+        "action": "LAUNCH_APP",
+        "description": "Avvio immediato di applicazioni su Windows (Chrome, Telegram, WhatsApp, VS Code, Discord, Spotify, Terminale)",
+        "prototypes": [
+            "apri chrome", "apri telegram", "apri whatsapp", "apri visual studio code", "apri discord",
+            "apri spotify", "apri terminale", "apri calcolatrice", "apri blocco note", "apri esplora risorse",
+            "avvia applicazione desktop"
+        ]
+    },
+    "OS_MEDIA_CONTROL": {
+        "domain": "OS_DESKTOP",
+        "action": "CONTROL_AUDIO_SCREEN",
+        "description": "Controllo nativo del volume di sistema, mute audio e cattura screenshot desktop",
+        "prototypes": [
+            "alza il volume", "abbassa il volume", "metti muto", "silenzia audio", "ripristina volume",
+            "fai uno screenshot", "cattura lo schermo del computer", "regola il volume"
+        ]
+    },
+    "HUD_VIDEO_PLAY": {
+        "domain": "MEDIA_HUD",
+        "action": "PLAY_VIDEO_HUD",
+        "description": "Riproduzione video YouTube o file multimediale direttamente sulla plancia centrale HUD (Mark-LV Surface)",
+        "prototypes": [
+            "riproduci il video sulla plancia", "metti il trailer al centro", "fai partire il video youtube",
+            "apri video nel hud", "guarda questo video", "mostrami il video al centro"
+        ]
     }
 }
 

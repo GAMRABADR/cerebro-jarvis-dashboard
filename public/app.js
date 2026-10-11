@@ -972,6 +972,19 @@ async function executeCommandPipeline(prompt) {
           finish(rf.spoken_ack || 'Radar lead SIMD attivo, Badr.', 'JEV CLM < 1ms');
           isBusy = false;
           return;
+        } else if (rf.intent === 'HUD_VIDEO_PLAY') {
+          if (window.playHudVideo) window.playHudVideo(prompt);
+          finish(rf.spoken_ack || 'Carico il video al centro della plancia HUD, Badr.', 'MARK-LV VIDEO');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'OS_APP_LAUNCH') {
+          finish(rf.spoken_ack || 'Applicazione avviata sul desktop, Badr.', 'OS CONTROLLER');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'OS_MEDIA_CONTROL') {
+          finish(rf.spoken_ack || 'Comando audio di sistema eseguito, Badr.', 'OS CONTROLLER');
+          isBusy = false;
+          return;
         }
       }
     }
@@ -4511,6 +4524,64 @@ window.setThemePreset = function(themeName) {
   });
 };
 
+// ── 12. MARK-LV HUD VIDEO STAGE ("VIDEO WHERE THE FACE IS") ──────────
+let _hudVideoMuted = true;
+window.playHudVideo = function(urlOrQuery) {
+  const stage = document.getElementById('jarvis-hud-video-stage');
+  const frame = document.getElementById('jarvis-hud-video-frame');
+  const orb = document.querySelector('.jarvis-orb-canvas-container');
+  if (!stage || !frame) return;
+
+  // Extract YouTube ID if present or embed URL
+  let embedUrl = '';
+  const ytMatch = String(urlOrQuery).match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    embedUrl = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=${_hudVideoMuted ? '1' : '0'}&controls=1&rel=0`;
+  } else if (String(urlOrQuery).startsWith('http')) {
+    embedUrl = urlOrQuery;
+  } else {
+    // Search query fallback / demo video
+    embedUrl = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(urlOrQuery)}&autoplay=1&mute=${_hudVideoMuted ? '1' : '0'}`;
+  }
+
+  // Swap Stage: hide orb to put video exactly where the avatar face is
+  if (orb) orb.style.display = 'none';
+  stage.style.display = 'block';
+
+  frame.innerHTML = `<iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border:none;"></iframe>`;
+  
+  if (window.showToolRun) {
+    window.showToolRun('MARK-LV HUD VIDEO', 'Video caricato al centro della plancia', '0.002s');
+  }
+};
+
+window.closeHudVideo = function() {
+  const stage = document.getElementById('jarvis-hud-video-stage');
+  const frame = document.getElementById('jarvis-hud-video-frame');
+  const orb = document.querySelector('.jarvis-orb-canvas-container');
+  if (frame) frame.innerHTML = '';
+  if (stage) stage.style.display = 'none';
+  if (orb) orb.style.display = 'block';
+};
+
+window.toggleHudVideoMute = function() {
+  _hudVideoMuted = !_hudVideoMuted;
+  const btn = document.getElementById('btn-hud-video-mute');
+  if (btn) {
+    btn.textContent = _hudVideoMuted ? 'AUDIO OFF (MUTED)' : 'AUDIO ON';
+    btn.style.color = _hudVideoMuted ? '#fff' : '#00ff9f';
+    btn.style.borderColor = _hudVideoMuted ? 'rgba(255,255,255,0.3)' : '#00ff9f';
+  }
+  // If video is playing, reload iframe with updated mute flag
+  const frame = document.getElementById('jarvis-hud-video-frame');
+  const iframe = frame ? frame.querySelector('iframe') : null;
+  if (iframe && iframe.src) {
+    let src = iframe.src;
+    src = src.replace(/mute=[01]/, `mute=${_hudVideoMuted ? '1' : '0'}`);
+    iframe.src = src;
+  }
+};
+
 // Auto-initialize Stark HUD & Theme on startup
 (function initStarkHudAndTheme() {
   const savedTheme = localStorage.getItem('ebj_theme') || 'stark-cyan';
@@ -4521,3 +4592,4 @@ window.setThemePreset = function(themeName) {
   const shouldBeStark = savedStark !== 'off';
   window.toggleStarkHudMode(shouldBeStark);
 })();
+
