@@ -981,8 +981,12 @@ async function executeCommandPipeline(prompt) {
           finish(rf.spoken_ack || 'Applicazione avviata sul desktop, Badr.', 'OS CONTROLLER');
           isBusy = false;
           return;
-        } else if (rf.intent === 'OS_MEDIA_CONTROL') {
-          finish(rf.spoken_ack || 'Comando audio di sistema eseguito, Badr.', 'OS CONTROLLER');
+        } else if (rf.intent === 'PC_HEALTH_CHECK') {
+          finish(rf.spoken_ack || 'Diagnostica hardware completata, Badr.', 'PC HEALTH CHECK');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'OS_SECURITY_LOCK') {
+          finish(rf.spoken_ack || 'Workstation bloccata in sicurezza, Badr.', 'OS CONTROLLER');
           isBusy = false;
           return;
         }

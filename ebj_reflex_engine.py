@@ -400,6 +400,20 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = {"video_hud": True, "query": prompt, "start_muted": True}
         ack_text = "Carico il video direttamente al centro della plancia HUD, Badr."
 
+    # 18. PC HEALTH CHECK & FULL DIAGNOSTICS
+    elif intent == "PC_HEALTH_CHECK":
+        import ebj_os_controller as eoc
+        diag_res = eoc.run_full_pc_health_check()
+        details = diag_res
+        ack_text = diag_res.get("verbal_summary", "Diagnostica completata: tutti i componenti hardware del PC sono operativi, Badr.")
+
+    # 19. OS SECURITY LOCK
+    elif intent == "OS_SECURITY_LOCK":
+        import ebj_os_controller as eoc
+        lock_res = eoc.lock_workstation()
+        details = lock_res
+        ack_text = "Workstation bloccata e messa in sicurezza, Badr."
+
     else:
         ack_text = "Comando ricevuto e registrato, Badr. Procedo con l'operazione."
 

@@ -266,6 +266,25 @@ CLM_INTENT_CATALOG: Dict[str, Dict[str, Any]] = {
             "riproduci il video sulla plancia", "metti il trailer al centro", "fai partire il video youtube",
             "apri video nel hud", "guarda questo video", "mostrami il video al centro"
         ]
+    },
+    "PC_HEALTH_CHECK": {
+        "domain": "OS_DESKTOP",
+        "action": "DIAGNOSE_PC",
+        "description": "Controllo completo del funzionamento del computer, diagnosi hardware, CPU, RAM 64GB, dischi e schede video",
+        "prototypes": [
+            "come sta il mio computer", "fai il controllo del pc", "checkup del pc", "come va il computer",
+            "stato di salute del pc", "controlla il mio pc", "diagnostica del computer", "come funziona il pc",
+            "temperatura gpu e cpu", "memoria ram e dischi del computer", "controllo di funzionamento del pc",
+            "fai un check del pc", "controlla il computer"
+        ]
+    },
+    "OS_SECURITY_LOCK": {
+        "domain": "OS_DESKTOP",
+        "action": "LOCK_PC",
+        "description": "Blocco immediato della workstation o chiusura rapida per sicurezza",
+        "prototypes": [
+            "blocca il computer", "blocca la postazione", "blocca il pc", "lock workstation", "metti in sicurezza il pc"
+        ]
     }
 }
 
