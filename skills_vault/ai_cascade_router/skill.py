@@ -270,6 +270,25 @@ def execute(params=None):
     t0 = time.time()
     errors = []
     tried = []
+    # ── 2026 SEMANTIC SPECULATIVE CACHE (L1 EXACT / L2 FUZZY) ────────
+    use_cache = params.get("use_cache", True)
+    if use_cache:
+        try:
+            from ebj_semantic_cache import cache_lookup, cache_store
+            c_hit = cache_lookup(prompt)
+            if c_hit:
+                return {
+                    "status": "SUCCESS",
+                    "provider": c_hit.get("provider", "Semantic Cache"),
+                    "text": c_hit.get("response", ""),
+                    "latency_ms": c_hit.get("latency_ms", 0.1),
+                    "cache_hit": True,
+                    "hit_type": c_hit.get("hit_type"),
+                    "score": c_hit.get("score")
+                }
+        except Exception:
+            pass
+
     for name, fn in _STEPS:
         if name in skip:
             continue
@@ -277,11 +296,17 @@ def execute(params=None):
         try:
             text = fn(prompt)
             if text:
+                try:
+                    from ebj_semantic_cache import cache_store
+                    cache_store(prompt, text, provider=name)
+                except Exception:
+                    pass
                 return {
                     "status": "SUCCESS",
                     "provider": name,
                     "text": text,
                     "latency_ms": round((time.time() - t0) * 1000, 2),
+                    "cache_hit": False
                 }
         except (urllib.error.URLError, urllib.error.HTTPError, KeyError, TimeoutError, OSError) as exc:
             errors.append({"provider": name, "error": type(exc).__name__})
