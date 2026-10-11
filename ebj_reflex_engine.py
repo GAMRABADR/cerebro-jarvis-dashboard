@@ -414,6 +414,15 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = lock_res
         ack_text = "Workstation bloccata e messa in sicurezza, Badr."
 
+    # 20. HEXSTRIKE & HERMES AUTONOMOUS SECURITY AUDIT (< 15ms Reflex)
+    elif intent in ("SECURITY_AUDIT", "HEXSTRIKE_MCP", "KALI_TOOLKIT"):
+        from skills_vault.hermes_kali_toolkit.hermes_autonomous_pipeline import run_hermes_autonomous_audit
+        m_ip = re.search(r'((?:[0-9]{1,3}\.){3}[0-9]{1,3}|localhost|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', prompt)
+        target_host = m_ip.group(1).strip() if m_ip else "127.0.0.1"
+        audit_res = run_hermes_autonomous_audit(target=target_host, quick_mode=True)
+        details = audit_res
+        ack_text = audit_res.get("verbal_summary", f"Audit HexStrike completato su {target_host}, Badr.")
+
     else:
         ack_text = "Comando ricevuto e registrato, Badr. Procedo con l'operazione."
 
@@ -493,6 +502,8 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
             matched, intent, domain, action = True, "OS_MEDIA_CONTROL", "OS_DESKTOP", "CONTROL_AUDIO_SCREEN"
         elif any(k in p_lower for k in ["riproduci video", "metti il trailer", "video youtube", "metti il video"]):
             matched, intent, domain, action = True, "HUD_VIDEO_PLAY", "MEDIA_HUD", "PLAY_VIDEO_HUD"
+        elif any(k in p_lower for k in ["hexstrike", "audit sicurezza", "scansiona vulnerabilità", "scansiona porte", "audit target", "pentest", "penetration test"]):
+            matched, intent, domain, action = True, "HEXSTRIKE_MCP", "SECURITY_MCP", "HEXSTRIKE_AUDIT"
 
     if not matched:
         return None

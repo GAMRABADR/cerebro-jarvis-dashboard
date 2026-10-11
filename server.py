@@ -2405,9 +2405,9 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
             f"```bash\n{k_res['output']}\n```"
         ), "kali-docker-cli"
 
-    # ── HERMES SECURITY & AUTONOMOUS PENTEST ENGINE (VOICE & TEXT) ──────
+    # ── HERMES & HEXSTRIKE SECURITY & AUTONOMOUS PENTEST ENGINE (VOICE & TEXT) ──────
     if any(k in p_lower for k in [
-        "hermes auditor", "hermes audit", "security auditor", "auditor di sicurezza", 
+        "hexstrike", "hex strike", "bug bounty", "hermes auditor", "hermes audit", "security auditor", "auditor di sicurezza", 
         "audit di sicurezza", "audit sicurezza", "penetration test", "pen test", 
         "scansiona vulnerabilità", "scansiona vulnerabilita", "analizza vulnerabilità",
         "audit porte", "audit target", "vulnerability scan", "pipeline hermes", "hermes autonomo"
@@ -7974,6 +7974,10 @@ def _patched_do_POST(self):
                 ans, m_used = query_model(user_query, persona=req_persona)
                 reply_text = "Chiamata inoltrata al tuo telefono dal numero 388 870 3508, Badr."
                 model_used = "jarvis-phone-call"
+            elif any(k in user_query.lower() for k in ["hexstrike", "hex strike", "bug bounty", "audit sicurezza"]):
+                ans, m_used = query_model(user_query, persona=req_persona)
+                reply_text = "Audit HexStrike avviato sui 143 tool di sicurezza del perimetro Badr."
+                model_used = "hexstrike-mcp"
             else:
                 # ── JEV REFLEX FAST-PATH (System One Structured Decision Layer) ──
                 try:

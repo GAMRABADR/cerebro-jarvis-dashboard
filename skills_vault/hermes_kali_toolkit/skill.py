@@ -272,6 +272,9 @@ def parse_user_kali(prompt: str) -> dict | None:
         return parse_kali_cli(m.group(1))
     m2 = re.match(r"^(?:lancia|esegui|avvia)\s+(\S+)(.*)$", raw, flags=re.IGNORECASE)
     if m2:
+        cand = m2.group(1).lower()
+        if cand in ("audit", "pipeline", "hexstrike", "vulnerabilita", "vulnerabilità"):
+            return None
         return parse_kali_cli((m2.group(1) + " " + m2.group(2)).strip())
     try:
         parts = shlex.split(raw)
@@ -472,11 +475,11 @@ def execute(params=None):
             "latency_ms": round((time.time() - t0) * 1000, 2),
         }
 
-    if act in ("pipeline", "autonomous_pipeline", "autonomous_audit"):
+    if action in ("pipeline", "autonomous_pipeline", "autonomous_audit"):
         try:
             from skills_vault.hermes_kali_toolkit.hermes_autonomous_pipeline import run_hermes_autonomous_audit
-            tgt = str(payload.get("target") or "127.0.0.1").strip()
-            quick = bool(payload.get("quick", True))
+            tgt = str(params.get("target") or "127.0.0.1").strip()
+            quick = bool(params.get("quick", True))
             return run_hermes_autonomous_audit(target=tgt, quick_mode=quick)
         except Exception as pe:
             return {

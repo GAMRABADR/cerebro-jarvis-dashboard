@@ -29,6 +29,7 @@ MCP_UNIVERSE = [
     {"id": "mcp-whatsapp-b2b-broadcaster", "name": "WhatsApp B2B Promo Broadcaster", "category": "B2B_CHEMICAL_SUPPLY", "status": "READY", "cmd": "mcp-wa-b2b"},
 
     # ── 3. KALI LINUX & SECURITY OSINT (21-30) ──
+    {"id": "mcp-hexstrike-ai", "name": "HexStrike AI MCP 150+ Tools Orchestrator", "category": "KALI_SECURITY_OSINT", "status": "ONLINE", "cmd": "python -c 'import skills_vault.hermes_kali_toolkit.skill'"},
     {"id": "mcp-nmap-scanner", "name": "Nmap Network & Port Auditor", "category": "KALI_SECURITY_OSINT", "status": "ONLINE", "cmd": "nmap --version"},
     {"id": "mcp-shodan-radar", "name": "Shodan Host Vulnerability Radar", "category": "KALI_SECURITY_OSINT", "status": "READY", "cmd": "mcp-shodan"},
     {"id": "mcp-whois-dns-prober", "name": "DNS MX/SPF/DKIM Health Prober", "category": "KALI_SECURITY_OSINT", "status": "READY", "cmd": "mcp-dns-audit"},
