@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E.B.J. Mobile Bridge — Installazione Smartphone</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <style>
+    :root {
+      --bg: #030712;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --cyan: #00f0ff;
+      --green: #10b981;
+      --border: rgba(0, 240, 255, 0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      padding: 24px 0 16px;
+    }
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+    .header p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-badge {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .cmd-box {
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      word-break: break-all;
+      position: relative;
+      margin: 12px 0;
+    }
+    .btn {
+      background: linear-gradient(135deg, #0284c7, #00f0ff);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(51, 65, 85, 0.8);
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      margin-top: 8px;
+    }
+    .features-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .features-list li {
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-pill {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      margin-right: 6px;
+    }
+    .status-pill.online {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>E.B.J. MOBILE NODE</h1>
+      <p>Controllo Hardware Smartphone per Badr · EBGStudio</p>
+    </div>
+
+    <!-- CARD 1: DOWNLOAD TERMUX -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">FASE 1</span>
+        <span>Installa Termux sul Telefono</span>
+      </div>
+      <p style="font-size:13px; color:#cbd5e1; margin-bottom:12px;">
+        Termux è l'ambiente Android ufficiale e sicuro che consente a EBJ di accedere a chiamate, GPS e notifiche senza root:
+      </p>
+      <a href="https://f-droid.org/repo/com.termux_118.apk" class="btn" style="text-decoration:none; margin-bottom:8px;">
+        ⬇️ Scarica Termux APK (Ufficiale F-Droid)
+      </a>
+      <a href="https://f-droid.org/repo/com.termux.api_51.apk" class="btn btn-secondary" style="text-decoration:none;">
+        ⬇️ Scarica Termux:API APK (Estensione Hardware)
+      </a>
+    </div>
+
+    <!-- CARD 2: COMANDO UNICO -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">FASE 2</span>
+        <span>Avvia il Collegamento in 1 Comando</span>
+      </div>
+      <p style="font-size:13px; color:#cbd5e1;">
+        Apri Termux sul telefono, copia e incolla questa riga di codice:
+      </p>
+      <div class="cmd-box" id="cmd-text">curl -sSL https://eb.badrexpress.com/mobile/install_ebj_mobile.sh | bash</div>
+      <button class="btn" onclick="copyInstallCmd()">📋 COPIA COMANDO INSTALLAZIONE</button>
+      <p style="font-size:12px; color:#94a3b8; margin-top:10px; text-align:center;">
+        Al termine, scrivi semplicemente: <strong style="color:var(--cyan)">ebj-start</strong>
+      </p>
+    </div>
+
+    <!-- CARD 3: CAPACITÀ ATTIVE -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">HARDWARE</span>
+        <span>Funzioni Automatiche Attive</span>
+      </div>
+      <ul class="features-list">
+        <li>📞 Chiamate native da SIM</li>
+        <li>💬 Invio SMS & WhatsApp</li>
+        <li>🛰️ Telemetria GPS Live</li>
+        <li>🔔 Lettura notifiche clienti</li>
+        <li>🗣️ Altoparlante vocale remoto</li>
+        <li>📸 Scatto foto camera remota</li>
+      </ul>
+    </div>
+
+    <!-- CARD 4: STATO COLLEGAMENTO -->
+    <div class="card" style="text-align:center;">
+      <div class="card-title" style="justify-content:center;">
+        <span class="status-pill" id="st-pill"></span>
+        <span id="st-text">Verifica connessione in corso...</span>
+      </div>
+      <p style="font-size:12px; color:#64748b;" id="st-sub">EBJ interroga lo smartphone ogni 3 secondi</p>
+    </div>
+  </div>
+
+  <script>
+    function copyInstallCmd() {
+      const text = document.getElementById('cmd-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Comando copiato negli appunti! Incollalo dentro Termux sul tuo smartphone.');
+      });
+    }
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/device/android/status');
+        if (res.ok) {
+          const d = await res.json();
+          const pill = document.getElementById('st-pill');
+          const txt = document.getElementById('st-text');
+          const sub = document.getElementById('st-sub');
+          if (d.status === 'ONLINE') {
+            pill.className = 'status-pill online';
+            txt.innerText = 'SMARTPHONE CONNESSO AD EBJ';
+            txt.style.color = '#10b981';
+            sub.innerText = `Batteria: ${d.battery?.percentage || '--'}% · Dispositivo: ${d.device_id}`;
+          } else {
+            pill.className = 'status-pill';
+            txt.innerText = 'In attesa di connessione dallo smartphone';
+            txt.style.color = '#94a3b8';
+          }
+        }
+      } catch(_) {}
+    }
+    setInterval(checkStatus, 3000);
+    checkStatus();
+  </script>
+</body>
+</html>
