@@ -51,9 +51,9 @@ def execute(params=None):
             c_name, phone, city, service, v_mq, budget, source, status, s_date, notes, post_url = r
             c_low = (city or "").lower()
             
-            # Filtro per Bologna & Provincia
+            # Filtro per citta richiesta (Milano, Torino, Cuneo, Bologna, ecc.)
             if city_filter and city_filter != "tutti":
-                if city_filter not in c_low and "imola" not in c_low and "bologna" not in c_low:
+                if city_filter not in c_low and city_filter not in (notes or "").lower():
                     continue
                     
             clean_digits = re.sub(r'[^0-9]', '', str(phone or ''))
