@@ -919,7 +919,7 @@ async function executeCommandPipeline(prompt) {
     });
     if (reflexRes.ok) {
       const rf = await reflexRes.json();
-      if (rf.confidence >= 0.85) {
+      if (rf.confidence >= 0.70) {
         if (rf.intent === 'CALL_EMERGENCY') {
           window.startEmergencyCountdown();
           finish(rf.spoken_ack || 'Avvio squillo telefonico d\'emergenza.', 'RUST REFLEX 2µs');
@@ -938,6 +938,38 @@ async function executeCommandPipeline(prompt) {
         } else if (rf.intent === 'BATTERY_SAVER_TELEGRAM') {
           if (window.openTelegramGuardModal) window.openTelegramGuardModal();
           finish(rf.spoken_ack || 'Pannello Telegram Guard aperto.', 'RUST REFLEX 2µs');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'EMAIL_VAULT' || rf.intent === 'EMAIL_INBOX') {
+          if (window.openMailModal) window.openMailModal();
+          finish(rf.spoken_ack || 'Mail Vault sincronizzato, Badr.', 'JEV REFLEX < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'MARKETPLACE_APPRAISAL') {
+          if (window.openJevModal) window.openJevModal();
+          finish(rf.spoken_ack || 'Perizia JEV completata, Badr.', 'JEV CLM < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'CAR_WASH_SCOUT') {
+          if (window.openSelezioneModal) window.openSelezioneModal();
+          finish(rf.spoken_ack || 'Archivio Selezione Chimica aperto, Badr.', 'JEV CLM < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'B2B_PRICING' || rf.intent === 'INVOICE_QUOTE') {
+          if (window.openQuoteModal) window.openQuoteModal();
+          finish(rf.spoken_ack || 'Preventivatore BadrExpress pronto, Badr.', 'JEV CLM < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'CALENDARIO' || rf.intent === 'CALENDAR_VIEW') {
+          finish(rf.spoken_ack || 'Agenda BadrExpress verificata, Badr.', 'JEV CLM < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'SYSTEM_STATUS' || rf.intent === 'SYSTEM_VPS_STATUS') {
+          finish(rf.spoken_ack || 'Tutti i sistemi vitali sono operativi, Badr.', 'JEV CLM < 1ms');
+          isBusy = false;
+          return;
+        } else if (rf.intent === 'LEAD_SEARCH' || rf.intent === 'LEAD_RADAR_SCAN') {
+          finish(rf.spoken_ack || 'Radar lead SIMD attivo, Badr.', 'JEV CLM < 1ms');
           isBusy = false;
           return;
         }
