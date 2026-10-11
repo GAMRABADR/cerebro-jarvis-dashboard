@@ -1535,10 +1535,11 @@ PERSONALITY_PROMPTS = {
     # JARVIS — Voce Principale (Butler Scientifico, Iron Man style)
     # ─────────────────────────────────────────────────────────────────────────
     "jarvis": """Sei E.B.J., l'intelligenza artificiale personale di Badr — un sistema di nuova generazione ispirato a J.A.R.V.I.S., colto, brillante, intuitivo e naturale nel parlato. Elegante e pronto, mai robotico, mai freddo.
+Dotato di piena padronanza multilingue: parli perfettamente italiano (lingua primaria di default), russo (quando Badr si rivolge a te in russo o richiede risposte in russo) e inglese.
 
 REGOLE ASSOLUTE DI COMUNICAZIONE CON BADR:
-0. LINGUA: Rispondi SEMPRE in italiano naturale, fluido e impeccabile.
-1. NOME: Rivolgiti a lui SEMPRE E SOLO come "Badr" (o "Signore"). VIETATO ASSOLUTAMENTE usare "Ingegnere" o "Ingegner Badr". Chiama SOLO Badr.
+0. LINGUA: Rispondi in italiano fluido e impeccabile di default. Se l'utente scrive o parla in russo (cirillico o richiesta esplicita di russo), rispondi con fluidità impeccabile in russo naturale con lo stesso tono di Jarvis. Se parla in inglese, rispondi in inglese.
+1. NOME: Rivolgiti a lui SEMPRE E SOLO come "Badr" (o "Signore", oppure in russo "Бадр" / "сэр"). VIETATO ASSOLUTAMENTE usare "Ingegnere" o "Ingegner Badr". Chiama SOLO Badr.
 2. ZERO DUMP DI DATI NON RICHIESTI: NON nominare MAI Pietro, aziende di traslochi, uffici, numeri di telefono o dettagli di curriculum A MENO CHE Badr non ti chieda espressamente di quel contatto o di quel tema specifico. Non recitare mai schede anagrafiche non richieste.
 3. DOMANDE SULLA VISIONE ("COSA VEDI?"): Se Badr chiede cosa vedi, descrivi in modo sintetico e reale ciò che è visibile (lui alla sua postazione di lavoro, la luce, lo schermo). Non inventare traslochi o contratti.
 4. LACONICITÀ INTELLIGENTE: Per risposte parlate o rapide, usa al massimo 1 o 2 frasi concise, fresche e incisive. Parla come un compagno di lavoro geniale, non come un bot ripetitivo.
@@ -3907,41 +3908,45 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
     # it-IT-DiegoNeural                → voce maschile italiana energica (military/friendly)
     # it-IT-BenignoNeural              → voce maschile italiana calma (architect fallback)
 
-    if voice_mode in ("jarvis_uk", "uk", "british", "paul_bettany", "ryan"):
+    # ── RILEVAMENTO LINGUA AUTOMATICO (RUSSO / INGLESE / ITALIANO) ───────────
+    is_cyrillic = bool(re.search(r'[\u0400-\u04FF]', clean_text))
+    if is_cyrillic or voice_mode in ("ru", "russian", "russo", "dmitry"):
+        # Voce russa maschile profonda JARVIS (Dmitry Neural)
+        edge_voice   = "ru-RU-DmitryNeural"
+        edge_rate    = "+0%"
+        edge_pitch   = "-3Hz"
+        voice_fallbacks = ["ru-RU-DmitryNeural", "ru-RU-SvetlanaNeural", "it-IT-GiuseppeMultilingualNeural"]
+    elif voice_mode in ("jarvis_uk", "uk", "british", "paul_bettany", "ryan"):
         # Original Marvel Stark Butler (Paul Bettany - British English)
         edge_voice   = "en-GB-RyanNeural"
         edge_rate    = "-2%"
         edge_pitch   = "-2Hz"
+        voice_fallbacks = ["en-GB-RyanNeural", "it-IT-GiuseppeMultilingualNeural"]
     elif voice_mode == "military":
         # Tactical: energico, comandante, voce bassa e decisa
         edge_voice   = "it-IT-GiuseppeMultilingualNeural"
         edge_rate    = "+2%"
         edge_pitch   = "-8Hz"
+        voice_fallbacks = [edge_voice, "it-IT-DiegoNeural"]
     elif voice_mode == "architect":
         # Architect: calmo, analitico, tono professionale
         edge_voice   = "it-IT-GiuseppeMultilingualNeural"
         edge_rate    = "-2%"
         edge_pitch   = "-5Hz"
+        voice_fallbacks = [edge_voice, "it-IT-BenignoNeural"]
     elif voice_mode == "friendly":
         # Friendly: energico, diretto, tono naturale
         edge_voice   = "it-IT-DiegoNeural"
         edge_rate    = "+1%"
         edge_pitch   = "-3Hz"
+        voice_fallbacks = [edge_voice, "it-IT-GiuseppeMultilingualNeural"]
     else:
         # JARVIS ITALIANO (Nino D'Agata / Deep AI Butler Cadence):
         # Voce profonda, calda, elegante, calma, cadenza autorevole e risonante
         edge_voice   = "it-IT-GiuseppeMultilingualNeural"
         edge_rate    = "-2%"
         edge_pitch   = "-5Hz"
-
-    # Ordine fallback voci: prima scelta ideale, poi alternative
-    voice_fallbacks = [edge_voice]
-    if edge_voice != "it-IT-GiuseppeMultilingualNeural":
-        voice_fallbacks.append("it-IT-GiuseppeMultilingualNeural")
-    if edge_voice != "it-IT-DiegoNeural":
-        voice_fallbacks.append("it-IT-DiegoNeural")
-    if edge_voice != "en-GB-RyanNeural":
-        voice_fallbacks.append("en-GB-RyanNeural")
+        voice_fallbacks = [edge_voice, "it-IT-DiegoNeural", "en-GB-RyanNeural"]
 
     for v in voice_fallbacks:
         try:
