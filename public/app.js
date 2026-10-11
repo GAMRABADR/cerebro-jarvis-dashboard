@@ -4586,6 +4586,58 @@ window.toggleHudVideoMute = function() {
   }
 };
 
+// ── 13. PWA SMART MOBILE INSTALLATION ENGINE ─────────────────────────
+let _deferredPwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _deferredPwaPrompt = e;
+  
+  // Se siamo su mobile o standalone non attivo, mostra il banner elegante in basso
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (!isStandalone) {
+    const banner = document.getElementById('ebj-pwa-install-banner');
+    if (banner && localStorage.getItem('ebj_pwa_dismissed') !== 'true') {
+      banner.style.display = 'block';
+    }
+  }
+});
+
+window.installPwaApp = async function() {
+  if (_deferredPwaPrompt) {
+    _deferredPwaPrompt.prompt();
+    const { outcome } = await _deferredPwaPrompt.userChoice;
+    if (outcome === 'accepted') {
+      const banner = document.getElementById('ebj-pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+      if (window.showToolRun) window.showToolRun('APP INSTALLATA', 'EBJ AI installata con successo!', '0.001s');
+    }
+    _deferredPwaPrompt = null;
+  } else {
+    // Se il browser (es. iOS Safari o browser senza prompt nativo) non supporta prompt() diretto, mostra la guida visuale
+    const modal = document.getElementById('ebj-pwa-guide-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+};
+
+window.dismissPwaBanner = function() {
+  const banner = document.getElementById('ebj-pwa-install-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('ebj_pwa_dismissed', 'true');
+};
+
+// Se è su mobile e non è ancora installato, mostra il banner dopo 3 secondi
+window.addEventListener('DOMContentLoaded', () => {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isMobile && !isStandalone && localStorage.getItem('ebj_pwa_dismissed') !== 'true') {
+    setTimeout(() => {
+      const banner = document.getElementById('ebj-pwa-install-banner');
+      if (banner) banner.style.display = 'block';
+    }, 2800);
+  }
+});
+
 // Auto-initialize Stark HUD & Theme on startup
 (function initStarkHudAndTheme() {
   const savedTheme = localStorage.getItem('ebj_theme') || 'stark-cyan';
@@ -4596,4 +4648,5 @@ window.toggleHudVideoMute = function() {
   const shouldBeStark = savedStark !== 'off';
   window.toggleStarkHudMode(shouldBeStark);
 })();
+
 
