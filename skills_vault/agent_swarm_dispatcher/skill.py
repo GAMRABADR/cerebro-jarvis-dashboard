@@ -28,11 +28,12 @@ AGENT_SPECIALIZATION_MATRIX = {
         ]
     },
     "AGENTE_ZERO": {
-        "role": "Autonomic Sandbox Worker, Code Dev, PLC Siemens & CNC",
-        "description": "Esecuzione script autonomi, validazione codice C++ UE5.8, bridge PLC Siemens S7-1200 e percorsi utensile CNC.",
+        "role": "Autonomic Zero-Intervention Server Operator, Penetration Testing & Full System Control",
+        "description": "Vincitore dell'AI Hacker Showdown (zSecurity): esecuzione sandbox autonoma, exploit multi-service (ComfyUI, n8n, upload), reverse shell, C++ UE5.8, automazione industriale PLC Siemens & CNC.",
         "assigned_mcp_skills": [
-            "mcp-snap7-siemens-plc", "mcp-gcode-cnc-validator", "mcp-cplusplus-clang-format",
-            "mcp-unreal-remote-control", "mcp-blender-python-bridge", "mcp-docker-compose-manager"
+            "mcp-hexstrike-ai", "hermes_kali_toolkit", "mcp-nmap-scanner", "mcp-snap7-siemens-plc",
+            "mcp-gcode-cnc-validator", "mcp-cplusplus-clang-format", "mcp-unreal-remote-control",
+            "mcp-docker-compose-manager"
         ]
     },
     "OPENCLAW_CRAWL4AI": {
@@ -117,9 +118,9 @@ def route_task_to_agent(task_prompt=""):
     elif any(k in p_low for k in ["scrappa", "estrai", "subito", "bakeca", "aste", "annunci", "autolavaggi d'italia", "crawl", "cerca annunci"]):
         assigned_agent = "OPENCLAW_CRAWL4AI"
         reason = "Task di data mining, web scraping intensivo o monitoraggio aste su RAM-Disk."
-    elif any(k in p_low for k in ["plc", "siemens", "s7-1200", "cnc", "gcode", "g-code", "unreal", "ue5", "blender", "compila c++", "script python"]):
+    elif any(k in p_low for k in ["agente zero", "agente 0", "agent zero", "controllo server", "server control", "root exploit", "reverse shell", "comfyui", "plc", "siemens", "s7-1200", "cnc", "gcode", "g-code", "unreal", "ue5", "blender", "compila c++", "script python"]):
         assigned_agent = "AGENTE_ZERO"
-        reason = "Task di sviluppo codice, automazione industriale PLC/CNC o rendering 3D."
+        reason = "Task Agente Zero: piena autonomia operativa, takeover server, sviluppo codice o automazione industriale."
     elif any(k in p_low for k in ["flusso", "workflow", "cron notturno", "schedula", "foglio excel", "google sheets", "bot telegram"]):
         assigned_agent = "N8N_ORCHESTRATOR"
         reason = "Task di orchestrazione visiva, trigger temporizzato o automazione multi-canale."

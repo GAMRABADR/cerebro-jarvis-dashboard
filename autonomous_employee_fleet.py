@@ -108,6 +108,8 @@ def _pick_best_agent(prompt):
         return "openclaw"
     elif any(k in p_low for k in ["autolavagg", "detergenz", "selezione", "agenzi", "immobiliare", "prospetto", "preventivo"]):
         return "b2b_pitcher"
+    elif any(k in p_low for k in ["agente zero", "agent zero", "controllo server", "server control", "root exploit", "reverse shell", "comfyui", "pentest", "hexstrike", "penetration test", "takeover", "hacker"]):
+        return "claude_code"  # Agente autonomo per exploit e pieno controllo server
     elif any(k in p_low for k in ["codice", "rust", "compila", "bug", "ue5", "git", "commit", "funzione"]):
         return "claude_code"
     elif any(k in p_low for k in ["vps", "docker", "riavvia", "container", "memoria", "notifiche"]):
