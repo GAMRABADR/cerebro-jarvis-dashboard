@@ -145,6 +145,22 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             
     if any(k in cmd for k in ["cestino", "svuota cestino", "cancella cestino", "pulisci cestino"]):
         return jev_empty_recycle_bin()
+
+    if any(k in cmd for k in ["pulisci disco", "pulisci hd", "libera spazio", "pulizia disco", "spazzatura", "svuota cache"]):
+        try:
+            from jev_disk_sentinel import execute_safe_cleanup
+            res = execute_safe_cleanup(clean_rust_debug=True)
+            res["engine"] = "JEV_Rust_Native_Disk_Sentinel"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    if any(k in cmd for k in ["stato disco", "spazio disco", "hard disk", "spazio libero", "controllo hd"]):
+        try:
+            from jev_disk_sentinel import get_disk_health
+            return {"status": "success", "disks": get_disk_health(), "engine": "JEV_Rust_Native_Disk_Sentinel"}
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
         
     # 2. Classificazione intent ad alta velocità con CLM (Tier 1)
     t0 = time.perf_counter()
