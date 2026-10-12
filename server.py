@@ -442,149 +442,13 @@ def detect_and_handle_language_switch(prompt_text):
         info = SUPPORTED_LANGUAGES[target]
         return True, info["ack_switch"], target
 # ── LIVE TRANSLATION ENGINE & JEV RUST HIGH-PERFORMANCE PROXY ─────────────────
-_TRANSLATION_STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".active_translation")
-LIVE_TRANSLATION_ACTIVE = False
-LIVE_TRANSLATION_TARGET = "ru"
-
-def _load_translation_state():
-    global LIVE_TRANSLATION_ACTIVE, LIVE_TRANSLATION_TARGET
-    try:
-        if os.path.exists(_TRANSLATION_STATE_FILE):
-            with open(_TRANSLATION_STATE_FILE, "r", encoding="utf-8") as fh:
-                data = json.load(fh)
-                LIVE_TRANSLATION_ACTIVE = bool(data.get("active", False))
-                LIVE_TRANSLATION_TARGET = data.get("target", "ru")
-    except Exception:
-        pass
-
-def _save_translation_state():
-    try:
-        with open(_TRANSLATION_STATE_FILE, "w", encoding="utf-8") as fh:
-            json.dump({"active": LIVE_TRANSLATION_ACTIVE, "target": LIVE_TRANSLATION_TARGET}, fh)
-    except Exception:
-        pass
-
-_load_translation_state()
+import ebj_translation_gateway as _trans_gw
 
 def translate_text_ultra_fast(text: str, target_lang: str = "ru", source_lang: str = "auto") -> tuple[str, str, float]:
-    """
-    Esegue la traduzione ad altissima velocità e zero lag.
-    1. Tenta la rotta nativa Rust Apex Engine (:9000/translate)
-    2. Fallback istantaneo a Google gtx neural gateway (sub-50ms)
-    3. Fallback MyMemory / deep-translator
-    Ritorna (testo_tradotto, motore_usato, latenza_ms).
-    """
-    t0 = time.perf_counter()
-    clean = str(text or "").strip()
-    if not clean:
-        return "", "empty", 0.0
-    
-    tgt = target_lang.lower().strip()
-    if tgt == "es-pe":
-        tgt = "es"
-
-    # Tentativo 1: Rust Apex Engine su porta 9000
-    try:
-        s_lang = "it" if source_lang == "auto" else source_lang
-        req = urllib.request.Request(
-            "http://127.0.0.1:9000/translate",
-            data=json.dumps({"text": clean, "source_lang": s_lang, "target_lang": tgt}).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req, timeout=1.8) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            tr = data.get("translated", "").strip()
-            if tr and not tr.startswith("'AUTO' IS AN INVALID") and tr != clean:
-                lat = (time.perf_counter() - t0) * 1000.0
-                return tr, "Rust_Apex_Engine_:9000", lat
-    except Exception:
-        pass
-
-    # Tentativo 2: Google GTX Neural Stream (latenza ~40-60ms, zero-token, altissima fedeltà)
-    try:
-        import urllib.parse
-        g_url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={tgt}&dt=t&q={urllib.parse.quote(clean)}"
-        g_req = urllib.request.Request(g_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(g_req, timeout=2.5) as r:
-            g_data = json.loads(r.read().decode("utf-8"))
-            res_parts = [part[0] for part in g_data[0] if part and part[0]]
-            res_txt = "".join(res_parts).strip()
-            if res_txt:
-                lat = (time.perf_counter() - t0) * 1000.0
-                return res_txt, "JEV_GTX_Neural_Stream", lat
-    except Exception:
-        pass
-
-    lat = (time.perf_counter() - t0) * 1000.0
-    return clean, "passthrough", lat
+    return _trans_gw.get_translator().translate_fast(text, target_lang=target_lang, source_lang=source_lang)
 
 def detect_and_handle_translation_mode(prompt_text: str) -> tuple[bool, str, str, str]:
-    """
-    Rileva:
-    1. Comandi di attivazione traduzione: 'ebj traduci [lingua]', 'ebj traduci in russo', 'traduci russo'
-    2. Comandi di stop: 'smetti di tradurre', 'stop traduzione', 'basta tradurre', 'disattiva traduzione'
-    3. Modalità attiva: se attiva, intercetta qualsiasi frase parlata da Badr e la traduce nella lingua impostata.
-    Ritorna (is_handled, reply_text, target_lang, action_type)
-    """
-    global LIVE_TRANSLATION_ACTIVE, LIVE_TRANSLATION_TARGET
-    p = str(prompt_text or "").lower().strip()
-    
-    # Riconoscimento comando di STOP
-    if any(s in p for s in [
-        "smetti di tradurre", "stop traduzione", "ferma traduzione", "basta tradurre",
-        "interrompi traduzione", "disattiva traduzione", "chiudi traduzione", "fine traduzione"
-    ]):
-        LIVE_TRANSLATION_ACTIVE = False
-        _save_translation_state()
-        ack = "Sì signore, procedo subito. Modalità traduzione istantanea disattivata. Torno alle normali funzioni operative Stark."
-        return True, ack, "it", "stop"
-
-    # Riconoscimento comando di ATTIVAZIONE: "ebj traduci [lingua]" o "eb traduci [lingua]" o "traduci in [lingua]"
-    is_trans_trigger = bool(re.search(r'\b(ebj\s+traduci|eb\s+traduci|traduci\s+in|inizia\s+a\s+tradurre|attiva\s+traduzione|mettiti\s+a\s+tradurre)\b', p))
-    # Se dice solo "ebj traduci" o "traduci"
-    if is_trans_trigger or p in ["ebj traduci", "eb traduci", "traduci"]:
-        # Verifica se è specificata la lingua target
-        target = None
-        if any(k in p for k in ["russo", "russa", "russian", "russia"]):
-            target = "ru"
-        elif any(k in p for k in ["inglese", "english", "britannico", "americano"]):
-            target = "en"
-        elif any(k in p for k in ["francese", "francia", "francais", "français"]):
-            target = "fr"
-        elif any(k in p for k in ["spagnolo", "spagnola", "espana", "español"]):
-            target = "es"
-        elif any(k in p for k in ["peruviano", "peru", "perù", "peruano"]):
-            target = "es-pe"
-        elif any(k in p for k in ["arabo", "araba", "arabic", "marocchino"]):
-            target = "ar"
-        elif any(k in p for k in ["albanese", "albania", "shqip"]):
-            target = "sq"
-        elif any(k in p for k in ["cinese", "mandarino", "chinese"]):
-            target = "zh"
-        elif any(k in p for k in ["italiano", "italiana"]):
-            target = "it"
-
-        if target:
-            LIVE_TRANSLATION_ACTIVE = True
-            LIVE_TRANSLATION_TARGET = target
-            _save_translation_state()
-            target_label = SUPPORTED_LANGUAGES.get(target, {}).get("label", target.upper())
-            ack = f"Sì signore, procedo subito! Modalità traduttore istantaneo attivata verso {target_label}. Parli liberamente: ripeterò e tradurrò ogni sua parola con voce neurale nativa. Per terminare dica semplicemente 'smetti di tradurre'."
-            return True, ack, "it", "start"
-        else:
-            # Chiede quale lingua desidera tradurre
-            ack = "Certamente signore. In quale lingua desidera che traduca ciò che dice? Può specificare: russo, inglese, arabo, francese, spagnolo, albanese, cinese o peruviano."
-            return True, ack, "it", "ask_lang"
-
-    # Se la modalità traduzione è ATTIVA e l'utente parla: traduce direttamente ciò che dice
-    if LIVE_TRANSLATION_ACTIVE:
-        # Pulisci eventuali prefissi accidentali
-        clean_text = re.sub(r'^(ebj|eb|jarvis)\s*[,.:;]?\s*', '', prompt_text, flags=re.I).strip()
-        if clean_text:
-            translated, engine, lat_ms = translate_text_ultra_fast(clean_text, target_lang=LIVE_TRANSLATION_TARGET, source_lang="it")
-            return True, translated, LIVE_TRANSLATION_TARGET, "translating"
-
-    return False, "", "", "none"
+    return _trans_gw.get_translator().handle_voice_query(prompt_text)
 
 # ── ANDROID SMARTPHONE HARDWARE NODE STATE & TELEMETRY ────────────────────────
 _ANDROID_DEVICE_STATE = {
@@ -8238,6 +8102,30 @@ def _patched_do_POST(self):
             self.wfile.write(_json.dumps({"status": "ERROR", "error": str(err)}).encode())
             return
 
+    # ── PLUGGABLE ABILITY REGISTRY APIS ──────────────────────────────────────
+    if self.path in ["/api/abilities/list", "/api/abilities/execute"]:
+        try:
+            import ebj_ability_registry as _ar
+            bd = _json.loads(body.decode("utf-8")) if body else {}
+            if self.path == "/api/abilities/list":
+                res = {"status": "SUCCESS", "abilities": _ar.get_ability_registry().list_abilities()}
+            else:
+                q = bd.get("query") or bd.get("prompt") or ""
+                disp = _ar.get_ability_registry().dispatch(q, bd)
+                res = disp or {"status": "NO_ABILITY_MATCH", "query": q}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps(res).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({"status": "ERROR", "error": str(e)}).encode())
+        return
+
     # ── SCREEN ANALYZE (AI Vision) ──────────────────────────────────────────
     
     # ── AUTONOMOUS AI EMPLOYEES & NIGHT FLEET API (/new, /steer, /queue) ────
@@ -8636,6 +8524,17 @@ def _patched_do_POST(self):
                         model_used = jev_res.get("engine", "jev-fast-path")
                 except Exception:
                     pass
+
+                # ── MODULAR ABILITY REGISTRY DISPATCH (Tier 1/Tier 2) ──
+                if not reply_text:
+                    try:
+                        import ebj_ability_registry as _ab_reg
+                        ab_res = _ab_reg.get_ability_registry().dispatch(user_query)
+                        if isinstance(ab_res, dict) and ab_res.get("spoken_response"):
+                            reply_text = ab_res["spoken_response"]
+                            model_used = f"ability:{ab_res.get('ability_name', 'custom')}"
+                    except Exception:
+                        pass
 
             if not reply_text:
                 if any(k in user_query.lower() for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri fotocamera", "accendi fotocamera"]):
