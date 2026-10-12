@@ -161,6 +161,11 @@
       <button class="view-switch-btn" id="btn-pc-power-nav" onclick="openPcPowerModal()" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
         <span class="btn-dot" id="pc-status-dot-nav" style="background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span><i data-lucide="monitor" class="lucide-icon text-cyan"></i>DESKTOP-SJR1JS8 [<span id="pc-status-txt-nav">ONLINE</span>]
       </button>
+
+      <!-- JEV SYSTEM OPS: APPS, FOTO, EMAIL -->
+      <button class="view-switch-btn" onclick="openSystemHubModal()" style="border-color:#00ff9f; color:#00ff9f; font-weight:bold;">
+        <i data-lucide="layout-grid" class="lucide-icon text-emerald"></i>JEV SYSTEM OPS [APPS · FOTO · EMAIL]
+      </button>
     </div>
 
     <div class="mv-right">
@@ -202,6 +207,10 @@
         <span class="pc-dot online" id="pc-status-dot-top"></span>
         <i data-lucide="monitor" class="lucide-icon text-cyan" style="width:13px;height:13px;margin-right:2px;"></i>
         <span class="pc-title-txt">DESKTOP-SJR1JS8: <strong id="pc-status-txt-top" style="color:#00ff9f;">ONLINE</strong></span>
+      </button>
+      <button class="vad-toggle-pill" id="btn-system-hub-top" onclick="openSystemHubModal()" title="🚀 JEV System Hub: Avvio App, Visualizzatore Foto e Invio Email Rapido" style="border-color:#00ff9f; color:#00ff9f; background:rgba(0,255,159,0.06);">
+        <i data-lucide="layout-grid" class="lucide-icon text-emerald" style="width:13px;height:13px;margin-right:2px;"></i>
+        <span>JEV OPS</span>
       </button>
       <span class="status-indicator live"></span>
       <span class="mv-stat" id="master-status">ONLINE 144 FPS</span>
@@ -3212,6 +3221,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- Feedback Message Box -->
     <div id="pc-action-msg" class="pc-action-msg-box" style="display:none; background:rgba(0,240,255,0.08); border:1px solid #00f0ff; color:#00f0ff;">
+    </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: JEV UNIVERSAL SYSTEM HUB (APPS, PHOTOS, EMAIL, IT)
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="modal-system-hub" class="pc-power-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeSystemHubModal()">
+  <div class="pc-power-modal-box" style="max-width:680px; max-height:90vh; overflow-y:auto;">
+    <!-- Header with Tabs -->
+    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="pc-dot online"></span>
+        <strong style="font-family:var(--font-hud); font-size:1.05rem; color:#00f0ff; letter-spacing:1px;">JEV SYSTEM & MEDIA HUB</strong>
+      </div>
+      <button onclick="closeSystemHubModal()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#94a3b8; width:30px; height:30px; border-radius:6px; cursor:pointer;">✕</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div style="display:flex; gap:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+      <button class="view-switch-btn active" id="tab-btn-sys-apps" onclick="switchSystemHubTab('apps')" style="flex:1; justify-content:center;">
+        <i data-lucide="layout-grid" class="lucide-icon text-cyan sm"></i> 🚀 APP & DESKTOP
+      </button>
+      <button class="view-switch-btn" id="tab-btn-sys-photos" onclick="switchSystemHubTab('photos')" style="flex:1; justify-content:center;">
+        <i data-lucide="image" class="lucide-icon text-emerald sm"></i> 🖼️ FOTO & GALLERY
+      </button>
+      <button class="view-switch-btn" id="tab-btn-sys-email" onclick="switchSystemHubTab('email')" style="flex:1; justify-content:center;">
+        <i data-lucide="mail" class="lucide-icon text-amber sm"></i> ✉️ EMAIL DISPATCH
+      </button>
+    </div>
+
+    <!-- Tab 1: Apps -->
+    <div id="sys-tab-apps" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono);">
+        AVVIO RAPIDO APPLICAZIONI & CARTELLE WINDOWS 11:
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px;">
+        <button class="sqd-btn" onclick="quickLaunchApp('chrome')" style="justify-content:center;"><i data-lucide="globe" class="lucide-icon text-cyan sm"></i> Chrome</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('explorer download')" style="justify-content:center;"><i data-lucide="download" class="lucide-icon text-emerald sm"></i> Download</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('explorer desktop')" style="justify-content:center;"><i data-lucide="folder" class="lucide-icon text-amber sm"></i> Desktop</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('terminal')" style="justify-content:center;"><i data-lucide="terminal" class="lucide-icon text-cyan sm"></i> Terminal</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('unreal')" style="justify-content:center;"><i data-lucide="gamepad-2" class="lucide-icon text-pink sm"></i> Unreal 5.8</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('blender')" style="justify-content:center;"><i data-lucide="box" class="lucide-icon text-amber sm"></i> Blender</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('notepad')" style="justify-content:center;"><i data-lucide="file-text" class="lucide-icon text-cyan sm"></i> Blocco Note</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('calc')" style="justify-content:center;"><i data-lucide="calculator" class="lucide-icon text-emerald sm"></i> Calcolatrice</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('telegram')" style="justify-content:center;"><i data-lucide="send" class="lucide-icon text-cyan sm"></i> Telegram</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('spotify')" style="justify-content:center;"><i data-lucide="music" class="lucide-icon text-emerald sm"></i> Spotify</button>
+        <button class="sqd-btn" onclick="quickLaunchApp('bambu')" style="justify-content:center;"><i data-lucide="printer" class="lucide-icon text-pink sm"></i> Bambu Studio</button>
+        <button class="sqd-btn" onclick="triggerScreenshotNow()" style="justify-content:center; border-color:#00ff9f; color:#00ff9f;"><i data-lucide="camera" class="lucide-icon text-emerald sm"></i> Screenshot 📸</button>
+      </div>
+
+      <!-- Custom Launch Box -->
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <input type="text" id="sys-custom-app-input" placeholder="Scrivi nome app o percorso (es: calc, chrome, d:\...)" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:8px; padding:10px 14px; color:#fff; font-size:0.85rem; font-family:var(--font-mono);" onkeydown="if(event.key==='Enter')launchCustomApp()">
+        <button onclick="launchCustomApp()" class="pc-power-btn" style="min-height:unset; padding:0 18px; border-color:#00f0ff; color:#00f0ff;">AVVIA</button>
+      </div>
+
+      <!-- Running Processes Section -->
+      <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono);">FINESTRE & PROCESSI GRAFICI ATTIVI:</span>
+          <button onclick="refreshRunningApps()" style="background:none; border:none; color:#00f0ff; font-size:0.75rem; cursor:pointer;">🔄 Aggiorna</button>
+        </div>
+        <div id="sys-running-apps-list" style="max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; font-family:var(--font-mono); font-size:0.75rem;">
+          <div style="color:#64748b;">Caricamento processi...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Photos -->
+    <div id="sys-tab-photos" style="display:none; flex-direction:column; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono);">FOTO, SCREENSHOT & PROVE RECENTI:</span>
+        <button onclick="loadRecentPhotos()" style="background:none; border:none; color:#00ff9f; font-size:0.75rem; cursor:pointer;">🔄 Aggiorna</button>
+      </div>
+      <div id="sys-photos-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px; max-height:360px; overflow-y:auto; padding-right:4px;">
+        <div style="color:#64748b; font-size:0.8rem;">Caricamento foto dal disco...</div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Email -->
+    <div id="sys-tab-email" style="display:none; flex-direction:column; gap:10px;">
+      <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono);">
+        INVIO EMAIL RAPIDA TRAMITE GMAIL SMTP (badraudi@gmail.com):
+      </div>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Destinatario:</label>
+        <input type="email" id="sys-email-to" value="badraudi@gmail.com" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:6px; padding:8px 12px; color:#fff; font-size:0.85rem; font-family:var(--font-mono); box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Oggetto:</label>
+        <input type="text" id="sys-email-subject" value="Notifica Operativa da EBJ Supreme" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:6px; padding:8px 12px; color:#fff; font-size:0.85rem; font-family:var(--font-mono); box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Messaggio:</label>
+        <textarea id="sys-email-body" rows="4" placeholder="Scrivi il messaggio qui..." style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.3); border-radius:6px; padding:8px 12px; color:#fff; font-size:0.85rem; font-family:var(--font-mono); resize:vertical; box-sizing:border-box;"></textarea>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="sys-email-voice" checked style="cursor:pointer;">
+        <label for="sys-email-voice" style="font-size:0.75rem; color:#38bdf8; cursor:pointer;">🎙️ Includi nota vocale parlata neurale (Edge-TTS it-IT-DiegoNeural)</label>
+      </div>
+      <button onclick="sendQuickEmailNow()" class="pc-power-btn" style="border-color:#10b981; color:#34d399; background:rgba(16,185,129,0.15); margin-top:6px;">
+        <i data-lucide="send" class="lucide-icon"></i> ✉️ INVIA EMAIL ORA
+      </button>
+    </div>
+
+    <!-- Status feedback message box -->
+    <div id="sys-action-msg" class="pc-action-msg-box" style="display:none; background:rgba(0,240,255,0.08); border:1px solid #00f0ff; color:#00f0ff; margin-top:6px;">
     </div>
   </div>
 </div>

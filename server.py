@@ -4221,6 +4221,51 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "error", "message": str(e)}, status=500)
             return
 
+        # ── JEV SYSTEM OPS & MEDIA ENDPOINTS (GET) ───────────────────
+        if clean_path in ('/api/system/apps', '/api/system/apps/'):
+            try:
+                from ebj_system_ops_executor import list_running_apps, KNOWN_APPS
+                running = list_running_apps()
+                self.send_json({"status": "success", "running_apps": running, "known_apps": list(KNOWN_APPS.keys())})
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if clean_path in ('/api/system/photos', '/api/system/photos/'):
+            try:
+                from ebj_system_ops_executor import find_recent_photos
+                photos = find_recent_photos(limit=24)
+                self.send_json({"status": "success", "photos": photos})
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if clean_path == '/api/system/photo-file':
+            try:
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                p = qs.get('path', [None])[0]
+                if p and os.path.exists(p) and os.path.isfile(p):
+                    ext = os.path.splitext(p)[1].lower()
+                    mime_types = {
+                        '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+                        '.webp': 'image/webp', '.bmp': 'image/bmp', '.gif': 'image/gif'
+                    }
+                    content_type = mime_types.get(ext, 'application/octet-stream')
+                    with open(p, 'rb') as f:
+                        content = f.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', content_type)
+                    self.send_header('Content-Length', str(len(content)))
+                    self.send_header('Cache-Control', 'max-age=3600')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(content)
+                else:
+                    self.send_json({"status": "error", "message": "File non trovato"}, status=404)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
         if clean_path == '/api/tts':
             try:
                 # Niente `import urllib.parse` qui: un import locale rende `urllib` un nome
@@ -6026,6 +6071,63 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     res = send_wake_on_lan(mac=data.get('mac', '08-BF-B8-73-99-3D'))
                 else:
                     res = {"status": "error", "message": f"Azione non valida: {action}"}
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        # ── JEV SYSTEM OPS & MEDIA ENDPOINTS (POST) ──────────────────
+        if self.path in ('/api/system/launch-app', '/api/system/launch-app/'):
+            try:
+                from ebj_system_ops_executor import launch_app
+                app_name = data.get('app') or data.get('name') or data.get('query') or ''
+                args = data.get('args', '')
+                res = launch_app(app_name, args=args)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if self.path in ('/api/system/kill-app', '/api/system/kill-app/'):
+            try:
+                from ebj_system_ops_executor import kill_app
+                proc = data.get('process') or data.get('app') or data.get('pid') or ''
+                res = kill_app(proc)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if self.path in ('/api/system/show-photo', '/api/system/show-photo/'):
+            try:
+                from ebj_system_ops_executor import show_photo
+                q = data.get('query') or data.get('path') or data.get('filename')
+                open_nat = data.get('open_native', True)
+                res = show_photo(q, open_native=open_nat)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if self.path in ('/api/system/screenshot', '/api/system/screenshot/'):
+            try:
+                from ebj_system_ops_executor import take_system_screenshot
+                res = take_system_screenshot()
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if self.path in ('/api/system/send-email', '/api/system/send-email/'):
+            try:
+                from ebj_system_ops_executor import send_universal_email
+                to = data.get('to') or data.get('recipient') or 'badraudi@gmail.com'
+                subject = data.get('subject') or 'Notifica da EBJ Supreme'
+                body = data.get('body') or data.get('message') or ''
+                voice_note = data.get('voice_note') or data.get('voice_text')
+                attachments = data.get('attachments')
+                brand = data.get('brand', 'EBJ')
+                res = send_universal_email(to, subject, body, attachments=attachments, voice_note_text=voice_note, brand=brand)
                 self.send_json(res)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)

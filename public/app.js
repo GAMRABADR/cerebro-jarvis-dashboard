@@ -4902,6 +4902,233 @@ if ('serviceWorker' in navigator) {
   }, 1500);
 })();
 
+// ═══════════════════════════════════════════════════════════════════
+//  JEV UNIVERSAL SYSTEM HUB CONTROLLER (APPS, PHOTOS, EMAIL, IT)
+// ═══════════════════════════════════════════════════════════════════
+(function initSystemHubManager() {
+  window.openSystemHubModal = function() {
+    const modal = document.getElementById('modal-system-hub');
+    if (modal) {
+      modal.style.display = 'flex';
+      refreshRunningApps();
+    }
+    if (window.lucide) {
+      setTimeout(() => lucide.createIcons(), 50);
+    }
+  };
+
+  window.closeSystemHubModal = function() {
+    const modal = document.getElementById('modal-system-hub');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.switchSystemHubTab = function(tab) {
+    const tabApps = document.getElementById('sys-tab-apps');
+    const tabPhotos = document.getElementById('sys-tab-photos');
+    const tabEmail = document.getElementById('sys-tab-email');
+    const btnApps = document.getElementById('tab-btn-sys-apps');
+    const btnPhotos = document.getElementById('tab-btn-sys-photos');
+    const btnEmail = document.getElementById('tab-btn-sys-email');
+
+    if (tabApps) tabApps.style.display = tab === 'apps' ? 'flex' : 'none';
+    if (tabPhotos) tabPhotos.style.display = tab === 'photos' ? 'flex' : 'none';
+    if (tabEmail) tabEmail.style.display = tab === 'email' ? 'flex' : 'none';
+
+    if (btnApps) btnApps.classList.toggle('active', tab === 'apps');
+    if (btnPhotos) btnPhotos.classList.toggle('active', tab === 'photos');
+    if (btnEmail) btnEmail.classList.toggle('active', tab === 'email');
+
+    if (tab === 'photos') loadRecentPhotos();
+    if (tab === 'apps') refreshRunningApps();
+    if (window.lucide) setTimeout(() => lucide.createIcons(), 50);
+  };
+
+  function showSysFeedback(text, isError = false) {
+    const msgBox = document.getElementById('sys-action-msg');
+    if (!msgBox) return;
+    msgBox.style.display = 'block';
+    msgBox.style.background = isError ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0, 240, 255, 0.15)';
+    msgBox.style.borderColor = isError ? '#ef4444' : '#00f0ff';
+    msgBox.style.color = isError ? '#f87171' : '#00f0ff';
+    msgBox.innerHTML = text;
+    setTimeout(() => { if (msgBox) msgBox.style.display = 'none'; }, 6000);
+  }
+
+  window.quickLaunchApp = async function(appName) {
+    showSysFeedback('🚀 Avvio di ' + appName + '...', false);
+    try {
+      const res = await fetch('/api/system/launch-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app: appName })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        showSysFeedback('✅ ' + (data.message || appName + ' avviato con successo!'), false);
+        setTimeout(refreshRunningApps, 1500);
+      } else {
+        showSysFeedback('❌ Errore: ' + (data.error || data.message), true);
+      }
+    } catch (err) {
+      showSysFeedback('❌ Errore di rete: ' + err.message, true);
+    }
+  };
+
+  window.launchCustomApp = function() {
+    const input = document.getElementById('sys-custom-app-input');
+    if (!input || !input.value.trim()) return;
+    quickLaunchApp(input.value.trim());
+    input.value = '';
+  };
+
+  window.refreshRunningApps = async function() {
+    const listEl = document.getElementById('sys-running-apps-list');
+    if (!listEl) return;
+    try {
+      const res = await fetch('/api/system/apps', { cache: 'no-store' });
+      const data = await res.json();
+      const apps = data.running_apps || [];
+      if (!apps.length) {
+        listEl.innerHTML = '<div style="color:#64748b; padding:4px;">Nessuna finestra utente rilevata al momento.</div>';
+        return;
+      }
+      let html = '';
+      for (const a of apps) {
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:4px 8px;">
+            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80%;">
+              <strong style="color:#00f0ff;">${a.process_name}</strong>: <span style="color:#cbd5e1;">${a.title}</span> <small style="color:#64748b;">(${a.memory_mb} MB)</small>
+            </div>
+            <button onclick="killRunningProcess('${a.pid}')" style="background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#f87171; border-radius:4px; padding:2px 6px; font-size:0.7rem; cursor:pointer;" title="Termina processo PID ${a.pid}">✕ Chiudi</button>
+          </div>
+        `;
+      }
+      listEl.innerHTML = html;
+    } catch (err) {
+      listEl.innerHTML = '<div style="color:#ef4444;">Errore recupero processi: ' + err.message + '</div>';
+    }
+  };
+
+  window.killRunningProcess = async function(pid) {
+    if (!confirm('Vuoi davvero terminare il processo PID ' + pid + '?')) return;
+    try {
+      const res = await fetch('/api/system/kill-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pid: pid })
+      });
+      const data = await res.json();
+      showSysFeedback('Processo terminato: ' + (data.output || 'OK'), false);
+      setTimeout(refreshRunningApps, 1000);
+    } catch (err) {
+      showSysFeedback('Errore: ' + err.message, true);
+    }
+  };
+
+  window.loadRecentPhotos = async function() {
+    const gridEl = document.getElementById('sys-photos-grid');
+    if (!gridEl) return;
+    try {
+      gridEl.innerHTML = '<div style="color:#64748b;">Scansione foto in corso...</div>';
+      const res = await fetch('/api/system/photos', { cache: 'no-store' });
+      const data = await res.json();
+      const photos = data.photos || [];
+      if (!photos.length) {
+        gridEl.innerHTML = '<div style="color:#64748b;">Nessuna foto recente trovata su disco.</div>';
+        return;
+      }
+      let html = '';
+      for (const ph of photos) {
+        const encPath = encodeURIComponent(ph.path);
+        const imgUrl = '/api/system/photo-file?path=' + encPath;
+        html += `
+          <div style="background:rgba(0,0,0,0.6); border:1px solid rgba(0,240,255,0.25); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; transition:transform 0.2s;" onmouseenter="this.style.borderColor='#00f0ff'" onmouseleave="this.style.borderColor='rgba(0,240,255,0.25)'">
+            <div style="height:90px; background:#010915; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="openPhotoOnScreen('${encodeURIComponent(ph.path)}')">
+              <img src="${imgUrl}" alt="${ph.filename}" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+            </div>
+            <div style="padding:6px; font-family:var(--font-mono); font-size:0.68rem; display:flex; flex-direction:column; gap:2px;">
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#e2e8f0;" title="${ph.filename}"><strong>${ph.filename}</strong></span>
+              <span style="color:#64748b;">${ph.size_kb} KB · ${ph.date_str.split(' ')[0]}</span>
+              <button onclick="openPhotoOnScreen('${encodeURIComponent(ph.path)}')" style="margin-top:4px; background:rgba(0,255,159,0.15); border:1px solid #00ff9f; color:#00ff9f; border-radius:4px; padding:3px 6px; font-size:0.65rem; cursor:pointer; font-weight:bold;">🖥️ Mostra su Schermo</button>
+            </div>
+          </div>
+        `;
+      }
+      gridEl.innerHTML = html;
+    } catch (err) {
+      gridEl.innerHTML = '<div style="color:#ef4444;">Errore recupero foto: ' + err.message + '</div>';
+    }
+  };
+
+  window.openPhotoOnScreen = async function(encodedPath) {
+    const rawPath = decodeURIComponent(encodedPath);
+    showSysFeedback('🖼️ Apertura di ' + rawPath.split('\\').pop() + '...', false);
+    try {
+      const res = await fetch('/api/system/show-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: rawPath, open_native: true })
+      });
+      const data = await res.json();
+      showSysFeedback('✅ ' + (data.message || 'Foto aperta su schermo!'), false);
+    } catch (err) {
+      showSysFeedback('❌ Errore: ' + err.message, true);
+    }
+  };
+
+  window.triggerScreenshotNow = async function() {
+    showSysFeedback('📸 Cattura screenshot dello schermo in corso...', false);
+    try {
+      const res = await fetch('/api/system/screenshot', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        showSysFeedback('✅ ' + data.message, false);
+        loadRecentPhotos();
+      } else {
+        showSysFeedback('❌ Errore screenshot: ' + (data.error || data.message), true);
+      }
+    } catch (err) {
+      showSysFeedback('❌ Errore: ' + err.message, true);
+    }
+  };
+
+  window.sendQuickEmailNow = async function() {
+    const to = document.getElementById('sys-email-to').value.trim();
+    const subject = document.getElementById('sys-email-subject').value.trim();
+    const body = document.getElementById('sys-email-body').value.trim();
+    const voiceNote = document.getElementById('sys-email-voice').checked ? body : null;
+
+    if (!to || !body) {
+      alert('Inserisci almeno destinatario e messaggio!');
+      return;
+    }
+
+    showSysFeedback('✉️ Invio email in corso tramite server Gmail...', false);
+    try {
+      const res = await fetch('/api/system/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: to,
+          subject: subject,
+          body: body,
+          voice_note: voiceNote
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        showSysFeedback('✅ ' + data.message, false);
+        document.getElementById('sys-email-body').value = '';
+      } else {
+        showSysFeedback('❌ Errore invio: ' + (data.error || data.message), true);
+      }
+    } catch (err) {
+      showSysFeedback('❌ Errore di rete: ' + err.message, true);
+    }
+  };
+})();
+
+
 
 
 

@@ -192,6 +192,69 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             return res
         except Exception as e:
             return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    # 3. Comandi Gestione Foto & Screenshot (JEV Native Vision)
+    if any(k in cmd for k in ["mostrami la foto", "mostra foto", "apri la foto", "apri foto", "fammi vedere le foto", "guarda foto", "vedi immagini", "mostra immagini"]):
+        try:
+            from ebj_system_ops_executor import show_photo
+            # Estrai eventuale parola chiave
+            clean = cmd.replace("mostrami la foto", "").replace("mostra foto", "").replace("apri foto", "").replace("di", "").strip()
+            res = show_photo(clean if clean else None, open_native=True)
+            res["spoken_response"] = f"Aperta la foto {res.get('filename', '')} sullo schermo, Badr."
+            res["engine"] = "JEV_Native_Photo_Viewer"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    if any(k in cmd for k in ["fai uno screenshot", "cattura schermo", "cattura lo schermo", "screenshot", "fotografa schermo"]):
+        try:
+            from ebj_system_ops_executor import take_system_screenshot
+            res = take_system_screenshot()
+            res["spoken_response"] = "Screenshot catturato e salvato con successo, Badr."
+            res["engine"] = "JEV_Native_Screen_Capture"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    # 4. Comandi Avvio & Chiusura Applicazioni (JEV Universal App Runner)
+    if cmd.startswith("apri ") or cmd.startswith("avvia ") or cmd.startswith("lancia "):
+        target_app = cmd.replace("apri ", "").replace("avvia ", "").replace("lancia ", "").strip()
+        # Escludi comandi di sistema già gestiti sopra
+        if target_app not in ["il pc", "pc", "computer", "la foto", "le foto"]:
+            try:
+                from ebj_system_ops_executor import launch_app
+                res = launch_app(target_app)
+                res["spoken_response"] = f"Apro subito {target_app}, Badr."
+                res["engine"] = "JEV_Native_App_Launcher"
+                return res
+            except Exception as e:
+                return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    if cmd.startswith("chiudi ") or cmd.startswith("termina ") or cmd.startswith("kill "):
+        target_app = cmd.replace("chiudi ", "").replace("termina ", "").replace("kill ", "").strip()
+        if target_app not in ["il pc", "pc"]:
+            try:
+                from ebj_system_ops_executor import kill_app
+                res = kill_app(target_app)
+                res["spoken_response"] = f"Processo {target_app} terminato, Badr."
+                res["engine"] = "JEV_Native_Process_Killer"
+                return res
+            except Exception as e:
+                return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    # 5. Comandi Invio Email (JEV Universal Email Dispatcher)
+    if any(k in cmd for k in ["invia email", "manda email", "invia una mail", "manda una mail", "invia mail"]):
+        try:
+            from ebj_system_ops_executor import send_universal_email
+            # Se la richiesta include testo o destinatario
+            subj = "Notifica Rapida da EBJ Supreme"
+            body = user_command
+            res = send_universal_email("badraudi@gmail.com", subj, body, voice_note_text=body)
+            res["spoken_response"] = "Email inviata con successo al tuo indirizzo, Badr."
+            res["engine"] = "JEV_Native_Email_Dispatcher"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
         
     # 2. Classificazione intent ad alta velocità con CLM (Tier 1)
     t0 = time.perf_counter()
