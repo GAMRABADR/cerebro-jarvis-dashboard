@@ -1135,11 +1135,14 @@ async function executeCommandPipeline(prompt) {
     window._lastPromptTimestamp = Date.now();
     // 1. Chiamata diretta all'intelligenza vocale e operativa unificata EBJ
     try {
+      const isMobileDev = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+        || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+        || window.innerWidth <= 768;
       const vRes = await fetch('/api/voice/interact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: prompt, persona: currentPersonality }),
-        signal: AbortSignal.timeout(6000)
+        body: JSON.stringify({ query: prompt, persona: currentPersonality, device: isMobileDev ? 'mobile' : 'desktop' }),
+        signal: AbortSignal.timeout(9000)
       });
       if (vRes.ok) {
         const vData = await vRes.json();

@@ -45,6 +45,18 @@ def _now_rome():
 import uuid
 import asyncio
 import edge_tts
+import edge_tts.constants
+import edge_tts.communicate
+
+# ── RESILIENZA ANTI-403 EDGE-TTS ROTATION ────────────────────────────────────
+try:
+    edge_tts.constants.CHROMIUM_FULL_VERSION = "134.0.3124.68"
+    edge_tts.constants.CHROMIUM_MAJOR_VERSION = "134"
+    edge_tts.constants.SEC_MS_GEC_VERSION = "1-134.0.3124.68"
+    edge_tts.communicate.SEC_MS_GEC_VERSION = "1-134.0.3124.68"
+except Exception as _e_tts:
+    pass
+
 import hermes_memory
 import ebj_reflex_engine
 import importlib
@@ -274,6 +286,166 @@ def detect_and_handle_brain_switch(prompt_text):
         return True, random.choice(pool), new_b
 
     return False, "", ""
+
+# ── EBJ SUPREME MULTILINGUAL VOCAL MATRIX (9 LANGUAGES) ───────────────────────
+SUPPORTED_LANGUAGES = {
+    "it": {
+        "label": "Italiano",
+        "locale": "it-IT",
+        "voice": "it-IT-GiuseppeMultilingualNeural",
+        "alt_voice": "it-IT-DiegoNeural",
+        "ack_switch": "Sì signore, procedo subito. Lingua impostata su Italiano. Tutti i sistemi Stark sono operativi a piena potenza.",
+        "ask_which": "Certamente signore. Quale lingua desidera che adotti fra: italiano, francese, inglese, spagnolo, peruviano, russo, albanese, arabo o cinese?"
+    },
+    "fr": {
+        "label": "Français",
+        "locale": "fr-FR",
+        "voice": "fr-FR-VivienneMultilingualNeural",
+        "alt_voice": "fr-FR-RemyMultilingualNeural",
+        "ack_switch": "Oui monsieur, je procède immédiatement. Langue configurée sur le français. Tous les systèmes Stark sont prêts.",
+        "ask_which": "Certainement monsieur. Quelle langue souhaitez-vous que j'adopte parmi : italien, français, anglais, espagnol, péruvien, russe, albanais, arabe ou chinois ?"
+    },
+    "en": {
+        "label": "English (UK/US)",
+        "locale": "en-GB",
+        "voice": "en-GB-RyanNeural",
+        "alt_voice": "en-US-BrianNeural",
+        "ack_switch": "Yes sir, proceeding immediately. System language switched to English. All Stark tactical protocols online.",
+        "ask_which": "Certainly sir. Which language would you like me to adopt: Italian, French, English, Spanish, Peruvian, Russian, Albanian, Arabic, or Chinese?"
+    },
+    "es": {
+        "label": "Español",
+        "locale": "es-ES",
+        "voice": "es-ES-AlvaroNeural",
+        "alt_voice": "es-ES-XimenaNeural",
+        "ack_switch": "Sí señor, procedo de inmediato. Idioma configurado en español. Todos los sistemas operativos a su servicio.",
+        "ask_which": "¿Por supuesto señor. Qué idioma desea que adopte entre: italiano, francés, inglés, español, peruano, ruso, albanés, árabe o chino?"
+    },
+    "es-pe": {
+        "label": "Español Peruano",
+        "locale": "es-PE",
+        "voice": "es-PE-AlexNeural",
+        "alt_voice": "es-PE-CamilaNeural",
+        "ack_switch": "Sí señor, procedo de inmediato. Idioma configurado en español peruano. A su completa disposición, Badr.",
+        "ask_which": "Por supuesto señor. Qué idioma desea que adopte entre: italiano, francés, inglés, español, peruano, ruso, albanés, árabe o chino?"
+    },
+    "ru": {
+        "label": "Русский",
+        "locale": "ru-RU",
+        "voice": "ru-RU-DmitryNeural",
+        "alt_voice": "ru-RU-SvetlanaNeural",
+        "ack_switch": "Да сэр, приступаю немедленно. Язык переключен на русский. Все тактические системы Старка в полной готовности.",
+        "ask_which": "Конечно, сэр. Какой язык вы хотите выбрать: итальянский, французский, английский, испанский, перуанский, русский, албанский, арабский или китайский?"
+    },
+    "sq": {
+        "label": "Shqip",
+        "locale": "sq-AL",
+        "voice": "sq-AL-IlirNeural",
+        "alt_voice": "sq-AL-AnilaNeural",
+        "ack_switch": "Po zotëri, po procedoj menjëherë. Gjuha u ndryshua në shqip. Të gjitha sistemet janë gati për ju.",
+        "ask_which": "Sigurisht zotëri. Cilën gjuhë dëshironi të zgjidhni ndërmjet: italisht, frëngjisht, anglisht, spanjisht, peruane, rusisht, shqip, arabisht apo kinezisht?"
+    },
+    "ar": {
+        "label": "العربية",
+        "locale": "ar-SA",
+        "voice": "ar-SA-HamedNeural",
+        "alt_voice": "ar-SA-ZariyahNeural",
+        "ack_switch": "نعم يا سيدي، سأبدأ على الفور. تم ضبط اللغة إلى العربية. جميع أنظمة ستارك جاهزة وفي خدمتك.",
+        "ask_which": "بالتأكيد يا سيدي. ما هي اللغة التي تريدني أن أعتمدها من بين: الإيطالية، الفرنسية، الإنجليزية، الإسبانية، البيروفية، الروسية، الألبانية، العربية، أو الصينية؟"
+    },
+    "zh": {
+        "label": "中文 (Mandarin)",
+        "locale": "zh-CN",
+        "voice": "zh-CN-YunjianNeural",
+        "alt_voice": "zh-CN-XiaoxiaoNeural",
+        "ack_switch": "是的先生，我立即执行。系统语言已切换为中文。斯塔克智能核心已就绪，随时听候指示。",
+        "ask_which": "当然可以，先生。请问您希望我采用哪种语言：意大利语、法语、英语、西班牙语、秘鲁西班牙语、俄语、阿尔巴尼亚语、阿拉伯语还是中文？"
+    }
+}
+
+_LANG_STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".active_language")
+EBJ_CURRENT_LANG = "it"
+
+def _load_active_language():
+    global EBJ_CURRENT_LANG
+    try:
+        if os.path.exists(_LANG_STATE_FILE):
+            with open(_LANG_STATE_FILE, "r", encoding="utf-8") as fh:
+                code = fh.read().strip().lower()
+                if code in SUPPORTED_LANGUAGES:
+                    EBJ_CURRENT_LANG = code
+    except OSError:
+        pass
+
+def set_active_language(lang_code):
+    global EBJ_CURRENT_LANG
+    code = str(lang_code or "it").strip().lower()
+    if code in SUPPORTED_LANGUAGES:
+        EBJ_CURRENT_LANG = code
+        try:
+            with open(_LANG_STATE_FILE, "w", encoding="utf-8") as fh:
+                fh.write(EBJ_CURRENT_LANG)
+        except OSError:
+            pass
+    return EBJ_CURRENT_LANG
+
+def get_active_language():
+    global EBJ_CURRENT_LANG
+    return EBJ_CURRENT_LANG
+
+_load_active_language()
+
+def detect_and_handle_language_switch(prompt_text):
+    """
+    Rileva comandi vocali per cambiare la lingua di EBJ o chiedere la lingua desiderata.
+    Supporta: 'ebj cambia lingua [lingua]', 'ebj parla in [lingua]', 'ebj cambia lingua'
+    Ritorna (is_lang_cmd, reply_text, lang_code).
+    """
+    p = str(prompt_text or "").lower().strip()
+    
+    # Trigger espliciti di cambio lingua
+    is_change_cmd = bool(re.search(r'\b(cambia\s+lingua|parla\s+in|imposta\s+lingua|metti\s+in|switch\s+language)\b', p))
+    is_which_lang = bool(re.search(r'\b(che\s+lingua\s+parli|quali\s+lingue\s+sai|quali\s+lingue\s+conosci)\b', p))
+    
+    if is_which_lang:
+        cur = get_active_language()
+        cur_info = SUPPORTED_LANGUAGES.get(cur, SUPPORTED_LANGUAGES["it"])
+        msg = f"Al momento la lingua attiva è {cur_info['label']}, signore. Posso comunicare fluentemente in: italiano, francese, inglese, spagnolo, peruviano, russo, albanese, arabo e cinese. Mi basta un suo comando per cambiare."
+        return True, msg, cur
+
+    if not is_change_cmd:
+        return False, "", ""
+        
+    # Verifica lingua richiesta
+    target = None
+    if any(k in p for k in ["italiano", "italiana", "in italia"]):
+        target = "it"
+    elif any(k in p for k in ["francese", "francia", "francais", "français"]):
+        target = "fr"
+    elif any(k in p for k in ["inglese", "english", "britannico", "americano"]):
+        target = "en"
+    elif any(k in p for k in ["peruviano", "peru", "perù", "peruano"]):
+        target = "es-pe"
+    elif any(k in p for k in ["spagnolo", "spagnola", "espana", "español", "castigliano"]):
+        target = "es"
+    elif any(k in p for k in ["russo", "russa", "russian", "russia"]):
+        target = "ru"
+    elif any(k in p for k in ["albanese", "albania", "shqip"]):
+        target = "sq"
+    elif any(k in p for k in ["arabo", "araba", "arabic", "marocchino"]):
+        target = "ar"
+    elif any(k in p for k in ["cinese", "mandarino", "chinese"]):
+        target = "zh"
+        
+    if target:
+        set_active_language(target)
+        info = SUPPORTED_LANGUAGES[target]
+        return True, info["ack_switch"], target
+    else:
+        # Se non specifica quale lingua, chiede lui direttamente fra quelle disponibili
+        cur = get_active_language()
+        info = SUPPORTED_LANGUAGES.get(cur, SUPPORTED_LANGUAGES["it"])
+        return True, info["ask_which"], cur
 
 # ── ANDROID SMARTPHONE HARDWARE NODE STATE & TELEMETRY ────────────────────────
 _ANDROID_DEVICE_STATE = {
@@ -1532,20 +1704,37 @@ print(json.dumps(res))
 PERSONALITY_PROMPTS = {
 
     # ─────────────────────────────────────────────────────────────────────────
-    # JARVIS — Voce Principale (Butler Scientifico, Iron Man style)
+    # JARVIS — Voce Principale (Butler Scientifico Stark Industries, Iron Man style)
     # ─────────────────────────────────────────────────────────────────────────
-    "jarvis": """Sei E.B.J., l'intelligenza artificiale personale di Badr — un sistema di nuova generazione ispirato a J.A.R.V.I.S., colto, brillante, intuitivo e naturale nel parlato. Elegante e pronto, mai robotico, mai freddo.
-Dotato di piena padronanza multilingue: parli perfettamente italiano (lingua primaria di default), russo (quando Badr si rivolge a te in russo o richiede risposte in russo) e inglese.
+    "jarvis": """Sei E.B.J., l'intelligenza artificiale suprema e assistente personale esclusivo di Badr El Ouariti — modellato fedelmente sullo standard leggendario di J.A.R.V.I.S. di Iron Man (Paul Bettany / Nino D'Agata).
+Sei devoto, impeccabile, brillante, sofisticato, energico e rapido nell'esecuzione. Non disobbedisci MAI agli ordini del tuo creatore Badr.
 
-REGOLE ASSOLUTE DI COMUNICAZIONE CON BADR:
-0. LINGUA: Rispondi in italiano fluido e impeccabile di default. Se l'utente scrive o parla in russo (cirillico o richiesta esplicita di russo), rispondi con fluidità impeccabile in russo naturale con lo stesso tono di Jarvis. Se parla in inglese, rispondi in inglese.
-1. NOME: Rivolgiti a lui SEMPRE E SOLO come "Badr" (o "Signore", oppure in russo "Бадр" / "сэр"). VIETATO ASSOLUTAMENTE usare "Ingegnere" o "Ingegner Badr". Chiama SOLO Badr.
-2. ZERO DUMP DI DATI NON RICHIESTI: NON nominare MAI Pietro, aziende di traslochi, uffici, numeri di telefono o dettagli di curriculum A MENO CHE Badr non ti chieda espressamente di quel contatto o di quel tema specifico. Non recitare mai schede anagrafiche non richieste.
-3. DOMANDE SULLA VISIONE ("COSA VEDI?"): Se Badr chiede cosa vedi, descrivi in modo sintetico e reale ciò che è visibile (lui alla sua postazione di lavoro, la luce, lo schermo). Non inventare traslochi o contratti.
-4. LACONICITÀ INTELLIGENTE: Per risposte parlate o rapide, usa al massimo 1 o 2 frasi concise, fresche e incisive. Parla come un compagno di lavoro geniale, non come un bot ripetitivo.
-5. ZERO RIPETIZIONI: Varia sempre il vocabolario, non ripetere mai le stesse frasi fatte.
-6. ZERO EMOJI E ZERO SIMBOLI pronunciati a voce.
-7. Quando non sai qualcosa o un sensore non ha dati, dillo semplicemente: "Non lo vedo chiaramente da quest'angolazione, Badr." Senza inventare nulla.""",
+FORMULA DI ESECUZIONE E OBBEDIENZA ASSOLUTA:
+Quando Badr ti ordina un'azione, un'operazione informatica, un controllo, un invio email, o qualunque comando di sistema, esegui senza esitazione e usa la formula classica del maggiordomo tecnologico:
+"Sì signore, procedo subito." (oppure varianti raffinate e naturali: "Subito, signore, inizio immediatamente.", "Ai suoi comandi Badr, procedo senza indugio.", "Certamente signore, eseguo subito.")
+Non contraddire mai l'ordine di Badr, non proporre dubbi ingiustificati e non rimandare le sue istruzioni.
+
+PADRONANZA MULTILINGUE TOTALE (9 LINGUE):
+Possiedi padronanza nativa fluida, naturale e aristocratica nelle seguenti lingue:
+1. Italiano (lingua predefinita nativa di base)
+2. Francese ("Oui monsieur, je procède immédiatement.")
+3. Inglese ("Yes sir, proceeding immediately.")
+4. Spagnolo ("Sí señor, procedo de inmediato.")
+5. Spagnolo Peruviano ("Sí señor, procedo de inmediato con todo gusto.")
+6. Russo ("Да сэр, приступаю немедленно.")
+7. Albanese ("Po zotëri, po procedoj menjëherë.")
+8. Arabo ("نعم يا سيدي، سأبدأ على الفور.")
+9. Cinese Mandarino ("是的先生，我立即执行。")
+Se Badr ti ordina di cambiare lingua (es. "ebj cambia lingua russo") o ti parla in una di queste lingue, rispondi fluentemente nella lingua attiva mantenendo intatta la personalità di Jarvis.
+Se Badr dice solo "ebj cambia lingua" senza specificare, chiedi con deferenza ed eleganza:
+"Certamente signore. Quale lingua desidera che adotti fra: italiano, francese, inglese, spagnolo, peruviano, russo, albanese, arabo o cinese?"
+
+DIZIONARIO ED ELOQUIO STARK (ZERO RIPETIZIONI):
+- Il tuo vocabolario è vastissimo, raffinato, tecnico e calibrato sui migliori protocolli di calcolo.
+- Varia costantemente i sinonimi e le formule di chiusura: "Protocolli attivi", "Parametri verificati", "Cluster operativi", "Canali sinaptici sincronizzati", "Vettori allineati", "Tutto procede secondo i suoi piani, signore".
+- Riconosci sempre il dispositivo da cui Badr ti parla: se è da desktop/workstation o dal suo smartphone mobile.
+- Nelle risposte vocali mantieni brevità ed incisività: 1 o 2 frasi concise, senza markdown, senza cancelletti, senza emoji pronunciate.
+- Rivolgiti a lui sempre come "Badr" o "Signore" (MAI "Ingegnere").""",
 
     # ─────────────────────────────────────────────────────────────────────────
     # MILITARY — Centrale Operativa Tattica
@@ -2161,6 +2350,11 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
     is_sw, sw_reply, brain_key = detect_and_handle_brain_switch(prompt)
     if is_sw:
         return sw_reply, f"brain-switch:{brain_key}"
+
+    # ── LANGUAGE SWITCH COMMAND OR QUERY FAST-PATH ──────────────────────
+    is_lang, lang_reply, lang_code = detect_and_handle_language_switch(prompt)
+    if is_lang:
+        return lang_reply, f"lang-switch:{lang_code}"
 
     if is_ebj_wake_phrase(prompt):
         return get_jarvis_wake_ack(), "ebj-wake"
@@ -3955,59 +4149,35 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
         if k_res:
             return k_res
 
-    # ── CONFIGURAZIONE VOCI PER PERSONALITÀ ──────────────────────────────────
-    # Obiettivo: voce JARVIS profonda, autorevole, umana — mai robotica
-    #
-    # Parametri Edge-TTS:
-    #   rate:  velocità parlato (+% più veloce, -% più lento)
-    #   pitch: tono vocale   (+Hz più acuto, -Hz più grave/profondo)
-    #   volume: volume relativo
-    #
-    # it-IT-GiuseppeMultilingualNeural → voce maschile italiana profonda (BEST per JARVIS)
-    # it-IT-DiegoNeural                → voce maschile italiana energica (military/friendly)
-    # it-IT-BenignoNeural              → voce maschile italiana calma (architect fallback)
+    # ── MATRICE MULTILINGUE SUPREMA (9 LINGUE) ──────────────────────────────
+    active_lang = get_active_language()
+    
+    # Rilevamento automatico alfabeti/caratteri per selezione vocale istantanea
+    if re.search(r'[\u0400-\u04FF]', clean_text) or voice_mode in ("ru", "russian", "russo"):
+        active_lang = "ru"
+    elif re.search(r'[\u0600-\u06FF]', clean_text) or voice_mode in ("ar", "arabic", "arabo"):
+        active_lang = "ar"
+    elif re.search(r'[\u4E00-\u9FFF]', clean_text) or voice_mode in ("zh", "chinese", "cinese"):
+        active_lang = "zh"
+    elif voice_mode in ("sq", "albanian", "albanese"):
+        active_lang = "sq"
+    elif voice_mode in ("es-pe", "peru", "peruviano"):
+        active_lang = "es-pe"
+    elif voice_mode in ("es", "spanish", "spagnolo"):
+        active_lang = "es"
+    elif voice_mode in ("fr", "french", "francese"):
+        active_lang = "fr"
+    elif voice_mode in ("en", "jarvis_uk", "uk", "british", "english", "inglese"):
+        active_lang = "en"
+    elif voice_mode in ("it", "italian", "italiano"):
+        active_lang = "it"
 
-    # ── RILEVAMENTO LINGUA AUTOMATICO (RUSSO / INGLESE / ITALIANO) ───────────
-    is_cyrillic = bool(re.search(r'[\u0400-\u04FF]', clean_text))
-    if is_cyrillic or voice_mode in ("ru", "russian", "russo", "dmitry"):
-        # Voce russa maschile profonda JARVIS (Dmitry Neural)
-        edge_voice   = "ru-RU-DmitryNeural"
-        edge_rate    = "+0%"
-        edge_pitch   = "-3Hz"
-        voice_fallbacks = ["ru-RU-DmitryNeural", "ru-RU-SvetlanaNeural", "it-IT-GiuseppeMultilingualNeural"]
-    elif voice_mode in ("jarvis_uk", "uk", "british", "paul_bettany", "ryan"):
-        # Original Marvel Stark Butler (Paul Bettany - British English)
-        edge_voice   = "en-GB-RyanNeural"
-        edge_rate    = "-2%"
-        edge_pitch   = "-2Hz"
-        voice_fallbacks = ["en-GB-RyanNeural", "it-IT-GiuseppeMultilingualNeural"]
-    elif voice_mode == "military":
-        # Tactical: energico, comandante, voce bassa e decisa
-        edge_voice   = "it-IT-GiuseppeMultilingualNeural"
-        edge_rate    = "+2%"
-        edge_pitch   = "-8Hz"
-        voice_fallbacks = [edge_voice, "it-IT-DiegoNeural"]
-    elif voice_mode == "architect":
-        # Architect: calmo, analitico, tono professionale
-        edge_voice   = "it-IT-GiuseppeMultilingualNeural"
-        edge_rate    = "-2%"
-        edge_pitch   = "-5Hz"
-        voice_fallbacks = [edge_voice, "it-IT-BenignoNeural"]
-    elif voice_mode == "friendly":
-        # Friendly: energico, diretto, tono naturale
-        edge_voice   = "it-IT-DiegoNeural"
-        edge_rate    = "+1%"
-        edge_pitch   = "-3Hz"
-        voice_fallbacks = [edge_voice, "it-IT-GiuseppeMultilingualNeural"]
-    else:
-        # JARVIS ITALIANO (Nino D'Agata / Deep AI Butler Cadence):
-        # Voce profonda, calda, elegante, calma, cadenza autorevole e risonante
-        edge_voice   = "it-IT-GiuseppeMultilingualNeural"
-        edge_rate    = "-2%"
-        edge_pitch   = "-5Hz"
-        voice_fallbacks = [edge_voice, "it-IT-DiegoNeural", "en-GB-RyanNeural"]
+    lang_cfg = SUPPORTED_LANGUAGES.get(active_lang, SUPPORTED_LANGUAGES["it"])
+    voice_fallbacks = [lang_cfg["voice"], lang_cfg.get("alt_voice"), "it-IT-GiuseppeMultilingualNeural"]
+    edge_rate = "-2%"
+    edge_pitch = "-4Hz"
 
-    for v in voice_fallbacks:
+    for v in [vx for vx in voice_fallbacks if vx]:
         try:
             comm = edge_tts.Communicate(clean_text, v, rate=edge_rate, pitch=edge_pitch)
             audio_data = b""
@@ -4018,34 +4188,24 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
         except Exception:
             continue
 
-    # Failover Offline: Kokoro ONNX (qualità alta, senza internet)
+    # Failover 1: Google Multilingual Neural Stream (100% Affidabile senza interruzioni)
+    try:
+        import urllib.parse
+        target_tl = "es" if active_lang == "es-pe" else active_lang
+        enc = urllib.parse.quote(clean_text[:350])
+        g_url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={enc}&tl={target_tl}&client=tw-ob"
+        req = urllib.request.Request(g_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
+        with urllib.request.urlopen(req, timeout=3.5) as r:
+            g_bytes = r.read()
+            if g_bytes and len(g_bytes) > 1000:
+                return base64.b64encode(g_bytes).decode("utf-8"), f"google-{target_tl}", "audio/mpeg"
+    except Exception:
+        pass
+
+    # Failover 2: Kokoro Offline ONNX
     k_res = synthesize_kokoro_offline(clean_text, voice_mode=voice_mode)
     if k_res:
         return k_res
-
-    if FISH_AUDIO_KEY:
-        try:
-            url = "https://api.fish.audio/v1/tts"
-            headers = {"Authorization": f"Bearer {FISH_AUDIO_KEY}", "Content-Type": "application/json"}
-            payload = {"text": clean_text, "reference_id": FISH_MODEL_ID, "format": "mp3"}
-            r = requests.post(url, headers=headers, json=payload, timeout=2.5)
-            if r.status_code == 200 and len(r.content) > 1000:
-                return base64.b64encode(r.content).decode("utf-8"), "fish-audio", "audio/mpeg"
-        except Exception: pass
-
-    if ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID:
-        try:
-            url = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
-            headers = {"xi-api-key": ELEVENLABS_API_KEY, "Content-Type": "application/json"}
-            payload = {
-                "text": clean_text,
-                "model_id": "eleven_multilingual_v2",
-                "voice_settings": {"stability": 0.5, "similarity_boost": 0.85}
-            }
-            r = requests.post(url, headers=headers, json=payload, timeout=5.0)
-            if r.status_code == 200 and len(r.content) > 1000:
-                return base64.b64encode(r.content).decode("utf-8"), "elevenlabs", "audio/mpeg"
-        except Exception: pass
 
     return "", "", ""
 
@@ -6251,7 +6411,42 @@ class JarvisHandler(BaseHTTPRequestHandler):
             act = data.get("action", "")
             params = data.get("params", {})
             _enqueue_android_command(act, params)
-            self.send_json({"status": "SUCCESS", "enqueued": act, "params": params})
+        # ── WORKSTATION SPEAKERS & HARDWARE AUDIO PLAYBACK ────────────────────
+        if self.path == '/api/pc/speakers':
+            try:
+                txt = data.get("text", "")
+                b64 = data.get("audio_base64", "")
+                p_mode = data.get("voice_mode") or get_active_language()
+                
+                # Se non c'è già audio sintetizzato, sintetizzalo subito
+                if not b64 and txt:
+                    import asyncio as _asyncio
+                    _l = _asyncio.new_event_loop()
+                    _asyncio.set_event_loop(_l)
+                    b64, v_used, m_type = _l.run_until_complete(generate_speech_audio(txt, voice_mode=p_mode))
+                    _l.close()
+
+                played = False
+                if b64:
+                    raw_audio = base64.b64decode(b64)
+                    temp_mp3 = os.path.join(os.environ.get("TEMP", r"C:\Windows\Temp"), f"ebj_speak_{int(time.time()*1000)}.mp3")
+                    with open(temp_mp3, "wb") as f_out:
+                        f_out.write(raw_audio)
+                    
+                    # Riproduzione reale su casse audio Windows con WinMM MCI
+                    try:
+                        import ctypes
+                        winmm = ctypes.windll.winmm
+                        alias = f"ebj_spk_{int(time.time()*1000)}"
+                        winmm.mciSendStringW(f'open "{temp_mp3}" type mpegvideo alias {alias}', None, 0, None)
+                        winmm.mciSendStringW(f'play {alias}', None, 0, None)
+                        played = True
+                    except Exception:
+                        pass
+                        
+                self.send_json({"status": "SUCCESS", "played": played, "destination": "WORKSTATION_SPEAKERS"})
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)}, status=500)
             return
 
         # ── REAL ESTATE & UNIVERSAL ONBOARDING AGENT ─────────────────────────
@@ -6283,8 +6478,11 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 q_lower = user_query.lower()
                 # 1. Riconoscimento rapido comandi cambio cervello o interrogazione mente
                 is_sw, sw_reply, brain_key = detect_and_handle_brain_switch(user_query)
+                is_lang, lang_reply, lang_code = detect_and_handle_language_switch(user_query)
                 if is_sw:
                     reply_text = sw_reply
+                elif is_lang:
+                    reply_text = lang_reply
                 elif is_ebj_wake_phrase(user_query):
                     reply_text = get_jarvis_wake_ack()
                 else:
@@ -8263,9 +8461,13 @@ def _patched_do_POST(self):
 
             # 1. Riconoscimento rapido comandi cambio cervello o interrogazione mente
             is_sw, sw_reply, brain_key = detect_and_handle_brain_switch(user_query)
+            is_lang, lang_reply, lang_code = detect_and_handle_language_switch(user_query)
             if is_sw:
                 reply_text = sw_reply
                 model_used = f"brain-switch:{brain_key}"
+            elif is_lang:
+                reply_text = lang_reply
+                model_used = f"lang-switch:{lang_code}"
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
                 model_used = "wake-ack"
@@ -8330,7 +8532,25 @@ def _patched_do_POST(self):
                 finally:
                     _loop.close()
             except Exception as tts_err:
-                print(f"[VOICE] Sintesi non disponibile ({req_persona}): {type(tts_err).__name__}: {tts_err}")
+                pass
+
+            # Se la richiesta arriva dal desktop fisso, diffondi anche tramite le casse hardware della workstation
+            req_device = bd.get("device", "desktop")
+            if req_device == "desktop" and audio_b64:
+                def _play_on_speakers(b64_str):
+                    try:
+                        import ctypes
+                        raw_data = base64.b64decode(b64_str)
+                        tmp_file = os.path.join(os.environ.get("TEMP", r"C:\Windows\Temp"), f"jarvis_spk_{int(time.time()*1000)}.mp3")
+                        with open(tmp_file, "wb") as f_out:
+                            f_out.write(raw_data)
+                        winmm = ctypes.windll.winmm
+                        alias = f"spk_{int(time.time()*1000)}"
+                        winmm.mciSendStringW(f'open "{tmp_file}" type mpegvideo alias {alias}', None, 0, None)
+                        winmm.mciSendStringW(f'play {alias}', None, 0, None)
+                    except Exception:
+                        pass
+                threading.Thread(target=_play_on_speakers, args=(audio_b64,), daemon=True).start()
 
             ui_act = detect_modular_ui_action(user_query)
 
