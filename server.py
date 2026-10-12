@@ -7778,7 +7778,7 @@ def _patched_do_POST(self):
     if self.path == "/api/reflex/dispatch":
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
-            query = (bd.get("query", "") or bd.get("text", "")).strip()
+            query = (bd.get("query", "") or bd.get("text", "") or bd.get("prompt", "")).strip()
             rust_data = None
             try:
                 import requests as _rq
@@ -7841,6 +7841,47 @@ def _patched_do_POST(self):
                 "spoken_ack": "Procedo subito, Badr.",
                 "error_fallback": str(e)
             }).encode())
+            return
+
+    # ── OMNI-CONNECTORS HUB API (WhatsApp, Telegram, Google Drive, Facebook) ──
+    if self.path == "/api/connectors/status":
+        try:
+            import ebj_omni_connector_hub as och
+            res = och.get_all_connectors_status()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
+            self.wfile.write(_json.dumps(res).encode())
+            return
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({"error": str(e)}).encode())
+            return
+
+    if self.path == "/api/connectors/dispatch":
+        try:
+            bd = _json.loads(body.decode("utf-8")) if body else {}
+            order = bd.get("order", "") or bd.get("prompt", "")
+            import ebj_omni_connector_hub as och
+            res = och.dispatch_connector_action(order)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
+            self.wfile.write(_json.dumps(res).encode())
+            return
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({"error": str(e)}).encode())
             return
 
     # ── OS COMPUTER USE WIN32 RUST (:9000 -> /api/os/computer-use) ───────────

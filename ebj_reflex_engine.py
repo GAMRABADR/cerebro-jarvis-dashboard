@@ -471,6 +471,13 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = order_res
         ack_text = order_res.get("verbal_summary", "Ordine eseguito con successo sul PC locale, Badr.")
 
+    # 23. OMNI-CONNECTORS HUB (WhatsApp, Telegram, Google Drive, Facebook)
+    elif intent == "OMNI_CONNECTORS":
+        import ebj_omni_connector_hub as och
+        conn_res = och.dispatch_connector_action(prompt)
+        details = conn_res
+        ack_text = conn_res.get("verbal_summary", "Comando sui connettori eseguito con successo, Badr.")
+
     else:
         ack_text = "Comando ricevuto e registrato, Badr. Procedo con l'operazione."
 
@@ -522,6 +529,8 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "OS_FILE_MANIPULATION", "OS_FILES", "FILE_EXECUTE"
     elif any(k in p_lower for k in ["porta in primo piano", "metti davanti", "scrivi ", "digita ", "incolla", "premi invio", "leggi gli appunti", "copia negli appunti"]):
         matched, intent, domain, action = True, "OS_INTERACTION", "OS_INPUT", "INPUT_EXECUTE"
+    elif any(k in p_lower for k in ["whatsapp", "wazap", "telegram", "google drive", "gdrive", "su drive", "in drive", "facebook", "connettori", "stato connettori"]):
+        matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["autolavaggi", "detergenti", "chimica lavaggi"]):
         matched, intent, domain, action = True, "CAR_WASH_SCOUT", "SELEZIONE_CHIMICA", "CAR_WASH_SCOUT"
     elif any(k in p_lower for k in ["lead", "radar", "traslochi", "sgomberi"]):
@@ -542,6 +551,8 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "HUD_VIDEO_PLAY", "MEDIA_HUD", "PLAY_VIDEO_HUD"
     elif any(k in p_lower for k in ["hexstrike", "audit sicurezza", "scansiona vulnerabilità", "scansiona porte", "audit target", "pentest", "penetration test"]):
         matched, intent, domain, action = True, "HEXSTRIKE_MCP", "SECURITY_MCP", "HEXSTRIKE_AUDIT"
+    elif any(k in p_lower for k in ["whatsapp", "wazap", "telegram", "google drive", "gdrive", "su drive", "facebook", "connettori", "stato connettori"]):
+        matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
         matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
 
