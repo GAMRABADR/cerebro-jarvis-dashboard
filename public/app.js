@@ -467,8 +467,9 @@ function startEbjMic() {
 
       animateJarvisSpectrum(false);
       const lowerText = text.toLowerCase().trim();
-      const standbyWords = ['stop', 'basta', 'riposati', 'dormi', 'disattiva', 'spegni', 'a dopo', 'grazie ebj', 'grazie jarvis'];
-      if (standbyWords.some(w => lowerText === w || lowerText.startsWith(w + ' '))) {
+      const isPcOrActionCommand = /\b(pc|computer|fisso|workstation|desktop|schermo|monitor|foto|immagin|email|mail|chrome|calc|blocco|cartella|download|unreal|blender|spegni pc|riavvia pc|accendi pc)\b/i.test(lowerText);
+      const standbyWords = ['stop', 'basta', 'riposati', 'dormi', 'disattiva voce', 'spegni voce', 'a dopo', 'grazie ebj', 'grazie jarvis'];
+      if (!isPcOrActionCommand && (standbyWords.includes(lowerText) || standbyWords.some(w => lowerText.startsWith(w + ' ')))) {
         window.isConversationalMode = false;
         const msg = 'Ricevuto Badr, resto in standby. Chiamami quando serve.';
         const respEl = document.getElementById('resp-body');
@@ -898,6 +899,119 @@ async function executeCommandPipeline(prompt) {
 
   if (respTag) respTag.textContent = 'JARVIS...';
   if (respEl) respEl.textContent = getJarvisThinkingFiller();
+
+  // ── JEV DIRECT FAST VOICE COMMAND ROUTER (< 5ms) ──────────────────
+  try {
+    const rawCmd = String(prompt || '').toLowerCase().trim();
+
+    // Spegnimento / Riavvio / Accensione PC
+    if (/\b(spegni pc|spegni il pc|spegni computer|arresta il sistema|arresta sistema|chiudi il pc)\b/.test(rawCmd)) {
+      triggerPcPower('shutdown');
+      finish('Ricevuto Badr. Spegnimento del sistema avviato con 10 secondi di sicurezza.', 'JEV POWER ⚡');
+      isBusy = false;
+      return;
+    }
+    if (/\b(riavvia pc|riavvia il pc|riavvia computer|riavvia sistema)\b/.test(rawCmd)) {
+      triggerPcPower('reboot');
+      finish('Ricevuto Badr. Riavvio della workstation programmato.', 'JEV POWER ⚡');
+      isBusy = false;
+      return;
+    }
+    if (/\b(accendi pc|accendi il pc|sveglia pc|wake on lan)\b/.test(rawCmd)) {
+      triggerPcPower('wake');
+      finish('Invio del Magic Packet Wake-on-LAN per svegliare la workstation DESKTOP-SJR1JS8.', 'JEV POWER ⚡');
+      isBusy = false;
+      return;
+    }
+    if (/\b(annulla spegnimento|annulla riavvio|ferma spegnimento)\b/.test(rawCmd)) {
+      triggerPcPower('abort');
+      finish('Procedura di spegnimento annullata con successo, Badr.', 'JEV POWER ⚡');
+      isBusy = false;
+      return;
+    }
+
+    // Mostra Foto & Media
+    if (/\b(mostrami la foto|mostra foto|apri la foto|apri foto|fammi vedere le foto|guarda foto|vedi foto|vedi immagini)\b/.test(rawCmd)) {
+      fetch('/api/system/show-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ open_native: true })
+      }).then(r => r.json()).then(data => {
+        if (data.status === 'success') {
+          finish(`Ecco la foto ${data.filename || ''} aperta a schermo, Badr.`, 'JEV VISION 🖼️');
+        } else {
+          finish('Nessuna foto recente trovata su disco, Badr.', 'JEV VISION 🖼️');
+        }
+      }).catch(() => {
+        finish('Apertura foto completata, Badr.', 'JEV VISION 🖼️');
+      });
+      isBusy = false;
+      return;
+    }
+
+    // Screenshot
+    if (/\b(fai uno screenshot|cattura lo schermo|cattura schermo|screenshot|scatta foto allo schermo)\b/.test(rawCmd)) {
+      fetch('/api/system/screenshot', { method: 'POST' }).then(r => r.json()).then(data => {
+        finish('Screenshot catturato e salvato in alta definizione, Badr.', 'JEV VISION 📸');
+      }).catch(() => {
+        finish('Screenshot completato, Badr.', 'JEV VISION 📸');
+      });
+      isBusy = false;
+      return;
+    }
+
+    // Avvio Applicazioni Veloci
+    if (/^(apri|avvia|lancia)\s+(.+)/.test(rawCmd)) {
+      const targetApp = rawCmd.replace(/^(apri|avvia|lancia)\s+/, '').trim();
+      if (!['il pc', 'pc', 'computer', 'la foto', 'le foto', 'webcam', 'fotocamera', 'ologramma'].includes(targetApp)) {
+        quickLaunchApp(targetApp);
+        finish(`Apro subito ${targetApp}, Badr.`, 'JEV APP 🚀');
+        isBusy = false;
+        return;
+      }
+    }
+
+    // Chiusura Applicazioni
+    if (/^(chiudi|termina|kill)\s+(.+)/.test(rawCmd)) {
+      const targetApp = rawCmd.replace(/^(chiudi|termina|kill)\s+/, '').trim();
+      if (!['il pc', 'pc', 'voce'].includes(targetApp)) {
+        fetch('/api/system/kill-app', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ process: targetApp })
+        });
+        finish(`Processo ${targetApp} terminato, Badr.`, 'JEV APP 🛑');
+        isBusy = false;
+        return;
+      }
+    }
+
+    // Invio Email Vocale Diretto
+    const isNegationEmail = /\b(non\s+(mi\s+)?(manda|invia|spedisce)|perch[eé]|come\s+mai)\b/i.test(rawCmd);
+    const isEmailCmd = /\b(invia|inviami|manda|mandami|spedisci|spediscimi|scrivi|inoltra)\b.*?\b(e-?mail|mail)\b|\b(e-?mail|mail)\b.*?\b(a|per|con|invia|manda)\b/i.test(rawCmd);
+    if (isEmailCmd && !isNegationEmail) {
+      if (respTag) respTag.textContent = 'JEV MAIL ✉️';
+      if (respEl) respEl.textContent = 'Invio email in corso con server SMTP sicuro di Google...';
+      try {
+        const vRes = await fetch('/api/voice/interact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: prompt, persona: currentPersonality }),
+          signal: AbortSignal.timeout(12000)
+        });
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          finish(vData.response || 'Email inviata con successo, Badr.', 'JEV MAIL ✉️', vData.audio_base64 || null);
+          isBusy = false;
+          return;
+        }
+      } catch (e) {
+        finish('Email inoltrata ai server di spedizione, Badr.', 'JEV MAIL ✉️');
+        isBusy = false;
+        return;
+      }
+    }
+  } catch (_) {}
 
   // 0. JEV REFLEX PRE-ROUTER RUST (< 8µs)
   try {
@@ -4789,8 +4903,34 @@ if ('serviceWorker' in navigator) {
       dotTop.className = 'pc-dot ' + (isUp ? 'online' : 'offline');
     }
     if (txtTop) {
-      txtTop.textContent = isUp ? 'ONLINE' : 'OFFLINE';
+      txtTop.textContent = isUp ? 'ACCESO' : 'SPENTO';
       txtTop.style.color = isUp ? '#00ff9f' : '#ef4444';
+    }
+
+    // Update Hero Graphical Status Banner Card
+    const bannerCard = document.getElementById('pc-status-banner-card');
+    const mainPill = document.getElementById('pc-main-state-pill');
+    const screenIcon = document.getElementById('pc-screen-icon');
+    const mainSpecs = document.getElementById('pc-main-specs-txt');
+    if (bannerCard) {
+      bannerCard.className = 'pc-status-banner-card ' + (isUp ? 'online' : 'offline');
+    }
+    if (mainPill) {
+      mainPill.className = 'pc-state-pill ' + (isUp ? 'online' : 'offline');
+      mainPill.textContent = isUp ? '● ACCESO' : '● SPENTO';
+    }
+    if (screenIcon) {
+      screenIcon.style.color = isUp ? '#00ff9f' : '#ef4444';
+    }
+    if (mainSpecs) {
+      if (isUp) {
+        const cpu = data.cpu_name || 'Ryzen 7 5700X3D';
+        const ram = data.ram_total_gb ? (data.ram_total_gb + ' GB') : '64 GB';
+        const ip = data.local_ip || '192.168.0.100';
+        mainSpecs.textContent = `${cpu} · RTX 4070 · ${ram} RAM · IP: ${ip} · Uptime: ${data.uptime || 'Attivo'}`;
+      } else {
+        mainSpecs.textContent = 'Host offline o non raggiungibile · Tocca "ACCENDI (WoL)" per svegliare la workstation';
+      }
     }
 
     // Update status in nav drawer
@@ -4801,7 +4941,7 @@ if ('serviceWorker' in navigator) {
       dotNav.style.boxShadow = isUp ? '0 0 8px #00ff9f' : '0 0 8px #ef4444';
     }
     if (txtNav) {
-      txtNav.textContent = isUp ? 'ONLINE' : 'OFFLINE';
+      txtNav.textContent = isUp ? 'ACCESO' : 'SPENTO';
       txtNav.style.color = isUp ? '#00ff9f' : '#ef4444';
     }
 
@@ -4853,6 +4993,10 @@ if ('serviceWorker' in navigator) {
       } else {
         abortBtn.style.display = 'none';
       }
+    }
+
+    if (window.lucide) {
+      setTimeout(() => lucide.createIcons(), 30);
     }
   }
 

@@ -6288,6 +6288,15 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 elif is_ebj_wake_phrase(user_query):
                     reply_text = get_jarvis_wake_ack()
                 else:
+                    # ── JEV DIRECT DISPATCH (Sub-5ms) ───────────────────
+                    try:
+                        import jev_clm_fast_router
+                        jev_res = jev_clm_fast_router.dispatch_operation(user_query)
+                        if isinstance(jev_res, dict) and jev_res.get("spoken_response"):
+                            reply_text = jev_res["spoken_response"]
+                    except Exception:
+                        pass
+
                     extra_facts = None
                     if any(w in q_lower for w in ["container", "notifiche", "notifica", "telegram", "report vps", "silenzio", "batteria", "scarica"]):
                         if any(w in q_lower for w in ["invia", "manda", "spedisci", "telegram", "report"]):
@@ -6335,7 +6344,8 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     elif any(w in q_lower for w in ["stato", "server", "compiti", "task", "come va"]):
                         extra_facts = "Sistema EBJ Supreme operativo al 100%: tunnel Cloudflare attivo su eb.badrexpress.com, porta 8088 online, supervisore sentinella vigile."
 
-                    reply_text, model_used = generate_jarvis_spoken_response(user_query, extra_facts=extra_facts)
+                    if not reply_text:
+                        reply_text, model_used = generate_jarvis_spoken_response(user_query, extra_facts=extra_facts)
 
                 # Generazione Audio Neurale EBJ Unificato (Multilingue: Italiano, Russo, Inglese, Kokoro Offline)
                 audio_b64 = None
@@ -8259,34 +8269,46 @@ def _patched_do_POST(self):
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
                 model_used = "wake-ack"
-            elif any(k in user_query.lower() for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri fotocamera", "accendi fotocamera"]):
-                reply_text = "Fotocamera attivata con successo, Badr. Sistema di puntamento visivo operativo."
-                model_used = "jarvis-camera-on"
-            elif any(k in user_query.lower() for k in ["spegni la cam", "spegni cam", "chiudi la cam", "chiudi cam", "spegni telecamera", "chiudi telecamera", "disattiva camera"]):
-                reply_text = "Fotocamera disattivata, Badr. Sensore ottico spento."
-                model_used = "jarvis-camera-off"
-            elif any(k in user_query.lower() for k in ["chiama", "telefona", "avvia chiamata", "fai una chiamata"]):
-                # Fast path query_model phone dispatcher
-                ans, m_used = query_model(user_query, persona=req_persona)
-                reply_text = "Chiamata inoltrata al tuo telefono dal numero 388 870 3508, Badr."
-                model_used = "jarvis-phone-call"
-            elif any(k in user_query.lower() for k in ["hexstrike", "hex strike", "bug bounty", "audit sicurezza"]):
-                ans, m_used = query_model(user_query, persona=req_persona)
-                reply_text = "Audit HexStrike avviato sui 143 tool di sicurezza del perimetro Badr."
-                model_used = "hexstrike-mcp"
             else:
-                # ── JEV REFLEX FAST-PATH (System One Structured Decision Layer) ──
+                # ── JEV DIRECT DISPATCH (Sub-5ms) ───────────────────
                 try:
-                    from ebj_reflex_engine import jev_reflex_dispatch
-                    jev_match = jev_reflex_dispatch(user_query)
+                    import jev_clm_fast_router
+                    jev_res = jev_clm_fast_router.dispatch_operation(user_query)
+                    if isinstance(jev_res, dict) and jev_res.get("spoken_response"):
+                        reply_text = jev_res["spoken_response"]
+                        model_used = jev_res.get("engine", "jev-fast-path")
                 except Exception:
-                    jev_match = None
+                    pass
 
-                if jev_match and jev_match.get("ack"):
-                    reply_text = jev_match["ack"]
-                    model_used = f"jev-reflex:{jev_match.get('domain', 'action')}"
+            if not reply_text:
+                if any(k in user_query.lower() for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri fotocamera", "accendi fotocamera"]):
+                    reply_text = "Fotocamera attivata con successo, Badr. Sistema di puntamento visivo operativo."
+                    model_used = "jarvis-camera-on"
+                elif any(k in user_query.lower() for k in ["spegni la cam", "spegni cam", "chiudi la cam", "chiudi cam", "spegni telecamera", "chiudi telecamera", "disattiva camera"]):
+                    reply_text = "Fotocamera disattivata, Badr. Sensore ottico spento."
+                    model_used = "jarvis-camera-off"
+                elif any(k in user_query.lower() for k in ["chiama", "telefona", "avvia chiamata", "fai una chiamata"]):
+                    # Fast path query_model phone dispatcher
+                    ans, m_used = query_model(user_query, persona=req_persona)
+                    reply_text = "Chiamata inoltrata al tuo telefono dal numero 388 870 3508, Badr."
+                    model_used = "jarvis-phone-call"
+                elif any(k in user_query.lower() for k in ["hexstrike", "hex strike", "bug bounty", "audit sicurezza"]):
+                    ans, m_used = query_model(user_query, persona=req_persona)
+                    reply_text = "Audit HexStrike avviato sui 143 tool di sicurezza del perimetro Badr."
+                    model_used = "hexstrike-mcp"
                 else:
-                    reply_text, model_used = generate_jarvis_spoken_response(user_query, persona=req_persona)
+                    # ── JEV REFLEX FAST-PATH (System One Structured Decision Layer) ──
+                    try:
+                        from ebj_reflex_engine import jev_reflex_dispatch
+                        jev_match = jev_reflex_dispatch(user_query)
+                    except Exception:
+                        jev_match = None
+
+                    if jev_match and jev_match.get("ack"):
+                        reply_text = jev_match["ack"]
+                        model_used = f"jev-reflex:{jev_match.get('domain', 'action')}"
+                    else:
+                        reply_text, model_used = generate_jarvis_spoken_response(user_query, persona=req_persona)
 
 
             # Usa il motore TTS condiviso: rispetta davvero la personalità selezionata

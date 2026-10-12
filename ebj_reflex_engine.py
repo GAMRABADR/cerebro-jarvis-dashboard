@@ -269,8 +269,22 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
 
     # 2. EMAIL COMPOSE
     elif intent == "EMAIL_COMPOSE":
-        details = {"module": "instant_surprise_mailer", "status": "DRAFT_READY"}
-        ack_text = "Apro il modulo di composizione e preparo l'invio prioritario, Badr."
+        try:
+            from ebj_system_ops_executor import send_universal_email
+            email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', prompt)
+            recipient = email_match.group(0) if email_match else "badraudi@gmail.com"
+            subj = "Notifica Rapida da EBJ Supreme"
+            subj_m = re.search(r'\b(con oggetto|oggetto|titolo)\s+([^\.,;]+)', prompt, re.I)
+            if subj_m:
+                subj = subj_m.group(2).strip().capitalize()
+            body_m = re.search(r'\b(con scritto|con testo|scrivendo|messaggio|testo|contenuto)\s+([^\.,;]+.*)', prompt, re.I)
+            body = body_m.group(2).strip() if body_m else prompt
+            res = send_universal_email(recipient, subj, body, voice_note_text=body)
+            details = {"module": "universal_mailer", "status": "SENT" if res.get("status") == "success" else "ERROR", "recipient": recipient}
+            ack_text = f"Email inviata con successo a {recipient}, Badr." if res.get("status") == "success" else f"Errore nell'invio email: {res.get('error')}"
+        except Exception as e:
+            details = {"module": "universal_mailer", "status": "ERROR", "error": str(e)}
+            ack_text = f"Tentativo di invio email non riuscito: {e}"
 
     # 3. CALENDAR VIEW
     elif intent == "CALENDAR_VIEW":

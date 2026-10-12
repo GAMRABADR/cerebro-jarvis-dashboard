@@ -159,7 +159,7 @@
 
       <!-- TELEMETRIA & ACCENSIONE WORKSTATION MOBILE -->
       <button class="view-switch-btn" id="btn-pc-power-nav" onclick="openPcPowerModal()" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
-        <span class="btn-dot" id="pc-status-dot-nav" style="background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span><i data-lucide="monitor" class="lucide-icon text-cyan"></i>DESKTOP-SJR1JS8 [<span id="pc-status-txt-nav">ONLINE</span>]
+        <span class="btn-dot" id="pc-status-dot-nav" style="background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span><i data-lucide="monitor" class="lucide-icon text-cyan"></i>DESKTOP-SJR1JS8 [<span id="pc-status-txt-nav">ACCESO</span>]
       </button>
 
       <!-- JEV SYSTEM OPS: APPS, FOTO, EMAIL -->
@@ -206,7 +206,7 @@
       <button class="vad-toggle-pill pc-power-pill" id="btn-pc-power-top" onclick="openPcPowerModal()" title="🖥️ DESKTOP-SJR1JS8: Telemetria e Controllo Alimentazione (WoL, Riavvio, Spegnimento)" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.06);">
         <span class="pc-dot online" id="pc-status-dot-top"></span>
         <i data-lucide="monitor" class="lucide-icon text-cyan" style="width:13px;height:13px;margin-right:2px;"></i>
-        <span class="pc-title-txt">DESKTOP-SJR1JS8: <strong id="pc-status-txt-top" style="color:#00ff9f;">ONLINE</strong></span>
+        <span class="pc-title-txt">DESKTOP-SJR1JS8: <strong id="pc-status-txt-top" style="color:#00ff9f;">ACCESO</strong></span>
       </button>
       <button class="vad-toggle-pill" id="btn-system-hub-top" onclick="openSystemHubModal()" title="🚀 JEV System Hub: Avvio App, Visualizzatore Foto e Invio Email Rapido" style="border-color:#00ff9f; color:#00ff9f; background:rgba(0,255,159,0.06);">
         <i data-lucide="layout-grid" class="lucide-icon text-emerald" style="width:13px;height:13px;margin-right:2px;"></i>
@@ -228,6 +228,31 @@
   <div class="jarvis-workspace active" id="view-jarvis">
     <div class="hud-container">
       
+      <!-- 🖥️ WORKSTATION HARDWARE & POWER STATUS COCKPIT (DESKTOP-SJR1JS8) -->
+      <div class="pc-status-banner-card online" id="pc-status-banner-card" onclick="openPcPowerModal()">
+        <div class="pc-monitor-graphic" id="pc-monitor-graphic">
+          <div class="pc-screen-frame">
+            <i data-lucide="monitor" class="pc-screen-icon" id="pc-screen-icon"></i>
+            <div class="pc-screen-stand"></div>
+            <div class="pc-screen-base"></div>
+          </div>
+        </div>
+        <div class="pc-banner-info">
+          <div class="pc-banner-title-row">
+            <span class="pc-banner-name">🖥️ WORKSTATION: DESKTOP-SJR1JS8</span>
+            <span class="pc-state-pill online" id="pc-main-state-pill">● ACCESO</span>
+          </div>
+          <div class="pc-banner-specs" id="pc-main-specs-txt">
+            AMD Ryzen 7 5700X3D · NVIDIA RTX 4070 · 64 GB RAM · IP: 192.168.0.100 · Intel I225-V 2.5G
+          </div>
+        </div>
+        <div class="pc-banner-actions" onclick="event.stopPropagation()">
+          <button class="pc-banner-btn wake" id="banner-btn-wake" onclick="triggerPcPower('wake')" title="Invia Magic Packet Wake-on-LAN">⚡ ACCENDI (WoL)</button>
+          <button class="pc-banner-btn reboot" id="banner-btn-reboot" onclick="triggerPcPower('reboot')" title="Riavvia il computer">🔄 RIAVVIA</button>
+          <button class="pc-banner-btn shutdown" id="banner-btn-shutdown" onclick="triggerPcPower('shutdown')" title="Spegni il computer (10s di sicurezza)">🛑 SPEGNI</button>
+        </div>
+      </div>
+
       <main class="main-grid">
         
         <!-- ── LEFT TACTICAL COMMAND DOCK ──────────────────────────── -->

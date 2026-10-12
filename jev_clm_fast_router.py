@@ -17,6 +17,7 @@ Include le lezioni apprese e persistite per Windows 11 Shell & Desktop:
 from __future__ import annotations
 import os
 import sys
+import re
 import time
 import json
 import subprocess
@@ -242,19 +243,43 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             except Exception as e:
                 return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
 
-    # 5. Comandi Invio Email (JEV Universal Email Dispatcher)
-    if any(k in cmd for k in ["invia email", "manda email", "invia una mail", "manda una mail", "invia mail"]):
+    # 5. Comandi Invio Email (JEV Universal Email Dispatcher con parsing intelligente)
+    is_negation = bool(re.search(r'\b(non\s+(mi\s+)?(manda|invia|spedisce)|perch[eé]|come\s+mai)\b', cmd, re.I))
+    is_email_cmd = bool(re.search(r'\b(invia|inviami|manda|mandami|spedisci|spediscimi|scrivi|inoltra)\b.*?\b(e-?mail|mail)\b|\b(e-?mail|mail)\b.*?\b(a|per|con|invia|manda)\b', cmd, re.I))
+    if is_email_cmd and not is_negation:
         try:
             from ebj_system_ops_executor import send_universal_email
-            # Se la richiesta include testo o destinatario
+            # Estrazione destinatario
+            email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', user_command)
+            recipient = email_match.group(0) if email_match else "badraudi@gmail.com"
+            
+            # Estrazione oggetto
             subj = "Notifica Rapida da EBJ Supreme"
-            body = user_command
-            res = send_universal_email("badraudi@gmail.com", subj, body, voice_note_text=body)
-            res["spoken_response"] = "Email inviata con successo al tuo indirizzo, Badr."
+            subj_match = re.search(r'\b(con oggetto|oggetto|titolo)\s+([^\.,;]+)', user_command, re.I)
+            if subj_match:
+                subj = subj_match.group(2).strip().capitalize()
+                
+            # Estrazione corpo del messaggio
+            body = ""
+            body_match = re.search(r'\b(con scritto|con testo|scrivendo|messaggio|testo|contenuto)\s+([^\.,;]+.*)', user_command, re.I)
+            if body_match:
+                body = body_match.group(2).strip()
+            else:
+                clean = re.sub(r'\b(invia|inviami|manda|mandami|spedisci|spediscimi|scrivi|inoltra)\s+(un\x27?|una\s+|l\x27|la\s+|il\s+)?(e-?mail|mail)\b', '', user_command, flags=re.I)
+                clean = re.sub(r'\b(a|per)\s+[\w\.-]+@[\w\.-]+\.\w+', '', clean, flags=re.I)
+                clean = re.sub(r'\b(a|per)\s+(me|me stesso|badr)\b', '', clean, flags=re.I)
+                clean = clean.strip()
+                body = clean if len(clean) > 3 else f"Comando vocale inviato da Badr: {user_command}"
+
+            res = send_universal_email(recipient, subj, body, voice_note_text=body)
+            if res.get("status") == "success":
+                res["spoken_response"] = f"Email inviata con successo a {recipient}, Badr."
+            else:
+                res["spoken_response"] = f"Attenzione Badr: errore durante l'invio dell'email: {res.get('error', 'errore sconosciuto')}"
             res["engine"] = "JEV_Native_Email_Dispatcher"
             return res
         except Exception as e:
-            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+            return {"status": "error", "message": str(e), "spoken_response": f"Errore nell'invio dell'email: {e}", "engine": "JEV_Native_Win32"}
         
     # 2. Classificazione intent ad alta velocità con CLM (Tier 1)
     t0 = time.perf_counter()

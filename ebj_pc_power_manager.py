@@ -35,6 +35,7 @@ def get_system_power_status() -> Dict[str, Any]:
     
     return {
         "status": "ONLINE",
+        "state_label": "ACCESO",
         "node_name": PC_NODE_NAME,
         "mac_address": PC_MAC_ADDRESS,
         "local_ip": PC_IP_ADDRESS,
