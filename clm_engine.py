@@ -192,6 +192,17 @@ CLM_INTENT_CATALOG: Dict[str, Dict[str, Any]] = {
             "chimica e prodotti per autolavaggi"
         ]
     },
+    "LIVE_TRANSLATION": {
+        "domain": "TRANSLATION",
+        "action": "REALTIME_TRANSLATE",
+        "description": "Traduzione simultanea vocale istantanea bidirezionale verso russo, arabo, inglese, spagnolo, albanese o cinese",
+        "prototypes": [
+            "ebj traduci", "ebj traduci russo", "eb traduci", "eb traduci russo", "ebj traduci in russo",
+            "traduci cosa dico in russo", "traduci in inglese", "traduci in francese", "traduci in arabo",
+            "traduci in albanese", "traduci in spagnolo", "smetti di tradurre", "stop traduzione", "basta tradurre",
+            "disattiva traduzione", "modalità interprete", "traduci le mie parole", "parla e traduci"
+        ]
+    },
     "LEAD_RADAR_SCAN": {
         "domain": "LEAD_RADAR",
         "action": "RADAR_SCAN",

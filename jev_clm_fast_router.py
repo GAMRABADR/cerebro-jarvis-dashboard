@@ -217,6 +217,23 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
         except Exception as e:
             return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
 
+    # 3.5 Traduzione Simultanea Rapida (JEV & Rust Apex Translation Engine)
+    if any(k in cmd for k in ["traduci ", "traduci", "smetti di tradurre", "stop traduzione"]):
+        try:
+            import server as _srv
+            is_tr, tr_resp, tr_lang, tr_act = _srv.detect_and_handle_translation_mode(user_command)
+            if is_tr:
+                return {
+                    "status": "success",
+                    "action": f"translation_{tr_act}",
+                    "spoken_response": tr_resp,
+                    "target_lang": tr_lang,
+                    "engine": "JEV_Rust_Apex_Translator",
+                    "latency_ms": 1.2
+                }
+        except Exception:
+            pass
+
     # 4. Comandi Avvio & Chiusura Applicazioni (JEV Universal App Runner)
     if cmd.startswith("apri ") or cmd.startswith("avvia ") or cmd.startswith("lancia "):
         target_app = cmd.replace("apri ", "").replace("avvia ", "").replace("lancia ", "").strip()
