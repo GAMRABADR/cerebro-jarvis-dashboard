@@ -5994,7 +5994,7 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "ERROR", "message": "Passcode non valido."})
             return
 
-        if self.path == '/api/jev/fast-dispatch':
+        if self.path in ('/api/fast-dispatch', '/api/fast-dispatch/', '/api/jev/fast-dispatch', '/api/jev/fast-dispatch/'):
             try:
                 from jev_clm_fast_router import dispatch_operation
                 cmd = data.get('command', '')
