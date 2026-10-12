@@ -5994,6 +5994,16 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "ERROR", "message": "Passcode non valido."})
             return
 
+        if self.path == '/api/jev/fast-dispatch':
+            try:
+                from jev_clm_fast_router import dispatch_operation
+                cmd = data.get('command', '')
+                res = dispatch_operation(cmd, context=data.get('context'))
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
         if self.path == '/api/brain/switch':
             target_brain = data.get("brain", "auto")
             new_brain = set_active_brain(target_brain)
