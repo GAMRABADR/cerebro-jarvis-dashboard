@@ -4258,6 +4258,32 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "ERROR", "message": str(e)})
             return
 
+        if clean_path in ['/api/pc/files/list', '/api/pc/list']:
+            try:
+                import ebj_os_controller as eoc
+                import urllib.parse
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                target_p = qs.get("path", ["desktop"])[0]
+                pat = qs.get("pattern", ["*"])[0]
+                res = eoc.list_directory(target_p, pat)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "ERROR", "message": str(e)})
+            return
+
+        if clean_path in ['/api/pc/files/search', '/api/pc/search']:
+            try:
+                import ebj_os_controller as eoc
+                import urllib.parse
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                q = qs.get("q", [""])[0]
+                root = qs.get("root", ["auto"])[0]
+                res = eoc.find_files(q, root)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "ERROR", "message": str(e)})
+            return
+
         if clean_path in ['/api/fleet/status', '/api/fleet']:
             try:
                 with open("fleet_debug.log", "a", encoding="utf-8") as _df:
@@ -6531,6 +6557,53 @@ class JarvisHandler(BaseHTTPRequestHandler):
             self.send_json(res)
             return
 
+        if self.path in ['/api/pc/order', '/api/pc/execute']:
+            try:
+                import ebj_os_controller as eoc
+                order_txt = data.get("command") or data.get("order") or data.get("prompt") or ""
+                res = eoc.execute_natural_pc_order(order_txt)
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
+        if self.path in ['/api/pc/files/move', '/api/pc/move']:
+            try:
+                import ebj_os_controller as eoc
+                src = data.get("src") or data.get("source") or ""
+                dst = data.get("dst") or data.get("destination") or ""
+                res = eoc.move_file_or_dir(src, dst)
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
+        if self.path in ['/api/pc/clipboard']:
+            try:
+                import ebj_os_controller as eoc
+                act = data.get("action", "get")
+                if act == "set" or "text" in data:
+                    res = eoc.set_clipboard_text(data.get("text", ""))
+                else:
+                    res = eoc.get_clipboard_text()
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
+        if self.path in ['/api/jev/appraise', '/api/jev/perizia']:
+            try:
+                import jev_marketplace_appraiser as jma
+                item = data.get("item") or data.get("item_name") or "arredo usato"
+                cond = data.get("condition") or "ottime_condizioni"
+                retail = float(data.get("retail_price_new", 0)) if data.get("retail_price_new") else None
+                loc = data.get("location") or "Bologna / Imola"
+                res = jma.appraise_generic_item(item, cond, retail, loc)
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
         if self.path in ['/api/agents/dispatch', '/api/agents/matrix']:
             try:
                 from skills_vault.agent_swarm_dispatcher.skill import execute as exec_dispatch
@@ -7609,10 +7682,33 @@ def _patched_do_POST(self):
         _ebj_bridge_relay(self, "POST", body)
         return
 
-    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone", "/api/clm/classify", "/api/jev/execute", "/api/jev/triage", "/api/jev/batch"]:
+    if self.path in ["/api/clm/rank", "/api/clm/decide", "/api/clm/systemone", "/api/clm/classify", "/api/jev/execute", "/api/jev/triage", "/api/jev/batch", "/api/jev/appraise", "/api/jev/perizia", "/api/pc/order", "/api/pc/execute", "/api/pc/files/move", "/api/pc/clipboard"]:
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
-            if self.path in ["/api/jev/triage", "/api/jev/batch"]:
+            if self.path in ["/api/jev/appraise", "/api/jev/perizia"]:
+                import jev_marketplace_appraiser as jma
+                item = bd.get("item") or bd.get("item_name") or "arredo usato"
+                cond = bd.get("condition") or "ottime_condizioni"
+                retail = float(bd.get("retail_price_new", 0)) if bd.get("retail_price_new") else None
+                loc = bd.get("location") or "Bologna / Imola"
+                res = jma.appraise_generic_item(item, cond, retail, loc)
+            elif self.path in ["/api/pc/order", "/api/pc/execute"]:
+                import ebj_os_controller as eoc
+                order_txt = bd.get("command") or bd.get("order") or bd.get("prompt") or ""
+                res = eoc.execute_natural_pc_order(order_txt)
+            elif self.path in ["/api/pc/files/move"]:
+                import ebj_os_controller as eoc
+                src = bd.get("src") or bd.get("source") or ""
+                dst = bd.get("dst") or bd.get("destination") or ""
+                res = eoc.move_file_or_dir(src, dst)
+            elif self.path in ["/api/pc/clipboard"]:
+                import ebj_os_controller as eoc
+                act = bd.get("action", "get")
+                if act == "set" or "text" in bd:
+                    res = eoc.set_clipboard_text(bd.get("text", ""))
+                else:
+                    res = eoc.get_clipboard_text()
+            elif self.path in ["/api/jev/triage", "/api/jev/batch"]:
                 from ebj_reflex_engine import triage_batch_messages
                 msgs = bd.get("messages") or bd.get("items") or bd.get("batch") or []
                 if isinstance(msgs, list):

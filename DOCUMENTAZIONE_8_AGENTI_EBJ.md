@@ -102,14 +102,15 @@ Recon/Audio   Root Takeover    Web Scraping     Preventivi/PDF  Git/C++ Dev
 
 ---
 
-### 7. 💎 JEV PERIZIE & AUTO-POSTER
-* **Ruolo**: Stima del valore dell'usato e pubblicazione automatica annunci Marketplace.
-* **Runtime**: Playwright Stealth Session Persistente + JEV Multi-Tone Estimator.
+### 7. 💎 JEV PERIZIE & AUTO-POSTER (UNIVERSAL APPRAISAL ENGINE)
+* **Ruolo**: Stima del valore dell'usato su qualsiasi bene (arredi, infissi, elettrodomestici, attrezzi, veicoli) e pubblicazione automatica Marketplace.
+* **Runtime**: Playwright Stealth Session Persistente + JEV Universal Multi-Category Estimator.
 * **Tool & MCP assegnati**:
-  - Stima a rapporti fissi (5 condizioni per 3 toni) su porte, arredi ed elettrodomestici.
-  - Pubblicazione autonoma con upload foto e coordinate territoriali (Bologna, Imola, Milano).
-  - Generazione link WhatsApp pre-compilati per trattativa diretta.
-* **Comandi Chiave**: `perizia porte`, `pubblica su facebook`, `stima valore mobile`.
+  - `jev_marketplace_appraiser`: Stima a 5 gradi di conservazione con posizionamento "Prezzo Affare" per chiusura entro 48-72h.
+  - Multi-Platform Copywriting: Testi ad altissima conversione generati per Facebook Marketplace, Subito.it, eBay e Wallapop.
+  - Upsell Consegna BadrExpress: Integrazione automatica proposta trasporto con furgone e consegna al piano per acquirenti senza mezzo.
+  - Link WhatsApp Diretto con messaggio pre-compilato per trattativa immediata.
+* **Comandi Chiave**: `perizia <oggetto>`, `valuta <elettrodomestico/arredo>`, `pubblica su facebook`, `stima valore`.
 
 ---
 
@@ -133,6 +134,11 @@ Recon/Audio   Root Takeover    Web Scraping     Preventivi/PDF  Git/C++ Dev
 | **Stato Flotta** | `/employees` o `/team` | Mostra in tempo reale lo stato degli 8 agenti e dei compiti in lavorazione. |
 | **Audit HexStrike** | `audit hexstrike [ip]` | Lancia la scansione di sicurezza automatica tramite il container Kali. |
 | **Blender 3D MCP** | `genera 3d [prop/porta/cassa]` | Genera asset 3D procedurale in Blender 5.2 ed esporta FBX Nanite per Unreal Engine 5.8. |
+| **Manipolazione File** | `sposta <file> in <cartella>` | Sposta o copia fisicamente file e cartelle su Desktop, Downloads, Documenti, Progetti D:. |
+| **Esplorazione PC** | `cosa c'è sul desktop / nei download` | Elenca file, dimensioni e date con conteggio esatto degli elementi archiviati. |
+| **Cestino Sicuro** | `elimina <file> / svuota cestino` | Sposta elementi nel Cestino Windows con ripristino o lo svuota su richiesta. |
+| **Interazione Finestre** | `porta in primo piano <app> / scrivi` | Attiva finestre sul desktop, simula digitazione o scorciatoie da tastiera. |
+| **Perizia Universale JEV**| `valuta <oggetto> / perizia <bene>` | Calcola prezzo a nuovo, usato e prezzo affare rapido con link WhatsApp e consegna. |
 
 ---
 

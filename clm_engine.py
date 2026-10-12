@@ -163,11 +163,13 @@ CLM_INTENT_CATALOG: Dict[str, Dict[str, Any]] = {
     "MARKETPLACE_APPRAISAL": {
         "domain": "MARKETPLACE",
         "action": "JEV_APPRAISAL",
-        "description": "Perizia specialistica e stima del valore di mercato dell'usato (porte in legno massello, mobili)",
+        "description": "Perizia specialistica e stima del valore di mercato dell'usato (arredi, porte, elettrodomestici, veicoli, attrezzi)",
         "prototypes": [
             "fai la perizia delle tre porte", "quanto valgono le porte in legno massello", "stima il prezzo delle porte",
             "perizia del valore di mercato usato", "valutazione economica del set di porte", "calcola prezzo di vendita su facebook",
-            "perizia jev per infissi e arredo", "stima valore delle tre porte con stipiti"
+            "perizia jev per infissi e arredo", "stima valore delle tre porte con stipiti",
+            "valuta frigorifero samsung", "stima lavatrice bosch", "quanto vale il divano", "perizia arredo usato",
+            "valutazione mobile usato", "stima valore bicicletta", "perizia trapano compressore"
         ]
     },
     "MARKETPLACE_PUBLISH": {
@@ -284,6 +286,38 @@ CLM_INTENT_CATALOG: Dict[str, Dict[str, Any]] = {
         "description": "Blocco immediato della workstation o chiusura rapida per sicurezza",
         "prototypes": [
             "blocca il computer", "blocca la postazione", "blocca il pc", "lock workstation", "metti in sicurezza il pc"
+        ]
+    },
+    "OS_FILE_MANIPULATION": {
+        "domain": "OS_FILES",
+        "action": "FILE_EXECUTE",
+        "description": "Spostamento, copia, eliminazione, creazione cartelle, navigazione e ricerca file nel PC di Badr",
+        "prototypes": [
+            "sposta il file dal desktop", "sposta file in download", "muovi file nella cartella",
+            "copia questo file", "duplica il documento", "crea una cartella sul desktop",
+            "elimina questo file", "cancella cartella", "cestina il file", "svuota il cestino",
+            "cerca il file nel computer", "trova documento in progetti", "cosa c'è sul desktop",
+            "cosa c'è nei download", "elenca i file nella cartella", "apri la cartella dei download",
+            "apri il file documento", "elimina cartella", "cancella file"
+        ]
+    },
+    "OS_INTERACTION": {
+        "domain": "OS_INPUT",
+        "action": "INPUT_EXECUTE",
+        "description": "Interazione con finestre attive, tastiera, scorciatoie ed appunti di Windows",
+        "prototypes": [
+            "porta in primo piano la finestra", "metti davanti chrome", "scrivi questo testo",
+            "digita ed invia", "premi invio", "incolla dagli appunti", "copia negli appunti",
+            "cosa c'è negli appunti", "leggi gli appunti"
+        ]
+    },
+    "BLENDER_MCP_3D": {
+        "domain": "GAME_DEV_3D",
+        "action": "RUN_BLENDER_SKILL",
+        "description": "Generazione procedurale di modelli 3D in Blender 5.2 MCP con esportazione Nanite per Unreal Engine 5.8",
+        "prototypes": [
+            "genera modello 3d in blender", "crea cassa munizioni 3d", "modella barricata 3d",
+            "esporta fbx nanite per unreal engine", "skill 3d blender procedurale", "porta 3d perizia blender"
         ]
     }
 }

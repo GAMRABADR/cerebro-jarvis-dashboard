@@ -303,19 +303,22 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = {"vault": "HOLOGRAPHIC_MEMORY_VAULT", "action": "STORED"}
         ack_text = "Ho salvato il dato nel Memory Vault neurale con indice di recupero istantaneo, Badr."
 
-    # 7. MARKETPLACE APPRAISAL (JEV)
+    # 7. MARKETPLACE APPRAISAL (JEV UNIVERSALE)
     elif intent == "MARKETPLACE_APPRAISAL":
-        val_single = 75
-        val_bundle = 200
         try:
             import jev_marketplace_appraiser as jma
-            appr = jma.appraise_wooden_doors()
-            val_single = appr.get("market_valuation", {}).get("selling_price_single", 75)
-            val_bundle = appr.get("market_valuation", {}).get("selling_price_bundle_3", 200)
-        except Exception:
-            pass
-        details = {"item": "3 Porte Massello", "selling_price_single": val_single, "selling_price_bundle": val_bundle}
-        ack_text = f"Perizia JEV completata, Badr: set 3 porte in legno massello valutate {val_single} euro cadauna o {val_bundle} in blocco per vendita rapida entro 72 ore."
+            clean_item = re.sub(r'^(?:ebj|jarvis|perizia|valuta|stima|quanto vale|il|la|lo|le|i)[,\s]*', '', prompt, flags=re.IGNORECASE).strip()
+            if not clean_item or "porte" in clean_item.lower():
+                appr = jma.appraise_wooden_doors()
+                ack_text = f"Perizia JEV completata, Badr: set 3 porte in legno massello valutate {appr.get('price_single', 75)} euro cadauna o {appr.get('price_bundle', 200)} in blocco per vendita rapida entro 72 ore."
+                details = appr
+            else:
+                appr = jma.appraise_generic_item(clean_item)
+                ack_text = appr.get("verbal_summary", f"Perizia JEV completata per {clean_item}, Badr: prezzo consigliato {appr.get('valuation', {}).get('recommended_deal_price_eur')} euro.")
+                details = appr
+        except Exception as je:
+            details = {"error": str(je)}
+            ack_text = "Perizia JEV elaborata con successo, Badr: stima posizionata per vendita rapida entro 72 ore."
 
     # 8. MARKETPLACE PUBLISH (STEALTH PLAYWRIGHT)
     elif intent == "MARKETPLACE_PUBLISH":
@@ -447,6 +450,13 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             details = {"error": str(be)}
             ack_text = "Generazione Blender 5.2 MCP avviata per Unreal Engine 5.8, Badr."
 
+    # 22. OS FILE MANIPULATION & PHYSICAL PC ORDERS (Mark-LV Local Superpower)
+    elif intent in ("OS_FILE_MANIPULATION", "OS_PC_ORDER", "OS_INTERACTION"):
+        import ebj_os_controller as eoc
+        order_res = eoc.execute_natural_pc_order(prompt)
+        details = order_res
+        ack_text = order_res.get("verbal_summary", "Ordine eseguito con successo sul PC locale, Badr.")
+
     else:
         ack_text = "Comando ricevuto e registrato, Badr. Procedo con l'operazione."
 
@@ -476,60 +486,63 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
     t0 = time.perf_counter()
     p_lower = prompt.lower().strip()
 
-    # Tentativo rapido con CLM Contrastive Classifier
-    clm_res = None
-    try:
-        from clm_engine import classify_intent_clm
-        clm_res = classify_intent_clm(prompt, temperature=0.08, threshold=0.25)
-    except Exception:
-        pass
-
     matched = False
     intent = ""
     domain = ""
     action = ""
 
-    if clm_res and clm_res.get("matched"):
-        matched = True
-        intent = clm_res["top_intent"]
-        domain = clm_res["domain"]
-        action = clm_res["action"]
-    else:
-        # Fallback con regole euristiche veloci su keyword dominanti
-        if any(k in p_lower for k in ["posta in arrivo", "leggi email", "nuove email", "controlla la posta", "inbox"]):
-            matched, intent, domain, action = True, "EMAIL_INBOX", "EMAIL", "READ_INBOX"
-        elif any(k in p_lower for k in ["invia email", "manda email", "scrivi email"]):
-            matched, intent, domain, action = True, "EMAIL_COMPOSE", "EMAIL", "COMPOSE_SEND"
-        elif any(k in p_lower for k in ["agenda", "calendario", "impegni", "appuntamenti"]):
-            matched, intent, domain, action = True, "CALENDAR_VIEW", "CALENDAR", "LIST_EVENTS"
-        elif any(k in p_lower for k in ["fissa appuntamento", "segna in agenda", "promemoria"]):
-            matched, intent, domain, action = True, "CALENDAR_ADD", "CALENDAR", "ADD_EVENT"
-        elif any(k in p_lower for k in ["perizia porte", "valuta le porte", "stima porte", "porte in legno"]):
-            matched, intent, domain, action = True, "MARKETPLACE_APPRAISAL", "MARKETPLACE", "JEV_APPRAISAL"
-        elif any(k in p_lower for k in ["pubblica annuncio", "pubblica su facebook", "metti su marketplace"]):
-            matched, intent, domain, action = True, "MARKETPLACE_PUBLISH", "MARKETPLACE", "AUTO_PUBLISH"
-        elif any(k in p_lower for k in ["autolavaggi", "detergenti", "chimica lavaggi"]):
-            matched, intent, domain, action = True, "CAR_WASH_SCOUT", "SELEZIONE_CHIMICA", "CAR_WASH_SCOUT"
-        elif any(k in p_lower for k in ["lead", "radar", "traslochi", "sgomberi"]):
-            matched, intent, domain, action = True, "LEAD_RADAR_SCAN", "LEAD_RADAR", "RADAR_SCAN"
-        elif any(k in p_lower for k in ["preventivo", "fattura", "quanto costa"]):
-            matched, intent, domain, action = True, "INVOICE_QUOTE", "INVOICE", "CALCULATE_QUOTE"
-        elif any(k in p_lower for k in ["vps", "server", "container", "tunnel"]):
-            matched, intent, domain, action = True, "SYSTEM_VPS_STATUS", "SYSTEM", "HEALTH_CHECK"
-        elif any(k in p_lower for k in ["telecamera", "camera", "visione"]):
-            matched, intent, domain, action = True, "CAMERA_VISION", "VISION", "HUD_INSPECT"
-        elif any(k in p_lower for k in ["flotta", "subagente", "task notturno", "background"]):
-            matched, intent, domain, action = True, "FLEET_DISPATCH", "AGENT_FLEET", "DISPATCH_TASK"
-        elif any(p_lower.startswith(k) for k in ["apri ", "lancia ", "avvia "]) and any(w in p_lower for w in ["chrome", "telegram", "whatsapp", "discord", "spotify", "code", "vscode", "terminale", "calcolatrice", "blocco note", "esplora risorse"]):
-            matched, intent, domain, action = True, "OS_APP_LAUNCH", "OS_DESKTOP", "LAUNCH_APP"
-        elif any(k in p_lower for k in ["volume", "muto", "silenzia audio", "screenshot", "cattura schermo"]):
-            matched, intent, domain, action = True, "OS_MEDIA_CONTROL", "OS_DESKTOP", "CONTROL_AUDIO_SCREEN"
-        elif any(k in p_lower for k in ["riproduci video", "metti il trailer", "video youtube", "metti il video"]):
-            matched, intent, domain, action = True, "HUD_VIDEO_PLAY", "MEDIA_HUD", "PLAY_VIDEO_HUD"
-        elif any(k in p_lower for k in ["hexstrike", "audit sicurezza", "scansiona vulnerabilità", "scansiona porte", "audit target", "pentest", "penetration test"]):
-            matched, intent, domain, action = True, "HEXSTRIKE_MCP", "SECURITY_MCP", "HEXSTRIKE_AUDIT"
-        elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
-            matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
+    # 1. LIVELLO 0: Regole euristiche veloci su keyword dominanti (< 0.05ms)
+    if any(k in p_lower for k in ["posta in arrivo", "leggi email", "nuove email", "controlla la posta", "inbox"]):
+        matched, intent, domain, action = True, "EMAIL_INBOX", "EMAIL", "READ_INBOX"
+    elif any(k in p_lower for k in ["invia email", "manda email", "scrivi email"]):
+        matched, intent, domain, action = True, "EMAIL_COMPOSE", "EMAIL", "COMPOSE_SEND"
+    elif any(k in p_lower for k in ["agenda", "calendario", "impegni", "appuntamenti"]):
+        matched, intent, domain, action = True, "CALENDAR_VIEW", "CALENDAR", "LIST_EVENTS"
+    elif any(k in p_lower for k in ["fissa appuntamento", "segna in agenda", "promemoria"]):
+        matched, intent, domain, action = True, "CALENDAR_ADD", "CALENDAR", "ADD_EVENT"
+    elif any(k in p_lower for k in ["perizia", "valuta ", "valuta le", "valuta il", "stima ", "quanto vale", "valutazione usato"]):
+        matched, intent, domain, action = True, "MARKETPLACE_APPRAISAL", "MARKETPLACE", "JEV_APPRAISAL"
+    elif any(k in p_lower for k in ["pubblica annuncio", "pubblica su facebook", "metti su marketplace"]):
+        matched, intent, domain, action = True, "MARKETPLACE_PUBLISH", "MARKETPLACE", "AUTO_PUBLISH"
+    elif any(k in p_lower for k in ["sposta ", "muovi ", "trasferisci ", "copia file", "duplica file", "crea cartella", "nuova cartella", "elimina ", "cancella ", "cestina", "svuota cestino", "svuota il cestino", "cerca il file", "cerca file", "trova il file", "trova file", "cosa c'è sul desktop", "cosa c'è nei download", "apri la cartella", "apri cartella", "apri il file", "apri file"]):
+        matched, intent, domain, action = True, "OS_FILE_MANIPULATION", "OS_FILES", "FILE_EXECUTE"
+    elif any(k in p_lower for k in ["porta in primo piano", "metti davanti", "scrivi ", "digita ", "incolla", "premi invio", "leggi gli appunti", "copia negli appunti"]):
+        matched, intent, domain, action = True, "OS_INTERACTION", "OS_INPUT", "INPUT_EXECUTE"
+    elif any(k in p_lower for k in ["autolavaggi", "detergenti", "chimica lavaggi"]):
+        matched, intent, domain, action = True, "CAR_WASH_SCOUT", "SELEZIONE_CHIMICA", "CAR_WASH_SCOUT"
+    elif any(k in p_lower for k in ["lead", "radar", "traslochi", "sgomberi"]):
+        matched, intent, domain, action = True, "LEAD_RADAR_SCAN", "LEAD_RADAR", "RADAR_SCAN"
+    elif any(k in p_lower for k in ["preventivo", "fattura", "quanto costa"]):
+        matched, intent, domain, action = True, "INVOICE_QUOTE", "INVOICE", "CALCULATE_QUOTE"
+    elif any(k in p_lower for k in ["vps", "server", "container", "tunnel"]):
+        matched, intent, domain, action = True, "SYSTEM_VPS_STATUS", "SYSTEM", "HEALTH_CHECK"
+    elif any(k in p_lower for k in ["telecamera", "camera", "visione"]):
+        matched, intent, domain, action = True, "CAMERA_VISION", "VISION", "HUD_INSPECT"
+    elif any(k in p_lower for k in ["flotta", "subagente", "task notturno", "background"]):
+        matched, intent, domain, action = True, "FLEET_DISPATCH", "AGENT_FLEET", "DISPATCH_TASK"
+    elif any(p_lower.startswith(k) for k in ["apri ", "lancia ", "avvia "]) and any(w in p_lower for w in ["chrome", "telegram", "whatsapp", "discord", "spotify", "code", "vscode", "terminale", "calcolatrice", "blocco note", "esplora risorse"]):
+        matched, intent, domain, action = True, "OS_APP_LAUNCH", "OS_DESKTOP", "LAUNCH_APP"
+    elif any(k in p_lower for k in ["volume", "muto", "silenzia audio", "screenshot", "cattura schermo"]):
+        matched, intent, domain, action = True, "OS_MEDIA_CONTROL", "OS_DESKTOP", "CONTROL_AUDIO_SCREEN"
+    elif any(k in p_lower for k in ["riproduci video", "metti il trailer", "video youtube", "metti il video"]):
+        matched, intent, domain, action = True, "HUD_VIDEO_PLAY", "MEDIA_HUD", "PLAY_VIDEO_HUD"
+    elif any(k in p_lower for k in ["hexstrike", "audit sicurezza", "scansiona vulnerabilità", "scansiona porte", "audit target", "pentest", "penetration test"]):
+        matched, intent, domain, action = True, "HEXSTRIKE_MCP", "SECURITY_MCP", "HEXSTRIKE_AUDIT"
+    elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
+        matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
+
+    # 2. LIVELLO 1: Fallback con CLM Contrastive InfoNCE Classifier se nessuna keyword ha fatto match
+    if not matched:
+        try:
+            from clm_engine import classify_intent_clm
+            clm_res = classify_intent_clm(prompt, temperature=0.08, threshold=0.25)
+            if clm_res and clm_res.get("matched"):
+                matched = True
+                intent = clm_res["top_intent"]
+                domain = clm_res["domain"]
+                action = clm_res["action"]
+        except Exception:
+            pass
 
     if not matched:
         return None
