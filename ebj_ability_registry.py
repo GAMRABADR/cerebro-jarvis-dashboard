@@ -194,6 +194,26 @@ class AbilityRegistry:
         except Exception as e:
             logger.warning(f"Abilità real_estate_outreach non caricata: {e}")
 
+        # 5. Esplorazione Cartelle e File PC (Explorer & File Scanner)
+        try:
+            from ebj_pc_explorer import execute_pc_explorer
+            def _handle_pc_explorer(payload: Dict[str, Any]) -> Dict[str, Any]:
+                return execute_pc_explorer(payload)
+
+            self.register(Ability(
+                name="pc_folder_explorer",
+                description="Esplorazione, apertura cartelle in Windows Explorer e ricerca rapida di file su disco",
+                handler=_handle_pc_explorer,
+                triggers=[
+                    "esplora cartelle", "esplora cartella", "esplora il pc", "esplora pc",
+                    "apri cartella", "apri la cartella", "esplora desktop", "esplora download",
+                    "cosa c'è in", "cosa c'e in", "cerca file", "trova file", "mostra cartella", "esplora"
+                ],
+                tier=0
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità pc_folder_explorer non caricata: {e}")
+
 # Singleton globale
 _GLOBAL_REGISTRY = AbilityRegistry()
 

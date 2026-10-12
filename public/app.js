@@ -135,6 +135,7 @@ function updateVadPill() {
 
 let _ebjAudioCtx = null;
 let _ebjMasterAudioEl = null;
+let _ebjActiveWebAudioSource = null;
 
 function getEbjAudioContext() {
   try {
@@ -153,6 +154,10 @@ function getEbjAudioContext() {
 
 function stopEbjSpeech() {
   try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+  if (_ebjActiveWebAudioSource) {
+    try { _ebjActiveWebAudioSource.stop(0); } catch (_) {}
+    _ebjActiveWebAudioSource = null;
+  }
   if (_ebjCurrentAudio) {
     try { _ebjCurrentAudio.pause(); } catch (_) {}
     _ebjCurrentAudio = null;
@@ -228,6 +233,7 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
+      _ebjActiveWebAudioSource = source;
 
       // JARVIS Holographic DSP Master Chain:
       // 1. Warmth Low-Shelf (+2.4dB @ 210Hz) - Tony Stark baritone chest resonance
@@ -260,6 +266,9 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
         const onDone = () => {
           if (!finished) {
             finished = true;
+            if (_ebjActiveWebAudioSource === source) {
+              _ebjActiveWebAudioSource = null;
+            }
             resolve();
           }
         };

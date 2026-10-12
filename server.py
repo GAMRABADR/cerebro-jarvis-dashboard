@@ -6505,6 +6505,16 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     except Exception:
                         pass
 
+                    # ── PLUGGABLE ABILITY REGISTRY ─────────────────────
+                    if not reply_text:
+                        try:
+                            import ebj_ability_registry as _ab_reg
+                            ab_res = _ab_reg.get_ability_registry().dispatch(user_query)
+                            if isinstance(ab_res, dict) and ab_res.get("spoken_response"):
+                                reply_text = ab_res["spoken_response"]
+                        except Exception:
+                            pass
+
                     extra_facts = None
                     if any(w in q_lower for w in ["container", "notifiche", "notifica", "telegram", "report vps", "silenzio", "batteria", "scarica"]):
                         if any(w in q_lower for w in ["invia", "manda", "spedisci", "telegram", "report"]):
@@ -8589,9 +8599,10 @@ def _patched_do_POST(self):
             except Exception as tts_err:
                 pass
 
-            # Se la richiesta arriva dal desktop fisso, diffondi anche tramite le casse hardware della workstation
-            req_device = bd.get("device", "desktop")
-            if req_device == "desktop" and audio_b64:
+            # Riproduzione sulle casse hardware della workstation SOLO se esplicitamente richiesto
+            # (evita l'eco e la voce doppia se il browser sta già riproducendo via WebAudio)
+            play_on_spk = bd.get("play_on_speakers", False)
+            if play_on_spk and audio_b64:
                 def _play_on_speakers(b64_str):
                     try:
                         import ctypes

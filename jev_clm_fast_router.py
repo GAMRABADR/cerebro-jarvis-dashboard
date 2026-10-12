@@ -234,6 +234,17 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
         except Exception:
             pass
 
+    # 3.8 Esplorazione Cartelle, File e File System Windows (JEV Native Explorer)
+    if any(k in cmd for k in ["esplora", "cartella", "directory", "cosa c'è in", "cosa c'e in", "cerca file", "trova file", "mostra cartella"]):
+        try:
+            from ebj_pc_explorer import execute_pc_explorer
+            res = execute_pc_explorer({"query": user_command})
+            if res.get("status") == "success":
+                res["engine"] = "JEV_Native_PC_Explorer"
+                return res
+        except Exception:
+            pass
+
     # 4. Comandi Avvio & Chiusura Applicazioni (JEV Universal App Runner)
     if cmd.startswith("apri ") or cmd.startswith("avvia ") or cmd.startswith("lancia "):
         target_app = cmd.replace("apri ", "").replace("avvia ", "").replace("lancia ", "").strip()
