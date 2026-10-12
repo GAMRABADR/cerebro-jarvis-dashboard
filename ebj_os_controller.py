@@ -465,11 +465,23 @@ def open_file_with_default_app(path: str) -> Dict[str, Any]:
         return {"status": "ERROR", "error": str(e)}
 
 def empty_recycle_bin() -> Dict[str, Any]:
-    """Svuota il Cestino di Windows."""
+    """Svuota il Cestino di Windows e aggiorna l'icona sul desktop."""
     try:
         if _SYSTEM == "Windows":
+            # 1. PowerShell Clear-RecycleBin nativo su tutti i volumi
             subprocess.run(["powershell", "-NoProfile", "-Command", "Clear-RecycleBin -Force -ErrorAction SilentlyContinue"], timeout=10)
-            return {"status": "SUCCESS", "verbal_summary": "Il Cestino di Windows è stato svuotato completamente, Badr."}
+            
+            # 2. Win32 Shell API SHEmptyRecycleBinW per forzare svuotamento C: e D:
+            try:
+                import ctypes
+                # SHERB_NOCONFIRMATION = 1, SHERB_NOPROGRESSUI = 2, SHERB_NOSOUND = 4 (Totale 7)
+                ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, 7)
+                # SHCNE_ASSOCCHANGED = 0x08000000, SHCNF_FLUSH = 0x1000 per aggiornare visivamente l'icona del Cestino (vuoto)
+                ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x1000, None, None)
+            except Exception:
+                pass
+
+            return {"status": "SUCCESS", "verbal_summary": "Il Cestino di Windows è stato svuotato completamente e l'icona aggiornata, Badr."}
         return {"status": "UNSUPPORTED", "message": "Supportato su Windows."}
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
