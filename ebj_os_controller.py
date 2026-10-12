@@ -66,15 +66,27 @@ def resolve_path(p: str) -> str:
     if os.path.isabs(expanded):
         return os.path.normpath(expanded)
     
-    # Default cerca nel Desktop o directory corrente
-    on_desktop = os.path.join(_WELL_KNOWN_DIRS["desktop"], clean)
-    if os.path.exists(on_desktop):
-        return on_desktop
-    on_downloads = os.path.join(_WELL_KNOWN_DIRS["downloads"], clean)
-    if os.path.exists(on_downloads):
-        return on_downloads
+# ── TOPOLOGIA DI RETE IBRIDA (ORACLE VPS <-> PC LOCALE DI BADR) ─────────────
+# Se il controller gira dentro la VPS Oracle (Linux), le azioni fisiche sul PC di Badr
+# (mouse, tastiera, schermo, cestino, cartelle locali) vengono inoltrate tramite il
+# Bridge Sentinel / Cloudflare Tunnel verso l'Agent locale (porta 9000 / 8088 locale).
+REMOTE_LOCAL_PC_BRIDGE = os.environ.get("EBJ_REMOTE_PC_BRIDGE_URL", "http://127.0.0.1:9000")
+IS_VPS_ENVIRONMENT = (_SYSTEM != "Windows" or os.environ.get("RUNNING_ON_VPS") == "1")
 
-    return os.path.abspath(expanded)
+def forward_to_remote_local_pc(endpoint: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Inoltra una chiamata di controllo fisico dalla VPS al PC locale di Badr."""
+    if not IS_VPS_ENVIRONMENT:
+        return None
+    try:
+        import requests as _rq
+        target_url = f"{REMOTE_LOCAL_PC_BRIDGE.rstrip('/')}/{endpoint.lstrip('/')}"
+        res = _rq.post(target_url, json=payload, timeout=3.5)
+        if res.status_code == 200:
+            return res.json()
+    except Exception:
+        pass
+    return None
+
 
 # ── 2. MAPPATURA APPLICAZIONI DESKTOP ──────────────────────────────────────────
 _APP_MAP = {
