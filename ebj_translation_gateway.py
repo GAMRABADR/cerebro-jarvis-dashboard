@@ -150,3 +150,16 @@ _TRANSLATOR_INSTANCE = LiveTranslator()
 
 def get_translator() -> LiveTranslator:
     return _TRANSLATOR_INSTANCE
+
+def ebj_translate(text: str, target_lang: str = "en", source_lang: str = "auto") -> Dict[str, Any]:
+    """Helper compatibile con Ability Registry per traduzione on-demand."""
+    translated, engine, lat_ms = _TRANSLATOR_INSTANCE.translate_fast(text, target_lang=target_lang, source_lang=source_lang)
+    return {
+        "status": "success",
+        "original_text": text,
+        "translated_text": translated,
+        "engine": engine,
+        "target_lang": target_lang,
+        "latency_ms": round(lat_ms, 2)
+    }
+

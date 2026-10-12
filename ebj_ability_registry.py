@@ -4,13 +4,18 @@ EBJ SUPREME ABILITY REGISTRY (PLUGGABLE SKILLS RUNTIME)
 ==============================================================================
 Modulo di orchestrazione modulare per registrare, abilitare, disabilitare e
 richiamare nuove abilità cognitive ed operative per l'agente EBJ senza mai
-toccare o sporcare il server monolitico.
+toccare o appesantire il server monolitico.
 
 Supporta:
-  - Dynamic Dispatch con prioritizzazione (Priority Queue)
-  - Fast Memory Caching
-  - Tracciamento metriche di esecuzione (latenza, success rate, fallback)
-  - Abilitazione/Disabilitazione runtime a caldo (Hot Reload)
+  - Dynamic Dispatch con prioritizzazione (Priority Queue per Tier)
+  - Fast Memory Caching & Auto-Inizializzazione delle Abilità di Produzione:
+      * Traduzione Istantanea Rust / Cloud
+      * Creazione Account / Gmail con Consegna Credenziali a badraudi@gmail.com
+      * Email Outreach ad Agenzie Immobiliari
+      * Caselle Email Temporanee Usa-e-Getta (Mail.tm)
+      * Operazioni Win32 & App Launch (JEV System Ops)
+  - Tracciamento metriche di esecuzione (latenza, success rate, chiamate)
+  - Hot Reload a runtime
 ==============================================================================
 """
 from __future__ import annotations
@@ -37,7 +42,7 @@ class Ability:
         self.description = description
         self.handler = handler
         self.triggers = [t.lower() for t in (triggers or [])]
-        self.tier = tier  # 0: Sub-1ms native/cache, 1: CLM/Reflex, 2: LLM
+        self.tier = tier  # 0: Sub-1ms native/cache, 1: Fast Reflex, 2: Remote/Automation
         self.enabled = enabled
         self.call_count = 0
         self.total_latency_ms = 0.0
@@ -65,12 +70,14 @@ class Ability:
                 "status": "error",
                 "ability_name": self.name,
                 "error": str(e),
+                "spoken_response": f"Errore durante l'esecuzione dell'abilità {self.name}: {str(e)}",
                 "ability_latency_ms": round(lat, 3)
             }
 
 class AbilityRegistry:
     def __init__(self):
         self._abilities: Dict[str, Ability] = {}
+        self._init_default_abilities()
 
     def register(self, ability: Ability) -> None:
         self._abilities[ability.name] = ability
@@ -101,6 +108,91 @@ class AbilityRegistry:
             if ab.match(query):
                 return ab.execute(payload)
         return None
+
+    def _init_default_abilities(self) -> None:
+        """Inizializza il catalogo delle abilità standard operative per l'agente EBJ."""
+        # 1. Traduzione Multilingue Istantanea (Rust Apex / Cloud)
+        try:
+            from ebj_translation_gateway import ebj_translate
+            def _handle_translate(payload: Dict[str, Any]) -> Dict[str, Any]:
+                q = payload.get("query", "")
+                text = payload.get("text") or q
+                target = payload.get("target_lang") or payload.get("lang") or "en"
+                res = ebj_translate(text=text, target_lang=target)
+                spoken = f"Traduzione in {target.upper()}: {res.get('translated_text', '')}"
+                res["spoken_response"] = spoken
+                return res
+
+            self.register(Ability(
+                name="realtime_translation",
+                description="Traduzione istantanea multilingue a bassa latenza con Rust Apex Cache e Google GTX / MyMemory",
+                handler=_handle_translate,
+                triggers=["traduci", "traduzione", "translate", "come si dice in"],
+                tier=0
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità realtime_translation non caricata: {e}")
+
+        # 2. Casella Email Temporanea Usa-e-Getta (Mail.tm)
+        try:
+            from ebj_temp_email_manager import execute_temp_email
+            def _handle_temp_email(payload: Dict[str, Any]) -> Dict[str, Any]:
+                res = execute_temp_email(payload)
+                if res.get("status") == "success" and "email" in res:
+                    res["spoken_response"] = f"Ho generato una casella email temporanea usa e getta: {res['email']}. Ricezione codici e OTP attiva."
+                return res
+
+            self.register(Ability(
+                name="temp_email_generator",
+                description="Creazione e consultazione istantanea di caselle email usa-e-getta senza Captcha (Mail.tm)",
+                handler=_handle_temp_email,
+                triggers=["email temporanea", "mail temporanea", "temp mail", "crea email usa e getta", "casella usa e getta", "temp email"],
+                tier=1
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità temp_email_generator non caricata: {e}")
+
+        # 3. Creazione Account / Gmail con Consegna a badraudi@gmail.com
+        try:
+            from ebj_gmail_account_creator import execute_gmail_creator
+            def _handle_gmail_creator(payload: Dict[str, Any]) -> Dict[str, Any]:
+                res = execute_gmail_creator(payload)
+                if res.get("status") == "success":
+                    person = res.get("person", "l'utente richiesto")
+                    email = res.get("email", "")
+                    res["spoken_response"] = f"Ho predisposto l'account per {person}: indirizzo {email}. Le credenziali complete sono state inviate alla tua email badraudi@gmail.com, Badr."
+                return res
+
+            self.register(Ability(
+                name="gmail_account_creator",
+                description="Generazione credenziali email/Google con recapito immediato e sicuro alla casella badraudi@gmail.com",
+                handler=_handle_gmail_creator,
+                triggers=["crea una gmail", "crea gmail", "crea account per", "crea una mail per", "registra gmail", "creami una gmail"],
+                tier=1
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità gmail_account_creator non caricata: {e}")
+
+        # 4. Email Outreach per Agenzie Immobiliari
+        try:
+            from ebj_real_estate_mailer import execute_real_estate_mailer
+            def _handle_real_estate(payload: Dict[str, Any]) -> Dict[str, Any]:
+                res = execute_real_estate_mailer(payload)
+                if res.get("status") == "success":
+                    res["spoken_response"] = "Proposta di partnership e collaborazione inviata con successo all'agenzia immobiliare. Ti ho recapitato il riepilogo su badraudi@gmail.com, Badr."
+                elif res.get("status") == "need_recipient":
+                    res["spoken_response"] = "Dimmi l'indirizzo email o il nome dell'agenzia immobiliare a cui vuoi che invii la proposta di collaborazione."
+                return res
+
+            self.register(Ability(
+                name="real_estate_outreach",
+                description="Invio email commerciali di convenzione traslochi/sgomberi ad agenzie immobiliari con notifica a Badr",
+                handler=_handle_real_estate,
+                triggers=["manda email a immobiliari", "invia mail immobiliare", "email agenzia immobiliare", "contatta immobiliari", "invia alle agenzie"],
+                tier=1
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità real_estate_outreach non caricata: {e}")
 
 # Singleton globale
 _GLOBAL_REGISTRY = AbilityRegistry()
