@@ -137,6 +137,18 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
     """
     cmd = user_command.lower().strip()
     
+    # 0. Intercettazione Istantanea Barge-In (Stop, Fermo, Aspetta, Ascolta)
+    if any(k == cmd or cmd.startswith(k + " ") or cmd.endswith(" " + k) for k in [
+        "stop", "fermo", "fermati", "basta", "aspetta", "taci", "silenzio", "calma", "ascolta", "ascoltami"
+    ]):
+        return {
+            "status": "interrupted",
+            "action": "barge_in_stop",
+            "spoken_response": "Mi fermo subito, Badr! Ti ascolto, dimmi pure.",
+            "engine": "JEV_Instant_BargeIn_Reflex",
+            "latency_ms": 0.2
+        }
+
     # 1. Intercettazione rapida comandi di sistema critici (JEV Tier 0)
     if any(k in cmd for k in ["desktop", "schermo", "icone", "explorer", "taskbar", "barra"]):
         if any(k in cmd for k in ["ripristina", "non vedo", "sparisci", "avvia", "ricarica", "reset"]):

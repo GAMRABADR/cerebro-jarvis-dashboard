@@ -136,6 +136,8 @@ function updateVadPill() {
 let _ebjAudioCtx = null;
 let _ebjMasterAudioEl = null;
 let _ebjActiveWebAudioSource = null;
+let _ebjSpeechEpoch = 0;
+let _ebjActiveTtsAbortCtrl = null;
 
 function getEbjAudioContext() {
   try {
@@ -153,18 +155,41 @@ function getEbjAudioContext() {
 }
 
 function stopEbjSpeech() {
-  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+  _ebjSpeechEpoch++;
+  if (_ebjActiveTtsAbortCtrl) {
+    try { _ebjActiveTtsAbortCtrl.abort(); } catch (_) {}
+    _ebjActiveTtsAbortCtrl = null;
+  }
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  } catch (_) {}
   if (_ebjActiveWebAudioSource) {
-    try { _ebjActiveWebAudioSource.stop(0); } catch (_) {}
+    try {
+      _ebjActiveWebAudioSource.onended = null;
+      _ebjActiveWebAudioSource.stop(0);
+      _ebjActiveWebAudioSource.disconnect();
+    } catch (_) {}
     _ebjActiveWebAudioSource = null;
   }
   if (_ebjCurrentAudio) {
-    try { _ebjCurrentAudio.pause(); } catch (_) {}
+    try {
+      _ebjCurrentAudio.pause();
+      _ebjCurrentAudio.currentTime = 0;
+      _ebjCurrentAudio.src = '';
+    } catch (_) {}
     _ebjCurrentAudio = null;
   }
   if (_ebjMasterAudioEl) {
-    try { _ebjMasterAudioEl.pause(); } catch (_) {}
+    try {
+      _ebjMasterAudioEl.pause();
+      _ebjMasterAudioEl.currentTime = 0;
+      _ebjMasterAudioEl.removeAttribute('src');
+    } catch (_) {}
   }
+  _ebjIsSpeaking = false;
+  animateJarvisSpectrum(false);
 }
 
 let _spectrumAnimTimer = null;
@@ -195,41 +220,47 @@ function animateJarvisSpectrum(active = true, intensity = 1.0) {
 }
 
 window.animateJarvisSpectrum = animateJarvisSpectrum;
+window.stopEbjSpeech = stopEbjSpeech;
 
 window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   if (!window.ebjVoiceEnabled || !text) return;
   const clean = String(text).replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1500);
   if (!clean) return;
 
+  // Single-Voice Armor: ferma categoricamente qualsiasi emissione vocale precedente
+  stopEbjSpeech();
+  const currentEpoch = _ebjSpeechEpoch; // Già incrementato da stopEbjSpeech()
+  _ebjActiveTtsAbortCtrl = new AbortController();
+  const abortSignal = _ebjActiveTtsAbortCtrl.signal;
+
   _ebjIsSpeaking = true;
   animateJarvisSpectrum(true, 1.0);
-  stopEbjMic(); // Immediate suppression during speech to prevent acoustic feedback loop
-  stopEbjSpeech();
   unlockEbjVoice();
 
   addEvent('voice', `🔊 VOCAL SYNTHESIS: "${clean.slice(0, 50)}..."`);
   let played = false;
 
   // Watchdog garantito per evitare freeze dell'ascolto
-  const watchdogMs = Math.max(5000, (clean.length * 110) + 1200);
+  const watchdogMs = Math.max(5000, (clean.length * 110) + 2000);
   const speechWatchdog = setTimeout(() => {
-    if (_ebjIsSpeaking) {
+    if (_ebjIsSpeaking && currentEpoch === _ebjSpeechEpoch) {
       console.warn('[Speech Watchdog]: Forzato reset speaking lock dopo', watchdogMs, 'ms');
       _ebjIsSpeaking = false;
       animateJarvisSpectrum(false);
-      if (window.ebjVoiceEnabled && !_ebjMicOn) startEbjMic();
     }
   }, watchdogMs);
 
   const playWithWebAudio = async (arrayBuffer) => {
+    if (currentEpoch !== _ebjSpeechEpoch) return false;
     const ctx = getEbjAudioContext();
     if (!ctx || typeof ctx.decodeAudioData !== 'function') return false;
     try {
       if (ctx.state === 'suspended') await ctx.resume();
+      if (currentEpoch !== _ebjSpeechEpoch) return false;
       const audioBuffer = await new Promise((res, rej) => {
         ctx.decodeAudioData(arrayBuffer.slice(0), res, rej);
       });
-      if (!audioBuffer) return false;
+      if (!audioBuffer || currentEpoch !== _ebjSpeechEpoch) return false;
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
@@ -276,7 +307,7 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
         source.start(0);
         setTimeout(onDone, Math.max(800, (audioBuffer.duration * 1000) + 400));
       });
-      return true;
+      return currentEpoch === _ebjSpeechEpoch;
     } catch (err) {
       console.warn('[WebAudio Decode Err]:', err);
       return false;
@@ -284,41 +315,55 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
   };
 
   const playWithAudioEl = async (srcUrl) => {
+    if (currentEpoch !== _ebjSpeechEpoch) return false;
     try {
       if (!_ebjMasterAudioEl) unlockEbjVoice();
       if (!_ebjMasterAudioEl) return false;
+      _ebjMasterAudioEl.pause();
+      _ebjMasterAudioEl.currentTime = 0;
       _ebjMasterAudioEl.src = srcUrl;
       _ebjMasterAudioEl.volume = 1.0;
-      await new Promise((resolve, reject) => {
+      const ok = await new Promise((resolve) => {
         let done = false;
-        const finish = (ok) => {
-          if (!done) {
-            done = true;
-            _ebjMasterAudioEl.onended = null;
-            _ebjMasterAudioEl.onerror = null;
-            if (ok) resolve(); else reject();
+        const cleanup = () => {
+          if (_ebjMasterAudioEl) {
+            _ebjMasterAudioEl.removeEventListener('ended', onEnded);
+            _ebjMasterAudioEl.removeEventListener('error', onError);
           }
         };
-        _ebjMasterAudioEl.onended = () => finish(true);
-        _ebjMasterAudioEl.onerror = () => finish(false);
-        _ebjMasterAudioEl.play().then(() => finish(true)).catch(() => finish(false));
-        setTimeout(() => finish(true), 14000);
+        const finish = (result) => {
+          if (!done) {
+            done = true;
+            cleanup();
+            resolve(result);
+          }
+        };
+        const onEnded = () => finish(true);
+        const onError = () => finish(false);
+        _ebjMasterAudioEl.addEventListener('ended', onEnded, { once: true });
+        _ebjMasterAudioEl.addEventListener('error', onError, { once: true });
+        // NOTA BENE: NON chiamare finish(true) su play()! Solo intercettare errore di avvio!
+        _ebjMasterAudioEl.play().catch((e) => {
+          console.warn('[AudioEl play error]:', e);
+          finish(false);
+        });
+        setTimeout(() => finish(true), 25000);
       });
-      return true;
+      return ok && (currentEpoch === _ebjSpeechEpoch);
     } catch (_) {
       return false;
     }
   };
 
   try {
-    // Stage 1: Preloaded base64
-    if (preloadedBase64 && preloadedBase64.length > 500) {
+    // Stage 1: Preloaded base64 Neurale da backend
+    if (preloadedBase64 && preloadedBase64.length > 500 && currentEpoch === _ebjSpeechEpoch) {
       try {
         const bin = atob(preloadedBase64);
         const buf = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
         played = await playWithWebAudio(buf.buffer);
-        if (!played) {
+        if (!played && currentEpoch === _ebjSpeechEpoch) {
           const blobUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
           played = await playWithAudioEl(blobUrl);
           URL.revokeObjectURL(blobUrl);
@@ -328,23 +373,23 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       }
     }
 
-    // Stage 2: Direct Fetch /api/tts from Master Server (Web Audio HD)
-    if (!played) {
+    // Stage 2: Direct Fetch /api/tts from Master Server (Edge-TTS Neurale)
+    if (!played && currentEpoch === _ebjSpeechEpoch) {
       try {
         const r = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: clean, persona: currentPersonality || 'jarvis', voice_mode: currentPersonality || 'jarvis' }),
-          signal: AbortSignal.timeout(8500)
+          signal: abortSignal
         });
-        if (r.ok) {
+        if (r.ok && currentEpoch === _ebjSpeechEpoch) {
           const d = await r.json();
-          if (d.audio_base64 && d.audio_base64.length > 500) {
+          if (d.audio_base64 && d.audio_base64.length > 500 && currentEpoch === _ebjSpeechEpoch) {
             const bin = atob(d.audio_base64);
             const buf = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
             played = await playWithWebAudio(buf.buffer);
-            if (!played) {
+            if (!played && currentEpoch === _ebjSpeechEpoch) {
               const blobUrl = URL.createObjectURL(new Blob([buf], { type: d.mime_type || 'audio/mpeg' }));
               played = await playWithAudioEl(blobUrl);
               URL.revokeObjectURL(blobUrl);
@@ -352,12 +397,12 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
           }
         }
       } catch (err) {
-        console.warn('[TTS Server Fetch Error]:', err);
+        if (err.name !== 'AbortError') console.warn('[TTS Server Fetch Error]:', err);
       }
     }
 
     // Stage 3: Streaming Direct GET /api/tts via Master Audio Element
-    if (!played) {
+    if (!played && currentEpoch === _ebjSpeechEpoch) {
       try {
         const streamUrl = `/api/tts?text=${encodeURIComponent(clean)}&persona=${encodeURIComponent(currentPersonality || 'jarvis')}&_t=${Date.now()}`;
         played = await playWithAudioEl(streamUrl);
@@ -366,8 +411,8 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       }
     }
 
-    // Stage 4: Controlled Browser SpeechSynthesis (Guaranteed speech output)
-    if (!played && ('speechSynthesis' in window)) {
+    // Stage 4: Controlled Browser SpeechSynthesis (Unicamente se nessun audio precedente e voce attiva)
+    if (!played && currentEpoch === _ebjSpeechEpoch && ('speechSynthesis' in window)) {
       try {
         window.speechSynthesis.cancel();
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
@@ -375,25 +420,25 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
         u.lang = currentPersonality === 'jarvis_uk' ? 'en-GB' : 'it-IT';
         u.rate = 1.0;
         u.pitch = 0.95;
+        // Assegna voce italiana naturale se disponibile
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        const itVoice = voices.find(v => v.lang.startsWith('it') && (v.name.includes('Neural') || v.name.includes('Natural') || v.name.includes('Elsa') || v.name.includes('Cosimo')));
+        if (itVoice) u.voice = itVoice;
+
         await new Promise((res) => {
           u.onend = res;
           u.onerror = res;
           window.speechSynthesis.speak(u);
           setTimeout(res, Math.max(1200, (clean.length * 90) + 400));
         });
-        played = true;
+        played = (currentEpoch === _ebjSpeechEpoch);
       } catch (_) {}
     }
   } finally {
     clearTimeout(speechWatchdog);
-    _ebjIsSpeaking = false;
-    animateJarvisSpectrum(false);
-    if (window.ebjVoiceEnabled) {
-      setTimeout(() => {
-        if (window.ebjVoiceEnabled && !_ebjIsSpeaking && !_ebjMicOn) {
-          startEbjMic();
-        }
-      }, 200);
+    if (currentEpoch === _ebjSpeechEpoch) {
+      _ebjIsSpeaking = false;
+      animateJarvisSpectrum(false);
     }
   }
 };
@@ -459,6 +504,35 @@ function startEbjMic() {
       interimTranscript = interimTranscript.trim();
       finalTranscript = finalTranscript.trim();
 
+      // ── BARGE-IN INTERRUPTION & CORREZIONE ISTANTANEA ────────────────
+      const liveChunk = (interimTranscript + ' ' + finalTranscript).toLowerCase();
+      const isInterrupt = /\b(stop|fermo|fermati|basta|aspetta|taci|silenzio|calma|ascolta|ascoltami|non parlare|zitto)\b/i.test(liveChunk);
+      
+      if (isInterrupt && _ebjIsSpeaking) {
+        console.log('[Barge-In Intercepted]: Badr ha interrotto EBJ:', liveChunk);
+        stopEbjSpeech();
+        _ebjIsSpeaking = false;
+        animateJarvisSpectrum(true, 0.9);
+        const respEl = document.getElementById('resp-body');
+        const respTag = document.getElementById('resp-tag');
+        if (respTag) respTag.textContent = '⚡ FERMATO · TI ASCOLTO';
+        if (respEl) {
+          respEl.innerHTML = `<span style="color:#00ff9f;font-weight:700;">Mi fermo subito, Badr! Ti ascolto, dimmi pure.</span>`;
+        }
+        // Se la frase era solo una parola di stop
+        if (/^(stop|fermo|fermati|basta|aspetta|taci|silenzio|calma)[.!? ]*$/i.test(liveChunk.trim())) {
+          return;
+        }
+      }
+
+      // ── ANTI-ACOUSTIC LOOP / ANTI-ACCAVALLAMENTO ─────────────────────
+      // Se EBJ sta attualmente parlando e NON è stato pronunciato un comando di stop:
+      // Si tratta semplicemente dell'eco della voce di EBJ dalle casse!
+      // Ignoriamo categoricamente la trascrizione per evitare che EBJ parli doppio o con due voci diverse!
+      if (_ebjIsSpeaking && !isInterrupt) {
+        return;
+      }
+
       // Feedback visivo immediato a 60 FPS mentre Badr sta parlando
       if (interimTranscript) {
         animateJarvisSpectrum(true, 0.7);
@@ -472,7 +546,16 @@ function startEbjMic() {
 
       if (!finalTranscript) return;
       const text = finalTranscript;
-      if (isBusy || _ebjIsSpeaking) return;
+      
+      // Assicura che qualsiasi audio sia fermato se era rimasto aperto
+      if (_ebjIsSpeaking) {
+        stopEbjSpeech();
+        _ebjIsSpeaking = false;
+      }
+      if (isBusy) {
+        // Reset del lock per accogliere il nuovo pensiero ricoretto
+        isBusy = false;
+      }
 
       animateJarvisSpectrum(false);
       const lowerText = text.toLowerCase().trim();

@@ -281,7 +281,10 @@ class CyberAudioEngine {
   }
 
   interruptJarvisSpeaking() {
-    // Barge-In: ferma qualsiasi audio in riproduzione attiva
+    // Barge-In: ferma qualsiasi audio in riproduzione attiva (WebAudio, Audio Element, SpeechSynthesis)
+    if (typeof window.stopEbjSpeech === 'function') {
+      window.stopEbjSpeech();
+    }
     if (window.currentPlayingVoiceAudio) {
       try {
         window.currentPlayingVoiceAudio.pause();
