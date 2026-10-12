@@ -104,10 +104,15 @@ class WhatsAppConnector:
 
         opened = False
         if auto_open:
+            # 1. Prova prima il protocollo desktop nativo
             try:
                 subprocess.Popen(["cmd", "/c", "start", wa_app_uri], shell=True)
                 opened = True
             except Exception:
+                pass
+            
+            # 2. Se è una richiesta generica o se l'app è bloccata, apri anche il web link garantito
+            if not num_no_plus:
                 try:
                     subprocess.Popen(["cmd", "/c", "start", wa_web_link], shell=True)
                     opened = True
