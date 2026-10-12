@@ -904,9 +904,24 @@ async function executeCommandPipeline(prompt) {
     const requestedHologram = String(prompt || '').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    if (/\b(fammi vedere|voglio vederti|mostrati|apri ologramma|attiva ologramma|guardami|guarda me|accendi la cam|accendi cam|apri la cam|apri cam|apri telecamera|attiva camera|attiva telecamera|accendi fotocamera|apri fotocamera|fotocamera|webcam|telecamera)\b/.test(requestedHologram)) {
-      window.openCameraVisionModal();
-      finish('Fotocamera attivata, Badr. Sistema di tracciamento visivo pronto.', 'JARVIS OPTICS < 1ms');
+
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+      || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+      || window.innerWidth <= 768;
+
+    if (/\b(fammi vedere|voglio vederti|mostrati|apri ologramma|attiva ologramma|guardami|guarda me|accendi la cam|accendi cam|apri la cam|apri cam|apri telecamera|attiva camera|attiva telecamera|accendi fotocamera|apri fotocamera|fotocamera|webcam|telecamera|inquadrami|selfie)\b/.test(requestedHologram)) {
+      const isSelfie = /\b(guardami|guarda me|inquadrami|selfie|mio viso|mio volto)\b/.test(requestedHologram);
+      const facing = isMobileDevice ? (isSelfie ? 'user' : 'environment') : 'user';
+
+      window.openCameraVisionModal(facing);
+
+      const ackMsg = isMobileDevice 
+        ? (isSelfie 
+            ? 'Fotocamera frontale dello smartphone attivata, Badr: sensori puntati su di te, ti vedo chiaramente.' 
+            : 'Fotocamera posteriore dello smartphone attivata, Badr: inquadratura pronta per l\'analisi visiva.')
+        : 'Webcam del desktop attivata, Badr: modulo ottico attivo, sistema di tracciamento pronto.';
+
+      finish(ackMsg, isMobileDevice ? 'MOBILE OPTICS 📱' : 'DESKTOP WEBCAM 💻');
       isBusy = false;
       if (sphere) sphere.style.boxShadow = '0 0 25px rgba(0, 255, 159, 0.5)';
       return;
@@ -915,7 +930,7 @@ async function executeCommandPipeline(prompt) {
     const reflexRes = await fetch('/api/reflex/dispatch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: prompt }),
+      body: JSON.stringify({ query: prompt, device: isMobileDevice ? 'mobile' : 'desktop' }),
       signal: AbortSignal.timeout(600)
     });
     if (reflexRes.ok) {
@@ -927,8 +942,10 @@ async function executeCommandPipeline(prompt) {
           isBusy = false;
           return;
         } else if (rf.intent === 'CAMERA_VISION') {
-          window.openCameraVisionModal();
-          finish(rf.spoken_ack || 'Webcam HD attivata per analisi visiva.', 'RUST REFLEX 2µs');
+          const isSelfie = /\b(guardami|guarda me|inquadrami|selfie|mio viso|mio volto)\b/.test(requestedHologram);
+          const facing = isMobileDevice ? (isSelfie ? 'user' : 'environment') : 'user';
+          window.openCameraVisionModal(facing);
+          finish(rf.spoken_ack || (isMobileDevice ? 'Fotocamera smartphone attivata per analisi visiva.' : 'Webcam HD attivata per analisi visiva.'), isMobileDevice ? 'MOBILE OPTICS 📱' : 'RUST REFLEX 2µs');
           isBusy = false;
           return;
         } else if (rf.intent === 'NEURAL_GRAPH') {
@@ -3241,29 +3258,38 @@ window.openCameraVisionModal = async function(facingModeOverride) {
   }
 
   try {
-    // Mobile progressive constraints: start with ideal facing mode
-    const constraints = {
-      video: {
-        facingMode: { ideal: _currentFacingMode },
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      },
-      audio: false
-    };
-
+    // Mobile progressive fallback ladder:
+    // Tier 1: facingMode ideal + flexible aspect
+    // Tier 2: facingMode exact/string
+    // Tier 3: standard video: true (universal Android/iOS/Desktop)
+    let stream = null;
     try {
-      _webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (fallbackErr) {
-      console.warn('[CAMERA CONSTRAINT FALLBACK]:', fallbackErr);
-      // Fallback to basic video: true (works on any Android/iOS device)
-      _webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: _currentFacingMode } },
+        audio: false
+      });
+    } catch (err1) {
+      console.warn('[CAMERA TIER 1 FALLBACK, RETRYING FACING EXACT]:', err1);
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: _currentFacingMode },
+          audio: false
+        });
+      } catch (err2) {
+        console.warn('[CAMERA TIER 2 FALLBACK, RETRYING UNIVERSAL VIDEO TRUE]:', err2);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
     }
+    _webcamStream = stream;
 
     video.srcObject = _webcamStream;
     try {
       await video.play();
     } catch (playErr) {
-      console.warn('[VIDEO PLAY ERR, RETRYING]:', playErr);
+      console.warn('[VIDEO PLAY ERR, RETRYING MUTED]:', playErr);
       video.muted = true;
       await video.play();
     }

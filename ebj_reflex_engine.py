@@ -370,8 +370,22 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
 
     # 13. CAMERA VISION
     elif intent == "CAMERA_VISION":
-        details = {"vision": "Stark HUD Optical", "status": "CONNECTED"}
-        ack_text = "Modulo ottico Stark HUD agganciato, Badr: sensori e telecamera pronti all'analisi dell'ambiente."
+        p_low = prompt.lower()
+        is_selfie = any(k in p_low for k in ["guardami", "guarda me", "inquadrami", "selfie", "viso", "volto"])
+        is_mobile = any(k in p_low for k in ["cellulare", "smartphone", "telefono", "mobile"])
+        
+        if is_mobile and is_selfie:
+            ack_text = "Fotocamera frontale dello smartphone attivata, Badr: sensori puntati su di te, ti vedo chiaramente."
+            details = {"vision": "Stark HUD Mobile Selfie", "device": "mobile", "facing": "user", "status": "CONNECTED"}
+        elif is_mobile:
+            ack_text = "Fotocamera dello smartphone attivata, Badr: ottica pronta all'analisi visiva dell'ambiente."
+            details = {"vision": "Stark HUD Mobile", "device": "mobile", "facing": "environment", "status": "CONNECTED"}
+        elif is_selfie:
+            ack_text = "Modulo visivo attivato, Badr: telecamera puntata su di te, rilevamento biometrico in tempo reale operativo."
+            details = {"vision": "Stark HUD Optical User", "device": "desktop", "facing": "user", "status": "CONNECTED"}
+        else:
+            ack_text = "Modulo ottico Stark HUD agganciato, Badr: telecamera e sensori pronti all'analisi dell'ambiente."
+            details = {"vision": "Stark HUD Optical", "device": "desktop", "facing": "user", "status": "CONNECTED"}
 
     # 14. FLEET DISPATCH
     elif intent == "FLEET_DISPATCH":
