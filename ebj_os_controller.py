@@ -528,6 +528,39 @@ def empty_recycle_bin() -> Dict[str, Any]:
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
 
+def arrange_desktop_icons() -> Dict[str, Any]:
+    """Allinea e ordina automaticamente tutte le icone del Desktop sulla griglia (AutoArrange + SnapToGrid)."""
+    try:
+        if _SYSTEM == "Windows":
+            import winreg, ctypes
+            key_path = r"Software\Microsoft\Windows\Shell\Bags\1\Desktop"
+            try:
+                k = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ | winreg.KEY_WRITE)
+                v, t = winreg.QueryValueEx(k, "FFlags")
+                # Attiva 0x01 (AutoArrange) e 0x02 (SnapToGrid)
+                new_v = v | 0x01 | 0x02
+                winreg.SetValueEx(k, "FFlags", 0, t, new_v)
+                winreg.CloseKey(k)
+            except Exception:
+                pass
+
+            # Notifica broadcast della shell
+            ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x1000, None, None)
+
+            # Invia F5 a livello hardware
+            try:
+                import win32api, win32con
+                VK_F5 = 0x74
+                win32api.keybd_event(VK_F5, 0, 0, 0)
+                win32api.keybd_event(VK_F5, 0, win32con.KEYEVENTF_KEYUP, 0)
+            except Exception:
+                pass
+
+            return {"status": "SUCCESS", "verbal_summary": "Ho ordinato e allineato sulla griglia tutte le icone del tuo Desktop, Badr."}
+        return {"status": "UNSUPPORTED", "message": "Disponibile su Windows."}
+    except Exception as e:
+        return {"status": "ERROR", "error": str(e)}
+
 
 # ── 4. PC INTERACTION & INPUT AUTOMATION ───────────────────────────────────────
 def bring_window_to_front(window_title: str) -> Dict[str, Any]:
@@ -757,7 +790,11 @@ def execute_natural_pc_order(command_text: str) -> Dict[str, Any]:
     """
     cmd = command_text.lower().strip()
 
-    # 0. ORGANIZZAZIONE DESKTOP E DOWNLOADS
+    # 0. ORDINAMENTO ICONE DESKTOP
+    if any(k in cmd for k in ["ordina icone", "ordinami le icone", "allinea icone", "sistema icone", "riordina icone", "disponi icone"]):
+        return arrange_desktop_icons()
+
+    # 0.1 ORGANIZZAZIONE FILE E CARTELLE DESKTOP E DOWNLOADS
     if any(k in cmd for k in ["ordina", "ordinami", "organizza", "pulisci"]) and any(w in cmd for w in ["desktop", "download"]):
         return organize_desktop_and_downloads()
 
