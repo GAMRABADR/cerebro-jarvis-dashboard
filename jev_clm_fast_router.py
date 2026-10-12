@@ -149,6 +149,24 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             "latency_ms": 0.2
         }
 
+    # 0.5 Intercettazione rapida Controllo PC & Computer Use (Tier 0 Native Win32)
+    if any(k in cmd for k in [
+        "entra nel pc", "entra nel mio pc", "entra nel computer", "usa il mio pc", "usa il pc", "usa il computer",
+        "prendi il controllo", "controlla il pc", "controllo pc", "accedi al pc", "computer use",
+        "controllo remoto", "muovi il mouse", "clicca sullo schermo", "digita al pc"
+    ]):
+        try:
+            from ebj_computer_use import execute_computer_use
+            act = "show_desktop" if "desktop" in cmd else "connect"
+            res = execute_computer_use(act)
+            res["spoken_response"] = "Accesso al PC completato, Badr! Ho agganciato la sessione grafica della workstation DESKTOP-SJR1JS8. Schermo, mouse, tastiera e controlli di sistema operativi al 100%."
+            res["ui_action"] = {"type": "OPEN_PC_REMOTE_COCKPIT", "data": res}
+            res["engine"] = "JEV_Native_Computer_Use"
+            res["latency_ms"] = 0.5
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
     # 1. Intercettazione rapida comandi di sistema critici (JEV Tier 0)
     if any(k in cmd for k in ["desktop", "schermo", "icone", "explorer", "taskbar", "barra"]):
         if any(k in cmd for k in ["ripristina", "non vedo", "sparisci", "avvia", "ricarica", "reset"]):

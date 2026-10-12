@@ -1,0 +1,54 @@
+{
+  "workstation_id": "DESKTOP-SJR1JS8",
+  "os": "Windows 11",
+  "interactive_session": "WinSta0\\Default",
+  "status": "AUTHORIZED_PERMANENT_ACCESS",
+  "created_at": "2026-10-12T23:58:00+02:00",
+  "owner": "Badr El Ouariti",
+  "owner_email": "badraudi@gmail.com",
+  "drives": {
+    "C": {
+      "path": "C:\\",
+      "type": "System NVMe",
+      "label": "Windows X-Lite",
+      "free_gb": 135.5
+    },
+    "D": {
+      "path": "D:\\",
+      "type": "Data & Projects",
+      "label": "DB-DATI",
+      "free_gb": 204.6
+    },
+    "E": {
+      "path": "E:\\",
+      "type": "Archive & SDK",
+      "label": "SDK",
+      "free_gb": 79.6
+    }
+  },
+  "critical_shortcuts": {
+    "ylenia": "E:\\Foto_Ylenia",
+    "foto_ylenia": "E:\\Foto_Ylenia",
+    "progetti": "D:\\EBGStudioProgetti",
+    "desktop": "C:\\Users\\Admin\\Desktop",
+    "downloads": "C:\\Users\\Admin\\Downloads",
+    "pictures": "C:\\Users\\Admin\\Pictures"
+  },
+  "binaries": {
+    "rust_photo_viewer": "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\ebj-supreme\\rust-agents\\target\\release\\ebj-photo-viewer.exe",
+    "rust_bridge": "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\ebj-supreme\\jarvis-bridge\\target\\release\\jarvis-bridge.exe"
+  },
+  "environment_variables": {
+    "EBJ_REMOTE_PC_ENTRY": "ENABLED",
+    "EBJ_WORKSTATION_NAME": "DESKTOP-SJR1JS8",
+    "EBJ_DIR_YLENIA": "E:\\Foto_Ylenia",
+    "EBJ_EXPLORE_ROOTS": "C:\\;D:\\;E:\\;E:\\Foto_Ylenia;C:\\Users\Admin\\Desktop;C:\\Users\\Admin\\Downloads;D:\\EBGStudioProgetti",
+    "EBJ_RUST_PHOTO_VIEWER": "D:\\EBGStudioProgetti\\Oracle-VPS and EBGStudio\\ebj-supreme\\rust-agents\\target\\release\\ebj-photo-viewer.exe"
+  },
+  "remote_access_protocol": {
+    "zero_prompt": true,
+    "interactive_elevation": "schtasks /it",
+    "win32_native_ctypes": true,
+    "sub_millisecond_routing": true
+  }
+}

@@ -127,8 +127,14 @@ FOLDER_SHORTCUTS = {
     "progetti": r"d:\EBGStudioProgetti",
     "disco c": r"C:\\",
     "disco d": r"D:\\",
+    "disco e": r"E:\\",
     "c:": r"C:\\",
-    "d:": r"D:\\"
+    "d:": r"D:\\",
+    "e:": r"E:\\",
+    "ylenia": r"E:\Foto_Ylenia",
+    "foto ylenia": r"E:\Foto_Ylenia",
+    "foto_ylenia": r"E:\Foto_Ylenia",
+    "foto di ylenia": r"E:\Foto_Ylenia"
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -341,6 +347,7 @@ def find_recent_photos(limit: int = 15) -> List[Dict[str, Any]]:
         os.path.join(os.environ.get("USERPROFILE", r"C:\Users\Admin"), "Pictures"),
         os.path.join(os.environ.get("USERPROFILE", r"C:\Users\Admin"), "Desktop"),
         os.path.join(os.environ.get("USERPROFILE", r"C:\Users\Admin"), "Downloads"),
+        r"E:\Foto_Ylenia",
     ]
     
     extensions = ("*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp")

@@ -45,10 +45,17 @@ KNOWN_LOCATIONS = {
     "dashboard": r"D:\EBGStudioProgetti\Oracle-VPS and EBGStudio\cerebro-jarvis-dashboard",
     "disco c": r"C:\\",
     "disco d": r"D:\\",
+    "disco e": r"E:\\",
     "c:": r"C:\\",
     "d:": r"D:\\",
+    "e:": r"E:\\",
     "c": r"C:\\",
-    "d": r"D:\\"
+    "d": r"D:\\",
+    "e": r"E:\\",
+    "ylenia": r"E:\Foto_Ylenia",
+    "foto ylenia": r"E:\Foto_Ylenia",
+    "foto_ylenia": r"E:\Foto_Ylenia",
+    "foto di ylenia": r"E:\Foto_Ylenia"
 }
 
 def resolve_target_path(query: str) -> str:

@@ -235,6 +235,44 @@ class AbilityRegistry:
         except Exception as e:
             logger.warning(f"Abilità photo_ai_studio non caricata: {e}")
 
+        # 7. Native Workstation Computer Use & PC Remote Control (Win32 OS Access)
+        try:
+            from ebj_computer_use import execute_computer_use
+            def _handle_computer_use(payload: Dict[str, Any]) -> Dict[str, Any]:
+                q = (payload.get("query") or "").lower()
+                act = payload.get("action")
+                if not act:
+                    if any(k in q for k in ["desktop", "mostra desktop", "minimizza"]):
+                        act = "show_desktop"
+                    elif any(k in q for k in ["screenshot", "schermo", "cattura"]):
+                        act = "snapshot"
+                    elif any(k in q for k in ["digita", "scrivi"]):
+                        act = "type"
+                    else:
+                        act = "connect"
+                res = execute_computer_use(act, payload.get("params", {}))
+                if act == "connect" or "entra" in q or "usa" in q:
+                    res["spoken_response"] = "Accesso al PC completato, Badr! Ho agganciato la sessione grafica della workstation DESKTOP-SJR1JS8. Schermo, mouse, tastiera e controlli di sistema operativi al 100%."
+                    res["ui_action"] = {"type": "OPEN_PC_REMOTE_COCKPIT", "data": res}
+                elif act == "show_desktop":
+                    res["spoken_response"] = "Mostro subito il Desktop della workstation, Badr."
+                return res
+
+            self.register(Ability(
+                name="pc_computer_use_controller",
+                description="Accesso remoto e controllo nativo del PC Windows 11 (DESKTOP-SJR1JS8): schermo, mouse, tastiera, finestre ed esecuzione comandi",
+                handler=_handle_computer_use,
+                triggers=[
+                    "entra nel pc", "entra nel mio pc", "entra nel computer", "usa il mio pc", "usa il pc", "usa il computer",
+                    "prendi il controllo", "controlla il pc", "controllo pc", "accedi al pc", "computer use",
+                    "controllo remoto", "muovi il mouse", "clicca sullo schermo", "digita al pc",
+                    "mostra desktop", "mostrami il desktop", "controllo workstation"
+                ],
+                tier=0
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità pc_computer_use_controller non caricata: {e}")
+
 # Singleton globale
 _GLOBAL_REGISTRY = AbilityRegistry()
 

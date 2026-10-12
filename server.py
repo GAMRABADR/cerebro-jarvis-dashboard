@@ -4380,6 +4380,36 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 "label": lbl,
                 "available_brains": BRAIN_ENGINE_NAMES
             })
+            return
+
+        # ── WORKSTATION COMPUTER USE & REMOTE OS ACCESS ──────────────────────
+        if clean_path in ('/api/pc/status', '/api/pc/computer-use'):
+            try:
+                from ebj_computer_use import get_workstation_status
+                self.send_json(get_workstation_status())
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
+
+        if clean_path in ('/api/pc/screen/frame', '/api/pc/screenshot'):
+            try:
+                from ebj_computer_use import capture_screen_pil
+                from io import BytesIO
+                im = capture_screen_pil()
+                bio = BytesIO()
+                im.save(bio, format="JPEG", quality=75)
+                raw_jpeg = bio.getvalue()
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/jpeg')
+                self.send_header('Content-Length', str(len(raw_jpeg)))
+                self.send_header('Cache-Control', 'no-cache, no-store')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(raw_jpeg)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
+
         if clean_path in ('/api/device/android/status', '/api/device/status'):
             self.send_json(_ANDROID_DEVICE_STATE)
             return
@@ -6291,6 +6321,18 @@ class JarvisHandler(BaseHTTPRequestHandler):
             try:
                 from ebj_system_ops_executor import take_system_screenshot
                 res = take_system_screenshot()
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        # ── WORKSTATION COMPUTER USE & OS REMOTE ACTION DISPATCHER ───────────
+        if self.path in ('/api/pc/computer-use', '/api/pc/computer-use/', '/api/pc/action'):
+            try:
+                from ebj_computer_use import execute_computer_use
+                act = data.get('action', 'status')
+                params = data.get('params', data)
+                res = execute_computer_use(act, params)
                 self.send_json(res)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)
