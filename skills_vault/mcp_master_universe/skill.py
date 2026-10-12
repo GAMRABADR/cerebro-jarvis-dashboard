@@ -55,7 +55,7 @@ MCP_UNIVERSE = [
 
     # ── 5. UNREAL ENGINE 5.8 & PLC/CNC (41-50) ──
     {"id": "mcp-unreal-remote-control", "name": "Unreal Engine 5.8 WebSocket Controller", "category": "GAME_DEV_AND_INDUSTRY", "status": "READY", "cmd": "mcp-ue5-remote"},
-    {"id": "mcp-blender-python-bridge", "name": "Blender 3D Background Asset Optimizer", "category": "GAME_DEV_AND_INDUSTRY", "status": "READY", "cmd": "blender --version"},
+    {"id": "mcp-blender-skills-studio", "name": "Blender 5.2 MCP & Stefan 3D Skills Forge (UE5.8 Nanite)", "category": "GAME_DEV_AND_INDUSTRY", "status": "ONLINE", "cmd": "python cerebro-jarvis-dashboard/skills_vault/blender_mcp_skills_studio/skill.py"},
     {"id": "mcp-steamworks-api", "name": "Steamworks SDK AppID 2886940 Ops", "category": "GAME_DEV_AND_INDUSTRY", "status": "READY", "cmd": "mcp-steamworks"},
     {"id": "mcp-gaea-terrain-automator", "name": "Gaea 8K Heightmap Terrain Automator", "category": "GAME_DEV_AND_INDUSTRY", "status": "READY", "cmd": "mcp-gaea-forge"},
     {"id": "mcp-dedicated-server-monitor", "name": "60Hz Dedicated Server Tick Monitor", "category": "GAME_DEV_AND_INDUSTRY", "status": "READY", "cmd": "mcp-ue-server"},

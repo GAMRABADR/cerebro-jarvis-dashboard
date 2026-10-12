@@ -2213,8 +2213,8 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
             import autonomous_employee_fleet as _fleet
             st = _fleet.get_fleet_status()
             lines = [
-                "🤖 **[TEAM 7 AGENTI AUTONOMI H24 — E.B.J. SUPREME]**\n",
-                "*Ispirato all'architettura di Riccardo Zanetti (15 tool) e Jirka Herník (VPS 24/7):*\n"
+                "🤖 **[TEAM 8 AGENTI AUTONOMI H24 — E.B.J. SUPREME]**\n",
+                "*Ispirato all'architettura di Riccardo Zanetti (15 tool), Jirka Herník (VPS 24/7) e zSecurity (Agent Zero Root Takeover):*\n"
             ]
             for k, ag in st["agents"].items():
                 lines.append(f"• {ag['icon']} **{ag['name']}**\n  _{ag['role']}_ · Status: `{ag['status']}`")
@@ -4247,6 +4247,15 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.wfile.write(raw_bytes)
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
+            return
+
+        if clean_path in ['/api/blender/mcp/skills', '/api/blender/skills']:
+            try:
+                from skills_vault.blender_mcp_skills_studio.skill import SKILLS_LIBRARY, get_blender_info
+                info = get_blender_info()
+                self.send_json({"status": "SUCCESS", "blender_info": info, "skills": SKILLS_LIBRARY})
+            except Exception as e:
+                self.send_json({"status": "ERROR", "message": str(e)})
             return
 
         if clean_path in ['/api/fleet/status', '/api/fleet']:
@@ -6506,6 +6515,17 @@ class JarvisHandler(BaseHTTPRequestHandler):
             try:
                 from skills_vault.mcp_master_universe.skill import run_universe_diagnostic
                 res = run_universe_diagnostic()
+            except Exception as e:
+                res = {"status": "ERROR", "message": str(e)}
+            self.send_json(res)
+            return
+
+        if self.path in ['/api/blender/mcp/generate', '/api/blender/generate']:
+            try:
+                from skills_vault.blender_mcp_skills_studio.skill import run_blender_skill
+                skill_id = data.get("skill_id", "survivor_ammo_crate")
+                custom_name = data.get("asset_name")
+                res = run_blender_skill(skill_id, custom_name)
             except Exception as e:
                 res = {"status": "ERROR", "message": str(e)}
             self.send_json(res)
