@@ -395,13 +395,30 @@ def show_photo(query_or_path: Optional[str] = None, open_native: bool = True) ->
             "message": "Nessuna foto trovata nei percorsi di sistema."
         }
 
-    # 1. Apri con il visualizzatore foto nativo di Windows
+    # 1. Apri con il visualizzatore foto ad alte prestazioni in RUST nativo (Sessione Interattiva WinSta0)
     if open_native:
-        try:
-            os.startfile(target_path)
-        except Exception as e:
-            # Fallback con explorer
-            subprocess.Popen(["explorer.exe", target_path])
+        rust_viewer_bin = r"d:\EBGStudioProgetti\Oracle-VPS and EBGStudio\ebj-supreme\rust-agents\target\release\ebj-photo-viewer.exe"
+        opened_rust = False
+        if os.path.exists(rust_viewer_bin):
+            try:
+                task_name = f"EBJPhotoViewer_{int(time.time() * 1000)}"
+                tr_cmd = f'cmd.exe /c start "" "{rust_viewer_bin}" "{target_path}"'
+                subprocess.run(
+                    ["schtasks", "/create", "/tn", task_name, "/tr", tr_cmd, "/sc", "once", "/st", "00:00", "/it", "/f"],
+                    capture_output=True, text=True, check=False
+                )
+                subprocess.run(["schtasks", "/run", "/tn", task_name], capture_output=True, text=True, check=False)
+                time.sleep(0.5)
+                subprocess.run(["schtasks", "/delete", "/tn", task_name, "/f"], capture_output=True, text=True, check=False)
+                opened_rust = True
+            except Exception:
+                opened_rust = False
+
+        if not opened_rust:
+            try:
+                os.startfile(target_path)
+            except Exception:
+                subprocess.Popen(["explorer.exe", target_path])
 
     # 2. Genera miniatura base64 per il visualizzatore web della dashboard
     b64_thumb = None
