@@ -214,6 +214,27 @@ class AbilityRegistry:
         except Exception as e:
             logger.warning(f"Abilità pc_folder_explorer non caricata: {e}")
 
+        # 6. Advanced Photo AI Studio (Rimozione Sfondo, Pose/Corpo, Commento Visivo)
+        try:
+            from ebj_photo_ai_studio import execute_photo_ai_action
+            def _handle_photo_studio(payload: Dict[str, Any]) -> Dict[str, Any]:
+                return execute_photo_ai_action(payload)
+
+            self.register(Ability(
+                name="photo_ai_studio",
+                description="Visualizzatore avanzato foto con zoom, rimozione sfondo trasparente, rilevamento corpo/volti e commento AI",
+                handler=_handle_photo_studio,
+                triggers=[
+                    "mostra foto", "apri foto", "fammi vedere la foto", "foto",
+                    "rimuovi sfondo", "togli sfondo", "senza sfondo", "scontorna",
+                    "riconosci corpo", "parti del corpo", "rileva persone", "trova volti",
+                    "commenta la foto", "commenta foto", "spiega la foto", "descrivi la foto"
+                ],
+                tier=0
+            ))
+        except Exception as e:
+            logger.warning(f"Abilità photo_ai_studio non caricata: {e}")
+
 # Singleton globale
 _GLOBAL_REGISTRY = AbilityRegistry()
 

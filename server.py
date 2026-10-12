@@ -4295,8 +4295,25 @@ def detect_modular_ui_action(prompt):
         return {"action": "close_camera", "title": "Chiudi Webcam"}
     if any(w in p for w in ["tutti i moduli", "tutti moduli", "tutte le schede", "mostra tutto", "apri tutto"]):
         return {"action": "open_all_modules", "title": "Tutti i Moduli"}
-    if any(w in p for w in ["chiudi tutto", "nascondi tutto", "nascondi schede", "stealth", "pulisci schermo"]):
-        return {"action": "close_all_modules", "title": "Modalità Stealth"}
+    if any(w in p for w in ["mostra foto", "apri foto", "fammi vedere la foto", "foto", "rimuovi sfondo", "riconosci corpo", "commenta la foto", "commenta foto"]):
+        try:
+            from ebj_system_ops_executor import find_recent_photos
+            rec = find_recent_photos(limit=1)
+            f_path = rec[0]["path"] if rec else ""
+            f_name = rec[0]["filename"] if rec else "Foto"
+            b64_p = ""
+            if f_path and os.path.exists(f_path):
+                with open(f_path, "rb") as fh:
+                    b64_p = base64.b64encode(fh.read()).decode("ascii")
+            return {
+                "action": "open_photo_studio",
+                "title": f"EBJ Photo Studio · {f_name}",
+                "filename": f_name,
+                "path": f_path,
+                "base64_preview": b64_p
+            }
+        except Exception:
+            return {"action": "open_photo_studio", "title": "EBJ Photo Studio"}
     return None
 
 def run_rust_debugger(flag="--audit"):
@@ -6261,12 +6278,10 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "error", "message": str(e)}, status=500)
             return
 
-        if self.path in ('/api/system/show-photo', '/api/system/show-photo/'):
+        if self.path in ('/api/system/show-photo', '/api/system/show-photo/', '/api/photo/action'):
             try:
-                from ebj_system_ops_executor import show_photo
-                q = data.get('query') or data.get('path') or data.get('filename')
-                open_nat = data.get('open_native', True)
-                res = show_photo(q, open_native=open_nat)
+                from ebj_photo_ai_studio import execute_photo_ai_action
+                res = execute_photo_ai_action(data)
                 self.send_json(res)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)

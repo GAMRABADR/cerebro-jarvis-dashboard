@@ -194,15 +194,16 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
         except Exception as e:
             return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
 
-    # 3. Comandi Gestione Foto & Screenshot (JEV Native Vision)
-    if any(k in cmd for k in ["mostrami la foto", "mostra foto", "apri la foto", "apri foto", "fammi vedere le foto", "guarda foto", "vedi immagini", "mostra immagini"]):
+    # 3. Comandi Gestione Foto, Vision AI & Photo Studio
+    if any(k in cmd for k in [
+        "mostrami la foto", "mostra foto", "apri la foto", "apri foto", "fammi vedere le foto",
+        "guarda foto", "vedi immagini", "mostra immagini", "rimuovi sfondo", "togli sfondo",
+        "riconosci corpo", "parti del corpo", "commenta la foto", "commenta foto", "spiega la foto"
+    ]):
         try:
-            from ebj_system_ops_executor import show_photo
-            # Estrai eventuale parola chiave
-            clean = cmd.replace("mostrami la foto", "").replace("mostra foto", "").replace("apri foto", "").replace("di", "").strip()
-            res = show_photo(clean if clean else None, open_native=True)
-            res["spoken_response"] = f"Aperta la foto {res.get('filename', '')} sullo schermo, Badr."
-            res["engine"] = "JEV_Native_Photo_Viewer"
+            from ebj_photo_ai_studio import execute_photo_ai_action
+            res = execute_photo_ai_action({"query": user_command})
+            res["engine"] = "JEV_Photo_AI_Studio"
             return res
         except Exception as e:
             return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}

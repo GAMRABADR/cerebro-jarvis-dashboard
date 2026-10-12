@@ -1414,6 +1414,71 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
+       EBJ ADVANCED PHOTO STUDIO & VISION AI MODAL [NEW 2026]
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-photo-studio" style="z-index:999999;">
+    <div class="modal-box holo-modal" style="max-width:960px; width:95%; background:rgba(3,7,18,0.96); border:1.5px solid #00f0ff; box-shadow:0 0 40px rgba(0,240,255,0.35); border-radius:14px; overflow:hidden;">
+      <div class="modal-header" style="border-bottom:1px solid rgba(0,240,255,0.25); padding:14px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:#00f0ff; font-size:1.3rem;">🖼️</span>
+          <div>
+            <h3 id="photo-studio-title" style="margin:0; font-family:'Orbitron', sans-serif; font-size:1rem; color:#00f0ff; letter-spacing:1px;">EBJ PHOTO STUDIO · VISION AI</h3>
+            <small id="photo-studio-subtitle" style="color:#94a3b8; font-size:0.75rem;">Zoom, Riconoscimento Parti del Corpo, Rimozione Sfondo &amp; Commento AI</small>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="h-btn close" onclick="closePhotoStudioModal()" style="border-color:#ff4d79; color:#ff4d79; padding:4px 10px; font-size:0.8rem;">✕ CHIUDI</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding:18px; display:grid; grid-template-columns:1fr 280px; gap:18px; max-height:76vh; overflow-y:auto;">
+        <!-- Area Immagine con Zoom e Canvas Animato -->
+        <div style="position:relative; background:#010409; border:1px solid rgba(0,240,255,0.2); border-radius:10px; overflow:hidden; min-height:420px; display:flex; align-items:center; justify-content:center;">
+          <div id="photo-container" style="position:relative; transition:transform 0.2s cubic-bezier(0.2, 0, 0, 1); transform-origin:center center; cursor:grab;">
+            <img id="photo-studio-img" src="" alt="Anteprima Foto" style="max-width:100%; max-height:55vh; object-fit:contain; display:block; border-radius:6px; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+            <canvas id="photo-studio-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+          </div>
+
+          <!-- Indicatori Zoom Flottanti -->
+          <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); border:1px solid rgba(0,240,255,0.4); border-radius:20px; padding:4px 12px; display:flex; gap:8px; align-items:center; z-index:10;">
+            <button onclick="adjustPhotoZoom(-0.25)" style="background:none; border:none; color:#00f0ff; font-size:1.1rem; cursor:pointer;">−</button>
+            <span id="photo-zoom-level" style="font-family:monospace; font-size:0.78rem; color:#00ff9f; min-width:44px; text-align:center;">100%</span>
+            <button onclick="adjustPhotoZoom(+0.25)" style="background:none; border:none; color:#00f0ff; font-size:1.1rem; cursor:pointer;">+</button>
+            <button onclick="resetPhotoZoom()" style="background:none; border:none; color:#94a3b8; font-size:0.72rem; cursor:pointer; margin-left:6px;">RESET</button>
+          </div>
+        </div>
+
+        <!-- Barra Operativa Controlli AI -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="font-size:0.75rem; font-weight:800; color:#00f0ff; letter-spacing:1px; text-transform:uppercase;">⚡ AZIONI NEURALI AI</div>
+          
+          <button class="h-btn primary" onclick="triggerPhotoStudioAction('remove_background')" style="width:100%; padding:10px; font-size:0.8rem; background:rgba(0,240,255,0.1); border-color:#00f0ff; color:#00f0ff; text-align:left;">
+            ✂️ Rimuovi Sfondo (Trasparente)
+          </button>
+          
+          <button class="h-btn primary" onclick="triggerPhotoStudioAction('detect_body_parts')" style="width:100%; padding:10px; font-size:0.8rem; background:rgba(0,255,159,0.1); border-color:#00ff9f; color:#00ff9f; text-align:left;">
+            🧍 Riconosci Corpo, Posa &amp; Volto
+          </button>
+
+          <button class="h-btn primary" onclick="triggerPhotoStudioAction('comment_photo')" style="width:100%; padding:10px; font-size:0.8rem; background:rgba(255,0,128,0.1); border-color:#ff0080; color:#ff0080; text-align:left;">
+            🎙️ Commenta Foto a Voce (AI)
+          </button>
+
+          <button class="h-btn" onclick="openPhotoNativeViewer()" style="width:100%; padding:9px; font-size:0.75rem; text-align:left;">
+            🖥️ Apri Lettore Rust a Schermo
+          </button>
+
+          <!-- Box Resoconto AI -->
+          <div style="margin-top:auto; background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.2); border-radius:8px; padding:12px;">
+            <div style="font-size:0.7rem; color:#00f0ff; font-weight:bold; margin-bottom:6px;">💬 FEEDBACK VOCALE EBJ:</div>
+            <div id="photo-studio-feedback" style="font-size:0.78rem; line-height:1.4; color:#f1f5f9; min-height:48px;">In attesa di comando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
        MODULAR CARDS CATALOG MODAL [M]
        ═══════════════════════════════════════════════════════════════ -->
   <div class="modal-overlay" id="modal-modular-catalog">

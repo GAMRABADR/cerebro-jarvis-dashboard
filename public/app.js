@@ -947,7 +947,8 @@ async function executeCommandPipeline(prompt) {
         body: JSON.stringify({ open_native: true })
       }).then(r => r.json()).then(data => {
         if (data.status === 'success') {
-          finish(`Ecco la foto ${data.filename || ''} aperta a schermo, Badr.`, 'JEV VISION 🖼️');
+          if (window.openPhotoStudioModal) window.openPhotoStudioModal(data);
+          finish(data.spoken_response || `Ecco la foto ${data.filename || ''} aperta a schermo, Badr.`, 'JEV VISION 🖼️');
         } else {
           finish('Nessuna foto recente trovata su disco, Badr.', 'JEV VISION 🖼️');
         }
@@ -1393,7 +1394,96 @@ window.handleAiUiAction = function(uiAction) {
     window.openCameraVisionModal();
   } else if (uiAction.action === 'close_camera') {
     window.closeCameraVisionModal();
+  } else if (uiAction.action === 'open_photo_studio') {
+    window.openPhotoStudioModal(uiAction);
   }
+};
+
+// ── PHOTO STUDIO & ADVANCED VISION AI FRONTEND CONTROLS ───────────
+let _currentPhotoPath = '';
+let _currentPhotoZoom = 1.0;
+
+window.openPhotoStudioModal = function(data = {}) {
+  const modal = document.getElementById('modal-photo-studio');
+  const img = document.getElementById('photo-studio-img');
+  const title = document.getElementById('photo-studio-title');
+  const feedback = document.getElementById('photo-studio-feedback');
+  if (!modal || !img) return;
+
+  _currentPhotoPath = data.path || '';
+  _currentPhotoZoom = 1.0;
+  window.resetPhotoZoom();
+
+  if (title) title.textContent = `EBJ PHOTO STUDIO · ${data.filename || 'Foto'}`;
+  if (data.base64_preview) {
+    img.src = `data:image/png;base64,${data.base64_preview}`;
+  } else if (data.path) {
+    img.src = `/api/system/show-photo?path=${encodeURIComponent(data.path)}&t=${Date.now()}`;
+  }
+
+  if (feedback) feedback.textContent = data.comment || 'Foto pronta per Zoom, Rimozione Sfondo o Riconoscimento Corpo.';
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closePhotoStudioModal = function() {
+  const modal = document.getElementById('modal-photo-studio');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+};
+
+window.adjustPhotoZoom = function(delta) {
+  _currentPhotoZoom = Math.max(0.5, Math.min(3.5, _currentPhotoZoom + delta));
+  const container = document.getElementById('photo-container');
+  const lvl = document.getElementById('photo-zoom-level');
+  if (container) container.style.transform = `scale(${_currentPhotoZoom.toFixed(2)})`;
+  if (lvl) lvl.textContent = `${Math.round(_currentPhotoZoom * 100)}%`;
+};
+
+window.resetPhotoZoom = function() {
+  _currentPhotoZoom = 1.0;
+  const container = document.getElementById('photo-container');
+  const lvl = document.getElementById('photo-zoom-level');
+  if (container) container.style.transform = 'scale(1)';
+  if (lvl) lvl.textContent = '100%';
+};
+
+window.triggerPhotoStudioAction = async function(actionName) {
+  const feedback = document.getElementById('photo-studio-feedback');
+  const img = document.getElementById('photo-studio-img');
+  if (feedback) feedback.textContent = `⚡ Elaborazione neurale "${actionName}" in corso...`;
+
+  try {
+    const res = await fetch('/api/photo/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: actionName, query: actionName, path: _currentPhotoPath })
+    });
+    const d = await res.json();
+    if (d.status === 'success') {
+      if (d.base64_preview && img) {
+        img.src = `data:image/png;base64,${d.base64_preview}`;
+      }
+      if (feedback) feedback.textContent = d.spoken_response || d.message || 'Azione completata.';
+      if (d.spoken_response && window.playSpeechAudio) {
+        window.playSpeechAudio(d.spoken_response);
+      }
+    } else {
+      if (feedback) feedback.textContent = d.message || 'Errore durante l\'elaborazione.';
+    }
+  } catch (err) {
+    if (feedback) feedback.textContent = 'Errore di connessione: ' + err.message;
+  }
+};
+
+window.openPhotoNativeViewer = function() {
+  fetch('/api/system/show-photo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: _currentPhotoPath, open_native: true })
+  });
 };
 
 window.quickCalculateCargo = function(mq) {
