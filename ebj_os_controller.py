@@ -312,6 +312,22 @@ def organize_desktop_and_downloads() -> Dict[str, Any]:
                     stats["details"].append(f"Desktop: {fname} -> {target_folder}")
                 except Exception:
                     pass
+
+        # 1.1 RAGGRUPPAMENTO CARTELLE SPARSE DEL DESKTOP IN _Cartelle_Progetti_e_Dati
+        folders_archive = os.path.join(desktop, "_Cartelle_Progetti_e_Dati")
+        os.makedirs(folders_archive, exist_ok=True)
+        loose_dirs = [".dist", "6595", "Dati-Modelli", "EAC_Setup", "FOTO_PORTE_MARKETPLACE", "U17E80108A", "cisei-eb", "hub"]
+        for ld in loose_dirs:
+            ld_path = os.path.join(desktop, ld)
+            if os.path.exists(ld_path) and os.path.isdir(ld_path):
+                dest_ld = os.path.join(folders_archive, ld)
+                if not os.path.exists(dest_ld):
+                    try:
+                        shutil.move(ld_path, dest_ld)
+                        stats["desktop_moved"] += 1
+                        stats["details"].append(f"Desktop: Cartella '{ld}' -> _Cartelle_Progetti_e_Dati")
+                    except Exception:
+                        pass
     except Exception as e:
         stats["desktop_error"] = str(e)
 
