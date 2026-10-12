@@ -137,6 +137,33 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
     """
     cmd = user_command.lower().strip()
     
+    # ── JEV RUST NATIVE LINGUISTIC & INTENT CLASSIFICATION (< 1ms) ───
+    rust_meta = {}
+    try:
+        from ebj_rust_linguistic import analyze_linguistic_intent
+        rust_meta = analyze_linguistic_intent(user_command)
+        if rust_meta.get("barge_in_triggered"):
+            return {
+                "status": "interrupted",
+                "action": "barge_in_stop",
+                "spoken_response": "Mi fermo subito, Badr! Ti ascolto, dimmi pure.",
+                "engine": "JEV_Rust_Native_Linguistic_Reflex",
+                "latency_ms": rust_meta.get("latency_ms", 0.1)
+            }
+        # Se Badr si rivolge in Darija marocchino
+        if rust_meta.get("is_darija") and any(w in cmd for w in ["salam", "kidayr", "labas", "chouf", "khoya", "wesh"]):
+            return {
+                "status": "success",
+                "action": "darija_greeting",
+                "spoken_response": "Marhaba a khoya Badr! Kolchi bikhir, ana hna m3ak f l-khedma w l-workstation dialek wajda.",
+                "voice": "ar-MA-JamalNeural",
+                "language": "ar-ma",
+                "engine": "JEV_Rust_Darija_Native_Core",
+                "latency_ms": rust_meta.get("latency_ms", 0.5)
+            }
+    except Exception:
+        pass
+
     # 0. Intercettazione Istantanea Barge-In (Stop, Fermo, Aspetta, Ascolta)
     if any(k == cmd or cmd.startswith(k + " ") or cmd.endswith(" " + k) for k in [
         "stop", "fermo", "fermati", "basta", "aspetta", "taci", "silenzio", "calma", "ascolta", "ascoltami"
@@ -340,13 +367,19 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
         except Exception as e:
             return {"status": "error", "message": str(e), "spoken_response": f"Errore nell'invio dell'email: {e}", "engine": "JEV_Native_Win32"}
         
-    # 2. Classificazione intent ad alta velocità con CLM (Tier 1)
+    # 2. Classificazione intent ad alta velocità con Rust Native CLM (Tier 1 < 1ms)
     t0 = time.perf_counter()
-    clm_result = classify_action_intent(user_command)
-    clm_latency = (time.perf_counter() - t0) * 1000.0
-    
-    intent = clm_result.get("intent", "general")
-    confidence = clm_result.get("confidence", 0.0)
+    if rust_meta and rust_meta.get("intent") and rust_meta.get("intent") != "GENERAL_CONVERSATION":
+        intent = rust_meta.get("intent")
+        confidence = rust_meta.get("intent_confidence", 0.95)
+        clm_latency = rust_meta.get("latency_ms", 0.1)
+        clm_engine = "JEV_Rust_CLM_Native_Core"
+    else:
+        clm_result = classify_action_intent(user_command)
+        clm_latency = (time.perf_counter() - t0) * 1000.0
+        intent = clm_result.get("intent", "general")
+        confidence = clm_result.get("confidence", 0.0)
+        clm_engine = "CLM_Contrastive_System_One"
     
     # Se il task richiede ragionamento generativo pesante (Tier 2)
     needs_generative_llm = any(k in cmd for k in [
@@ -367,10 +400,11 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
     else:
         return {
             "tier": 1,
-            "engine": "CLM_Contrastive_System_One",
+            "engine": clm_engine,
             "intent": intent,
             "confidence": confidence,
-            "action_decision": clm_result.get("action", intent),
+            "action_decision": intent,
+            "language_detected": rust_meta.get("detected_language", "it") if rust_meta else "it",
             "clm_latency_ms": round(clm_latency, 2)
         }
 

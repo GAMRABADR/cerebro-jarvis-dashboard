@@ -346,12 +346,44 @@ SUPPORTED_LANGUAGES = {
         "ask_which": "Sigurisht zotëri. Cilën gjuhë dëshironi të zgjidhni ndërmjet: italisht, frëngjisht, anglisht, spanjisht, peruane, rusisht, shqip, arabisht apo kinezisht?"
     },
     "ar": {
-        "label": "العربية",
+        "label": "العربية (Standard)",
         "locale": "ar-SA",
         "voice": "ar-SA-HamedNeural",
         "alt_voice": "ar-SA-ZariyahNeural",
         "ack_switch": "نعم يا سيدي، سأبدأ على الفور. تم ضبط اللغة إلى العربية. جميع أنظمة ستارك جاهزة وفي خدمتك.",
         "ask_which": "بالتأكيد يا سيدي. ما هي اللغة التي تريدني أن أعتمدها من بين: الإيطالية، الفرنسية، الإنجليزية، الإسبانية، البيروفية، الروسية، الألبانية، العربية، أو الصينية؟"
+    },
+    "ar-ma": {
+        "label": "الدارجة المغربية (Darija)",
+        "locale": "ar-MA",
+        "voice": "ar-MA-JamalNeural",
+        "alt_voice": "ar-MA-MounaNeural",
+        "ack_switch": "واخا خويا بدر، صافي بدلت اللغة للدارجة المغربية. كولشي واجد و أنا فالخدمة ديالك.",
+        "ask_which": "مرحبا خويا بدر، آشنو هي اللغة اللي بغيتي نهضر بيها معاك؟"
+    },
+    "de": {
+        "label": "Deutsch",
+        "locale": "de-DE",
+        "voice": "de-DE-ConradNeural",
+        "alt_voice": "de-DE-KatjaNeural",
+        "ack_switch": "Jawohl mein Herr, Sprache auf Deutsch umgestellt. Alle Systeme sind einsatzbereit.",
+        "ask_which": "Gewiss mein Herr. Welche Sprache bevorzugen Sie?"
+    },
+    "pt": {
+        "label": "Português",
+        "locale": "pt-PT",
+        "voice": "pt-PT-DuarteNeural",
+        "alt_voice": "pt-BR-AntonioNeural",
+        "ack_switch": "Sim senhor, idioma alterado para português. Todos os sistemas prontos para operar.",
+        "ask_which": "Com certeza senhor. Qual idioma deseja utilizar?"
+    },
+    "ja": {
+        "label": "日本語",
+        "locale": "ja-JP",
+        "voice": "ja-JP-KeitaNeural",
+        "alt_voice": "ja-JP-NanamiNeural",
+        "ack_switch": "はい、承知いたしました。言語を日本語に切り替えました。すべてのシステムが準備完了です。",
+        "ask_which": "かしこまりました。どちらの言語をお選びになりますか？"
     },
     "zh": {
         "label": "中文 (Mandarin)",
@@ -410,15 +442,26 @@ def detect_and_handle_language_switch(prompt_text):
     if is_which_lang:
         cur = get_active_language()
         cur_info = SUPPORTED_LANGUAGES.get(cur, SUPPORTED_LANGUAGES["it"])
-        msg = f"Al momento la lingua attiva è {cur_info['label']}, signore. Posso comunicare fluentemente in: italiano, francese, inglese, spagnolo, peruviano, russo, albanese, arabo e cinese. Mi basta un suo comando per cambiare."
+        msg = f"Al momento la lingua attiva è {cur_info['label']}, signore. Posso comunicare fluentemente in: italiano, arabo marocchino (Darija), arabo standard, francese, inglese, spagnolo, peruviano, tedesco, portoghese, russo, albanese, giapponese e cinese. Mi basta un suo comando per cambiare."
         return True, msg, cur
 
     if not is_change_cmd:
+        # Se non è un comando esplicito di cambio lingua, lascia fluire
         return False, "", ""
         
-    # Verifica lingua richiesta
+    # Verifica lingua richiesta con precisione neurale e Rust support
     target = None
-    if any(k in p for k in ["italiano", "italiana", "in italia"]):
+    if any(k in p for k in ["darija", "marocchino", "marocco", "arabo marocchino"]):
+        target = "ar-ma"
+    elif any(k in p for k in ["arabo", "araba", "arabic"]):
+        target = "ar"
+    elif any(k in p for k in ["tedesco", "tedesca", "deutsch", "germania"]):
+        target = "de"
+    elif any(k in p for k in ["portoghese", "portogallo", "portugues", "brasiliano"]):
+        target = "pt"
+    elif any(k in p for k in ["giapponese", "giappone", "japanese", "nihongo"]):
+        target = "ja"
+    elif any(k in p for k in ["italiano", "italiana", "in italia"]):
         target = "it"
     elif any(k in p for k in ["francese", "francia", "francais", "français"]):
         target = "fr"
@@ -432,8 +475,6 @@ def detect_and_handle_language_switch(prompt_text):
         target = "ru"
     elif any(k in p for k in ["albanese", "albania", "shqip"]):
         target = "sq"
-    elif any(k in p for k in ["arabo", "araba", "arabic", "marocchino"]):
-        target = "ar"
     elif any(k in p for k in ["cinese", "mandarino", "chinese"]):
         target = "zh"
         
@@ -4158,10 +4199,22 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
     # Rilevamento automatico alfabeti/caratteri per selezione vocale istantanea
     if re.search(r'[\u0400-\u04FF]', clean_text) or voice_mode in ("ru", "russian", "russo"):
         active_lang = "ru"
+    elif voice_mode in ("ar-ma", "darija", "marocchino", "arabo_marocchino"):
+        active_lang = "ar-ma"
     elif re.search(r'[\u0600-\u06FF]', clean_text) or voice_mode in ("ar", "arabic", "arabo"):
-        active_lang = "ar"
+        # Se contiene termini Darija
+        if any(w in clean_text for w in ["ديال", "بزاف", "مزيان", "واخا", "دابا", "صافي", "خويا"]):
+            active_lang = "ar-ma"
+        else:
+            active_lang = "ar"
+    elif re.search(r'[\u3040-\u30FF]', clean_text) or voice_mode in ("ja", "japanese", "giapponese"):
+        active_lang = "ja"
     elif re.search(r'[\u4E00-\u9FFF]', clean_text) or voice_mode in ("zh", "chinese", "cinese"):
         active_lang = "zh"
+    elif voice_mode in ("de", "german", "tedesco", "deutsch"):
+        active_lang = "de"
+    elif voice_mode in ("pt", "portuguese", "portoghese"):
+        active_lang = "pt"
     elif voice_mode in ("sq", "albanian", "albanese"):
         active_lang = "sq"
     elif voice_mode in ("es-pe", "peru", "peruviano"):
@@ -4174,6 +4227,16 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
         active_lang = "en"
     elif voice_mode in ("it", "italian", "italiano"):
         active_lang = "it"
+    else:
+        try:
+            from ebj_rust_linguistic import analyze_linguistic_intent
+            rust_ling = analyze_linguistic_intent(clean_text)
+            if rust_ling.get("confidence", 0) > 0.85:
+                detected = rust_ling.get("detected_language")
+                if detected in SUPPORTED_LANGUAGES:
+                    active_lang = detected
+        except Exception:
+            pass
 
     lang_cfg = SUPPORTED_LANGUAGES.get(active_lang, SUPPORTED_LANGUAGES["it"])
     voice_fallbacks = [lang_cfg["voice"], lang_cfg.get("alt_voice"), "it-IT-GiuseppeMultilingualNeural"]
