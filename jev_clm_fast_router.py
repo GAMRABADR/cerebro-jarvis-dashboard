@@ -161,6 +161,37 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             return {"status": "success", "disks": get_disk_health(), "engine": "JEV_Rust_Native_Disk_Sentinel"}
         except Exception as e:
             return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    # Comandi di alimentazione vocale (Power Management)
+    if any(k in cmd for k in ["spegni pc", "spegni il pc", "spegni computer", "arresta sistema", "chiudi il pc"]):
+        try:
+            from ebj_pc_power_manager import shutdown_pc
+            res = shutdown_pc(delay_seconds=10, reason="Spegnimento vocale EBJ")
+            res["spoken_response"] = "Ricevuto Badr. Avvio la procedura di arresto del sistema. Il PC si spegnerà tra 10 secondi."
+            res["engine"] = "JEV_Native_Power_Manager"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    if any(k in cmd for k in ["riavvia pc", "riavvia il pc", "riavvia computer"]):
+        try:
+            from ebj_pc_power_manager import restart_pc
+            res = restart_pc(delay_seconds=10, reason="Riavvio vocale EBJ")
+            res["spoken_response"] = "Riavvio del PC programmato tra 10 secondi, Badr."
+            res["engine"] = "JEV_Native_Power_Manager"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+
+    if any(k in cmd for k in ["annulla spegnimento", "annulla riavvio", "ferma spegnimento"]):
+        try:
+            from ebj_pc_power_manager import abort_power_action
+            res = abort_power_action()
+            res["spoken_response"] = "Spegnimento annullato con successo, Badr."
+            res["engine"] = "JEV_Native_Power_Manager"
+            return res
+        except Exception as e:
+            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
         
     # 2. Classificazione intent ad alta velocità con CLM (Tier 1)
     t0 = time.perf_counter()

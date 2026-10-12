@@ -156,6 +156,11 @@
       <button class="view-switch-btn" id="btn-toggle-cmd-palette" onclick="openCommandPalette()" style="border-color:#ffd700; color:#ffd700; font-weight:bold; background:rgba(255,215,0,0.08);">
         <i data-lucide="command" class="lucide-icon text-amber"></i>COMMANDS [Ctrl+K]
       </button>
+
+      <!-- TELEMETRIA & ACCENSIONE WORKSTATION MOBILE -->
+      <button class="view-switch-btn" id="btn-pc-power-nav" onclick="openPcPowerModal()" style="border-color:#00f0ff; color:#00f0ff; font-weight:bold;">
+        <span class="btn-dot" id="pc-status-dot-nav" style="background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span><i data-lucide="monitor" class="lucide-icon text-cyan"></i>DESKTOP-SJR1JS8 [<span id="pc-status-txt-nav">ONLINE</span>]
+      </button>
     </div>
 
     <div class="mv-right">
@@ -192,6 +197,11 @@
       </button>
       <button class="vad-toggle-pill" id="btn-tg-guard-top" onclick="openTelegramGuardModal()" title="🛡️ TELEGRAM GUARD: Notifiche disattivate di default (Zero battery drain, max 5/gg o su richiesta vocale)" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.08);">
         <span class="vad-dot" id="dot-tg-guard-top" style="background:#38bdf8; box-shadow:0 0 8px #38bdf8;"></span><i data-lucide="send" class="lucide-icon text-cyan" style="margin-right:2px;"></i>TG: <strong id="lbl-tg-guard-top">SILENT</strong>
+      </button>
+      <button class="vad-toggle-pill pc-power-pill" id="btn-pc-power-top" onclick="openPcPowerModal()" title="🖥️ DESKTOP-SJR1JS8: Telemetria e Controllo Alimentazione (WoL, Riavvio, Spegnimento)" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.06);">
+        <span class="pc-dot online" id="pc-status-dot-top"></span>
+        <i data-lucide="monitor" class="lucide-icon text-cyan" style="width:13px;height:13px;margin-right:2px;"></i>
+        <span class="pc-title-txt">DESKTOP-SJR1JS8: <strong id="pc-status-txt-top" style="color:#00ff9f;">ONLINE</strong></span>
       </button>
       <span class="status-indicator live"></span>
       <span class="mv-stat" id="master-status">ONLINE 144 FPS</span>
@@ -3129,6 +3139,79 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <button class="ring-cancel-btn jarvis-close-btn" onclick="closeCameraVisionModal()">✕ CHIUDI</button>
       </div>
+    </div>
+  </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: WORKSTATION DESKTOP-SJR1JS8 POWER & TELEMETRY
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="modal-pc-power" class="pc-power-modal-backdrop" style="display:none;" onclick="if(event.target===this)closePcPowerModal()">
+  <div class="pc-power-modal-box">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="pc-dot online" id="pc-modal-dot" style="width:12px; height:12px;"></span>
+        <div>
+          <div style="font-family:var(--font-hud); font-size:1.05rem; font-weight:900; color:#00f0ff; letter-spacing:1px; display:flex; align-items:center; gap:8px;">
+            <span>DESKTOP-SJR1JS8</span>
+          </div>
+          <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-mono);">
+            STATO: <strong id="pc-modal-status-text" style="color:#00ff9f;">ONLINE</strong> · <span id="pc-modal-heartbeat">Connesso</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="closePcPowerModal()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#94a3b8; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">✕</button>
+    </div>
+
+    <!-- Hardware & Network Telemetry Grid -->
+    <div class="pc-telemetry-grid">
+      <div class="pc-telemetry-item">
+        <span class="pc-telemetry-label">CPU PRINCIPALE</span>
+        <span class="pc-telemetry-val" id="pc-spec-cpu">Ryzen 7 5700X3D (8C/16T)</span>
+      </div>
+      <div class="pc-telemetry-item">
+        <span class="pc-telemetry-label">RAM FISICA</span>
+        <span class="pc-telemetry-val" id="pc-spec-ram">64 GB DDR4</span>
+      </div>
+      <div class="pc-telemetry-item">
+        <span class="pc-telemetry-label">DUAL GPU</span>
+        <span class="pc-telemetry-val" id="pc-spec-gpu">RTX 4070 + GTX 1660</span>
+      </div>
+      <div class="pc-telemetry-item">
+        <span class="pc-telemetry-label">IP LOCALE</span>
+        <span class="pc-telemetry-val" id="pc-spec-ip">192.168.0.100</span>
+      </div>
+      <div class="pc-telemetry-item" style="grid-column: span 2;">
+        <span class="pc-telemetry-label">MAC ADDRESS & SCHEDA (WOL ATTIVA)</span>
+        <span class="pc-telemetry-val" style="color:#38bdf8;" id="pc-spec-mac">Intel I225-V 2.5G · 08-BF-B8-73-99-3D</span>
+      </div>
+    </div>
+
+    <!-- Actions Grid -->
+    <div class="pc-power-actions-grid">
+      <button class="pc-power-btn wake" id="btn-pc-act-wake" onclick="triggerPcPower('wake')" type="button">
+        <i data-lucide="zap" class="lucide-icon text-amber"></i>
+        <span>⚡ SVEGLIA DA REMOTO (WoL)</span>
+      </button>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <button class="pc-power-btn reboot" id="btn-pc-act-reboot" onclick="triggerPcPower('reboot')" type="button">
+          <i data-lucide="rotate-cw" class="lucide-icon text-cyan"></i>
+          <span>🔄 RIAVVIA</span>
+        </button>
+        <button class="pc-power-btn shutdown" id="btn-pc-act-shutdown" onclick="triggerPcPower('shutdown')" type="button">
+          <i data-lucide="power" class="lucide-icon text-pink"></i>
+          <span>🛑 SPEGNI</span>
+        </button>
+      </div>
+
+      <button class="pc-power-btn abort" id="btn-pc-act-abort" onclick="triggerPcPower('abort')" style="display:none;" type="button">
+        <i data-lucide="shield-alert" class="lucide-icon text-emerald"></i>
+        <span>⚠️ ANNULLA SPEGNIMENTO O RIAVVIO</span>
+      </button>
+    </div>
+
+    <!-- Feedback Message Box -->
+    <div id="pc-action-msg" class="pc-action-msg-box" style="display:none; background:rgba(0,240,255,0.08); border:1px solid #00f0ff; color:#00f0ff;">
     </div>
   </div>
 </div>

@@ -4213,6 +4213,14 @@ class JarvisHandler(BaseHTTPRequestHandler):
             })
             return
 
+        if clean_path in ('/api/pc/status', '/api/pc/health'):
+            try:
+                from ebj_pc_power_manager import get_system_power_status
+                self.send_json(get_system_power_status())
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
         if clean_path == '/api/tts':
             try:
                 # Niente `import urllib.parse` qui: un import locale rende `urllib` un nome
@@ -5999,6 +6007,25 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 from jev_clm_fast_router import dispatch_operation
                 cmd = data.get('command', '')
                 res = dispatch_operation(cmd, context=data.get('context'))
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if self.path in ('/api/pc/power', '/api/pc/power/'):
+            try:
+                from ebj_pc_power_manager import shutdown_pc, restart_pc, abort_power_action, send_wake_on_lan
+                action = data.get('action', '').lower().strip()
+                if action == 'shutdown':
+                    res = shutdown_pc(delay_seconds=data.get('delay', 5), reason=data.get('reason', 'Spegnimento remoto da cellulare EBJ'))
+                elif action in ('reboot', 'restart'):
+                    res = restart_pc(delay_seconds=data.get('delay', 5), reason=data.get('reason', 'Riavvio remoto da cellulare EBJ'))
+                elif action in ('abort', 'cancel'):
+                    res = abort_power_action()
+                elif action in ('wake', 'wol'):
+                    res = send_wake_on_lan(mac=data.get('mac', '08-BF-B8-73-99-3D'))
+                else:
+                    res = {"status": "error", "message": f"Azione non valida: {action}"}
                 self.send_json(res)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)

@@ -4137,3 +4137,196 @@ body.stark-hud-mode .stark-quick-dock {
   transform: translateY(-2px);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   WORKSTATION DESKTOP-SJR1JS8 REMOTE POWER & TELEMETRY
+   ═══════════════════════════════════════════════════════════════════ */
+.pc-power-pill {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.pc-power-pill:hover {
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.pc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.pc-dot.online {
+  background: #00ff9f;
+  box-shadow: 0 0 10px #00ff9f;
+  animation: pcPulseGreen 2s infinite ease-in-out;
+}
+
+.pc-dot.offline {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pcPulseRed 1.5s infinite ease-in-out;
+}
+
+@keyframes pcPulseGreen {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@keyframes pcPulseRed {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); }
+}
+
+.pc-power-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 20, 0.88);
+  backdrop-filter: blur(14px);
+  z-index: 10010;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.pc-power-modal-box {
+  background: linear-gradient(135deg, rgba(3, 14, 30, 0.98), rgba(1, 8, 18, 0.98));
+  border: 2px solid #00f0ff;
+  border-radius: 18px;
+  max-width: 480px;
+  width: 100%;
+  padding: 22px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.35), 0 20px 50px rgba(0, 0, 0, 0.9);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pc-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.pc-telemetry-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pc-telemetry-label {
+  color: #64748b;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pc-telemetry-val {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.pc-power-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.pc-power-btn {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
+.pc-power-btn.wake {
+  border-color: #f59e0b;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.08);
+}
+.pc-power-btn.wake:hover {
+  background: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+}
+
+.pc-power-btn.reboot {
+  border-color: #00f0ff;
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.08);
+}
+.pc-power-btn.reboot:hover {
+  background: rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.pc-power-btn.shutdown {
+  border-color: #ef4444;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+}
+.pc-power-btn.shutdown:hover {
+  background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.pc-power-btn.abort {
+  border-color: #10b981;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  animation: abortGlow 1s infinite alternate;
+}
+@keyframes abortGlow {
+  from { box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+  to { box-shadow: 0 0 22px rgba(16, 185, 129, 0.7); }
+}
+
+.pc-action-msg-box {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+

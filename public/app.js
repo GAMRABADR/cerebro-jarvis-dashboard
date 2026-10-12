@@ -4742,5 +4742,166 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  WORKSTATION DESKTOP-SJR1JS8 REMOTE POWER & TELEMETRY CONTROLLER
+// ═══════════════════════════════════════════════════════════════════
+(function initPcPowerManager() {
+  let pcPollTimer = null;
+  let pcLastStatus = null;
+
+  window.openPcPowerModal = function() {
+    const modal = document.getElementById('modal-pc-power');
+    if (modal) {
+      modal.style.display = 'flex';
+      refreshPcStatus();
+    }
+    if (window.lucide) {
+      setTimeout(() => lucide.createIcons(), 50);
+    }
+  };
+
+  window.closePcPowerModal = function() {
+    const modal = document.getElementById('modal-pc-power');
+    if (modal) modal.style.display = 'none';
+  };
+
+  async function refreshPcStatus() {
+    try {
+      const res = await fetch('/api/pc/status', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      pcLastStatus = data;
+      updatePcUI(data, true);
+    } catch (err) {
+      console.warn('[PC-POWER] Polling error:', err);
+      updatePcUI({ status: 'offline', error: err.message }, false);
+    }
+  }
+
+  function updatePcUI(data, isOnline) {
+    const statusUpper = String(data.status || '').toUpperCase();
+    const isUp = isOnline && (statusUpper === 'ONLINE' || !data.error);
+
+    // Update status dot & text in top bar
+    const dotTop = document.getElementById('pc-status-dot-top');
+    const txtTop = document.getElementById('pc-status-txt-top');
+    if (dotTop) {
+      dotTop.className = 'pc-dot ' + (isUp ? 'online' : 'offline');
+    }
+    if (txtTop) {
+      txtTop.textContent = isUp ? 'ONLINE' : 'OFFLINE';
+      txtTop.style.color = isUp ? '#00ff9f' : '#ef4444';
+    }
+
+    // Update status in nav drawer
+    const dotNav = document.getElementById('pc-status-dot-nav');
+    const txtNav = document.getElementById('pc-status-txt-nav');
+    if (dotNav) {
+      dotNav.style.background = isUp ? '#00ff9f' : '#ef4444';
+      dotNav.style.boxShadow = isUp ? '0 0 8px #00ff9f' : '0 0 8px #ef4444';
+    }
+    if (txtNav) {
+      txtNav.textContent = isUp ? 'ONLINE' : 'OFFLINE';
+      txtNav.style.color = isUp ? '#00ff9f' : '#ef4444';
+    }
+
+    // Update Modal
+    const modalDot = document.getElementById('pc-modal-dot');
+    const modalStatus = document.getElementById('pc-modal-status-text');
+    const modalHb = document.getElementById('pc-modal-heartbeat');
+    if (modalDot) modalDot.className = 'pc-dot ' + (isUp ? 'online' : 'offline');
+    if (modalStatus) {
+      modalStatus.textContent = isUp ? 'ONLINE' : 'OFFLINE';
+      modalStatus.style.color = isUp ? '#00ff9f' : '#ef4444';
+    }
+    if (modalHb) {
+      modalHb.textContent = isUp ? ('Uptime: ' + (data.uptime || 'Attivo') + ' · Sub-5ms') : 'Host non raggiungibile';
+    }
+
+    const cpuVal = data.cpu_name || data.cpu;
+    if (cpuVal) {
+      const cpuEl = document.getElementById('pc-spec-cpu');
+      if (cpuEl) cpuEl.textContent = cpuVal;
+    }
+    if (data.ram_total_gb || data.ram) {
+      const ramEl = document.getElementById('pc-spec-ram');
+      if (ramEl) {
+        ramEl.textContent = data.ram_total_gb ? (data.ram_total_gb + ' GB (' + (data.ram_used_gb || '') + ' GB usati)') : data.ram;
+      }
+    }
+    const gpuVal = Array.isArray(data.gpus) ? data.gpus.join(' + ') : (data.gpu || null);
+    if (gpuVal) {
+      const gpuEl = document.getElementById('pc-spec-gpu');
+      if (gpuEl) gpuEl.textContent = gpuVal;
+    }
+    const ipVal = data.local_ip || data.ip;
+    if (ipVal) {
+      const ipEl = document.getElementById('pc-spec-ip');
+      if (ipEl) ipEl.textContent = ipVal;
+    }
+    const macVal = data.mac_address || data.mac;
+    if (macVal) {
+      const macEl = document.getElementById('pc-spec-mac');
+      if (macEl) macEl.textContent = (data.nic_name ? data.nic_name + ' · ' : 'Intel I225-V · ') + macVal;
+    }
+
+    // Abort button visibility
+    const abortBtn = document.getElementById('btn-pc-act-abort');
+    if (abortBtn) {
+      if (data.pending_action) {
+        abortBtn.style.display = 'flex';
+      } else {
+        abortBtn.style.display = 'none';
+      }
+    }
+  }
+
+  window.triggerPcPower = async function(action) {
+    const msgBox = document.getElementById('pc-action-msg');
+    const showMsg = (text, isError = false) => {
+      if (!msgBox) return;
+      msgBox.style.display = 'block';
+      msgBox.style.background = isError ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0, 240, 255, 0.15)';
+      msgBox.style.borderColor = isError ? '#ef4444' : '#00f0ff';
+      msgBox.style.color = isError ? '#f87171' : '#00f0ff';
+      msgBox.innerHTML = text;
+    };
+
+    if (action === 'shutdown') {
+      const ok = confirm("ATTENZIONE: Sei sicuro di voler SPEGNERE la workstation DESKTOP-SJR1JS8?\n(Il comando avvierà un conto alla rovescia di 10 secondi per consentire l'eventuale annullamento)");
+      if (!ok) return;
+    } else if (action === 'reboot') {
+      const ok = confirm("ATTENZIONE: Sei sicuro di voler RIAVVIARE la workstation DESKTOP-SJR1JS8?");
+      if (!ok) return;
+    }
+
+    showMsg('Invio comando in corso...', false);
+
+    try {
+      const res = await fetch('/api/pc/power', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action })
+      });
+      const resData = await res.json();
+      if (!res.ok || resData.error) {
+        showMsg('❌ Errore: ' + (resData.error || 'Operazione fallita'), true);
+      } else {
+        showMsg('✅ ' + (resData.message || 'Comando eseguito con successo!'), false);
+        setTimeout(refreshPcStatus, 1500);
+      }
+    } catch (err) {
+      showMsg('❌ Errore di rete: ' + err.message, true);
+    }
+  };
+
+  // Start initial polling after 1.5s, then every 8s
+  setTimeout(() => {
+    refreshPcStatus();
+    pcPollTimer = setInterval(refreshPcStatus, 8000);
+  }, 1500);
+})();
+
+
 
 
