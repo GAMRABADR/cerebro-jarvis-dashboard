@@ -504,7 +504,7 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "MARKETPLACE_APPRAISAL", "MARKETPLACE", "JEV_APPRAISAL"
     elif any(k in p_lower for k in ["pubblica annuncio", "pubblica su facebook", "metti su marketplace"]):
         matched, intent, domain, action = True, "MARKETPLACE_PUBLISH", "MARKETPLACE", "AUTO_PUBLISH"
-    elif any(k in p_lower for k in ["sposta ", "muovi ", "trasferisci ", "copia file", "duplica file", "crea cartella", "nuova cartella", "elimina ", "cancella ", "cestina", "svuota cestino", "svuota il cestino", "cerca il file", "cerca file", "trova il file", "trova file", "cosa c'è sul desktop", "cosa c'è nei download", "apri la cartella", "apri cartella", "apri il file", "apri file"]):
+    elif any(k in p_lower for k in ["sposta ", "muovi ", "trasferisci ", "copia file", "duplica file", "crea cartella", "nuova cartella", "elimina ", "cancella ", "cestina", "svuota cestino", "svuota il cestino", "cerca il file", "cerca file", "trova il file", "trova file", "cosa c'è sul desktop", "cosa c'è nei download", "apri la cartella", "apri cartella", "apri il file", "apri file", "ordina", "ordinami", "organizza", "pulisci desktop", "pulisci download"]):
         matched, intent, domain, action = True, "OS_FILE_MANIPULATION", "OS_FILES", "FILE_EXECUTE"
     elif any(k in p_lower for k in ["porta in primo piano", "metti davanti", "scrivi ", "digita ", "incolla", "premi invio", "leggi gli appunti", "copia negli appunti"]):
         matched, intent, domain, action = True, "OS_INTERACTION", "OS_INPUT", "INPUT_EXECUTE"

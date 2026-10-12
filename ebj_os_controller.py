@@ -240,6 +240,118 @@ def create_directory(path: str) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
 
+def organize_desktop_and_downloads() -> Dict[str, Any]:
+    """
+    Riorganizza in modo pulito e sicuro Desktop e cartella Download di Badr:
+    - Conserva tutti i collegamenti (.lnk, .url) ed alberi esistenti sul Desktop.
+    - Raggruppa i file sciolti in cartelle tematiche dedicate.
+    - Zero sovrascritture o perdite di dati.
+    """
+    desktop = _WELL_KNOWN_DIRS["desktop"]
+    downloads = _WELL_KNOWN_DIRS["downloads"]
+
+    stats = {
+        "desktop_moved": 0,
+        "downloads_moved": 0,
+        "details": []
+    }
+
+    # 1. ORGANIZZAZIONE DESKTOP
+    desktop_rules = {
+        "_Documenti_e_PDF": [".pdf", ".xlsx", ".xls", ".docx", ".doc", ".csv"],
+        "_Note_e_Testi": [".txt", ".ini", ".log", ".conf"],
+        "_Screenshot_e_Media": [".png", ".jpg", ".jpeg", ".webp", ".svg", ".bmp"],
+        "_Archivi_e_Setup": [".zip", ".rar", ".7z", ".tar", ".gz", ".bat", ".py", ".ps1"]
+    }
+
+    protected_desktop = [
+        "desktop.ini", ".dist", ".sixth", "6595", "Dati-Modelli", "EAC_Setup",
+        "FOTO_PORTE_MARKETPLACE", "Icons", "Programmi", "RevoUninstaller_Portable",
+        "U17E80108A", "cisei-eb", "hub", "steam", "LRTBDR88A07Z330L"
+    ]
+
+    for cat_dir, exts in desktop_rules.items():
+        os.makedirs(os.path.join(desktop, cat_dir), exist_ok=True)
+
+    try:
+        for fname in os.listdir(desktop):
+            fpath = os.path.join(desktop, fname)
+            if os.path.isdir(fpath) or fname in protected_desktop or fname.startswith("_"):
+                continue
+            fext = os.path.splitext(fname)[1].lower()
+            if fext in [".lnk", ".url"]:
+                # Non toccare i collegamenti delle app
+                continue
+
+            target_folder = None
+            for cat_dir, exts in desktop_rules.items():
+                if fext in exts:
+                    target_folder = cat_dir
+                    break
+
+            if target_folder:
+                dest = os.path.join(desktop, target_folder, fname)
+                if os.path.exists(dest):
+                    base, ext = os.path.splitext(fname)
+                    dest = os.path.join(desktop, target_folder, f"{base}_{int(time.time())}{ext}")
+                try:
+                    shutil.move(fpath, dest)
+                    stats["desktop_moved"] += 1
+                    stats["details"].append(f"Desktop: {fname} -> {target_folder}")
+                except Exception:
+                    pass
+    except Exception as e:
+        stats["desktop_error"] = str(e)
+
+    # 2. ORGANIZZAZIONE DOWNLOADS
+    downloads_rules = {
+        "_PDF_e_Documenti": [".pdf", ".csv", ".xlsx", ".xls", ".docx", ".doc", ".txt", ".md", ".json", ".html", ".htm"],
+        "_Installatori_e_Setup": [".exe", ".msi", ".iso", ".zip", ".rar", ".7z", ".tar.gz", ".gz", ".wpress"],
+        "_Immagini_e_Foto": [".png", ".jpg", ".jpeg", ".webp", ".svg", ".bmp"],
+        "_Video_e_Audio": [".mp4", ".ogg", ".wav", ".mp3", ".avi", ".mov"],
+        "_Modelli_3D_CAD": [".3mf", ".stl", ".sldprt", ".obj", ".fbx"],
+        "_Script_e_Chiavi": [".py", ".sh", ".ps1", ".pem", ".key", ".pub", ".env", ".gpg", ".css"]
+    }
+
+    for cat_dir, exts in downloads_rules.items():
+        os.makedirs(os.path.join(downloads, cat_dir), exist_ok=True)
+
+    try:
+        for fname in os.listdir(downloads):
+            fpath = os.path.join(downloads, fname)
+            if os.path.isdir(fpath) or fname == "desktop.ini" or fname.startswith("_"):
+                continue
+            fext = os.path.splitext(fname)[1].lower()
+
+            target_folder = None
+            for cat_dir, exts in downloads_rules.items():
+                if fext in exts:
+                    target_folder = cat_dir
+                    break
+
+            if target_folder:
+                dest = os.path.join(downloads, target_folder, fname)
+                if os.path.exists(dest):
+                    base, ext = os.path.splitext(fname)
+                    dest = os.path.join(downloads, target_folder, f"{base}_{int(time.time())}{ext}")
+                try:
+                    shutil.move(fpath, dest)
+                    stats["downloads_moved"] += 1
+                    stats["details"].append(f"Downloads: {fname} -> {target_folder}")
+                except Exception:
+                    pass
+    except Exception as e:
+        stats["downloads_error"] = str(e)
+
+    total_moved = stats["desktop_moved"] + stats["downloads_moved"]
+    stats["total_moved"] = total_moved
+    stats["status"] = "SUCCESS"
+    stats["verbal_summary"] = (
+        f"Ho organizzato Desktop e cartella Download, Badr: archiviati {stats['desktop_moved']} elementi sul Desktop "
+        f"e {stats['downloads_moved']} file nei Download in cartelle dedicate, preservando tutti i tuoi collegamenti."
+    )
+    return stats
+
 def list_directory(path: str = "desktop", pattern: str = "*") -> Dict[str, Any]:
     """Elenca file e cartelle in un percorso con dettagli di dimensione e data."""
     d_path = resolve_path(path)
@@ -563,6 +675,10 @@ def execute_natural_pc_order(command_text: str) -> Dict[str, Any]:
     - Gestione audio, screenshot e spegnimento/lock
     """
     cmd = command_text.lower().strip()
+
+    # 0. ORGANIZZAZIONE DESKTOP E DOWNLOADS
+    if any(k in cmd for k in ["ordina", "ordinami", "organizza", "pulisci"]) and any(w in cmd for w in ["desktop", "download"]):
+        return organize_desktop_and_downloads()
 
     # 1. SPOSTAMENTO FILE: "sposta [file] in [destinazione]"
     m_move = re.search(r'(?:sposta|muovi|trasferisci)\s+(?:il\s+|i\s+)?(?:file\s+|cartella\s+)?([^\s]+(?:\s+[^\s]+)?)\s+(?:in|su|a|nel|nella|verso)\s+(.+)', cmd, re.IGNORECASE)
