@@ -495,7 +495,19 @@ def empty_recycle_bin() -> Dict[str, Any]:
             except Exception:
                 pass
 
-            return {"status": "SUCCESS", "verbal_summary": "Il Cestino di Windows è stato svuotato completamente e l'icona aggiornata istantaneamente, Badr."}
+            # 3. Invio automatico del tasto F5 a livello hardware Win32 per refresh desktop garantito
+            try:
+                import win32api, win32con
+                VK_F5 = 0x74
+                win32api.keybd_event(VK_F5, 0, 0, 0)
+                win32api.keybd_event(VK_F5, 0, win32con.KEYEVENTF_KEYUP, 0)
+            except Exception:
+                try:
+                    subprocess.run(["powershell", "-NoProfile", "-Command", "$w = New-Object -ComObject WScript.Shell; $w.SendKeys('{F5}')"], timeout=2)
+                except Exception:
+                    pass
+
+            return {"status": "SUCCESS", "verbal_summary": "Il Cestino di Windows è stato svuotato completamente e ho eseguito il refresh F5 del desktop, Badr."}
         return {"status": "UNSUPPORTED", "message": "Supportato su Windows."}
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
