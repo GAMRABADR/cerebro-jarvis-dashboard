@@ -6330,6 +6330,16 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "error", "message": str(e)}, status=500)
             return
 
+        if self.path in ('/api/agentic/metacore', '/api/agentic/metacore/', '/api/agentic/reflect-decide'):
+            try:
+                from ebj_agentic_metacore import run_agentic_metacore
+                goal = data.get('goal', data.get('prompt', data.get('command', '')))
+                res = run_agentic_metacore(goal, context=data.get('context'))
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
         if self.path in ('/api/pc/power', '/api/pc/power/'):
             try:
                 from ebj_pc_power_manager import shutdown_pc, restart_pc, abort_power_action, send_wake_on_lan

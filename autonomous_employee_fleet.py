@@ -314,31 +314,44 @@ def _execute_task_worker(task_id, agent_key, prompt, origin="telegram"):
 
         full_prompt = f"Sei l'agente autonomo {agent_info['name']}. Esegui con la massima precisione: {prompt}{steer_extra}"
 
-        # ── 2026 SELF-HEALING REFLECTION LOOP INTEGRATION ─────────────
-        from ebj_self_healing import run_self_healing_action
+        # ── 2026 AGENTIC METACORE (JEV, CLM, HERMES, AGENTE ZERO) REFLECTION & EXECUTION ──
+        try:
+            from ebj_agentic_metacore import run_agentic_metacore
+            meta_res = run_agentic_metacore(prompt, context={"agent_hint": agent_key, "steer": steer_extra})
+            if meta_res.get("status") == "SUCCESS":
+                summary = meta_res.get("spoken_response") or meta_res.get("execution_result", {}).get("message", "Task completato con successo.")
+                sh_res = {"status": "SUCCESS", "result": {"response": summary}, "iterations": meta_res.get("iterations", 1), "self_healed": meta_res.get("self_healed", False)}
+            else:
+                sh_res = None
+        except Exception:
+            sh_res = None
 
-        def execute_step(step_params):
-            steer_txt = step_params.get("_healing_context", "")
-            final_prompt = full_prompt + (f"\n\n[SELF-HEALING REFINE DIRECTIVE]: {steer_txt}" if steer_txt else "")
-            r = requests.post("http://127.0.0.1:8088/api/chat", json={
-                "prompt": final_prompt,
-                "model": "auto",
-                "persona": "jarvis"
-            }, timeout=45)
-            if r.status_code == 200:
-                resp_text = r.json().get("response", "")
-                if "errore" in resp_text.lower() and len(resp_text) < 120:
-                    return {"status": "ERROR", "message": resp_text}
-                return {"status": "SUCCESS", "response": resp_text}
-            return {"status": "ERROR", "message": f"HTTP {r.status_code}"}
+        if not sh_res:
+            # ── 2026 SELF-HEALING REFLECTION LOOP INTEGRATION ─────────────
+            from ebj_self_healing import run_self_healing_action
 
-        sh_res = run_self_healing_action(prompt, execute_step)
-        if sh_res.get("status") == "SUCCESS":
-            summary = sh_res.get("result", {}).get("response", "Completato con successo.")
-            if sh_res.get("self_healed"):
-                summary = f"⚡ [AUTO-HEALED at iteration {sh_res.get('iterations')}]:\n" + summary
-        else:
-            summary = f"Esecuzione fallita dopo tentativi di auto-riparazione: {sh_res.get('error')}"
+            def execute_step(step_params):
+                steer_txt = step_params.get("_healing_context", "")
+                final_prompt = full_prompt + (f"\n\n[SELF-HEALING REFINE DIRECTIVE]: {steer_txt}" if steer_txt else "")
+                r = requests.post("http://127.0.0.1:8088/api/chat", json={
+                    "prompt": final_prompt,
+                    "model": "auto",
+                    "persona": "jarvis"
+                }, timeout=45)
+                if r.status_code == 200:
+                    resp_text = r.json().get("response", "")
+                    if "errore" in resp_text.lower() and len(resp_text) < 120:
+                        return {"status": "ERROR", "message": resp_text}
+                    return {"status": "SUCCESS", "response": resp_text}
+                return {"status": "ERROR", "message": f"HTTP {r.status_code}"}
+
+            sh_res = run_self_healing_action(prompt, execute_step)
+            if sh_res.get("status") == "SUCCESS":
+                summary = sh_res.get("result", {}).get("response", "Completato con successo.")
+                if sh_res.get("self_healed"):
+                    summary = f"⚡ [AUTO-HEALED at iteration {sh_res.get('iterations')}]:\n" + summary
+            else:
+                summary = f"Esecuzione fallita dopo tentativi di auto-riparazione: {sh_res.get('error')}"
 
         # Segna come COMPLETED / FAILED nel ledger di coda
         final_status = "COMPLETED" if sh_res.get("status") == "SUCCESS" else "FAILED"

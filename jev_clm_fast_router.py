@@ -85,9 +85,12 @@ def jev_empty_recycle_bin() -> Dict[str, Any]:
         pass
         
     latency_ms = (time.perf_counter() - t0) * 1000.0
+    # hr == 0 oppure -2147418113 (E_FAIL / S_OK se cestino già vuoto)
+    is_ok = hr in (0, -2147418113, 0x80004005)
     return {
-        "status": "success" if hr == 0 else f"code_{hr}",
+        "status": "success" if is_ok else f"code_{hr}",
         "action": "empty_recycle_bin",
+        "spoken_response": "Cestino di Windows svuotato con successo, Badr." if is_ok else "Il cestino è già vuoto o non accessibile, Badr.",
         "engine": "JEV_Native_Win32",
         "latency_ms": round(latency_ms, 2)
     }
@@ -367,7 +370,18 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
         except Exception as e:
             return {"status": "error", "message": str(e), "spoken_response": f"Errore nell'invio dell'email: {e}", "engine": "JEV_Native_Win32"}
         
-    # 2. Classificazione intent ad alta velocità con Rust Native CLM (Tier 1 < 1ms)
+    # 2. Intercettazione e Deliberazione Cognitiva Avanzata (MetaCore Reflexion & Decision Loop)
+    if rust_meta and rust_meta.get("intent") in ("HERMES_COGNITIVE_TASK", "AGENTE_ZERO_TAKEOVER", "METAPLAN_REFLECT_DECIDE"):
+        try:
+            from ebj_agentic_metacore import run_agentic_metacore
+            meta_res = run_agentic_metacore(user_command, context=context)
+            meta_res["engine"] = f"MetaCore_{meta_res.get('agent_executed', 'hybrid').upper()}"
+            meta_res["latency_ms"] = meta_res.get("total_latency_ms", 15.0)
+            return meta_res
+        except Exception:
+            pass
+
+    # 2.1 Classificazione intent ad alta velocità con Rust Native CLM (Tier 1 < 1ms)
     t0 = time.perf_counter()
     if rust_meta and rust_meta.get("intent") and rust_meta.get("intent") != "GENERAL_CONVERSATION":
         intent = rust_meta.get("intent")
