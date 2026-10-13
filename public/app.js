@@ -996,6 +996,49 @@ async function executeCommandPipeline(prompt) {
   try {
     const rawCmd = String(prompt || '').toLowerCase().trim();
 
+    // EBJ KALI a voce. La parola d'ordine serve perche' i pattern di
+    // kali_intent.rs ("scan", "osint", "chi e X") sono parole comuni: una
+    // frase normale non deve diventare ricognizione. Stessa regola del ponte
+    // Rust (`voice_dialogue_engine.rs: kali_voice_command`).
+    //
+    // Punta a `/api/kali/cli`, lo stesso endpoint del pulsante del drawer: il
+    // gate di perimetro (`skill.py: check_target_scope`) e l'allowlist del
+    // catalogo restano gli unici giudici. Qui non si aggiunge nessuna
+    // capacita' nuova, si da' solo la voce a un comando che gia' esisteva.
+    const mKali = /^\s*\/?(?:kali|apex|ebjh)\b[,:]?\s+(\S.{0,400})$/.exec(String(prompt || '').trim());
+    if (mKali) {
+      const cmdKali = mKali[1].trim();
+      if (/[;&|`$]/.test(cmdKali)) {
+        finish('Caratteri shell rifiutati. Nessuna esecuzione.', 'EBJ KALI');
+        isBusy = false;
+        return;
+      }
+      if (respTag) respTag.textContent = 'EBJ KALI';
+      if (respEl) respEl.textContent = 'Eseguo: ' + cmdKali;
+      try {
+        const rK = await fetch('/api/kali/cli', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmdKali }),
+          signal: AbortSignal.timeout(140000)
+        });
+        const jK = await rK.json().catch(() => ({}));
+        const outK = String(jK.stdout || jK.message || jK.stderr || '').trim();
+        if (!rK.ok || jK.status === 'ERROR' || jK.status === 'RIFIUTATO' || jK.success === false) {
+          setKaliLog('$ ' + cmdKali + '\n' + (outK || 'comando non eseguito.'), 'error');
+          finish('Non eseguito: ' + ((outK.slice(0, 160)) || 'il ponte ha rifiutato.'), 'EBJ KALI');
+        } else {
+          setKaliLog('$ ' + cmdKali + '\n' + (outK || '(nessun output)'));
+          const righeK = outK ? outK.split('\n').filter(x => x.trim()).length : 0;
+          finish('Eseguito. ' + righeK + ' righe di output, leggile nel pannello Kali.', 'EBJ KALI');
+        }
+      } catch (eK) {
+        finish('Non eseguito: il pannello non ha risposto.', 'EBJ KALI');
+      }
+      isBusy = false;
+      return;
+    }
+
     // Spegnimento / Riavvio / Accensione PC
     if (/\b(spegni pc|spegni il pc|spegni computer|arresta il sistema|arresta sistema|chiudi il pc)\b/.test(rawCmd)) {
       triggerPcPower('shutdown');

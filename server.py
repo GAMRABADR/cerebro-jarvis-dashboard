@@ -1418,24 +1418,59 @@ def send_email_action(to_email, subject, body_text, html_content=None, attachmen
     return {"success": True, "smtp_success": smtp_ok, "smtp_error": smtp_err, "recipient": to_email, "subject": subject}
 
 # ── KALI LINUX DOCKER EXECUTION BRIDGE (allowlist + SSH condiviso, timeout 120s) ─
+# Gli slot sono gli stessi dichiarati in ebj-supreme/.env.example (EBJ_BRIDGE_*):
+# questo processo e il ponte stanno sulla stessa VPS, quindi il default e'
+# loopback — il giro lungo tailnet aggiungeva nginx e TLS su un salto interno,
+# e su quel certificato (CN = badrexpress.com, self-signed) la verifica era
+# stata spenta a mano con verify=False. In loopback non c'e' TLS da verificare
+# e non c'e' credenziale da mandare; allowlist, token exec e perimetro restano
+# nel container Kali. La credenziale che era in chiaro qui dentro va RUOTATA:
+# un segreto committato non e' cancellato dalla riga, resta nella storia.
+KALI_DISPATCH_URL = os.environ.get(
+    "EBJ_BRIDGE_DISPATCH_URL", "http://127.0.0.1:9000/api/ebj-h/dispatch"
+).strip()
+# `BRIDGE_API_TOKEN` e' la variabile che il bridge legge (auth.rs);
+# `EBJ_BRIDGE_TOKEN` e' il sinonimo per i chiamanti, allineati per contratto.
+BRIDGE_API_TOKEN = (os.environ.get("BRIDGE_API_TOKEN", "")
+                    or os.environ.get("EBJ_BRIDGE_TOKEN", "")).strip()
+# Solo per un chiamante esterno che deve passare dal nginx con auth_basic.
+KALI_DISPATCH_BASIC = (
+    os.environ.get("EBJ_BRIDGE_USER", "").strip(),
+    os.environ.get("EBJ_BRIDGE_PASS", "").strip(),
+)
+KALI_DISPATCH_CA = os.environ.get("EBJ_DISPATCH_CA_BUNDLE", "").strip() or True
+
+
 def execute_kali_docker_cmd(cmd_str):
-    """Fast-path catena Rust EBJ via funnel; fallback skill SSH legacy."""
+    """Fast-path catena Rust EBJ via dispatch; fallback skill SSH legacy."""
     import shlex
     t0 = time.time()
     clean_cmd = re.sub(r'^/kali\s*:?\s*', '', str(cmd_str), flags=re.IGNORECASE).strip()
 
-    # FAST PATH: bridge Rust su VPS (138 tool allowlist, latenza ms)
+    # FAST PATH: bridge Rust su VPS (149 tool in allowlist, latenza ms).
+    # Due porte misurate il 2026-10-13: nginx auth_basic su /api/ebj-h/* per
+    # chi viene dal tailnet, e il gate del bridge (auth.rs::PROTETTE) che
+    # chiede X-EBJ-Token perche' :9000 e' raggiungibile dai container senza
+    # passare da nginx. Manca una delle due chiavi -> fallback SSH legacy,
+    # niente chiamata anonima.
+    fast_err = None
     try:
         import requests as _rq
         parts = clean_cmd.split()
         if parts:
-            _r = _rq.post(
-                "https://ebj-vps.taila7f20c.ts.net/api/ebj-h/dispatch",
-                json={"tool": parts[0], "args": parts[1:]},
-                auth=("ebg", "592060ca3a272fde"),
-                timeout=130,
-                verify=False,
-            )
+            headers = {"content-type": "application/json"}
+            if BRIDGE_API_TOKEN:
+                headers["x-ebj-token"] = BRIDGE_API_TOKEN
+            kwargs = {"timeout": 130, "headers": headers}
+            if all(KALI_DISPATCH_BASIC):
+                kwargs["auth"] = KALI_DISPATCH_BASIC
+            if KALI_DISPATCH_URL.startswith("https://"):
+                kwargs["verify"] = KALI_DISPATCH_CA
+            # Il payload e' {auto, text} e non {tool, args}: il ponte prova
+            # prima la tabella delle intent ("scansiona il sito X" -> nmap) e
+            # poi "primo token = tool", identico al vecchio payload per una
+            # riga gia' letterale. Cosi' il fast path copre tutti i tool.
+            _r = _rq.post(KALI_DISPATCH_URL, json={"auto": True, "text": clean_cmd}, **kwargs)
             _d = _r.json()
             if _d.get("status") == "SUCCESS" or "stdout" in _d:
                 _out = (_d.get("stdout") or "") + (_d.get("stderr") or "")
@@ -1447,8 +1482,15 @@ def execute_kali_docker_cmd(cmd_str):
                     "fast_chain_rust": True,
                     "elapsed_ms": int((time.time() - t0) * 1000),
                 }
-    except Exception:
-        pass
+            # Il ponte ha risposto senza stdout: un diniego (allowlist, perimetro,
+            # token) o una 4xx. Non e` un motivo per tacere e passare oltre.
+            fast_err = str(_d.get("detail") or _d.get("message") or _d)[:300]
+    except Exception as e:
+        fast_err = f"{type(e).__name__}: {e}"
+
+    if fast_err:
+        print(f"[kali-fast] dispatch non riuscito su {KALI_DISPATCH_URL}: {fast_err}",
+              flush=True)
 
     try:
         from skills_vault.hermes_kali_toolkit.skill import execute as kali_exec, parse_kali_cli

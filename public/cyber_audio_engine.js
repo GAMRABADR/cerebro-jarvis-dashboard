@@ -215,10 +215,25 @@ class CyberAudioEngine {
       this.analyser.smoothingTimeConstant = 0.4;
       this.micSource.connect(this.analyser);
 
-      // WebSocket Rust locale solo se in chiaro (evita mixed content su HTTPS)
-      if (window.location.protocol !== 'https:') {
+      // Socket del turno. Prima era `ws://localhost:9000` e basta: su una
+      // pagina https il browser non apre nemmeno la mano (mixed content),
+      // quindi da telefono il barge-in e la telemetria del ponte non
+      // esistevano proprio. Il bordo ha la location giusta - `/hud/ws/` va
+      // per prefisso piu' lungo e proxya su :9000/ws/ con le stesse
+      // credenziali della pagina - quindi sotto /hud/ l'URL si costruisce
+      // relativo alla pagina; altrove (dev locale su :8088 in chiaro) resta
+      // il bridge diretto.
+      const sottoHud = window.location.pathname.startsWith('/hud');
+      const protoS = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      let urlSocket = null;
+      if (sottoHud) {
+        urlSocket = `${protoS}//${window.location.host}/hud/ws/voice-dialogue`;
+      } else if (window.location.protocol === 'http:') {
+        urlSocket = 'ws://localhost:9000/ws/voice-dialogue';
+      }
+      if (urlSocket) {
         try {
-          this.dialogueWs = new WebSocket('ws://localhost:9000/ws/voice-dialogue');
+          this.dialogueWs = new WebSocket(urlSocket);
           this.dialogueWs.onmessage = (ev) => {
             try {
               const msg = JSON.parse(ev.data);
