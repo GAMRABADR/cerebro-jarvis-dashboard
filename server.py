@@ -1418,16 +1418,19 @@ def send_email_action(to_email, subject, body_text, html_content=None, attachmen
     return {"success": True, "smtp_success": smtp_ok, "smtp_error": smtp_err, "recipient": to_email, "subject": subject}
 
 # ── KALI LINUX DOCKER EXECUTION BRIDGE (allowlist + SSH condiviso, timeout 120s) ─
-# Gli slot sono gli stessi dichiarati in ebj-supreme/.env.example (EBJ_BRIDGE_*):
-# questo processo e il ponte stanno sulla stessa VPS, quindi il default e'
-# loopback — il giro lungo tailnet aggiungeva nginx e TLS su un salto interno,
-# e su quel certificato (CN = badrexpress.com, self-signed) la verifica era
-# stata spenta a mano con verify=False. In loopback non c'e' TLS da verificare
-# e non c'e' credenziale da mandare; allowlist, token exec e perimetro restano
-# nel container Kali. La credenziale che era in chiaro qui dentro va RUOTATA:
-# un segreto committato non e' cancellato dalla riga, resta nella storia.
+# Questo e' il pannello LOCALE (il PC di Badr), non la copia VPS: il ponte non
+# gira qui, si raggiunge dal tailnet. Il default e' quindi l'URL tailnet misurato
+# il 2026-10-13, non il loopback di ebj-supreme/jarvis/server.py (ab5dbb8), che
+# vale solo sulla VPS dove ponte e dashboard sono lo stesso processo-macchina.
+# Due porte misurate: nginx auth_basic su /api/ebj-h/* (Basic = EBJ_BRIDGE_USER/
+# PASS) e il gate del bridge (auth.rs::PROTETTE, X-EBJ-Token = BRIDGE_API_TOKEN
+# o EBJ_BRIDGE_TOKEN). Manca una chiave -> il ramo si salta e si cade sulla rotta
+# SSH legacy: fail-soft, niente chiamate anonime.
+# La credenziale che era in chiaro qui (auth=("ebg", ...)) va RUOTATA: un segreto
+# committato non e' cancellato dalla riga, resta nella storia di git — ed e'
+# anche il login HUD, condiviso via /etc/nginx/.htpasswd_dock.
 KALI_DISPATCH_URL = os.environ.get(
-    "EBJ_BRIDGE_DISPATCH_URL", "http://127.0.0.1:9000/api/ebj-h/dispatch"
+    "EBJ_BRIDGE_DISPATCH_URL", "https://ebj-vps.taila7f20c.ts.net/api/ebj-h/dispatch"
 ).strip()
 # `BRIDGE_API_TOKEN` e' la variabile che il bridge legge (auth.rs);
 # `EBJ_BRIDGE_TOKEN` e' il sinonimo per i chiamanti, allineati per contratto.
@@ -1438,7 +1441,12 @@ KALI_DISPATCH_BASIC = (
     os.environ.get("EBJ_BRIDGE_USER", "").strip(),
     os.environ.get("EBJ_BRIDGE_PASS", "").strip(),
 )
-KALI_DISPATCH_CA = os.environ.get("EBJ_DISPATCH_CA_BUNDLE", "").strip() or True
+# Il certificato del tailnet e' self-signed (CN = badrexpress.com, emesso da se'
+# stesso, ssl_verify_result=18): con verify=True ogni chiamata fallirebbe. Il
+# default False e' difendibile perche' il wire e' gia' WireGuard; token e Basic
+# restano attivi. Per chiudere anche questo gap: EBJ_DISPATCH_CA_BUNDLE col path
+# della CA, e la verifica si riaccende da sola.
+KALI_DISPATCH_CA = os.environ.get("EBJ_DISPATCH_CA_BUNDLE", "").strip() or False
 
 
 def execute_kali_docker_cmd(cmd_str):
