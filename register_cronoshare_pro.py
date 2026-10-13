@@ -37,7 +37,7 @@ async def run():
         print("Compilazione dati: Pietro Traslochi & BadrExpress...")
         await page.fill("#name", "Pietro Traslochi & BadrExpress")
         await page.fill("#email", "badraudi@gmail.com")
-        await page.fill("#password", "BadrExpress2026!")
+        await page.fill("#password", os.environ.get("PORTAL_ACCOUNT_PASSWORD", ""))
 
         # Digitazione CAP con trigger eventi per caricare il select delle città
         await page.click("#geozipcode")

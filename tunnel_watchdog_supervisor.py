@@ -8,7 +8,8 @@ Monitora e mantiene perennemente attivi i 3 processi vitali dell'ecosistema E.B.
 
 Funzionalità v3.0:
   ✅ Heartbeat aggressivo ogni 2 secondi su ogni servizio
-  ✅ Verifica HTTP diretta del tunnel pubblico (eb.badrexpress.com)
+  ✅ Tunnel misurato su DUE anelli separati: connettore locale (/ready) e edge
+     pubblico. Il riavvio di cloudflared scatta solo se e' rotto l'anello suo.
   ✅ Alert Telegram su ogni evento di kill/restart automatico
   ✅ Fallback automatico release→debug per Rust Bridge
   ✅ Log rotante con limite di 50.000 righe (no disk overflow)
@@ -39,8 +40,19 @@ HEARTBEAT_S = 2           # Ciclo di verifica ogni 2 secondi
 TUNNEL_CHECK_INTERVAL = 6 # Verifica tunnel pubblico ogni N cicli (12s)
 MAX_CRASH_RESTARTS = 10   # Dopo N riavvii in < 2 min → backoff 30s
 PUBLIC_URL  = "https://eb.badrexpress.com/"
+# Porta di stato di cloudflared: 20241 e' il default del binario quando non si
+# passa --metrics. /ready = 200 solo con trasporto attivo verso l'edge.
+CF_READY_URL = os.environ.get("EBJ_CF_READY_URL", "http://127.0.0.1:20241/ready")
 
-CF_TOKEN = "eyJhIjoiYzQ4YjA0ZGViODA1NzcwM2EyODQ5ZTZmOWY5ZWVmNjkiLCJ0IjoiZjFlNjQ4YWYtMGU0Yi00YWVjLWE1N2EtZmYzZmYxZGFiZjc3IiwicyI6Ik1qbGpZemt6WXpVdFl6VXpOaTAwTXpWa0xUaG1Nell0TWpBM09UVTRNRGhrTUdFMSJ9"
+# Il token del named tunnel sta in .env (slot CF_TUNNEL_TOKEN) o nell'ambiente.
+# Prima era letterale qui, in un file TRACKATO di un repo GitHub pubblico: la
+# riga 23 del .gitignore copriva `.env` ma `.env` era gia' committato, e il
+# token era committato anche nel .bat. Un token di connettore non e' una
+# credenziale di sola lettura: chi lo ha puo' fingeri il tuo connettore e
+# prendersi il traffico di eb./jarvis.badrexpress.com. Fail-closed: senza
+# token il tunnel non parte e il log nomina lo slot, come fa exec_api.py con
+# KALI_EXEC_TOKEN.
+CF_TOKEN = os.environ.get("CF_TUNNEL_TOKEN", "")
 
 CLOUDFLARED_BIN = os.path.join(BASE_DIR, "cloudflared.exe")
 SERVER_PY       = os.path.join(BASE_DIR, "server.py")
@@ -79,6 +91,9 @@ try:
     TG_BOT_TOKEN = _env.get("TELEGRAM_BOT_TOKEN", TG_BOT_TOKEN)
     if _env.get("TELEGRAM_NOTIFICATIONS_ENABLED", "0").lower() in ("1", "true", "yes"):
         TG_NOTIFICATIONS_ENABLED = True
+    # L'ambiente vince sul file: cosi' un EnvironmentFile systemd o un `set` in
+    # sessione battono sempre il .env, che resta il default del develop locale.
+    CF_TOKEN = os.environ.get("CF_TUNNEL_TOKEN") or _env.get("CF_TUNNEL_TOKEN", "") or CF_TOKEN
 except Exception:
     pass
 
@@ -155,10 +170,30 @@ def is_cloudflared_os_alive() -> bool:
     except Exception:
         return False
 
-def check_public_tunnel() -> bool:
-    """Verifica HTTP reale del tunnel pubblico. Tolera redirect e pagine HTML."""
+def connector_ready() -> bool:
+    """Primo anello: il CONNETTORE di questa macchina e' agganciato all'edge.
+
+    E' la misura che vale. cloudflared serve /ready sulla porta di stato locale
+    (default 127.0.0.1:20241) e risponde 200 solo quando ha un trasporto attivo
+    verso il piano Cloudflare. Misura il TUO tunnel, non Cloudflare.
+    """
     try:
-        r = requests.get(PUBLIC_URL, timeout=5, allow_redirects=True)
+        return requests.get(CF_READY_URL, timeout=3).status_code == 200
+    except Exception:
+        return False
+
+def edge_answers() -> bool:
+    """Secondo anello: l'hostname pubblico vive al edge (DNS + app + Access).
+
+    NON prova l'origine e NON deve essere scambiato per una prova del tunnel:
+    dietro `eb.badrexpress.com` c'e' Cloudflare Access, che risponde 302 verso
+    il proprio idP senza mai toccare il connettore. Il check vecchio
+    (`requests.get(PUBLIC_URL, allow_redirects=True)` con esito verde su
+    200/301/302/308) era verde anche con cloudflared spento, e il log
+    "Tunnel pubblico OK" lo raccontava come se fosse la prova end-to-end.
+    """
+    try:
+        r = requests.get(PUBLIC_URL, timeout=5, allow_redirects=False)
         return r.status_code in (200, 301, 302, 308)
     except Exception:
         return False
@@ -226,13 +261,25 @@ def start_cloudflared():
     if not os.path.exists(CLOUDFLARED_BIN):
         log(f"ERRORE: cloudflared.exe non trovato in {CLOUDFLARED_BIN}", "ERROR")
         return None
+    if not CF_TOKEN:
+        # Senza token non c'e' da tentare nulla: `tunnel run` morirebbe al primo
+        # handshake e il backoff lo riucciderebbe 10 volte. Meglio un log che
+        # dice esattamente quale slot riempire.
+        log("⛔ Cloudflared NON avviato: CF_TUNNEL_TOKEN vuoto. Riempi lo slot "
+            f"`CF_TUNNEL_TOKEN` in {os.path.join(BASE_DIR, '.env')} (o nell'ambiente).", "ERROR")
+        return None
     log("🔄 Avvio/Ripristino Cloudflare Named Tunnel (eb.badrexpress.com)...")
     _backoff_if_crashing("cloudflared")
     log_path = os.path.join(BASE_DIR, "cloudflared.log")
     logf = open(log_path, "ab")
+    # `--token` mette il segreto nell'argv del figlio: leggibile da qualunque
+    # `Get-CimInstance Win32_Process` o `tasklist /v` su questa macchina (l'ho
+    # letto io stesso durante la verifica). cloudflared accetta TUNNEL_TOKEN
+    # dall'ambiente, che nell'argv non ci finisce.
     proc = subprocess.Popen(
-        [CLOUDFLARED_BIN, "tunnel", "run", "--token", CF_TOKEN],
+        [CLOUDFLARED_BIN, "tunnel", "run"],
         cwd=BASE_DIR,
+        env=dict(os.environ, TUNNEL_TOKEN=CF_TOKEN),
         stdout=logf,
         stderr=subprocess.STDOUT,
         creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
@@ -241,6 +288,38 @@ def start_cloudflared():
     log("✅ Cloudflare Tunnel avviato")
     tg_alert("✅ Cloudflare Tunnel `eb.badrexpress.com` ripristinato automaticamente.")
     return proc
+
+def tunnel_step() -> str:
+    """Un giro di verifica del tunnel: nomina L'ANELLO rotto e agisce di conseguenza.
+
+    Ritorna 'riavviato' | 'non-toccare' | 'ok'. I due anelli stanno separati perche'
+    hanno due colpevoli diversi, e uno solo dei due si cura riavviando
+    cloudflared: e' la stessa distinzione che il worker della VPS gia' fa
+    (ebj-supreme/deploy-worker.sh sezione 7 + tests/tunnel_restart_harness.sh,
+    caso T5 "dietro Access il tunnel sano risponde cosi'").
+    """
+    porta_ok = ("8088:" + ("OK" if is_port_responding(8088) else "KO") +
+                " | 9000:" + ("OK" if is_port_responding(9000) else "KO"))
+    if not connector_ready():
+        # Solo QUI cloudflared e' il colpevole, e solo qui il kill ha senso.
+        log(f"🚨 Anello CONNETTORE rotto ({CF_READY_URL} non risponde): "
+            f"riavvio cloudflared... | {porta_ok}", "WARN")
+        try:
+            subprocess.run(["taskkill", "/F", "/IM", "cloudflared.exe"], capture_output=True, timeout=3)
+        except Exception:
+            pass
+        time.sleep(1)
+        processes["cloudflared"] = start_cloudflared()
+        return "riavviato"
+    if not edge_answers():
+        # Connettore agganciato: se l'edge non risponde la colpa e' di DNS / zona
+        # / app Access, e riavviare il connettore non cambia niente - anzi
+        # ammazza un trasporto sano.
+        log(f"⚠️ Connettore OK ma l'edge {PUBLIC_URL} non risponde: anello "
+            "DNS/Cloudflare. NON riavvio cloudflared (non e' suo).", "WARN")
+        return "non-toccare"
+    log(f"🌐 Tunnel OK | connettore:agganciato | edge:rISPONDE | {porta_ok}")
+    return "ok"
 
 # ── MAIN LOOP ──────────────────────────────────────────────────────────────────
 def supervisor_loop():
@@ -290,21 +369,11 @@ def supervisor_loop():
                 log("🚨 Cloudflared terminato! Resurrezione tunnel...", "WARN")
                 processes["cloudflared"] = start_cloudflared()
 
-            # ── 4. Verifica Tunnel Pubblico (ogni 12s) ─────────────────
+            # ── 4. Due anelli separati (ogni 12s) ──────────────────────
             tunnel_check_counter += 1
             if tunnel_check_counter >= TUNNEL_CHECK_INTERVAL:
                 tunnel_check_counter = 0
-                if not check_public_tunnel():
-                    log("🚨 Tunnel pubblico https://eb.badrexpress.com NON RAGGIUNGIBILE! Restart CF...", "WARN")
-                    # Tenta kill e riavvio cloudflared
-                    try:
-                        subprocess.run(["taskkill", "/F", "/IM", "cloudflared.exe"], capture_output=True, timeout=3)
-                    except Exception:
-                        pass
-                    time.sleep(1)
-                    processes["cloudflared"] = start_cloudflared()
-                else:
-                    log(f"🌐 Tunnel pubblico OK | 8088:{'OK' if is_port_responding(8088) else 'KO'} | 9000:{'OK' if is_port_responding(9000) else 'KO'}")
+                tunnel_step()
 
         except Exception as e:
             log(f"Eccezione ciclo supervisore: {e}", "ERROR")

@@ -39,7 +39,7 @@ DOSSIER = {
     "cap": "40121",
     "province": "BO",
     "cf": "LRTBDR88A07Z330L",
-    "password": "BadrExpress2026!",
+    "password": os.environ.get("PORTAL_ACCOUNT_PASSWORD", ""),
     "description": (
         "Ditta specializzata in traslochi civili e commerciali, sgomberi rapidi appartamenti e cantine, "
         "noleggio furgone con autista e sponda idraulica, smontaggio e rimontaggio mobili a regola d'arte. "

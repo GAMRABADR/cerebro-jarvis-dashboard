@@ -2,7 +2,22 @@ import os, time, base64, io, ctypes, struct
 from PIL import Image
 import requests
 
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD-k_wusHxq5eS-cms4QNnMMmNaTJ-iUpQ")
+def _secret(name):
+    """Ambiente prima, poi .env della dashboard. Nessun default letterale:
+    la chiave Gemini viveva qui dentro, committata in un repo pubblico."""
+    v = os.environ.get(name, "")
+    if v:
+        return v
+    here = os.path.dirname(os.path.abspath(__file__))
+    for f in (os.path.join(here, "..", "..", ".env"), os.path.join(here, ".env")):
+        if os.path.isfile(f):
+            for line in open(f, encoding="utf-8", errors="replace"):
+                k, _, val = line.strip().partition("=")
+                if k == name and val.strip():
+                    return val.strip().strip(chr(34)).strip(chr(39))
+    return ""
+
+GEMINI_KEY = _secret("GEMINI_API_KEY")
 
 def grab_screen_ctypes():
     user32 = ctypes.windll.user32
