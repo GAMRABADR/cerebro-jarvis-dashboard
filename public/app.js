@@ -266,29 +266,44 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
       source.buffer = audioBuffer;
       _ebjActiveWebAudioSource = source;
 
-      // JARVIS Holographic DSP Master Chain:
-      // 1. Warmth Low-Shelf (+2.4dB @ 210Hz) - Tony Stark baritone chest resonance
+      // JARVIS Holographic DSP Master Chain (Iron Man / Nino Prester / Paul Bettany):
+      // 1. High-Pass filter to strip subsonic rumble (below 95Hz)
+      const rumbleCut = ctx.createBiquadFilter();
+      rumbleCut.type = 'highpass';
+      rumbleCut.frequency.value = 95;
+      rumbleCut.Q.value = 0.7;
+
+      // 2. Warmth Low-Shelf (+2.8dB @ 200Hz) - Tony Stark / Nino Prester baritone chest resonance
       const bass = ctx.createBiquadFilter();
       bass.type = 'lowshelf';
-      bass.frequency.value = 210;
-      bass.gain.value = 2.4;
+      bass.frequency.value = 200;
+      bass.gain.value = 2.8;
 
-      // 2. High-Shelf De-harshing (-0.8dB @ 6500Hz)
+      // 3. Mark VII / STARK Holographic Presence Peaking EQ (+3.6dB @ 2150Hz, Q=2.4)
+      const presence = ctx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 2150;
+      presence.Q.value = 2.4;
+      presence.gain.value = 3.6;
+
+      // 4. High-Shelf De-harshing (-1.0dB @ 6800Hz)
       const highs = ctx.createBiquadFilter();
       highs.type = 'highshelf';
-      highs.frequency.value = 6500;
-      highs.gain.value = -0.8;
+      highs.frequency.value = 6800;
+      highs.gain.value = -1.0;
 
-      // 3. Holographic Broadcast Compressor - Cinematic punch
+      // 5. Holographic Broadcast Dynamics Compressor - Cinematic broadcast punch
       const comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -18;
-      comp.knee.value = 10;
-      comp.ratio.value = 2.8;
+      comp.knee.value = 8;
+      comp.ratio.value = 3.2;
       comp.attack.value = 0.003;
-      comp.release.value = 0.22;
+      comp.release.value = 0.20;
 
-      source.connect(bass);
-      bass.connect(highs);
+      source.connect(rumbleCut);
+      rumbleCut.connect(bass);
+      bass.connect(presence);
+      presence.connect(highs);
       highs.connect(comp);
       comp.connect(ctx.destination);
 
@@ -2268,9 +2283,7 @@ window.runReaTeardownLive = async function() {
       }
 
       if (d.audio_base64) {
-        const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
-        audio.play().catch(e => console.log('Audio autoplay blocked:', e));
-        window.animateAudioSpectrum(4500);
+        window.playSpeechAudio(d.spoken_ack || 'Teardown completato con successo, signore.', d.audio_base64);
       }
     } else {
       if (resultsBox) {
@@ -2312,9 +2325,7 @@ window.runReaBuildOriginal = async function() {
       }
       if (d.spoken_ack) window.setJarvisSubtitle(d.spoken_ack);
       if (d.audio_base64) {
-        const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
-        audio.play().catch(_ => {});
-        window.animateAudioSpectrum(3500);
+        window.playSpeechAudio(d.spoken_ack || 'Costruzione completata, signore.', d.audio_base64);
       }
     }
   } catch (e) {
@@ -2370,9 +2381,7 @@ window.sendCosmosPrompt = async function() {
       window.setJarvisSubtitle(d.reply, false);
     }
     if (d.audio_base64) {
-      const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
-      audio.play().catch(_ => {});
-      window.animateAudioSpectrum(4000);
+      window.playSpeechAudio(d.reply || 'Comando elaborato, signore.', d.audio_base64);
     }
   } catch (err) {
     window.setJarvisSubtitle('Errore di comunicazione: ' + err.message, false);
