@@ -110,6 +110,24 @@
         { name: 'Port Scanner Recon', type: 'sec', status: 'IDLE', notes: 'VPS exposure verifier' },
         { name: 'SSH Sentinel Keyring', type: 'sec', status: 'ARMED', notes: 'ECDSA/RSA key vault' }
       ]
+    },
+    {
+      id: 'rea',
+      name: 'REA & ArtCraft Rust Suite',
+      color: 0x00f0ff, // Electric Cyan
+      pos: new THREE.Vector3(0, -90, -140),
+      nodes: [
+        { name: 'REA Core v6.5', type: 'decompiler', status: 'ONLINE', notes: '170 MCP Reverse Engineering Tools' },
+        { name: 'Ghidra & Hopper MCP', type: 'disassembler', status: 'ARMED', notes: 'PE, ELF & Mach-O Analysis' },
+        { name: 'Electron ASAR Recover', type: 'unpacker', status: 'ACTIVE', notes: 'JavaScript AST Source Recovery' },
+        { name: 'Photocraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust Photoshop Alternative' },
+        { name: 'Gridcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust Excel Alternative' },
+        { name: 'Vectorcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust Illustrator Alternative' },
+        { name: 'CADcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust AutoCAD Alternative' },
+        { name: 'Deckcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust PowerPoint Alternative' },
+        { name: 'PDFcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust Acrobat Alternative' },
+        { name: 'Filmcraft (Rust)', type: 'app', status: 'READY', notes: 'Pure Rust Premiere Alternative' }
+      ]
     }
   ];
 
@@ -519,7 +537,15 @@
     renderer.render(scene, camera);
   }
 
-  // Lazy initialization: attivo SOLO quando l'utente apre esplicitamente la vista 3D Topology
+  window.focusCosmosOnCluster = function(clusterId) {
+    const hub = nodeObjects.find(n => n.userData && n.userData.isHub && 
+      (n.userData.name.toLowerCase().includes(clusterId.toLowerCase()) || (n.userData.id === clusterId)));
+    if (hub) {
+      focusOnNode(hub);
+    }
+  };
+
+  // Initialization: attivo quando aperto o invocato
   window.initCosmos3D = function() {
     if (!scene) {
       init();
@@ -531,8 +557,17 @@
     }
   };
 
-  // Se l'elemento è già visibile al caricamento, inizializza
+  // Se l'elemento è già presente, inizializza appena possibile
   if (container.offsetParent !== null && container.clientWidth > 0) {
     init();
+  } else {
+    // Retry polling briefly so it initializes as soon as the view is displayed
+    const checkInit = setInterval(() => {
+      if (container.clientWidth > 0) {
+        clearInterval(checkInit);
+        if (!scene) init();
+      }
+    }, 200);
+    setTimeout(() => clearInterval(checkInit), 5000);
   }
 })();

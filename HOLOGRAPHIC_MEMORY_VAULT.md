@@ -1,5 +1,5 @@
 # 🌌 HERMES AGENT & JARVIS · HOLOGRAPHIC LONG-TERM MEMORY VAULT
-*Ultima sincronizzazione automatica: 2026-10-12 22:36:34*
+*Ultima sincronizzazione automatica: 2026-10-16 19:47:06*
 
 Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, sincronizzata con SQLite Vector/FTS.
 
@@ -381,6 +381,17 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Interazione Utente** `★★★★★`: grigismo dal cestino *(Registrato: 2026-10-12 02:03:18)*
 - **Interazione Utente** `★★★★★`: parcheggi verificare cartellini un computer AC cartelle identiche *(Registrato: 2026-10-12 04:05:48)*
 - **Interazione Utente** `★★★★★`: aggiorna l'app cellulare e il *(Registrato: 2026-10-12 04:07:41)*
+- **Interazione Utente** `★★★★★`: esponi al computer cerca la cartella ylenia galli entra e mostrami la prima foto *(Registrato: 2026-10-12 21:06:18)*
+- **Interazione Utente** `★★★★★`: Ylenia_Interno_Salotto_17 mostrani foto nel pc *(Registrato: 2026-10-12 21:36:25)*
+- **Interazione Utente** `★★★★★`: Spegni interno salotto *(Registrato: 2026-10-12 21:36:43)*
+- **Interazione Utente** `★★★★★`: Cerca Ilenia dal computer *(Registrato: 2026-10-12 21:40:18)*
+- **Interazione Utente** `★★★★★`: entra nel mio computer *(Registrato: 2026-10-12 21:42:07)*
+- **Interazione Utente** `★★★★★`: hai accesso alla rete WiFi *(Registrato: 2026-10-15 19:41:26)*
+- **Interazione Utente** `★★★★★`: Massimiliano *(Registrato: 2026-10-15 20:21:01)*
+- **Interazione Utente** `★★★★★`: Israele hanno toccato ad Amsterdam passa una città marocchina la pubblicità di un modello d'Europa ed è tutta musulmano *(Registrato: 2026-10-16 17:29:24)*
+- **Interazione Utente** `★★★★★`: Beh Perché Dio ha detto è Esattamente esattamente cerca di discriminarci a scuola al tu non puoi mangiare il maiale ma sei tu anche non puoi Coglione Figlio di puttana cane di merda falso Buffon anche *(Registrato: 2026-10-16 17:30:41)*
+- **Interazione Utente** `★★★★★`: dei provvedimento solo quello che fate parte tre idee in uno pensa quanto siete malatio quando Siete lontani dalla luce dalla parte del viso Pisa È l'unica regione bella Mio padre è un uomo mio padre  *(Registrato: 2026-10-16 17:31:45)*
+- **Interazione Utente** `★★★★★`: sempre lo ha fatto sì che vuol dire sempre non una volta due ogni volta che io sono entrato in quel bar dove abita mio padre ho preso qualcosa lui è fidanzato a pagare Infatti non ci vedo più perché s *(Registrato: 2026-10-16 17:32:44)*
 
 ## 📂 Categoria: `BUSINESS_SGOMBERI`
 
@@ -464,6 +475,13 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - WORKSTATION LOCALE: 64 GB RAM (63.91 GB DDR), CPU 8 Core / 16 Thread, DUAL GPU (NVIDIA GeForce RTX 4070 12GB VRAM + GTX 1660).
 - ORACLE CLOUD VPS (92.4.233.42): 24 GB RAM (Ampere A1 4 OCPU), Ubuntu 24.04 LTS, 200GB NVMe.
 - CAPACITA MASSIVA: Nessun limite a 4GB! Possiamo allocare container Docker con 8GB-16GB RAM, RAM-Disk tmpfs fino a 4GB-8GB a 50 GB/s, cache Redis estesa e modelli locali pesanti. *(Registrato: 2026-08-25 22:40:34)*
+
+## 📂 Categoria: `SYSTEM_SELF_HEAL`
+
+- **PostMortem_hermes** `★★★★★`: Task su 'cosa sappiamo sul gioco EBGS MMO nella memoria' fallito con cannot import name 'recall_memories' from 'hermes_memory' (D. Applicato auto-recupero. *(Registrato: 2026-10-12 22:35:15)*
+- **PostMortem_agente_zero** `★★★★★`: Task su 'agente zero esegui comando whoami' fallito con Exit code 1: "comando" non Š riconosciuto come comando inter. Applicato auto-recupero. *(Registrato: 2026-10-12 22:35:15)*
+- **PostMortem_clm** `★★★★★`: Task su 'rifletti e decidi tra avviare server o pulire il d' fallito con cannot import name 'classify_action_intent' from 'clm_engine. Applicato auto-recupero. *(Registrato: 2026-10-12 22:35:15)*
+- **PostMortem_jev** `★★★★★`: Task su 'svuota il cestino subito' fallito con Anomalia sconosciuta. Applicato auto-recupero. *(Registrato: 2026-10-12 22:36:09)*
 
 ## 📂 Categoria: `USER_BIOGRAPHY`
 

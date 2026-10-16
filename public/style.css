@@ -4561,5 +4561,37 @@ body.stark-hud-mode .stark-quick-dock {
   }
 }
 
+/* ── REA CHIP & HUD ENHANCEMENTS (JARVIS v8 STARK HUD) ── */
+.rea-chip {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.rea-chip:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
 
-
+@media (max-width: 1024px) {
+  #rea-floating-stage {
+    left: 10px !important;
+    top: 140px !important;
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+  #cosmos-arc-reactor {
+    top: 10px !important;
+    right: 10px !important;
+    transform: scale(0.85);
+    transform-origin: top right;
+  }
+}

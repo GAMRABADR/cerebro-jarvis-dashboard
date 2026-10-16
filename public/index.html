@@ -40,8 +40,14 @@
     </div>
 
     <div class="mv-center" id="mv-center-nav">
-      <button class="view-switch-btn active" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">
-        <span class="btn-dot live"></span><i data-lucide="cpu" class="lucide-icon"></i>E.B.J. CORE
+      <!-- 🌌 VISTA PRIMARIA: J.A.R.V.I.S. v8 APEX STARK HUD (3D CONSTELLATION + REA + ARC REACTOR) -->
+      <button class="view-switch-btn active" id="btn-view-topology" onclick="switchMasterView('topology')" style="border-color:#00f0ff; color:#00f0ff; font-weight:900; box-shadow:0 0 15px rgba(0,240,255,0.3);">
+        <span class="btn-dot live" style="background:#00f0ff; box-shadow:0 0 10px #00f0ff;"></span><i data-lucide="zap" class="lucide-icon text-cyan"></i>🌌 J.A.R.V.I.S. v8 (STARK HUD)
+      </button>
+
+      <!-- VISTA SECONDARIA: CONSOLE CLASSICA 2D -->
+      <button class="view-switch-btn" id="btn-view-jarvis" onclick="switchMasterView('jarvis')">
+        <span class="btn-dot" style="background:#64748b;"></span><i data-lucide="layout-grid" class="lucide-icon"></i>📊 CONSOLE CLASSICA
       </button>
 
       <!-- VISTA MATRICE SKILL & ABILITÀ (RUST + JEV + CONTAINERS) -->
@@ -58,11 +64,6 @@
       <a href="/leads_chiamata_rapida.html" target="_blank" class="view-switch-btn" style="background: rgba(0, 240, 255, 0.18); border-color: #00f0ff; color: #00f0ff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 900; box-shadow: 0 0 10px rgba(0,240,255,0.3);">
         <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span><i data-lucide="phone-call" class="lucide-icon text-cyan"></i>LEAD 1-CLICK CALLING [175+] <i data-lucide="external-link" class="lucide-icon sm"></i>
       </a>
-
-      <!-- VISTA ECOSYSTEM MAP TOPOLOGY -->
-      <button class="view-switch-btn" id="btn-view-topology" onclick="switchMasterView('topology')">
-        <span class="btn-dot" style="background: #00f0ff; box-shadow: 0 0 8px #00f0ff;"></span><i data-lucide="compass" class="lucide-icon text-cyan"></i>ECOSYSTEM MAP
-      </button>
 
       <!-- VISTA NEURAL KNOWLEDGE GRAPH (FORCE-DIRECTED RUST) -->
       <button class="view-switch-btn" id="btn-view-graph" onclick="switchMasterView('graph')">
@@ -225,7 +226,7 @@
   <!-- ═══════════════════════════════════════════════════════════════
        VIEW 1: APEX BENTO-GRID WORKSPACE
        ═══════════════════════════════════════════════════════════════ -->
-  <div class="jarvis-workspace active" id="view-jarvis">
+  <div class="jarvis-workspace" id="view-jarvis" style="display:none;">
     <div class="hud-container">
       
       <!-- 🖥️ WORKSTATION HARDWARE & POWER STATUS COCKPIT (DESKTOP-SJR1JS8) -->
@@ -1716,7 +1717,9 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
   <!-- ══════════════════════════════════════════════════════════════════════════ -->
   <!-- VISTA J.A.R.V.I.S. 3D NEURAL COSMOS & KNOWLEDGE GRAPH (IDENTICA AL VIDEO)  -->
   <!-- ══════════════════════════════════════════════════════════════════════════ -->
-  <div class="jarvis-workspace" id="view-topology" style="display:none; width:100%; height:calc(100vh - 56px); background:#02050b; position:relative; overflow:hidden;">
+  <!-- 🌌 J.A.R.V.I.S. v8 APEX STARK HUD (3D CONSTELLATION + REA + ARC REACTOR)   -->
+  <!-- ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="jarvis-workspace active" id="view-topology" style="width:100%; height:calc(100vh - 56px); background:#02050b; position:relative; overflow:hidden;">
     
     <!-- 3D Three.js Container -->
     <div id="cosmos-3d-container" style="position:absolute; inset:0; width:100%; height:100%; z-index:1;"></div>
@@ -1724,71 +1727,154 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
     <!-- Floating Sleek Tooltip (Hover sui Nodi) -->
     <div id="cosmos-tooltip" style="position:fixed; display:none; z-index:100; pointer-events:none; background:rgba(3, 10, 20, 0.92); border:1px solid #00f0ff; border-radius:10px; padding:10px 14px; transform: translateZ(0); box-shadow:0 0 20px rgba(0, 240, 255, 0.35); min-width:180px; font-family:'Outfit', sans-serif;"></div>
 
-    <!-- Top-Left Navigation & Controls Overlay -->
-    <div style="position:absolute; top:20px; left:20px; z-index:10; display:flex; flex-direction:column; gap:8px; pointer-events:auto;">
-      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.25); border-radius:12px; padding:10px 16px; transform: translateZ(0); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00ff9f; box-shadow:0 0 8px #00ff9f;"></span>
-          <span style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#fff; letter-spacing:1px;">J.A.R.V.I.S. 3D CONSTELLATION</span>
+    <!-- Top-Left Telemetry & Jarvis v8 Header Overlay -->
+    <div style="position:absolute; top:68px; left:20px; z-index:10; display:flex; flex-direction:column; gap:10px; max-width:320px; pointer-events:auto;">
+      <div style="background:rgba(4, 14, 26, 0.88); backdrop-filter:blur(16px); border:1px solid rgba(0, 240, 255, 0.3); border-radius:14px; padding:12px 18px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#00ff9f; box-shadow:0 0 10px #00ff9f;"></span>
+            <span style="font-family:'Orbitron',sans-serif; font-size:13px; font-weight:900; color:#00f0ff; letter-spacing:1.5px;">J.A.R.V.I.S. OS v8.0</span>
+          </div>
+          <span style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; font-size:10px; font-weight:bold; padding:2px 8px; border-radius:12px;">144 FPS</span>
         </div>
-        <div style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono', monospace; margin-top:3px;">
-          Force-Directed Ecosystem Matrix · 360° Orbit Mode
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Side: Arc Reactor HUD Dial (Identico al Video YouTube) -->
-    <div id="cosmos-arc-reactor" style="position:absolute; top:20px; right:20px; z-index:10; display:flex; flex-direction:column; align-items:center; gap:14px; pointer-events:auto;">
-      
-      <!-- Arc Reactor Dial Container -->
-      <div style="position:relative; width:190px; height:190px; display:flex; align-items:center; justify-content:center;">
-        <div class="reactor-outer-ring"></div>
-        <div class="reactor-ticks-ring"></div>
-        <div class="reactor-inner-core">
-          <span style="font-family:'Outfit', sans-serif; font-size:13px; font-weight:900; letter-spacing:3px; color:#00f0ff; text-shadow:0 0 10px #00f0ff;">J.A.R.V.I.S.</span>
+        <div style="font-size:11px; color:#cbd5e1; font-family:'Share Tech Mono', monospace; line-height:1.4;">
+          <div>• ROUTING: <span style="color:#00ff9f;">JEV Native Win32 (&lt; 1ms)</span></div>
+          <div>• MICRO-BUS: <span style="color:#00f0ff;">Rust Tokio :9000 (0.05ms)</span></div>
+          <div>• TELEMETRIA: <span style="color:#ffd700;">64GB PC + 24GB VPS</span></div>
+          <div>• VOCE: <span style="color:#38bdf8;">DiegoNeural (+8%)</span></div>
         </div>
       </div>
 
-      <!-- Status Badges -->
-      <div style="display:flex; gap:6px;">
-        <span style="background:rgba(16,185,129,0.18); border:1px solid #10b981; color:#10b981; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-          <span style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span> LISTENING
-        </span>
-        <span style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px;">
-          ✦ RUST / QWEN 27B ⚡
-        </span>
-      </div>
-
-      <!-- Live Full-Duplex Dialogue Button & Spectrum -->
-      <button id="btn-live-voice-link" onclick="toggleLiveVoiceLink()" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 14px; background:linear-gradient(135deg, rgba(0,229,255,0.12), rgba(0,100,255,0.22)); border:1px solid #00e5ff; border-radius:20px; color:#00e5ff; font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; letter-spacing:1px; cursor:pointer; box-shadow:0 0 15px rgba(0,229,255,0.25); transition:all 0.3s ease;">
-        <span id="voice-link-indicator" style="width:8px; height:8px; border-radius:50%; background:#00e5ff; box-shadow:0 0 8px #00e5ff;"></span>
-        <span id="voice-link-label">🎙️ LIVE VOICE LINK (Alt+M)</span>
-      </button>
-      <div id="voice-live-spectrum" style="display:none; width:100%; height:16px; background:rgba(0,10,25,0.8); border:1px solid rgba(0,229,255,0.3); border-radius:6px; overflow:hidden; padding:2px; box-sizing:border-box;">
-        <div id="voice-energy-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #00e5ff, #ffd700); border-radius:4px; transition:width 0.05s ease;"></div>
-      </div>
-
-      <div id="voice-dialogue-status-text" style="font-size:11px; color:#64748b; font-family:'JetBrains Mono', monospace; letter-spacing:1px; text-align:center;">
-        • standby, press Alt+M to talk
-      </div>
-
-      <!-- Layout Switcher Buttons (RING, CUBE, SPHERE, CONSTELLATION) -->
-      <div style="background:rgba(4, 14, 26, 0.85); border:1px solid rgba(0, 240, 255, 0.2); border-radius:12px; padding:6px; display:flex; gap:4px; transform: translateZ(0);">
+      <!-- Layout Switcher Buttons -->
+      <div style="background:rgba(4, 14, 26, 0.85); backdrop-filter:blur(12px); border:1px solid rgba(0, 240, 255, 0.2); border-radius:12px; padding:6px; display:flex; gap:4px;">
         <button class="cosmos-btn-mode active" id="btn-layout-constellation" onclick="setCosmosLayout('constellation')">CONSTELLATION</button>
         <button class="cosmos-btn-mode" id="btn-layout-ring" onclick="setCosmosLayout('ring')">RING</button>
         <button class="cosmos-btn-mode" id="btn-layout-cube" onclick="setCosmosLayout('cube')">CUBE</button>
         <button class="cosmos-btn-mode" id="btn-layout-sphere" onclick="setCosmosLayout('sphere')">SPHERE</button>
       </div>
+    </div>
 
-      <!-- Quick Toggles (EYES, HOLO, FOCUS) -->
-      <div style="width:100%; display:flex; flex-direction:column; gap:6px;">
-        <div class="cosmos-toggle-row"><span class="ctr-lbl">EYES</span><span class="ctr-val on">watching</span></div>
-        <div class="cosmos-toggle-row"><span class="ctr-lbl">HOLO 3D</span><span class="ctr-val on">active</span></div>
-        <div class="cosmos-toggle-row" onclick="resetCosmosCamera()" style="cursor:pointer;"><span class="ctr-lbl">CAMERA</span><span class="ctr-val">re-center ↺</span></div>
+    <!-- Center Floating REA (Reverse Engineer Anything) Teardown Stage -->
+    <div id="rea-floating-stage" style="position:absolute; top:68px; left:360px; z-index:10; width:480px; max-width:calc(100vw - 600px); background:rgba(3, 10, 24, 0.88); backdrop-filter:blur(20px); border:1.5px solid rgba(0, 240, 255, 0.4); border-radius:16px; padding:16px; box-shadow:0 15px 45px rgba(0,0,0,0.7), 0 0 30px rgba(0, 240, 255, 0.15); pointer-events:auto; font-family:'Inter', sans-serif;">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,240,255,0.25); padding-bottom:10px; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:16px;">🔍</span>
+          <span style="font-family:'Orbitron',sans-serif; font-size:13px; font-weight:900; color:#00f0ff; letter-spacing:1px;">REA · REVERSE ENGINEER ANYTHING</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="background:rgba(16,185,129,0.18); border:1px solid #10b981; color:#10b981; font-size:10px; font-weight:800; padding:2px 8px; border-radius:12px;">170 TOOLS</span>
+          <button onclick="toggleReaStage()" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:14px;">✕</button>
+        </div>
       </div>
 
-      <!-- Inspector Drawer per Nodo Cliccato -->
-      <div id="cosmos-inspector-drawer" style="display:none; width:260px; background:rgba(4, 14, 26, 0.95); border:1px solid rgba(0, 240, 255, 0.35); border-radius:14px; padding:16px; transform: translateZ(0); box-shadow:0 15px 40px rgba(0,0,0,0.7);">
+      <!-- Target Input Box -->
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <input type="text" id="rea-target-input" value="https://igloo.inc" placeholder="Inserisci URL sito o percorso app .exe/.asar..." style="flex:1; background:rgba(0,0,0,0.6); border:1px solid rgba(0,240,255,0.3); border-radius:8px; padding:8px 12px; color:#fff; font-family:'Share Tech Mono', monospace; font-size:12px; outline:none;" onfocus="this.style.borderColor='#00f0ff'" onblur="this.style.borderColor='rgba(0,240,255,0.3)'">
+        <button onclick="runReaTeardownLive()" style="background:linear-gradient(135deg, #00f0ff, #0077ff); border:none; border-radius:8px; color:#01040a; font-family:'Orbitron', sans-serif; font-size:11px; font-weight:900; padding:8px 14px; cursor:pointer; box-shadow:0 0 15px rgba(0,240,255,0.4); display:flex; align-items:center; gap:6px;">
+          ⚡ TEARDOWN
+        </button>
+      </div>
+
+      <!-- Quick Preset Targets (come nel video di Zubair!) -->
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+        <button class="rea-chip" onclick="setReaTarget('https://igloo.inc')">🌐 igloo.inc (3D Web)</button>
+        <button class="rea-chip" onclick="setReaTarget('Apple Notes / Notes.app')">📝 Apple Notes</button>
+        <button class="rea-chip" onclick="setReaTarget('Excel / Gridcraft')">📊 Gridcraft (Excel Rust)</button>
+        <button class="rea-chip" onclick="setReaTarget('Photoshop / Photocraft')">🎨 Photocraft (Rust)</button>
+        <button class="rea-chip" onclick="setReaTarget('AutoCAD / CADcraft')">📐 CADcraft (AutoCAD Rust)</button>
+      </div>
+
+      <!-- Teardown Results Display -->
+      <div id="rea-results-box" style="background:rgba(0,0,0,0.5); border:1px solid rgba(0,240,255,0.2); border-radius:10px; padding:12px; max-height:220px; overflow-y:auto; font-size:11px; font-family:'Share Tech Mono', monospace; color:#e2e8f0; line-height:1.5;">
+        <div style="color:#00ff9f; font-weight:bold;">✦ REA v6.5 Engine Collegato con Successo.</div>
+        <div style="color:#94a3b8; margin-top:4px;">Pronto per l'ispezione architetturale di siti web o applicazioni locali. Premi [⚡ TEARDOWN] per avviare l'analisi assistita da J.A.R.V.I.S. con voce neurale.</div>
+      </div>
+
+      <!-- Bottom Action Row -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid rgba(0,240,255,0.15); padding-top:8px;">
+        <button onclick="runReaBuildOriginal()" style="background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; border-radius:6px; padding:5px 10px; font-size:10px; font-weight:800; cursor:pointer;">
+          🔨 COSTRUISCI BLUEPRINT ORIGINALE
+        </button>
+        <button onclick="openArtCraftSuiteModal()" style="background:rgba(255,183,3,0.15); border:1px solid #ffb703; color:#ffb703; border-radius:6px; padding:5px 10px; font-size:10px; font-weight:800; cursor:pointer;">
+          🎨 SUITE ARTCRAFT RUST (13 APP)
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Side: Arc Reactor HUD Dial (Identico a Iron Man & Zubair) -->
+    <div id="cosmos-arc-reactor" style="position:absolute; top:68px; right:20px; z-index:10; display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:auto;">
+      
+      <!-- Arc Reactor Dial Container -->
+      <div style="position:relative; width:190px; height:190px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="toggleLiveVoiceLink()" title="Tocca l'Arc Reactor per parlare con J.A.R.V.I.S.">
+        <div class="reactor-outer-ring"></div>
+        <div class="reactor-ticks-ring"></div>
+        <div class="reactor-inner-core">
+          <span style="font-family:'Orbitron', sans-serif; font-size:12px; font-weight:900; letter-spacing:3px; color:#00f0ff; text-shadow:0 0 10px #00f0ff;">J.A.R.V.I.S.</span>
+        </div>
+      </div>
+
+      <!-- Status Badges -->
+      <div style="display:flex; gap:6px;">
+        <span id="arc-voice-badge" style="background:rgba(16,185,129,0.18); border:1px solid #10b981; color:#10b981; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span> LISTENING
+        </span>
+        <span style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:20px;">
+          ✦ DIEGO (+8%)
+        </span>
+      </div>
+
+      <!-- Live Voice Trigger & Energy Bar -->
+      <button id="btn-live-voice-link" onclick="toggleLiveVoiceLink()" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 14px; background:linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,100,255,0.25)); border:1px solid #00e5ff; border-radius:20px; color:#00e5ff; font-family:'Orbitron', sans-serif; font-size:11px; font-weight:800; letter-spacing:1px; cursor:pointer; box-shadow:0 0 15px rgba(0,229,255,0.25); transition:all 0.3s ease;">
+        <span id="voice-link-indicator" style="width:8px; height:8px; border-radius:50%; background:#00e5ff; box-shadow:0 0 8px #00e5ff;"></span>
+        <span id="voice-link-label">🎙️ VOCE MANI LIBERE</span>
+      </button>
+
+      <div id="voice-live-spectrum" style="width:100%; height:16px; background:rgba(0,10,25,0.8); border:1px solid rgba(0,229,255,0.3); border-radius:6px; overflow:hidden; padding:2px; box-sizing:border-box;">
+        <div id="voice-energy-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #00e5ff, #00ff9f); border-radius:4px; transition:width 0.05s ease;"></div>
+      </div>
+
+      <!-- Quick Toggles -->
+      <div style="width:100%; display:flex; flex-direction:column; gap:4px;">
+        <div class="cosmos-toggle-row" onclick="focusCosmosOnCluster('rea')" style="cursor:pointer;"><span class="ctr-lbl">FOCUS REA</span><span class="ctr-val on">3D view</span></div>
+        <div class="cosmos-toggle-row" onclick="resetCosmosCamera()" style="cursor:pointer;"><span class="ctr-lbl">CAMERA</span><span class="ctr-val">re-center ↺</span></div>
+      </div>
+    </div>
+
+    <!-- Bottom Dock: Subtitles, Command Bar & Audio Visualizer Wave -->
+    <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:10; width:90%; max-width:960px; pointer-events:auto; display:flex; flex-direction:column; gap:8px;">
+      
+      <!-- Real-time Spoken Subtitle Banner -->
+      <div id="jarvis-spoken-subtitle" style="display:none; background:rgba(2, 6, 18, 0.9); backdrop-filter:blur(16px); border:1px solid #00f0ff; border-radius:12px; padding:10px 18px; color:#00f0ff; font-family:'Share Tech Mono', monospace; font-size:13px; text-shadow:0 0 10px rgba(0,240,255,0.5); box-shadow:0 10px 30px rgba(0,0,0,0.6); align-items:center; justify-content:space-between;">
+        <span id="jarvis-subtitle-text">J.A.R.V.I.S.: Pronto a ricevere ordini, Badr.</span>
+        <button onclick="document.getElementById('jarvis-spoken-subtitle').style.display='none'" style="background:none; border:none; color:#64748b; cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Dynamic Equalizer Bar Visualizer -->
+      <div class="jarvis-audio-spectrum" id="cosmos-audio-spectrum" style="margin:0 auto; height:24px;">
+        <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+        <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+        <div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div><div class="jas-bar"></div>
+      </div>
+
+      <!-- Main Input Command Dock -->
+      <div style="background:rgba(4, 14, 26, 0.92); backdrop-filter:blur(20px); border:1.5px solid #00f0ff; border-radius:16px; padding:8px 12px; display:flex; align-items:center; gap:10px; box-shadow:0 0 35px rgba(0,240,255,0.3);">
+        <button onclick="toggleRecording()" style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; color:#00f0ff; cursor:pointer; flex-shrink:0;">
+          <i data-lucide="mic" class="lucide-icon text-cyan"></i>
+        </button>
+        <input type="text" id="cosmos-prompt-input" placeholder="Comanda J.A.R.V.I.S... (premi Spazio per parlare, oppure digita un comando)" style="flex:1; background:transparent; border:none; color:#fff; font-family:'Inter', sans-serif; font-size:14px; outline:none;" onkeydown="if(event.key==='Enter') sendCosmosPrompt()">
+        <button onclick="sendCosmosPrompt()" style="background:linear-gradient(135deg, #00f0ff, #0066ff); border:none; border-radius:10px; color:#01040a; font-family:'Orbitron', sans-serif; font-size:12px; font-weight:900; padding:8px 18px; cursor:pointer; box-shadow:0 0 15px rgba(0,240,255,0.4);">
+          INVIA ↵
+        </button>
+      </div>
+
+      <!-- Quick Command Chips below input -->
+      <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:6px;">
+        <button class="sqd-btn" onclick="sendQuick('JARVIS, esegui il teardown di igloo.inc con REA')">🔍 Teardown igloo.inc</button>
+        <button class="sqd-btn" onclick="toggleReaStage()">⚙️ REA Console</button>
+        <button class="sqd-btn" onclick="sendQuick('JARVIS, qual è lo stato della workstation Badr e del PC?')">🖥️ Controllo PC</button>
+        <button class="sqd-btn" onclick="sendQuick('JARVIS, apri preventivo rapido traslochi BadrExpress')">🚚 Preventivi</button>
+        <button class="sqd-btn" onclick="switchMasterView('jarvis')">📊 Console Classica</button>
       </div>
 
     </div>
@@ -2310,6 +2396,10 @@ Firma: BadrExpress.com &amp; PietroTraslochi.com (+39 388 870 3508).</textarea>
     </div>
   </div>
 
+  <!-- 🌌 Three.js 3D Engine & J.A.R.V.I.S. Neural Constellation -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+  <script src="jarvis_3d_cosmos.js?v=1026.0"></script>
   <script src="cyber_audio_engine.js?v=1025.0"></script>
   <script src="app.js?v=1036.0"></script>
   <script src="astra_3d_client.js?v=1.1"></script>

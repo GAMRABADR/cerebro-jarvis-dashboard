@@ -2106,13 +2106,14 @@ function renderKaliCards() {
 }
 
 window.switchMasterView = function(view) {
-  const key = view === 'kali' ? 'kali' : (view || 'jarvis');
-  const targetId = KALI_VIEW_MAP[key] || 'view-jarvis';
+  const key = view === 'kali' ? 'kali' : (view || 'topology');
+  localStorage.setItem('ebj_active_view', key);
+  const targetId = KALI_VIEW_MAP[key] || 'view-topology';
 
   document.querySelectorAll('.jarvis-workspace').forEach(w => {
     if (w.id === targetId) {
       w.classList.add('active');
-      w.style.display = (targetId === 'view-jarvis') ? 'block' : 'flex';
+      w.style.display = (targetId === 'view-jarvis' || targetId === 'view-topology') ? 'block' : 'flex';
     } else {
       w.classList.remove('active');
       w.style.display = 'none';
@@ -2122,7 +2123,13 @@ window.switchMasterView = function(view) {
   document.body.classList.toggle('view-kali', key === 'kali');
 
   document.querySelectorAll('.view-switch-btn').forEach(b => b.classList.remove('active'));
-  if (key === 'jarvis') document.getElementById('btn-view-jarvis')?.classList.add('active');
+  if (key === 'topology' || key === 'jarvis-v8' || key === 'stark') {
+    document.getElementById('btn-view-topology')?.classList.add('active');
+    window.dispatchEvent(new Event('resize'));
+    if (window.initCosmos3D) window.initCosmos3D();
+    if (window.setCosmosLayout) window.setCosmosLayout('constellation');
+  }
+  if (key === 'jarvis' || key === 'classic') document.getElementById('btn-view-jarvis')?.classList.add('active');
   if (key === 'kanban') {
     document.getElementById('btn-view-kanban')?.classList.add('active');
     if (window.refreshKanbanData) window.refreshKanbanData();
@@ -2139,16 +2146,6 @@ window.switchMasterView = function(view) {
     const f = document.getElementById('agente-zero-frame');
     if (f && (!f.src || f.src === 'about:blank')) {
       f.src = f.getAttribute('data-src') || 'http://92.4.233.42:50080';
-    }
-  }
-  if (key === 'topology') {
-    document.getElementById('btn-view-topology')?.classList.add('active');
-    if (window.loadCosmos3DOnDemand) {
-      window.loadCosmos3DOnDemand(() => {
-        window.dispatchEvent(new Event('resize'));
-        if (window.initCosmos3D) window.initCosmos3D();
-        if (window.setCosmosLayout) window.setCosmosLayout('constellation');
-      });
     }
   }
   if (key === 'graph') {
@@ -2170,6 +2167,218 @@ window.switchMasterView = function(view) {
     setTimeout(() => lucide.createIcons(), 50);
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// REA (REVERSE ENGINEER ANYTHING) & J.A.R.V.I.S. v8 STARK HUD LOGIC
+// ═══════════════════════════════════════════════════════════════════
+window.setReaTarget = function(val) {
+  const input = document.getElementById('rea-target-input');
+  if (input) {
+    input.value = val;
+    input.focus();
+  }
+};
+
+window.toggleReaStage = function() {
+  const stage = document.getElementById('rea-floating-stage');
+  if (stage) {
+    stage.style.display = (stage.style.display === 'none') ? 'block' : 'none';
+  }
+};
+
+window.setJarvisSubtitle = function(text, isUser = false) {
+  const banner = document.getElementById('jarvis-spoken-subtitle');
+  const span = document.getElementById('jarvis-subtitle-text');
+  if (banner && span) {
+    banner.style.display = 'flex';
+    span.innerHTML = (isUser ? '<strong style="color:#00ff9f;">BADR:</strong> ' : '<strong style="color:#00f0ff;">J.A.R.V.I.S.:</strong> ') + text;
+  }
+};
+
+window.animateAudioSpectrum = function(durationMs = 3000) {
+  const bars = document.querySelectorAll('#cosmos-audio-spectrum .jas-bar, #jarvis-audio-spectrum .jas-bar');
+  if (!bars.length) return;
+  const startTime = Date.now();
+  const interval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    if (elapsed > durationMs) {
+      clearInterval(interval);
+      bars.forEach(b => b.style.height = '4px');
+      return;
+    }
+    bars.forEach(b => {
+      const h = Math.floor(Math.random() * 20) + 4;
+      b.style.height = `${h}px`;
+    });
+  }, 80);
+};
+
+window.runReaTeardownLive = async function() {
+  const targetInput = document.getElementById('rea-target-input');
+  const target = targetInput ? targetInput.value.trim() : 'https://igloo.inc';
+  const resultsBox = document.getElementById('rea-results-box');
+  
+  if (resultsBox) {
+    resultsBox.innerHTML = `
+      <div style="color:#00f0ff; display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; animation:spin 1s infinite linear;">⚙️</span>
+        Ispezione REA in corso su <strong>${target}</strong> tramite 170 tool MCP...
+      </div>
+    `;
+  }
+  
+  window.setJarvisSubtitle(`Analisi di reverse engineering avviata su ${target}...`);
+  if (window.focusCosmosOnCluster) window.focusCosmosOnCluster('rea');
+
+  try {
+    const res = await fetch('/api/rea/teardown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target: target, read_aloud: true })
+    });
+    const d = await res.json();
+    
+    if (d.status === 'SUCCESS') {
+      const techChips = (d.tech_stack || []).map(t => 
+        `<span style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:4px;">${t}</span>`
+      ).join('');
+
+      const compList = (d.components || []).map(c => 
+        `<li style="margin:2px 0;">• <strong style="color:#fff;">${c.name}</strong> [${c.type}] <span style="color:#00ff9f;">${c.status}</span></li>`
+      ).join('');
+
+      if (resultsBox) {
+        resultsBox.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="color:#00ff9f; font-weight:bold;">✦ TEARDOWN COMPLETATO CON SUCCESSO</span>
+            <span style="color:#94a3b8; font-size:10px;">${d.category || 'Architettura WebGL/Nativa'}</span>
+          </div>
+          <div style="margin:6px 0;">${techChips}</div>
+          <div style="margin-top:6px; color:#cbd5e1; font-size:11px;">
+            <ul style="padding-left:14px; margin:4px 0;">${compList}</ul>
+          </div>
+          <div style="margin-top:8px; padding-top:6px; border-top:1px dashed rgba(0,240,255,0.25); color:#ffd700; font-size:11px;">
+            💬 J.A.R.V.I.S.: "${d.spoken_ack || ''}"
+          </div>
+        `;
+      }
+
+      if (d.spoken_ack) {
+        window.setJarvisSubtitle(d.spoken_ack);
+      }
+
+      if (d.audio_base64) {
+        const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
+        audio.play().catch(e => console.log('Audio autoplay blocked:', e));
+        window.animateAudioSpectrum(4500);
+      }
+    } else {
+      if (resultsBox) {
+        resultsBox.innerHTML = `<div style="color:#ef4444;">Errore REA: ${d.message || d.error || 'Errore sconosciuto'}</div>`;
+      }
+    }
+  } catch (err) {
+    if (resultsBox) {
+      resultsBox.innerHTML = `<div style="color:#ef4444;">Errore di connessione REA: ${err.message}</div>`;
+    }
+  }
+};
+
+window.runReaBuildOriginal = async function() {
+  const targetInput = document.getElementById('rea-target-input');
+  const target = targetInput ? targetInput.value.trim() : 'https://igloo.inc';
+  const resultsBox = document.getElementById('rea-results-box');
+
+  if (resultsBox) {
+    resultsBox.innerHTML = `<div style="color:#00ff9f;">🔨 Costruzione blueprint originale per ${target} in corso...</div>`;
+  }
+  
+  try {
+    const res = await fetch('/api/rea/build', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target: target })
+    });
+    const d = await res.json();
+    if (d.status === 'SUCCESS') {
+      const filesList = (d.blueprint_files || []).map(f => `<div style="color:#00f0ff;">📄 ${f}</div>`).join('');
+      if (resultsBox) {
+        resultsBox.innerHTML = `
+          <div style="color:#00ff9f; font-weight:bold;">✦ BLUEPRINT ORIGINALE COSTRUITO</div>
+          <div style="color:#e2e8f0; margin-top:4px;">File architetturali generati nel repository:</div>
+          <div style="margin-top:6px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px;">${filesList}</div>
+          <div style="margin-top:6px; color:#ffd700;">${d.spoken_ack || ''}</div>
+        `;
+      }
+      if (d.spoken_ack) window.setJarvisSubtitle(d.spoken_ack);
+      if (d.audio_base64) {
+        const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
+        audio.play().catch(_ => {});
+        window.animateAudioSpectrum(3500);
+      }
+    }
+  } catch (e) {
+    if (resultsBox) resultsBox.innerHTML = `<div style="color:#ef4444;">Errore build: ${e.message}</div>`;
+  }
+};
+
+window.openArtCraftSuiteModal = async function() {
+  const resultsBox = document.getElementById('rea-results-box');
+  if (resultsBox) {
+    resultsBox.innerHTML = `<div style="color:#00f0ff;">Scansione 13 App Pure Rust della suite ArtCraft...</div>`;
+  }
+  try {
+    const res = await fetch('/api/rea/status');
+    const d = await res.json();
+    if (d.status === 'SUCCESS' && d.artcraft_apps) {
+      const appCards = Object.entries(d.artcraft_apps).map(([k, v]) => `
+        <div style="display:inline-block; margin:3px; padding:4px 8px; background:rgba(255,183,3,0.12); border:1px solid #ffb703; border-radius:6px; font-size:10px;">
+          <strong style="color:#ffb703;">${v.name}</strong> · <span style="color:#cbd5e1;">${v.category}</span>
+        </div>
+      `).join('');
+      if (resultsBox) {
+        resultsBox.innerHTML = `
+          <div style="color:#ffb703; font-weight:bold; margin-bottom:6px;">✦ SUITE ARTCRAFT RUST (13 APPLICAZIONI)</div>
+          <div style="color:#94a3b8; font-size:10px; margin-bottom:6px;">Software aperti e riscritti in Pure Rust con Server MCP integrato:</div>
+          <div>${appCards}</div>
+        `;
+      }
+    }
+  } catch (e) {
+    if (resultsBox) resultsBox.innerHTML = `<div style="color:#ef4444;">Errore ArtCraft: ${e.message}</div>`;
+  }
+};
+
+window.sendCosmosPrompt = async function() {
+  const input = document.getElementById('cosmos-prompt-input');
+  if (!input) return;
+  const prompt = input.value.trim();
+  if (!prompt) return;
+  input.value = '';
+
+  window.setJarvisSubtitle(prompt, true);
+  window.animateAudioSpectrum(2500);
+
+  try {
+    const res = await fetch('/api/voice/interact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: prompt, voice_enabled: true })
+    });
+    const d = await res.json();
+    if (d.reply) {
+      window.setJarvisSubtitle(d.reply, false);
+    }
+    if (d.audio_base64) {
+      const audio = new Audio("data:audio/mp3;base64," + d.audio_base64);
+      audio.play().catch(_ => {});
+      window.animateAudioSpectrum(4000);
+    }
+  } catch (err) {
+    window.setJarvisSubtitle('Errore di comunicazione: ' + err.message, false);
+  }
+};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 12. SKILLS & ABILITIES VISUAL MATRIX MONITOR (71+ SKILLS & RUST)
@@ -5071,6 +5280,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const savedStark = localStorage.getItem('ebj_stark_mode');
   const shouldBeStark = savedStark !== 'off';
   window.toggleStarkHudMode(shouldBeStark);
+
+  // Default to 3D J.A.R.V.I.S. v8 STARK HUD view
+  const savedView = localStorage.getItem('ebj_active_view') || 'topology';
+  window.switchMasterView(savedView);
 })();
 
 // Registrazione Service Worker per Installazione PWA Reale
