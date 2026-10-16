@@ -4521,6 +4521,29 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "error", "message": str(e)}, 500)
             return
 
+        # ── SOLIDCRAFT 3D CAD ENGINE & MCP STATUS ──────────────────────────
+        if clean_path in ('/api/solidcraft/status', '/api/solidcraft/status/'):
+            try:
+                sc_bin = r"d:\EBGStudioProgetti\Oracle-VPS and EBGStudio\tools\solidcraft\solidcraft-0.14.0-windows-x64-portable\solidcraft-cli.exe"
+                sc_gui = r"d:\EBGStudioProgetti\Oracle-VPS and EBGStudio\tools\solidcraft\solidcraft-0.14.0-windows-x64-portable\solidcraft.exe"
+                installed = os.path.exists(sc_bin)
+                self.send_json({
+                    "status": "SUCCESS",
+                    "name": "SolidCraft",
+                    "version": "0.14.0",
+                    "language": "Pure Rust",
+                    "installed": installed,
+                    "cli_path": sc_bin if installed else None,
+                    "gui_path": sc_gui if os.path.exists(sc_gui) else None,
+                    "mcp_enabled": True,
+                    "mcp_tools_count": 15,
+                    "gpu_acceleration": "NVIDIA GeForce RTX 4070 (Vulkan / Dx12)",
+                    "supported_formats": ["STEP (.step/.stp)", "3MF (.3mf)", "STL (.stl)", "FreeCAD (.FCStd)", "Rhino (.3dm)", "glTF 2.0 (.glb/.gltf)"]
+                })
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
+
         if clean_path in ('/api/pc/screen/frame', '/api/pc/screenshot'):
             try:
                 from ebj_computer_use import capture_screen_pil
