@@ -1,13 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 ==============================================================================
-EBJ SUPREME TRANSLATION GATEWAY MODULE (RUST & MULTI-PROVIDER)
+⚡ EBJ SUPREME TRANSLATION GATEWAY MODULE (RUST & MULTI-PROVIDER v2.0)
 ==============================================================================
-Modulo isolato e pluggabile per la gestione della traduzione simultanea e
-ordinata. Disaccoppia la logica da server.py e gestisce il router multi-provider:
-  Tier 0: Rust Apex Engine Cache (:9000)
-  Tier 1: Google GTX Neural Stream (sub-50ms)
-  Tier 2: MyMemory Resilient Failover
-  Tier 3: DeepL / Lara Translation Model (MCP Protocol)
+Modulo ad alte prestazioni per la traduzione simultanea e sincrona:
+  - Supporto nativo: Moldavo, Ucraino, Polacco, Rumeno, Arabo Marocchino (Darija)
+    più Italiano, Inglese, Francese, Spagnolo, Russo, Tedesco, Portoghese, Cinese, Albanese
+  - Traduzione istantanea One-Shot: 'traduci in polacco confermo il carico'
+  - Traduzione sincrona continua: 'inizia a tradurre in ucraino'
+  - Tier 0: Cache lessicale RAM ad altissima velocità (< 0.5ms)
+  - Tier 1: Rust Apex Engine (:9000)
+  - Tier 2: Google GTX Neural Stream (sub-150ms)
+  - Adattatore lessicale Darija marocchino nativo
 ==============================================================================
 """
 from __future__ import annotations
@@ -22,10 +26,70 @@ from typing import Tuple, Dict, Any, Optional
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _TRANSLATION_STATE_FILE = os.path.join(BASE_DIR, ".active_translation")
 
+# Cache RAM per frasi comuni e saluti (Latenza < 0.2ms)
+DARIJA_LEXICON = {
+    "ciao": "Salam khoya",
+    "buongiorno": "Sbah lkhir khoya",
+    "buonasera": "Msa lkhir",
+    "grazie": "Chokran bzaf",
+    "grazie mille": "Chokran bzaf 3afak",
+    "per favore": "3afak",
+    "va bene": "Wakha, safi",
+    "d'accordo": "Wakha mzyan",
+    "ok": "Wakha safi",
+    "subito": "Daba daba",
+    "ora": "Daba",
+    "adesso": "Daba",
+    "quanto costa": "Bchhal hada?",
+    "il preventivo è pronto": "Devis dyalek wajed khoya",
+    "ci vediamo domani": "Nchoufouk ghedda nchallah",
+    "il camion sta arrivando": "L-camion rah jay daba f triq",
+    "confermo il carico": "Kan-akked l-hamla dyal ghedda",
+    "tutto a posto": "Koulchi mzyan, koulchi bikhir"
+}
+
+LANG_ALIASES = {
+    "uk": "uk", "ucraino": "uk", "ukraino": "uk", "ucraina": "uk", "ukrainian": "uk",
+    "pl": "pl", "polacco": "pl", "polacca": "pl", "polonia": "pl", "polish": "pl", "polska": "pl",
+    "ro": "ro", "rumeno": "ro", "rumena": "ro", "romeno": "ro", "romanian": "ro", "romania": "ro",
+    "mo": "ro", "moldavo": "ro", "moldava": "ro", "moldavia": "ro", "moldova": "ro",
+    "ar-ma": "ar-ma", "marocchino": "ar-ma", "marocco": "ar-ma", "darija": "ar-ma", "arabo marocchino": "ar-ma",
+    "ar": "ar", "arabo": "ar", "araba": "ar", "arabic": "ar",
+    "ru": "ru", "russo": "ru", "russa": "ru", "russian": "ru",
+    "en": "en", "inglese": "en", "english": "en", "americano": "en",
+    "fr": "fr", "francese": "fr", "francais": "fr", "français": "fr",
+    "es": "es", "spagnolo": "es", "spagnola": "es", "spanish": "es",
+    "es-pe": "es-pe", "peruviano": "es-pe", "peru": "es-pe",
+    "de": "de", "tedesco": "de", "german": "de", "deutsch": "de",
+    "pt": "pt", "portoghese": "pt", "portuguese": "pt",
+    "sq": "sq", "albanese": "sq", "shqip": "sq",
+    "it": "it", "italiano": "it",
+    "zh": "zh", "cinese": "zh", "mandarino": "zh"
+}
+
+LANG_DISPLAY_NAMES = {
+    "uk": "Ucraino",
+    "pl": "Polacco",
+    "ro": "Rumeno",
+    "mo": "Moldavo (Rumeno)",
+    "ar-ma": "Arabo Marocchino (Darija)",
+    "ar": "Arabo Moderno Standard",
+    "ru": "Russo",
+    "en": "Inglese",
+    "fr": "Francese",
+    "es": "Spagnolo",
+    "es-pe": "Spagnolo Peruviano",
+    "de": "Tedesco",
+    "pt": "Portoghese",
+    "sq": "Albanese",
+    "it": "Italiano",
+    "zh": "Cinese Mandarino"
+}
+
 class LiveTranslator:
     def __init__(self):
         self.is_active = False
-        self.target_lang = "ru"
+        self.target_lang = "uk"
         self._load_state()
 
     def _load_state(self):
@@ -34,7 +98,7 @@ class LiveTranslator:
                 with open(_TRANSLATION_STATE_FILE, "r", encoding="utf-8") as fh:
                     data = json.load(fh)
                     self.is_active = bool(data.get("active", False))
-                    self.target_lang = data.get("target", "ru")
+                    self.target_lang = data.get("target", "uk")
         except Exception:
             pass
 
@@ -51,19 +115,28 @@ class LiveTranslator:
         if not clean:
             return "", "empty", 0.0
 
-        tgt = (target_lang or self.target_lang).lower().strip()
-        if tgt == "es-pe":
-            tgt = "es"
+        raw_tgt = (target_lang or self.target_lang).lower().strip()
+        tgt = LANG_ALIASES.get(raw_tgt, raw_tgt)
 
-        # Tier 0 & 1: Rust Apex Engine su porta 9000
+        # Tier 0: Cache Darija rapida per saluti ed espressioni quotidiane
+        if tgt == "ar-ma":
+            lower_clean = clean.lower()
+            if lower_clean in DARIJA_LEXICON:
+                lat = (time.perf_counter() - t0) * 1000.0
+                return DARIJA_LEXICON[lower_clean], "EBJ_Darija_Lexicon_RAM", lat
+
+        # Mappatura per Google GTX
+        gtx_tgt = "ro" if tgt == "mo" else ("ar" if tgt == "ar-ma" else ("es" if tgt == "es-pe" else tgt))
+
+        # Tier 1: Rust Apex Engine su porta 9000 (se attivo)
         try:
             s_lang = "it" if source_lang == "auto" else source_lang
             req = urllib.request.Request(
                 "http://127.0.0.1:9000/translate",
-                data=json.dumps({"text": clean, "source_lang": s_lang, "target_lang": tgt}).encode("utf-8"),
+                data=json.dumps({"text": clean, "source_lang": s_lang, "target_lang": gtx_tgt}).encode("utf-8"),
                 headers={"Content-Type": "application/json"}
             )
-            with urllib.request.urlopen(req, timeout=1.8) as resp:
+            with urllib.request.urlopen(req, timeout=1.2) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 tr = data.get("translated", "").strip()
                 prov = data.get("provider", "Rust_Apex_Engine_:9000")
@@ -73,15 +146,18 @@ class LiveTranslator:
         except Exception:
             pass
 
-        # Tier 2: Google GTX Neural Stream
+        # Tier 2: Google GTX Neural Stream (sub-150ms)
         try:
-            g_url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={tgt}&dt=t&q={urllib.parse.quote(clean)}"
-            g_req = urllib.request.Request(g_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+            g_url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={gtx_tgt}&dt=t&q={urllib.parse.quote(clean)}"
+            g_req = urllib.request.Request(g_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) EBJ-Supreme"})
             with urllib.request.urlopen(g_req, timeout=2.5) as r:
                 g_data = json.loads(r.read().decode("utf-8"))
                 res_parts = [part[0] for part in g_data[0] if part and part[0]]
                 res_txt = "".join(res_parts).strip()
                 if res_txt:
+                    # Se target è Darija, applica tocco dialettale marocchino
+                    if tgt == "ar-ma":
+                        res_txt = res_txt.replace("شاحنة النقل", "الكاميو ديال الترحيل").replace("شاحنة", "كاميو").replace("سيدي", "خويا بدر")
                     lat = (time.perf_counter() - t0) * 1000.0
                     return res_txt, "JEV_GTX_Neural_Stream", lat
         except Exception:
@@ -93,50 +169,53 @@ class LiveTranslator:
     def handle_voice_query(self, prompt_text: str) -> Tuple[bool, str, str, str]:
         p = str(prompt_text or "").lower().strip()
 
-        # Stop command
+        # 1. Stop command
         if any(s in p for s in [
             "smetti di tradurre", "stop traduzione", "ferma traduzione", "basta tradurre",
             "interrompi traduzione", "disattiva traduzione", "chiudi traduzione", "fine traduzione"
         ]):
             self.is_active = False
             self._save_state()
-            ack = "Sì signore, procedo subito. Modalità traduzione istantanea disattivata. Torno alle normali funzioni operative Stark."
+            ack = "Sì signore, procedo subito Badr. Modalità traduzione istantanea disattivata. Torno alle normali funzioni operative Stark."
             return True, ack, "it", "stop"
 
-        # Activation command
-        is_trans_trigger = bool(re.search(r'\b(ebj\s+traduci|eb\s+traduci|traduci\s+in|inizia\s+a\s+tradurre|attiva\s+traduzione|mettiti\s+a\s+tradurre)\b', p))
+        # 2. One-Shot Translation: "traduci in [lingua] [testo]"
+        m_oneshot = re.search(
+            r'\b(?:jarvis\s+|ebj\s+)?(?:traduci|traduci\s+subito|traduci\s+in)\s+(?:in\s+)?([a-zA-Z\-_]+)\s*(?:[:,-]|dicendo|che|testo)?\s*(.+)',
+            prompt_text,
+            re.IGNORECASE
+        )
+        if m_oneshot:
+            lang_word = m_oneshot.group(1).lower().strip()
+            phrase_to_trans = m_oneshot.group(2).strip()
+            if lang_word in LANG_ALIASES and len(phrase_to_trans) > 1:
+                target_code = LANG_ALIASES[lang_word]
+                # Se la frase contiene parole di trigger di attivazione (senza vero testo)
+                if phrase_to_trans.lower() not in ["tutto", "quello che dico", "ciò che dico", "ora", "adesso", "subito"]:
+                    translated, engine, lat = self.translate_fast(phrase_to_trans, target_lang=target_code, source_lang="it")
+                    return True, translated, target_code, "one_shot_translated"
+
+        # 3. Activation command: "attiva traduzione in [lingua]" o "inizia a tradurre in [lingua]"
+        is_trans_trigger = bool(re.search(r'\b(ebj\s+traduci|eb\s+traduci|traduci\s+in|inizia\s+a\s+tradurre|attiva\s+traduzione|mettiti\s+a\s+tradurre|parla\s+in)\b', p))
         if is_trans_trigger or p in ["ebj traduci", "eb traduci", "traduci"]:
             target = None
-            if any(k in p for k in ["russo", "russa", "russian", "russia"]):
-                target = "ru"
-            elif any(k in p for k in ["inglese", "english", "britannico", "americano"]):
-                target = "en"
-            elif any(k in p for k in ["francese", "francia", "francais", "français"]):
-                target = "fr"
-            elif any(k in p for k in ["spagnolo", "spagnola", "espana", "español"]):
-                target = "es"
-            elif any(k in p for k in ["peruviano", "peru", "perù", "peruano"]):
-                target = "es-pe"
-            elif any(k in p for k in ["arabo", "araba", "arabic", "marocchino"]):
-                target = "ar"
-            elif any(k in p for k in ["albanese", "albania", "shqip"]):
-                target = "sq"
-            elif any(k in p for k in ["cinese", "mandarino", "chinese"]):
-                target = "zh"
-            elif any(k in p for k in ["italiano", "italiana"]):
-                target = "it"
+            for key, code in LANG_ALIASES.items():
+                if key in p:
+                    target = code
+                    break
 
             if target:
                 self.is_active = True
                 self.target_lang = target
                 self._save_state()
-                ack = f"Sì signore, procedo subito! Modalità traduttore istantaneo attivata verso {target.upper()}. Parli liberamente: ripeterò e tradurrò ogni sua parola con voce neurale nativa. Per terminare dica semplicemente 'smetti di tradurre'."
+                lang_name = LANG_DISPLAY_NAMES.get(target, target.upper())
+                ack = f"Sì signore, procedo subito Badr! Modalità traduttore istantaneo attivata verso {lang_name}. Parla liberamente: ripeterò e tradurrò ogni tua frase in tempo reale con voce neurale nativa. Per terminare basta dire 'smetti di tradurre'."
                 return True, ack, "it", "start"
             else:
-                ack = "Certamente signore. In quale lingua desidera che traduca ciò che dice? Può specificare: russo, inglese, arabo, francese, spagnolo, albanese, cinese o peruviano."
+                ack = "Certamente Badr. In quale lingua desideri che traduca? Posso tradurre sincronizzato in: moldavo, ucraino, polacco, rumeno, arabo marocchino (Darija), russo, inglese, francese, spagnolo, albanese e tedesco."
                 return True, ack, "it", "ask_lang"
 
-        # Active stream translating
+        # 4. Active stream translating (ripete e traduce ogni frase)
         if self.is_active:
             clean_text = re.sub(r'^(ebj|eb|jarvis)\s*[,.:;]?\s*', '', prompt_text, flags=re.I).strip()
             if clean_text:
@@ -162,4 +241,17 @@ def ebj_translate(text: str, target_lang: str = "en", source_lang: str = "auto")
         "target_lang": target_lang,
         "latency_ms": round(lat_ms, 2)
     }
+
+if __name__ == "__main__":
+    import sys
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    t = get_translator()
+    print("=== TEST EBJ TRANSLATION GATEWAY MULTI-LANG ===")
+    sample = "Buongiorno, confermo il carico merci per il trasloco di domani mattina alle otto."
+    for l in ["uk", "pl", "ro", "mo", "ar-ma"]:
+        res, eng, lat = t.translate_fast(sample, target_lang=l)
+        print(f"[{LANG_DISPLAY_NAMES.get(l, l)}] ({lat:.1f}ms via {eng}):\n  -> {res}\n")
 

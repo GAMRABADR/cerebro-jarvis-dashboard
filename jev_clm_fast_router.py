@@ -325,7 +325,11 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
 
 
     # 3.5 Traduzione Simultanea Rapida (JEV & Rust Apex Translation Engine)
-    if any(k in cmd for k in ["traduci ", "traduci", "smetti di tradurre", "stop traduzione"]):
+    if any(k in cmd for k in [
+        "traduci ", "traduci", "smetti di tradurre", "stop traduzione", "ferma traduzione",
+        "basta tradurre", "attiva traduzione", "inizia a tradurre", "mettiti a tradurre"
+    ]):
+
         try:
             import ebj_translation_gateway as _trans_gw
             is_tr, tr_resp, tr_lang, tr_act = _trans_gw.get_translator().handle_voice_query(user_command)

@@ -393,8 +393,41 @@ SUPPORTED_LANGUAGES = {
         "alt_voice": "zh-CN-XiaoxiaoNeural",
         "ack_switch": "是的先生，我立即执行。系统语言已切换为中文。斯塔克智能核心已就绪，随时听候指示。",
         "ask_which": "当然可以，先生。请问您希望我采用哪种语言：意大利语、法语、英语、西班牙语、秘鲁西班牙语、俄语、阿尔巴尼亚语、阿拉伯语还是中文？"
+    },
+    "uk": {
+        "label": "Українська",
+        "locale": "uk-UA",
+        "voice": "uk-UA-OstapNeural",
+        "alt_voice": "uk-UA-PolinaNeural",
+        "ack_switch": "Так, сер, виконую негайно. Мову переключено на українську. Усі системи Старка готові до роботи, Бадр.",
+        "ask_which": "Звісно, сер. Яку мову ви бажаєте обрати?"
+    },
+    "pl": {
+        "label": "Polski",
+        "locale": "pl-PL",
+        "voice": "pl-PL-MarekNeural",
+        "alt_voice": "pl-PL-ZofiaNeural",
+        "ack_switch": "Tak jest, panie Badr, język został przełączony na polski. Wszystkie systemy Stark są w pełnej gotowości.",
+        "ask_which": "Oczywiście, panie Badr. Jaki język pan wybiera?"
+    },
+    "ro": {
+        "label": "Română",
+        "locale": "ro-RO",
+        "voice": "ro-RO-EmilNeural",
+        "alt_voice": "ro-RO-AlinaNeural",
+        "ack_switch": "Da, domnule Badr, execut imediat. Limba a fost schimbată în română. Toate sistemele Stark sunt gata de operare.",
+        "ask_which": "Desigur, domnule Badr. Ce limbă doriți să folosesc?"
+    },
+    "mo": {
+        "label": "Moldovenească (Română)",
+        "locale": "ro-MD",
+        "voice": "ro-RO-EmilNeural",
+        "alt_voice": "ro-RO-AlinaNeural",
+        "ack_switch": "Da, domnule Badr, trecem pe moldovenească. Sistemul este pregătit și la dispoziția dumneavoastră.",
+        "ask_which": "Sigur, domnule Badr. Ce limbă alegeți?"
     }
 }
+
 
 _LANG_STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".active_language")
 EBJ_CURRENT_LANG = "it"
@@ -474,10 +507,17 @@ def detect_and_handle_language_switch(prompt_text):
         target = "es"
     elif any(k in p for k in ["russo", "russa", "russian", "russia"]):
         target = "ru"
-    elif any(k in p for k in ["albanese", "albania", "shqip"]):
-        target = "sq"
     elif any(k in p for k in ["cinese", "mandarino", "chinese"]):
         target = "zh"
+    elif any(k in p for k in ["ucraino", "ucraina", "ukraino", "ukraina", "ukrainian"]):
+        target = "uk"
+    elif any(k in p for k in ["polacco", "polacca", "polonia", "polish", "polska"]):
+        target = "pl"
+    elif any(k in p for k in ["rumeno", "rumena", "romeno", "romena", "romanian", "romania"]):
+        target = "ro"
+    elif any(k in p for k in ["moldavo", "moldava", "moldavia", "moldova"]):
+        target = "mo"
+
         
     if target:
         set_active_language(target)
@@ -4224,7 +4264,15 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
     active_lang = get_active_language()
     
     # Rilevamento automatico alfabeti/caratteri per selezione vocale istantanea
-    if re.search(r'[\u0400-\u04FF]', clean_text) or voice_mode in ("ru", "russian", "russo"):
+    if voice_mode in ("uk", "ukrainian", "ucraino") or re.search(r'[іїєґІЇЄҐ]', clean_text):
+        active_lang = "uk"
+    elif voice_mode in ("pl", "polish", "polacco") or re.search(r'[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]', clean_text):
+        active_lang = "pl"
+    elif voice_mode in ("ro", "romanian", "rumeno") or re.search(r'[ăâîșțĂÂÎȘȚ]', clean_text):
+        active_lang = "ro"
+    elif voice_mode in ("mo", "moldavian", "moldavo"):
+        active_lang = "mo"
+    elif re.search(r'[\u0400-\u04FF]', clean_text) or voice_mode in ("ru", "russian", "russo"):
         active_lang = "ru"
     elif voice_mode in ("ar-ma", "darija", "marocchino", "arabo_marocchino"):
         active_lang = "ar-ma"
@@ -4235,6 +4283,7 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
         else:
             active_lang = "ar"
     elif re.search(r'[\u3040-\u30FF]', clean_text) or voice_mode in ("ja", "japanese", "giapponese"):
+
         active_lang = "ja"
     elif re.search(r'[\u4E00-\u9FFF]', clean_text) or voice_mode in ("zh", "chinese", "cinese"):
         active_lang = "zh"
