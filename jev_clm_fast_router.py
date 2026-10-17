@@ -367,27 +367,36 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
     if is_email_cmd and not is_negation:
         try:
             from ebj_system_ops_executor import send_universal_email
-            # Estrazione destinatario
+            # Estrazione destinatario (con alias intelligenti)
             email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', user_command)
-            recipient = email_match.group(0) if email_match else "badraudi@gmail.com"
+            if email_match:
+                recipient = email_match.group(0).strip()
+            else:
+                alias_match = re.search(r'\b(?:a|per|destinatario)\s+([a-zA-Z0-9_\s]+)', user_command, re.I)
+                alias = alias_match.group(1).strip().lower() if alias_match else "badr"
+                if any(k in alias for k in ["pietro", "logistica"]):
+                    recipient = "pietrotraslochi@gmail.com"
+                else:
+                    recipient = "badraudi@gmail.com"
             
             # Estrazione oggetto
             subj = "Notifica Rapida da EBJ Supreme"
-            subj_match = re.search(r'\b(con oggetto|oggetto|titolo)\s+([^\.,;]+)', user_command, re.I)
+            subj_match = re.search(r'\b(?:con oggetto|oggetto|titolo)\s+([^\.,;]+)', user_command, re.I)
             if subj_match:
-                subj = subj_match.group(2).strip().capitalize()
+                subj = subj_match.group(1).strip().capitalize()
                 
-            # Estrazione corpo del messaggio
+            # Estrazione corpo del messaggio (con supporto a 'dicendo', 'che dice', ecc.)
             body = ""
-            body_match = re.search(r'\b(con scritto|con testo|scrivendo|messaggio|testo|contenuto)\s+([^\.,;]+.*)', user_command, re.I)
+            body_match = re.search(r'\b(?:con scritto|con testo|scrivendo|messaggio|testo|contenuto|dicendo|che dice)\s+(.*)', user_command, re.I)
             if body_match:
-                body = body_match.group(2).strip()
+                body = body_match.group(1).strip()
             else:
                 clean = re.sub(r'\b(invia|inviami|manda|mandami|spedisci|spediscimi|scrivi|inoltra)\s+(un\x27?|una\s+|l\x27|la\s+|il\s+)?(e-?mail|mail)\b', '', user_command, flags=re.I)
                 clean = re.sub(r'\b(a|per)\s+[\w\.-]+@[\w\.-]+\.\w+', '', clean, flags=re.I)
-                clean = re.sub(r'\b(a|per)\s+(me|me stesso|badr)\b', '', clean, flags=re.I)
+                clean = re.sub(r'\b(a|per)\s+(me|me stesso|badr|pietro)\b', '', clean, flags=re.I)
                 clean = clean.strip()
                 body = clean if len(clean) > 3 else f"Comando vocale inviato da Badr: {user_command}"
+
 
             res = send_universal_email(recipient, subj, body, voice_note_text=body)
             if res.get("status") == "success":

@@ -37,7 +37,7 @@ VOICE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Credenziali Email Gmail (Google App Password)
 GMAIL_USER = "badraudi@gmail.com"
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "kqvjcuzibizysoxu")
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", os.environ.get("GMAIL_APP_PASS") or os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("GMAIL_PASSWORD") or "")
 
 # Mappa delle applicazioni Windows più comuni e percorsi noti
 KNOWN_APPS = {
@@ -587,23 +587,44 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helv
                 except Exception as e:
                     print(f"[JEV Executor] Errore allegato {att_path}:", e)
 
-    # Invio SMTP SSL
+    # Invio Infallibile con Motore Rust Lettre + Auto-Failover
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
-            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            server.send_message(msg)
+        from ebj_rust_mailer import send_email_infallible
+        all_atts = list(attachments or [])
+        if audio_path and os.path.exists(audio_path):
+            all_atts.append(audio_path)
             
+        r_res = send_email_infallible(
+            to=recipient,
+            subject=subject,
+            body=body,
+            html=html_body,
+            attachments=all_atts,
+            brand=brand
+        )
+        
         lat = (time.perf_counter() - t0) * 1000.0
-        return {
-            "status": "success",
-            "action": "send_email",
-            "recipient": recipient,
-            "subject": subject,
-            "has_voice_note": bool(audio_path),
-            "attachments_count": len(attachments) if attachments else 0,
-            "latency_ms": round(lat, 2),
-            "message": f"Email inviata con successo a {recipient}!"
-        }
+        if r_res.get("success"):
+            return {
+                "status": "success",
+                "action": "send_email",
+                "recipient": recipient,
+                "subject": subject,
+                "has_voice_note": bool(audio_path),
+                "attachments_count": len(all_atts),
+                "latency_ms": round(r_res.get("latency_ms", lat), 2),
+                "engine": r_res.get("engine", "Rust_Lettre_Native"),
+                "channel": r_res.get("channel", "SMTPS_SSL_465"),
+                "message": f"Email inviata con successo a {recipient}!"
+            }
+        else:
+            return {
+                "status": "error",
+                "action": "send_email",
+                "recipient": recipient,
+                "error": r_res.get("error", "Errore sconosciuto SMTP"),
+                "latency_ms": round(lat, 2)
+            }
     except Exception as e:
         lat = (time.perf_counter() - t0) * 1000.0
         return {

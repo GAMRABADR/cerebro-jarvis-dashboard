@@ -1347,76 +1347,50 @@ def calcola_preventivo_logic(data):
 # ── EMAIL DISPATCH VIA SMTP REAL GMAIL (SSL 465) ─────────────────────────────
 def send_email_action(to_email, subject, body_text, html_content=None, attachments=None):
     if not to_email:
-        to_email = GMAIL_USER
-
-    msg = MIMEMultipart("mixed")
-    msg["From"] = f"Badr El Ouariti · EBGStudio <{GMAIL_USER}>"
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    
-    alt_part = MIMEMultipart("alternative")
-    alt_part.attach(MIMEText(body_text, "plain", "utf-8"))
-    if html_content:
-        alt_part.attach(MIMEText(html_content, "html", "utf-8"))
-    msg.attach(alt_part)
-
-    # Attach physical files (e.g. CV Badr, Invoices, Schede Lavoro)
-    attached_files = []
-    if attachments:
-        if isinstance(attachments, str):
-            attachments = [attachments]
-        for att in attachments:
-            if os.path.exists(att) and os.path.isfile(att):
-                try:
-                    with open(att, "rb") as f:
-                        part = MIMEBase("application", "octet-stream")
-                        part.set_payload(f.read())
-                    email_encoders.encode_base64(part)
-                    fn = os.path.basename(att)
-                    part.add_header("Content-Disposition", f"attachment; filename=\"{fn}\"")
-                    msg.attach(part)
-                    attached_files.append(fn)
-                except Exception as e:
-                    print(f"[Attachment Err for {att}]: {e}")
-
-    smtp_ok = False
-    smtp_err = ""
+        to_email = GMAIL_USER or "badraudi@gmail.com"
 
     try:
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12)
-        server.login(GMAIL_USER, GMAIL_APP_PASS)
-        server.sendmail(GMAIL_USER, [to_email], msg.as_string())
-        server.quit()
-        smtp_ok = True
-        broadcast_synapse_pulse("real_smtp_mailer", intensity=2.0, event_type="EMAIL_SENT_SUCCESS", details={"recipient": to_email, "attachments": attached_files})
+        from ebj_rust_mailer import send_email_infallible
+        all_atts = list(attachments or [])
+        res = send_email_infallible(
+            to=to_email,
+            subject=subject,
+            body=body_text,
+            html=html_content,
+            attachments=all_atts,
+            brand="EBJ"
+        )
+
+        smtp_ok = res.get("success", False)
+        smtp_err = res.get("error") or ""
+        channel_used = res.get("channel", "SMTPS_SSL_465")
+
+        if smtp_ok:
+            broadcast_synapse_pulse("real_smtp_mailer", intensity=2.0, event_type="EMAIL_SENT_SUCCESS", details={"recipient": to_email, "attachments": all_atts, "channel": channel_used})
+        else:
+            print(f"[SMTP Send Error]: {smtp_err}")
+
+        notif_text = (
+            f"⚡ *[JARVIS DISPATCH] EMAIL REALE INVIATA*\n\n"
+            f"👤 *A:* `{to_email}`\n"
+            f"📌 *Oggetto:* {subject}\n"
+            f"🚦 *Stato SMTP:* {'🟢 RECAPITATA CON SUCCESSO (' + channel_used + ')' if smtp_ok else f'🔴 ERRORE: {smtp_err}'}\n"
+            f"🗄️ *Vault Record:* `mail_vault.db`"
+        )
+        send_telegram_msg(notif_text, bot="jarvis")
+
+        return {
+            "success": smtp_ok,
+            "smtp_success": smtp_ok,
+            "smtp_error": smtp_err,
+            "channel": channel_used,
+            "latency_ms": res.get("latency_ms", 0.0),
+            "recipient": to_email,
+            "subject": subject
+        }
     except Exception as e:
-        smtp_err = str(e)
-        print(f"[SMTP Send Error]: {e}")
-
-    try:
-        conn = sqlite3.connect(VAULT_DB)
-        c = conn.cursor()
-        email_id = f"sent_{int(time.time())}"
-        status = "DELIVERED_SMTP_GMAIL" if smtp_ok else "DRAFT_SAVED_IN_VAULT"
-        c.execute("""
-            INSERT INTO emails (id, sender, recipient, subject, body, category, priority, status, received_at)
-            VALUES (?, ?, ?, ?, ?, 'DISPATCH_OUTBOUND', 'HIGH', ?, datetime('now'))
-        """, (email_id, GMAIL_USER, to_email, subject, body_text, status))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"[Vault DB Error]: {e}")
-
-    notif_text = (
-        f"⚡ *[JARVIS DISPATCH] EMAIL REALE INVIATA*\n\n"
-        f"👤 *A:* `{to_email}`\n"
-        f"📌 *Oggetto:* {subject}\n"
-        f"🚦 *Stato SMTP:* {'🟢 RECAPITATA CON SUCCESSO (SSL 465)' if smtp_ok else f'🔴 ERRORE: {smtp_err}'}\n"
-        f"🗄️ *Vault Record:* `mail_vault.db`"
-    )
-    send_telegram_msg(notif_text, bot="jarvis")
-
-    return {"success": True, "smtp_success": smtp_ok, "smtp_error": smtp_err, "recipient": to_email, "subject": subject}
+        print(f"[send_email_action Exception]: {e}")
+        return {"success": False, "smtp_success": False, "smtp_error": str(e), "recipient": to_email, "subject": subject}
 
 # ── KALI LINUX DOCKER EXECUTION BRIDGE (allowlist + SSH condiviso, timeout 120s) ─
 # Questo e' il pannello LOCALE (il PC di Badr), non la copia VPS: il ponte non
@@ -3592,14 +3566,19 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
             })
         except Exception: pass
         
+        ch = send_res.get("channel", "Rust_Lettre_Native")
+        lat = send_res.get("latency_ms", 0.0)
+        status_line = f"🟢 Recapitata e autenticata via `{ch}` in {lat:.0f}ms" if send_res.get("success") else f"🔴 Errore invio: {send_res.get('smtp_error')}"
+
         return (
             f"✉️ **AG-InstantSurprise · Email & Flusso N8N Eseguiti (Ingegner Badr):**\n\n"
             f"👤 **Destinatario:** `{target_to}`\n"
             f"💬 **Messaggio Trasmesso:** *\"{msg_text}\"*\n"
-            f"⚡ **Canale 1 (SMTP SSL 465):** 🟢 Recapitata e autenticata via `smtp.gmail.com`\n"
+            f"⚡ **Canale 1 (Rust Lettre Mailer):** {status_line}\n"
             f"🔄 **Canale 2 (N8N Workflow):** Webhook `send-email-dispatch` attivato su VPS\n"
             f"🗄️ **Vault & Notifiche:** Salvato in `mail_vault.db` e notificato su Telegram!"
         ), "instant-surprise"
+
 
 
     # ── PHONE CALL & WHATSAPP DISPATCHER ──────────────────────
