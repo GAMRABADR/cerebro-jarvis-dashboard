@@ -110,8 +110,24 @@ KNOWN_APPS = {
     "bambu studio": [
         r"C:\Program Files\Bambu Studio\bin\bambu-studio.exe",
         r"C:\Program Files\Bambu Studio\bambu-studio.exe"
+    ],
+    "solidcraft": [
+        r"D:\tools\SolidCraft\solidcraft-0.15.0-windows-x64-portable\solidcraft.exe",
+        r"D:\tools\SolidCraft\solidcraft.exe"
+    ],
+    "solidworks": [
+        r"D:\tools\SolidCraft\solidcraft-0.15.0-windows-x64-portable\solidcraft.exe",
+        r"D:\tools\SolidCraft\solidcraft.exe"
+    ],
+    "cad": [
+        r"D:\tools\SolidCraft\solidcraft-0.15.0-windows-x64-portable\solidcraft.exe",
+        r"D:\tools\SolidCraft\solidcraft.exe"
+    ],
+    "artcraft": [
+        r"D:\ArtCraft\artcraft-launcher.exe"
     ]
 }
+
 
 # Cartelle di sistema standard per Explorer
 FOLDER_SHORTCUTS = {

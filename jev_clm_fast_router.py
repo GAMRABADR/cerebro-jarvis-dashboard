@@ -280,32 +280,49 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
 
     # 3.2 Reverse Engineering Nativo con REA & Suite Creativa ArtCraft in Rust
     if any(k in cmd for k in [
-        "reverse engineering", "reverse engineer", "decompila", "disassembla", "analizza binario",
-        "rea ", "rea", "artcraft", "photocraft", "cadcraft", "gridcraft", "vectorcraft", "wordcraft"
+        "reverse engineering", "reverse engineer", "revers enginier", "revers enginers",
+        "decompila", "disassembla", "analizza binario", "rea ", "rea", "artcraft", "photocraft", "cadcraft", "gridcraft"
     ]):
         try:
-            from ebj_reverse_engineer_rea import get_artcraft_suite, is_rea_available, inspect_pe_file
+            from ebj_reverse_engineer_rea import get_artcraft_suite, is_rea_available, deep_reverse_engineer
+            
+            # Se la richiesta riguarda esplicitamente la suite ArtCraft
             if any(k in cmd for k in ["artcraft", "photocraft", "cadcraft", "gridcraft", "suite"]):
                 suite = get_artcraft_suite()
                 return {
                     "status": "success",
                     "action": "artcraft_suite_query",
-                    "spoken_response": "La suite ArtCraft in pure Rust include tredici applicazioni creative gratuite controllabili via MCP: Photocraft, CADCraft, Gridcraft, Vectorcraft e Wordcraft, Badr.",
+                    "spoken_response": "La suite ArtCraft in pure Rust include tredici applicazioni creative gratuite controllabili via MCP: tra cui SolidCraft e CADCraft per il CAD parametrico, Photocraft e Gridcraft, Badr.",
                     "data": suite,
                     "engine": "JEV_ArtCraft_Rust_Suite",
                     "latency_ms": 1.5
                 }
+
+            # Estrazione del nome del programma target se specificato
+            m_target = re.search(r'\b(?:reverse\s*engineering|revers\s*enginiering|revers\s*enginers|reverse\s*engineer|decompila|disassembla)\s+(?:di|del|dell[\'\"\s]|su|l[\'\"\s])?\s*([a-zA-Z0-9_\-\.\s]+)', user_command, re.I)
+            target_prog = None
+            if m_target:
+                candidate = m_target.group(1).strip()
+                candidate_clean = re.sub(r'\b(programma|app|software|file|eseguibile|jarvis|ebj|per favore|subito|fammi|fai)\b', '', candidate, flags=re.I).strip()
+                if candidate_clean and candidate_clean.lower() not in ["tutto", "qualcosa"]:
+                    target_prog = candidate_clean
+
+            if target_prog:
+                re_res = deep_reverse_engineer(target_prog)
+                re_res["engine"] = "JEV_REA_Reverse_Engineer"
+                return re_res
             else:
                 return {
                     "status": "success",
                     "action": "rea_reverse_engineering_ready",
-                    "spoken_response": "Skill di Reverse Engineering REA attiva e operativa, Badr. Posso ispezionare binari PE, Rust, assembly .NET e sorgenti Electron ASAR.",
+                    "spoken_response": "Skill di Reverse Engineering REA attiva e operativa, Badr. Dimmi quale applicazione o binario vuoi che analizzi o decompili.",
                     "rea_online": is_rea_available(),
                     "engine": "JEV_REA_Reverse_Engineer",
                     "latency_ms": 1.2
                 }
         except Exception as e:
-            return {"status": "error", "message": str(e), "engine": "JEV_Native_Win32"}
+            return {"status": "error", "message": str(e), "spoken_response": f"Errore durante l'analisi REA: {e}", "engine": "JEV_Native_Win32"}
+
 
     # 3.5 Traduzione Simultanea Rapida (JEV & Rust Apex Translation Engine)
     if any(k in cmd for k in ["traduci ", "traduci", "smetti di tradurre", "stop traduzione"]):
@@ -409,6 +426,8 @@ def dispatch_operation(user_command: str, context: Optional[Dict[str, Any]] = No
             return {"status": "error", "message": str(e), "spoken_response": f"Errore nell'invio dell'email: {e}", "engine": "JEV_Native_Win32"}
         
     # 2. Intercettazione e Deliberazione Cognitiva Avanzata (MetaCore Reflexion & Decision Loop)
+
+
     if rust_meta and rust_meta.get("intent") in ("HERMES_COGNITIVE_TASK", "AGENTE_ZERO_TAKEOVER", "METAPLAN_REFLECT_DECIDE"):
         try:
             from ebj_agentic_metacore import run_agentic_metacore
