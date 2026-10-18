@@ -104,6 +104,7 @@ def send_heartbeat():
         "battery": batt,
         "location": loc,
         "notifications_count": len(notifs),
+        "notifications": notifs,
         "status": "ONLINE"
     }
     try:

@@ -105,11 +105,14 @@ def get_recent_notifications():
 def send_heartbeat():
     loc = get_gps_location()
     batt = get_battery_status()
+    notifs = get_recent_notifications()
     payload = {
         "device_id": NODE_ID,
         "timestamp": time.time(),
         "battery": batt,
         "location": loc,
+        "notifications_count": len(notifs),
+        "notifications": notifs,
         "status": "ONLINE"
     }
     try:

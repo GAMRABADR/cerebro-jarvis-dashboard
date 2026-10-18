@@ -4609,6 +4609,22 @@ class JarvisHandler(BaseHTTPRequestHandler):
             })
             return
 
+        if clean_path == '/api/whatsapp/webhook':
+            import urllib.parse
+            parsed_url = urllib.parse.urlparse(self.path)
+            q_params = urllib.parse.parse_qs(parsed_url.query)
+            mode = q_params.get('hub.mode', [''])[0]
+            token = q_params.get('hub.verify_token', [''])[0]
+            challenge = q_params.get('hub.challenge', [''])[0]
+            if challenge:
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(challenge.encode('utf-8'))
+                return
+            self.send_json({"status": "SUCCESS", "message": "WhatsApp Meta Webhook Listener Ready"})
+            return
+
         if clean_path in ('/api/pc/status', '/api/pc/health'):
             try:
                 from ebj_pc_power_manager import get_system_power_status
@@ -6744,6 +6760,26 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 _ANDROID_DEVICE_STATE["location"] = data["location"]
             if "notifications_count" in data:
                 _ANDROID_DEVICE_STATE["notifications_count"] = data["notifications_count"]
+            
+            # Parsing automatico notifiche WhatsApp su smartphone di Badr (+39 388 870 3508)
+            raw_notifs = data.get("notifications", [])
+            if raw_notifs:
+                try:
+                    from ebj_whatsapp_meta_agent import get_whatsapp_agent
+                    wa_agent = get_whatsapp_agent()
+                    for n in raw_notifs:
+                        if n.get("packageName") == "com.whatsapp":
+                            sender_title = n.get("title", "")
+                            msg_content = n.get("text", "")
+                            if sender_title and msg_content:
+                                wa_agent.process_incoming_whatsapp(
+                                    sender_phone=sender_title,
+                                    sender_name=sender_title,
+                                    message=msg_content
+                                )
+                except Exception:
+                    pass
+
             pending = list(_ANDROID_DEVICE_STATE["pending_commands"])
             _ANDROID_DEVICE_STATE["pending_commands"] = []
             self.send_json({"status": "SUCCESS", "pending_commands": pending})
@@ -6753,6 +6789,31 @@ class JarvisHandler(BaseHTTPRequestHandler):
             act = data.get("action", "")
             params = data.get("params", {})
             _enqueue_android_command(act, params)
+            self.send_json({"status": "SUCCESS", "enqueued": act})
+            return
+
+        # ── WHATSAPP META BUSINESS AGENT WEBHOOK & DIRECT DISPATCHER ───────────
+        if self.path.startswith('/api/whatsapp/webhook'):
+            try:
+                from ebj_whatsapp_meta_agent import get_whatsapp_agent
+                wa_agent = get_whatsapp_agent()
+                res = wa_agent.process_meta_webhook(data)
+                self.send_json({"status": "SUCCESS", "processed_count": len(res), "results": res})
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)}, 500)
+            return
+
+        if self.path == '/api/whatsapp/send':
+            try:
+                target_phone = data.get("phone", "+393888703508")
+                msg_text = data.get("text", "")
+                from ebj_whatsapp_meta_agent import get_whatsapp_agent
+                wa_agent = get_whatsapp_agent()
+                res = wa_agent.send_whatsapp_message(target_phone, msg_text)
+                self.send_json({"status": "SUCCESS", "result": res})
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)}, 500)
+            return
         # ── WORKSTATION SPEAKERS & HARDWARE AUDIO PLAYBACK ────────────────────
         if self.path == '/api/pc/speakers':
             try:
