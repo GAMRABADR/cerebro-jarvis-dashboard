@@ -536,55 +536,91 @@
               </div>
             </div>
 
-            <!-- 🌌 J.A.R.V.I.S. ARC REACTOR HOLOGRAPHIC HUD (144 FPS / TONY STARK FUI) -->
-            <div class="jarvis-arc-hud-container" id="quantum-hologram-wrapper" onclick="toggleRecording()" title="Tocca l'Arc Reactor o premi [Ctrl+Spazio] per parlare con J.A.R.V.I.S.">
-              <svg class="jarvis-arc-svg" viewBox="0 0 240 240">
-                <defs>
-                  <radialGradient id="arcCoreGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-                    <stop offset="35%" stop-color="#00f0ff" stop-opacity="0.9"/>
-                    <stop offset="70%" stop-color="#0066ff" stop-opacity="0.5"/>
-                    <stop offset="100%" stop-color="#001026" stop-opacity="0"/>
-                  </radialGradient>
-                </defs>
+            <!-- 🌌 ULTRA HIGH-TECH VOLUMETRIC HOLOGRAM STAGE (STARK APEX 2026) -->
+            <div class="holo-stage-wrapper" id="holo-stage-wrapper">
+              <!-- Volumetric Light Beam & Pedestal -->
+              <div class="holo-volumetric-beam"></div>
+              <div class="holo-pedestal-ring"></div>
 
-                <!-- 1. ANELLO ESTERNO CON TACCHE GRADUATE 360° -->
-                <circle cx="120" cy="120" r="110" fill="none" stroke="rgba(0,240,255,0.2)" stroke-width="1.5"/>
-                <g class="arc-rot-clockwise">
-                  <circle cx="120" cy="120" r="106" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="4 8 16 8"/>
-                  <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(0,255,159,0.4)" stroke-width="1" stroke-dasharray="2 6"/>
-                  <line x1="120" y1="6" x2="120" y2="18" stroke="#00ff9f" stroke-width="2"/>
-                  <line x1="120" y1="222" x2="120" y2="234" stroke="#00ff9f" stroke-width="2"/>
-                  <line x1="6" y1="120" x2="18" y2="120" stroke="#00ff9f" stroke-width="2"/>
-                  <line x1="222" y1="120" x2="234" y2="120" stroke="#00ff9f" stroke-width="2"/>
-                </g>
+              <!-- Sci-Fi Telemetry Corner Brackets -->
+              <div class="holo-telemetry-overlay">
+                <span class="holo-corner-bracket holo-cb-tl">SYS: APEX 144FPS</span>
+                <span class="holo-corner-bracket holo-cb-tr">GEO: 44.49°N · BO</span>
+                <span class="holo-corner-bracket holo-cb-bl">VOICE: DIEGO NEURAL</span>
+                <span class="holo-corner-bracket holo-cb-br">COHERENCE: 99.8%</span>
+              </div>
 
-                <!-- 2. ANELLO INTERMEDIO DENTATO (GEAR TEETH) -->
-                <g class="arc-rot-counter">
-                  <circle cx="120" cy="120" r="88" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="12 16"/>
-                  <circle cx="120" cy="120" r="80" fill="none" stroke="rgba(255,183,3,0.45)" stroke-width="1.5" stroke-dasharray="30 20"/>
-                </g>
+              <!-- 3D Projection Target (Supports Modes: Arc, Avatar, Globe) -->
+              <div class="holo-projection-target" id="quantum-hologram-wrapper" onclick="toggleRecording()" title="Tocca il Nucleo Olografico per parlare con J.A.R.V.I.S.">
+                
+                <!-- MODE 1: ARC REACTOR CORE (DEFAULT) -->
+                <div class="holo-mode-arc" id="holo-view-arc">
+                  <svg class="jarvis-arc-svg" viewBox="0 0 240 240">
+                    <defs>
+                      <radialGradient id="arcCoreGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                        <stop offset="35%" stop-color="#00f0ff" stop-opacity="0.9"/>
+                        <stop offset="70%" stop-color="#0066ff" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="#001026" stop-opacity="0"/>
+                      </radialGradient>
+                    </defs>
+                    <circle cx="120" cy="120" r="110" fill="none" stroke="rgba(0,240,255,0.2)" stroke-width="1.5"/>
+                    <g class="arc-rot-clockwise">
+                      <circle cx="120" cy="120" r="106" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="4 8 16 8"/>
+                      <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(0,255,159,0.4)" stroke-width="1" stroke-dasharray="2 6"/>
+                      <line x1="120" y1="6" x2="120" y2="18" stroke="#00ff9f" stroke-width="2"/>
+                      <line x1="120" y1="222" x2="120" y2="234" stroke="#00ff9f" stroke-width="2"/>
+                      <line x1="6" y1="120" x2="18" y2="120" stroke="#00ff9f" stroke-width="2"/>
+                      <line x1="222" y1="120" x2="234" y2="120" stroke="#00ff9f" stroke-width="2"/>
+                    </g>
+                    <g class="arc-rot-counter">
+                      <circle cx="120" cy="120" r="88" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="12 16"/>
+                      <circle cx="120" cy="120" r="80" fill="none" stroke="rgba(255,183,3,0.45)" stroke-width="1.5" stroke-dasharray="30 20"/>
+                    </g>
+                    <g class="arc-rot-fast">
+                      <circle cx="120" cy="120" r="64" fill="none" stroke="rgba(0,255,159,0.7)" stroke-width="2" stroke-dasharray="6 24 12 12"/>
+                    </g>
+                    <line x1="85" y1="120" x2="155" y2="120" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+                    <line x1="120" y1="85" x2="120" y2="155" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+                    <g class="arc-pulse-core" id="jarvis-sphere">
+                      <circle cx="120" cy="120" r="46" fill="url(#arcCoreGrad)"/>
+                      <circle cx="120" cy="120" r="42" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+                      <circle cx="120" cy="120" r="22" fill="#ffffff"/>
+                    </g>
+                    <text x="120" y="125" text-anchor="middle" fill="#01040a" font-family="'Orbitron', sans-serif" font-weight="900" font-size="12" letter-spacing="2">E.B.J.</text>
+                  </svg>
+                </div>
 
-                <!-- 3. ANELLO A DIAFRAMMA OTTICO / STARK HUD -->
-                <g class="arc-rot-fast">
-                  <circle cx="120" cy="120" r="64" fill="none" stroke="rgba(0,255,159,0.7)" stroke-width="2" stroke-dasharray="6 24 12 12"/>
-                </g>
+                <!-- MODE 2: VOLUMETRIC AVATAR HOLOGRAM -->
+                <div class="holo-mode-avatar" id="holo-view-avatar">
+                  <div class="holo-avatar-hud-target"></div>
+                  <img src="badr_hologram.png" alt="Avatar Olografico Badr" class="holo-avatar-floating-img">
+                  <span style="font-family:'Orbitron',sans-serif; font-size:9px; font-weight:800; color:#00f0ff; letter-spacing:1px; margin-top:4px; text-shadow:0 0 8px #00f0ff;">UNIT-01 · BADR APEX</span>
+                </div>
 
-                <!-- 4. RETICOLO DI MIRA CENTRALE (TARGET CROSSHAIR) -->
-                <line x1="85" y1="120" x2="155" y2="120" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
-                <line x1="120" y1="85" x2="120" y2="155" stroke="rgba(0,240,255,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+                <!-- MODE 3: 3D QUANTUM WIREFRAME GLOBE -->
+                <div class="holo-mode-globe" id="holo-view-globe">
+                  <div class="holo-wireframe-globe-wrap">
+                    <div class="globe-ring globe-ring-lat1"></div>
+                    <div class="globe-ring globe-ring-lat2"></div>
+                    <div class="globe-ring globe-ring-lon1"></div>
+                    <div class="globe-ring globe-ring-lon2"></div>
+                    <div class="globe-ring globe-ring-lon3"></div>
+                    <div class="globe-bologna-beacon" title="Hub Bologna 44.49° N, 11.34° E"></div>
+                  </div>
+                  <span style="position:absolute; bottom:6px; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:800; color:#00ff9f; letter-spacing:1px; text-shadow:0 0 8px #00ff9f;">GEO-HUB · BOLOGNA</span>
+                </div>
 
-                <!-- 5. NUCLEO AL PLASMA PULSANTE (ARC REACTOR CORE) -->
-                <g class="arc-pulse-core" id="jarvis-sphere">
-                  <circle cx="120" cy="120" r="46" fill="url(#arcCoreGrad)"/>
-                  <circle cx="120" cy="120" r="42" fill="none" stroke="#ffffff" stroke-width="1.5"/>
-                  <circle cx="120" cy="120" r="22" fill="#ffffff"/>
-                </g>
+              </div>
 
-                <!-- 6. LABEL CENTRALE -->
-                <text x="120" y="125" text-anchor="middle" fill="#01040a" font-family="'Orbitron', sans-serif" font-weight="900" font-size="12" letter-spacing="2">E.B.J.</text>
-              </svg>
+              <!-- Hologram Projection Mode Switcher -->
+              <div class="holo-mode-controls">
+                <button type="button" class="holo-mode-pill active" id="btn-holo-arc" onclick="window.switchHoloProjection('arc')">⚛️ ARC CORE</button>
+                <button type="button" class="holo-mode-pill" id="btn-holo-avatar" onclick="window.switchHoloProjection('avatar')">👤 AVATAR</button>
+                <button type="button" class="holo-mode-pill" id="btn-holo-globe" onclick="window.switchHoloProjection('globe')">🌐 3D GLOBE</button>
+              </div>
             </div>
+
 
             <!-- 🎬 MARK-LV HUD VIDEO STAGE (VIDEO WHERE THE FACE IS) -->
             <div id="jarvis-hud-video-stage" style="display:none; position:relative; width:100%; max-width:540px; margin:0 auto 16px auto; background:#010915; border:1px solid #00f0ff; border-radius:12px; overflow:hidden; box-shadow:0 0 30px rgba(0,240,255,0.3); z-index:100;">

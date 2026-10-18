@@ -5722,6 +5722,75 @@ if ('serviceWorker' in navigator) {
   };
 })();
 
+// ═══════════════════════════════════════════════════════════════════
+// 🌌 VOLUMETRIC HOLOGRAM CONTROLLER & 3D PARALLAX INTERACTION
+// ═══════════════════════════════════════════════════════════════════
+(function() {
+  window.switchHoloProjection = function(mode) {
+    const arcView = document.getElementById('holo-view-arc');
+    const avatarView = document.getElementById('holo-view-avatar');
+    const globeView = document.getElementById('holo-view-globe');
+
+    const btnArc = document.getElementById('btn-holo-arc');
+    const btnAvatar = document.getElementById('btn-holo-avatar');
+    const btnGlobe = document.getElementById('btn-holo-globe');
+
+    if (!arcView || !avatarView || !globeView) return;
+
+    // Reset all
+    arcView.style.display = 'none';
+    avatarView.style.display = 'none';
+    globeView.style.display = 'none';
+
+    if (btnArc) btnArc.classList.remove('active');
+    if (btnAvatar) btnAvatar.classList.remove('active');
+    if (btnGlobe) btnGlobe.classList.remove('active');
+
+    if (mode === 'avatar') {
+      avatarView.style.display = 'flex';
+      if (btnAvatar) btnAvatar.classList.add('active');
+      if (window.cyberAudio && window.cyberAudio.playHoloGlitch) window.cyberAudio.playHoloGlitch();
+    } else if (mode === 'globe') {
+      globeView.style.display = 'flex';
+      if (btnGlobe) btnGlobe.classList.add('active');
+      if (window.cyberAudio && window.cyberAudio.playChime) window.cyberAudio.playChime();
+    } else {
+      // Default: Arc Reactor
+      arcView.style.display = 'flex';
+      if (btnArc) btnArc.classList.add('active');
+    }
+  };
+
+  // 3D Parallax Tilt on Stage Hover
+  function initHoloParallax() {
+    const stage = document.getElementById('holo-stage-wrapper');
+    const target = document.getElementById('quantum-hologram-wrapper');
+    if (!stage || !target) return;
+
+    stage.addEventListener('mousemove', (e) => {
+      const rect = stage.getBoundingClientRect();
+      const x = e.clientX - rect.left - (rect.width / 2);
+      const y = e.clientY - rect.top - (rect.height / 2);
+      
+      const rotY = (x / (rect.width / 2)) * 14;
+      const rotX = -(y / (rect.height / 2)) * 14;
+
+      target.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) scale(1.03)`;
+    });
+
+    stage.addEventListener('mouseleave', () => {
+      target.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHoloParallax);
+  } else {
+    initHoloParallax();
+  }
+})();
+
+
 
 
 
