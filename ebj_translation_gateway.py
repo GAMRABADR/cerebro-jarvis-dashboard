@@ -90,6 +90,8 @@ class LiveTranslator:
     def __init__(self):
         self.is_active = False
         self.target_lang = "uk"
+        self.default_lang = "it"
+        self.auto_listen = False
         self._load_state()
 
     def _load_state(self):
@@ -99,13 +101,20 @@ class LiveTranslator:
                     data = json.load(fh)
                     self.is_active = bool(data.get("active", False))
                     self.target_lang = data.get("target", "uk")
+                    self.default_lang = data.get("default_lang", "it")
+                    self.auto_listen = bool(data.get("auto_listen", False))
         except Exception:
             pass
 
     def _save_state(self):
         try:
             with open(_TRANSLATION_STATE_FILE, "w", encoding="utf-8") as fh:
-                json.dump({"active": self.is_active, "target": self.target_lang}, fh)
+                json.dump({
+                    "active": self.is_active,
+                    "target": self.target_lang,
+                    "default_lang": self.default_lang,
+                    "auto_listen": self.auto_listen
+                }, fh)
         except Exception:
             pass
 
@@ -175,9 +184,32 @@ class LiveTranslator:
             "interrompi traduzione", "disattiva traduzione", "chiudi traduzione", "fine traduzione"
         ]):
             self.is_active = False
+            self.auto_listen = False
             self._save_state()
             ack = "Sì signore, procedo subito Badr. Modalità traduzione istantanea disattivata. Torno alle normali funzioni operative Stark."
             return True, ack, "it", "stop"
+
+        # 1.1 Switch lingua predefinita: "cambia lingua predefinita in [lingua]", "imposta lingua predefinita su [lingua]"
+        m_lang_switch = re.search(r'\b(?:cambia\s+lingua|imposta\s+lingua|lingua\s+predefinita|cambia\s+la\s+lingua)\s+(?:predefinita\s+)?(?:in\s+|su\s+)?([a-zA-Z\-_]+)\b', p)
+        if m_lang_switch:
+            target_raw = m_lang_switch.group(1).lower().strip()
+            if target_raw in LANG_ALIASES:
+                code = LANG_ALIASES[target_raw]
+                self.default_lang = code
+                self._save_state()
+                lang_name = LANG_DISPLAY_NAMES.get(code, code.upper())
+                ack = f"Sì signore, procedo subito Badr! Lingua predefinita impostata su {lang_name}. Tutte le comunicazioni e le traduzioni utilizzeranno {lang_name}."
+                return True, ack, "it", "default_lang_switch"
+
+        # 1.2 "traduci cosa senti" / "traduci quello che senti" / "ascolta e traduci"
+        if any(tr in p for tr in ["traduci cosa senti", "traduci quello che senti", "traduci cio che senti", "cosa senti", "ascolta e traduci"]):
+            self.is_active = True
+            self.auto_listen = True
+            self._save_state()
+            target_code = getattr(self, "default_lang", "it")
+            lang_name = LANG_DISPLAY_NAMES.get(target_code, "Italiano")
+            ack = f"Sì signore, ascolto attivo. Qualsiasi lingua estera rilevata verrà tradotta istantaneamente in {lang_name}. Per fermare basta dire 'stop traduzione'."
+            return True, ack, "it", "listen_and_translate"
 
         # 2. One-Shot Translation: "traduci in [lingua] [testo]"
         m_oneshot = re.search(
@@ -206,6 +238,7 @@ class LiveTranslator:
 
             if target:
                 self.is_active = True
+                self.auto_listen = False
                 self.target_lang = target
                 self._save_state()
                 lang_name = LANG_DISPLAY_NAMES.get(target, target.upper())
@@ -219,8 +252,14 @@ class LiveTranslator:
         if self.is_active:
             clean_text = re.sub(r'^(ebj|eb|jarvis)\s*[,.:;]?\s*', '', prompt_text, flags=re.I).strip()
             if clean_text:
-                translated, engine, lat_ms = self.translate_fast(clean_text, target_lang=self.target_lang, source_lang="it")
-                return True, translated, self.target_lang, "translating"
+                if getattr(self, "auto_listen", False):
+                    target_dest = getattr(self, "default_lang", "it")
+                    translated, engine, lat_ms = self.translate_fast(clean_text, target_lang=target_dest, source_lang="auto")
+                    return True, translated, target_dest, "auto_translating"
+                else:
+                    src = getattr(self, "default_lang", "it")
+                    translated, engine, lat_ms = self.translate_fast(clean_text, target_lang=self.target_lang, source_lang=src)
+                    return True, translated, self.target_lang, "translating"
 
         return False, "", "", "none"
 

@@ -1,11 +1,12 @@
 # 🌌 HERMES AGENT & JARVIS · HOLOGRAPHIC LONG-TERM MEMORY VAULT
-*Ultima sincronizzazione automatica: 2026-10-16 19:47:06*
+*Ultima sincronizzazione automatica: 2026-10-18 23:55:40*
 
 Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, sincronizzata con SQLite Vector/FTS.
 
 
 ## 📂 Categoria: `AI_MODELS`
 
+- **EBJ JARVIS Motore Vocale Multilingua & WhatsApp Meta Business Agent** `★★★★★`: Integrazione unificata tra Rust (:9000 wake.rs) e Python (ebj_translation_gateway.py, ebj_whatsapp_meta_agent.py). Supporto cambio lingua predefinita a voce («cambia lingua predefinita in russo/ucraino/italiano»), ascolto dinamico («traduci cosa senti») con traduzione bidirezionale istantanea. Modulo WhatsApp Meta Agent con reverse engineering dei flussi, custom name dinamico (JARVIS, EBJ, Selezione), routing multi-brand e traduzione cross-lingua automatica per messaggi e note vocali. *(Registrato: 2026-10-19 00:58:00)*
 - **Motori Neurale Predefiniti** `★★★★★`: La modalità Auto Intelligence usa Groq Qwen 27B / GPT-OSS per sub-second e Gemini 3.7 Flash per compiti complessi. *(Registrato: 2026-08-22 13:16:58)*
 
 ## 📂 Categoria: `API_CREDENTIALS`
@@ -392,6 +393,9 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 - **Interazione Utente** `★★★★★`: Beh Perché Dio ha detto è Esattamente esattamente cerca di discriminarci a scuola al tu non puoi mangiare il maiale ma sei tu anche non puoi Coglione Figlio di puttana cane di merda falso Buffon anche *(Registrato: 2026-10-16 17:30:41)*
 - **Interazione Utente** `★★★★★`: dei provvedimento solo quello che fate parte tre idee in uno pensa quanto siete malatio quando Siete lontani dalla luce dalla parte del viso Pisa È l'unica regione bella Mio padre è un uomo mio padre  *(Registrato: 2026-10-16 17:31:45)*
 - **Interazione Utente** `★★★★★`: sempre lo ha fatto sì che vuol dire sempre non una volta due ogni volta che io sono entrato in quel bar dove abita mio padre ho preso qualcosa lui è fidanzato a pagare Infatti non ci vedo più perché s *(Registrato: 2026-10-16 17:32:44)*
+- **Interazione Utente** `★★★★★`: Ovvio ti fai male *(Registrato: 2026-10-16 18:44:22)*
+- **Interazione Utente** `★★★★★`: baby jimmy mi senti *(Registrato: 2026-10-16 18:45:31)*
+- **Interazione Utente** `★★★★★`: Luigi mi senti *(Registrato: 2026-10-18 02:42:34)*
 
 ## 📂 Categoria: `BUSINESS_SGOMBERI`
 
