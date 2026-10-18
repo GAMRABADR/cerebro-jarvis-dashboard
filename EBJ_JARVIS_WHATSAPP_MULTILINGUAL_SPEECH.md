@@ -204,3 +204,51 @@ flowchart TD
   * *«EBJ invia preventivo al cliente di Bologna»* $\to$ Invia automaticamente la proposta WhatsApp con sconto tattico e link di conferma.
   * *«EBJ com'è il cliente di Modena?»* $\to$ EBJ esegue il profiling e fornisce la tattica negoziale in tempo reale.
 
+---
+
+## 9. Motore di Cronaca Locale & Rassegna Stampa («Cosa è successo a Bologna?»)
+
+### A. Capacità di Ricerca & Parsing Temporale Dinamico
+EBJ ora risponde istantaneamente a qualsiasi domanda sui fatti del giorno o storici:
+* **Comandi generici (senza data):**
+  * *«Cosa è successo a Bologna?»* / *«Cosa succede a Bologna?»*
+  * *«Cronaca Bologna»* / *«Ultime notizie Bologna»* / *«Fatti del giorno a Bologna»*
+  * $\rightarrow$ Recupera e aggrega in tempo reale gli articoli delle **ultime 12-24 ore** da Google News Local, Il Resto del Carlino, BolognaToday e ANSA.
+* **Comandi con Vincolo Temporale:**
+  * *«Cosa è successo a Bologna ieri?»*
+  * *«Cosa è successo a Bologna l'altro ieri?»*
+  * *«Cosa è successo a Bologna il 15 ottobre?»* (o qualsiasi data: giorno + mese)
+  * *«Cosa è successo a Bologna questo weekend / stamattina?»*
+  * $\rightarrow$ Costruisce automaticamente query di ricerca mirate e filtra le notizie pertinenti a quella specifica finestra temporale.
+* **Multi-Città Nativo:**
+  * Supporta qualsiasi città oltre a Bologna: Imola, Modena, Reggio Emilia, Ferrara, Ravenna, Cesena, Forlì, Milano, Torino, Cuneo, Roma.
+
+### B. Doppio Canale di Output (Voce + Card Grafica)
+1. **Risposta Vocale Concisa Sub-2s (Pilastro 3):**
+   * Esattamente 1 o 2 frasi parlate, pulite, prive di markdown o parentesi, con voce neurale `it-IT-DiegoNeural`:
+   * *«A Bologna oggi, i fatti principali riguardano: Disordini in stazione, gli organizzatori del corteo confermano la manifestazione; e inoltre erogati metà dei contributi per la ricostruzione.»*
+2. **Card Dettagliata per Dashboard HUD, Chat e WhatsApp:**
+   * Elenco categorizzato (Viabilità & Incidenti, Cronaca Nera & Giudiziaria, Meteo & Allerte, Città & Servizi) con fonti e link per approfondire.
+
+---
+
+## 10. Lista Idee Innovative di Espansione & Prossime Sorprese per EBJ APEX
+
+Ecco una selezione di funzioni ad alto valore per portare EBJ a un livello ancora più fantascientifico e strategico:
+
+1. **🚦 Sentinel Tangenziale & Autostrada A14/A1 (Traffic & Accident Radar):**
+   - Monitoraggio continuo dello stato di tangenziale di Bologna e svincoli A14/A1.
+   - Prima che Badr o i furgoni partano per un trasloco, EBJ avvisa: *«Badr, attenzione: coda di 4km tra Casalecchio e San Lazzaro per incidente, ti conviene passare dai viali.»*
+
+2. **⛈️ Allerta Meteo & Idrogeologica ARPAE Emilia-Romagna:**
+   - Controllo automatico dei bollettini di Protezione Civile per allagamenti, vento forte o grandine con allerta vocale preventiva la mattina.
+
+3. **🗺️ Crime & Safety Geofencing (Mappa della Sicurezza Quartieri):**
+   - Mappatura dei fatti di cronaca per quartiere (Stazione Centrale, Bolognina, San Donato, Navile, Saragozza, San Vitale) per avere il polso della sicurezza cittadina in tempo reale.
+
+4. **🎙️ Morning Executive Micro-Podcast (30 Secondi):**
+   - Alle 07:30 del mattino (o al comando *«EBJ rassegna del mattino»*), EBJ sintetizza: meteo locale, viabilità viali/tangenziale e i 2 fatti di cronaca più importanti.
+
+5. **🚨 WhatsApp Alert per Emergenze Cittadine Straordinarie:**
+   - In caso di eventi eccezionali (es. interruzione linea ferroviaria alta velocità, sciopero improvviso o blocchi totali), EBJ invia una notifica push istantanea sul WhatsApp di Badr (+39 388 870 3508).
+
