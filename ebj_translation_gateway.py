@@ -215,6 +215,13 @@ class LiveTranslator:
             res = behavioral_profiler.profile_transcript(transcript_to_profile, "Interlocutore Rilevato")
             return True, res["spoken_critique"], getattr(self, "default_lang", "it"), "behavioral_critique"
 
+        # 1.17 Local Chronicle & News Engine («Cosa è successo a Bologna?»)
+        if any(w in p for w in ["cosa è successo", "cosa e successo", "cose successo", "cosa succede", "fatti di cronaca", "cronaca di", "cronaca a", "notizie di", "notizie a", "ultime notizie", "fatti del giorno"]):
+            from ebj_local_chronicle import get_chronicle_engine
+            eng = get_chronicle_engine()
+            res_c = eng.fetch_chronicle(prompt_text)
+            return True, res_c["spoken_ack"], getattr(self, "default_lang", "it"), "local_chronicle"
+
         # 1.2 "traduci cosa senti" / "traduci quello che senti" / "ascolta e traduci"
         if any(tr in p for tr in ["traduci cosa senti", "traduci quello che senti", "traduci cio che senti", "ascolta e traduci"]):
             self.is_active = True

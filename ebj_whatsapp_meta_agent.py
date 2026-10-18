@@ -272,6 +272,14 @@ class WhatsAppMetaAgentEngine:
                     f"Ricevuto Badr. Gateway di traduzione e ascolto acustico attivo. "
                     f"Posso tradurre al volo da e verso russo, ucraino, arabo marocchino, inglese, rumeno e francese."
                 )
+            elif any(w in lower_msg for w in ["cosa è successo", "cosa e successo", "cose successo", "cronaca", "notizie", "succede a", "successo a"]):
+                try:
+                    from ebj_local_chronicle import get_chronicle_engine
+                    eng = get_chronicle_engine()
+                    res_c = eng.fetch_chronicle(message)
+                    base_reply = f"Ecco la rassegna di cronaca aggiornata, Badr:\n\n" + res_c["markdown_card"]
+                except Exception as e:
+                    base_reply = f"Errore recupero cronaca Badr: {e}"
             else:
                 base_reply = (
                     f"Ricevuto Badr! Sono {agent_name}. Ho preso in carico la tua richiesta: '{message}'. "

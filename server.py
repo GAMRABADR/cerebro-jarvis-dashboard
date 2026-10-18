@@ -2468,7 +2468,18 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
     if is_ebj_wake_phrase(prompt):
         return get_jarvis_wake_ack(), "ebj-wake"
 
+    # ── LOCAL CHRONICLE & NEWS FAST-PATH («Cosa è successo a Bologna?») ───
+    if any(k in p_lower for k in ["cosa è successo", "cosa e successo", "cose successo", "cosa succede", "fatti di cronaca", "cronaca di", "cronaca a", "notizie di", "notizie a", "ultime notizie", "fatti del giorno", "rassegna stampa"]):
+        try:
+            from ebj_local_chronicle import get_chronicle_engine
+            eng = get_chronicle_engine()
+            res_c = eng.fetch_chronicle(prompt)
+            return res_c["spoken_ack"] + "\n\n" + res_c["markdown_card"], "local-chronicle"
+        except Exception as e:
+            print(f"[Chronicle Err]: {e}")
+
     # ── CAMERA / WEBCAM FAST-PATH (< 0.1ms) ─────────────────────────
+
     if any(k in p_lower for k in ["accendi la cam", "accendi cam", "apri la cam", "apri cam", "attiva telecamera", "accendi telecamera", "attiva la cam", "apri la fotocamera", "accendi fotocamera"]):
         return (
             "Fotocamera attivata con successo, Badr. Sistema di tracciamento visivo e telemetria ottica attivi a schermo."
@@ -4623,6 +4634,15 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.wfile.write(challenge.encode('utf-8'))
                 return
             self.send_json({"status": "SUCCESS", "message": "WhatsApp Meta Webhook Listener Ready"})
+            return
+
+        if clean_path in ('/api/chronicle/bologna', '/api/chronicle/latest'):
+            try:
+                from ebj_local_chronicle import get_chronicle_engine
+                eng = get_chronicle_engine()
+                self.send_json(eng.fetch_chronicle("Bologna"))
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
             return
 
         if clean_path in ('/api/pc/status', '/api/pc/health'):
@@ -6814,6 +6834,20 @@ class JarvisHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"status": "ERROR", "error": str(e)}, 500)
             return
+
+        # ── LOCAL CHRONICLE & NEWS QUERY ENDPOINT ───────────────────────
+        if self.path == '/api/chronicle/query':
+            try:
+                q_text = data.get("query", "Bologna")
+                d_filter = data.get("date", None)
+                from ebj_local_chronicle import get_chronicle_engine
+                eng = get_chronicle_engine()
+                res = eng.fetch_chronicle(q_text, date_filter=d_filter)
+                self.send_json({"status": "SUCCESS", "result": res})
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)}, 500)
+            return
+
         # ── WORKSTATION SPEAKERS & HARDWARE AUDIO PLAYBACK ────────────────────
         if self.path == '/api/pc/speakers':
             try:
