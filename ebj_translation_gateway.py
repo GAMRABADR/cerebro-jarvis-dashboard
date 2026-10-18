@@ -201,8 +201,15 @@ class LiveTranslator:
                 ack = f"Sì signore, procedo subito Badr! Lingua predefinita impostata su {lang_name}. Tutte le comunicazioni e le traduzioni utilizzeranno {lang_name}."
                 return True, ack, "it", "default_lang_switch"
 
+        # 1.15 Acoustic Sentinel & Diarization Engine («Cosa senti intorno a te» / «Dimmi cosa dicono»)
+        from ebj_acoustic_sentinel import get_acoustic_sentinel
+        sentinel = get_acoustic_sentinel()
+        sentinel_handled, sentinel_reply, sentinel_action = sentinel.handle_acoustic_query(p, default_lang=getattr(self, "default_lang", "it"))
+        if sentinel_handled:
+            return True, sentinel_reply, getattr(self, "default_lang", "it"), sentinel_action
+
         # 1.2 "traduci cosa senti" / "traduci quello che senti" / "ascolta e traduci"
-        if any(tr in p for tr in ["traduci cosa senti", "traduci quello che senti", "traduci cio che senti", "cosa senti", "ascolta e traduci"]):
+        if any(tr in p for tr in ["traduci cosa senti", "traduci quello che senti", "traduci cio che senti", "ascolta e traduci"]):
             self.is_active = True
             self.auto_listen = True
             self._save_state()

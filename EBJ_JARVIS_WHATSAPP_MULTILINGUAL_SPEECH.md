@@ -111,3 +111,33 @@ Esempio reale di elaborazione:
    * Test cambio nome agente dinamico $\rightarrow$ Verificato (`EBJ APEX`, `JARVIS`).
    * Test switch brand Selezione vs BadrExpress $\rightarrow$ Verificato al 100%.
    * Test ricezione messaggio cirillico $\rightarrow$ Traduzione operatore e risposta multilingua verificata.
+
+---
+
+## 6. Acoustic Sentinel & Speaker Diarizer («Cosa senti» $\to$ «Dimmi cosa dicono»)
+
+### A. Scansione Spettrale Ambientale
+* **Comandi supportati (varianti intuitive):**
+  * *«Cosa senti intorno a te?»*
+  * *«Cosa senti?»*
+  * *«Chi senti intorno a te?»*
+  * *«Quante persone senti?»*
+  * *«Chi sta parlando?»*
+  * *«Ascolta la stanza»* / *«Ascolta l'ambiente»*
+* **Elaborazione Matematica DSP:**
+  * Zero-Crossing Rate (ZCR), RMS Energy dB, Discrete Autocorrelation per frequenza fondamentale $F_0$.
+  * Clustering bimodale/multimodale dei picchi di frequenza ($F_0$) per discriminare istantaneamente se a parlare è 1 persona o sono 2 o più persone.
+* **Risposta Vocale Contestuale:**
+  * *«Sento due persone parlare intorno a noi con tono attivo. Chiedimi «dimmi cosa dicono» e ascolterò traducendo tutto per te in italiano.»*
+
+### B. Trascrizione e Traduzione Conversazionale Eloquente
+* **Comandi di follow-up (varianti intuitive):**
+  * *«Dimmi cosa dicono»*
+  * *«Cosa dicono?»*
+  * *«Dimmi cosa dice»*
+  * *«Cosa sta dicendo?»*
+  * *«Traduci cosa dicono»*
+  * *«Cosa si dicono?»*
+* **Risultato:**
+  * Cattura il flusso vocale con Whisper Turbo v3 (< 0.18s), rileva la lingua (russo, ucraino, arabo, ecc.) e restituisce una sintesi dialogica fluida, distinta per interlocutore, nella lingua predefinita dell'operatore.
+
