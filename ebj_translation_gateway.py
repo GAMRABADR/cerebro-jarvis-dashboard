@@ -208,6 +208,13 @@ class LiveTranslator:
         if sentinel_handled:
             return True, sentinel_reply, getattr(self, "default_lang", "it"), sentinel_action
 
+        # 1.16 Behavioral Profiler & Psychological Critique («EBJ critica quello che dice» / «profila chi parla»)
+        if any(w in p for w in ["critica quello che dice", "critica cosa dice", "profila chi parla", "profila l'interlocutore", "è affidabile", "sta bluffando", "analizza psicologia"]):
+            from ebj_behavioral_profiler import behavioral_profiler
+            transcript_to_profile = getattr(sentinel, "last_transcript", "Trascrizione recente rilevata dai sensori acustici.")
+            res = behavioral_profiler.profile_transcript(transcript_to_profile, "Interlocutore Rilevato")
+            return True, res["spoken_critique"], getattr(self, "default_lang", "it"), "behavioral_critique"
+
         # 1.2 "traduci cosa senti" / "traduci quello che senti" / "ascolta e traduci"
         if any(tr in p for tr in ["traduci cosa senti", "traduci quello che senti", "traduci cio che senti", "ascolta e traduci"]):
             self.is_active = True
