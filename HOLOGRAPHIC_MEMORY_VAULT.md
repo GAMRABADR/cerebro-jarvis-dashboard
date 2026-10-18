@@ -6,8 +6,10 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 
 ## 📂 Categoria: `AI_MODELS`
 
+- **EBJ Volumetric Hologram Stage & Stark FUI Graphics (2026)** `★★★★★`: Riprogettazione ultra-futuristica del palco olografico centrale in index.html, style.css e app.js. Cono di luce volumetrico con clip-path e animazione beam-flicker, disco pedestal con prospettiva rotante a 72°, telemetria sci-fi a 4 angoli (SYS, GEO Bologna, VOICE, COHERENCE), e selettore a 3 modalità di proiezione interattiva: 1) Arc Reactor Core (giroscopico 3D 144 FPS); 2) Avatar Olografico Badr / J.A.R.V.I.S. con scanlines e aberrazione cromatica; 3) 3D Quantum Wireframe Globe con beacon su Bologna (44.49° N, 11.34° E). Parallasse 3D reattivo al movimento del cursore del mouse. *(Registrato: 2026-10-19 01:47:00)*
 - **EBJ Local Chronicle & News Intelligence Engine** `★★★★★`: Motore di rassegna stampa e cronaca in tempo reale per Bologna (e altre città). Supporto per query naturali senza data (ultime ore) o con data specifica («ieri», «il 15 ottobre», «questo weekend»). Aggregatore multi-feed (Google News Local, Il Resto del Carlino, BolognaToday, ANSA) con doppio canale di output: risposta vocale Diego sub-2s (max 2 frasi parlate) e card dettagliata per HUD, WhatsApp ed endpoint API. *(Registrato: 2026-10-19 01:37:00)*
 - **Motori Neurale Predefiniti** `★★★★★`: La modalità Auto Intelligence usa Groq Qwen 27B / GPT-OSS per sub-second e Gemini 3.7 Flash per compiti complessi. *(Registrato: 2026-08-22 13:16:58)*
+
 
 
 ## 📂 Categoria: `API_CREDENTIALS`
