@@ -566,8 +566,11 @@ VAULT_ORDINE = {
 
 def init_vault_db():
     try:
-        con = sqlite3.connect(VAULT_DB)
+        con = sqlite3.connect(VAULT_DB, timeout=10.0)
         c = con.cursor()
+        c.execute("PRAGMA journal_mode = WAL;")
+        c.execute("PRAGMA synchronous = NORMAL;")
+        c.execute("PRAGMA busy_timeout = 10000;")
         c.execute("""CREATE TABLE IF NOT EXISTS paystubs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email_id TEXT UNIQUE,

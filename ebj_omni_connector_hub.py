@@ -48,9 +48,29 @@ import json
 import time
 import urllib.parse
 import urllib.request
-import subprocess
+import webbrowser
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
+try:
+    import winsound
+except ImportError:
+    winsound = None
+
+def safe_launch_uri(target: str) -> bool:
+    """Apre un URL o URI protocollo senza invocare cmd.exe o shell=True (Zero Injection, Zero Spawn Overhead)."""
+    try:
+        if hasattr(os, "startfile"):
+            os.startfile(target)
+            return True
+        else:
+            return webbrowser.open(target)
+    except Exception:
+        try:
+            return webbrowser.open(target)
+        except Exception:
+            return False
 
 # ── RUBRICA CONTATTI DI BADR ──────────────────────────────────────────────────
 CONTACTS_BOOK = {
@@ -104,20 +124,12 @@ class WhatsAppConnector:
 
         opened = False
         if auto_open:
-            # 1. Prova prima il protocollo desktop nativo
-            try:
-                subprocess.Popen(["cmd", "/c", "start", wa_app_uri], shell=True)
-                opened = True
-            except Exception:
-                pass
+            # 1. Prova prima il protocollo desktop nativo con Win32/ShellExecute sicuro
+            opened = safe_launch_uri(wa_app_uri)
             
-            # 2. Se è una richiesta generica o se l'app è bloccata, apri anche il web link garantito
-            if not num_no_plus:
-                try:
-                    subprocess.Popen(["cmd", "/c", "start", wa_web_link], shell=True)
-                    opened = True
-                except Exception:
-                    pass
+            # 2. Se è una richiesta generica o fallita, apri il web link garantito
+            if not num_no_plus and not opened:
+                opened = safe_launch_uri(wa_web_link)
 
         return {
             "status": "SUCCESS",
@@ -163,7 +175,7 @@ class TelegramConnector:
         encoded = urllib.parse.quote(text)
         tg_uri = f"tg://msg?text={encoded}"
         try:
-            subprocess.Popen(["cmd", "/c", "start", tg_uri], shell=True)
+            safe_launch_uri(tg_uri)
             return {
                 "status": "SUCCESS",
                 "service": "TELEGRAM_DESKTOP",
@@ -205,7 +217,7 @@ class GoogleDriveConnector:
             drive_url = f"https://drive.google.com/drive/search?q={q}"
 
         try:
-            subprocess.Popen(["cmd", "/c", "start", drive_url], shell=True)
+            safe_launch_uri(drive_url)
             return {
                 "status": "SUCCESS",
                 "service": "GOOGLE_DRIVE",
@@ -224,7 +236,7 @@ class EmailConnector:
     def open_inbox(cls) -> Dict[str, Any]:
         url = "https://mail.google.com/"
         try:
-            subprocess.Popen(["cmd", "/c", "start", url], shell=True)
+            safe_launch_uri(url)
             return {
                 "status": "SUCCESS",
                 "service": "GMAIL_INBOX",
@@ -241,7 +253,7 @@ class EmailConnector:
         q_bod = urllib.parse.quote(body)
         mailto_uri = f"mailto:{q_to}?subject={q_sub}&body={q_bod}"
         try:
-            subprocess.Popen(["cmd", "/c", "start", mailto_uri], shell=True)
+            safe_launch_uri(mailto_uri)
             return {
                 "status": "SUCCESS",
                 "service": "EMAIL_COMPOSE",
@@ -260,7 +272,7 @@ class CalendarConnector:
     def open_calendar(cls) -> Dict[str, Any]:
         url = "https://calendar.google.com/"
         try:
-            subprocess.Popen(["cmd", "/c", "start", url], shell=True)
+            safe_launch_uri(url)
             return {
                 "status": "SUCCESS",
                 "service": "GOOGLE_CALENDAR",
@@ -275,7 +287,7 @@ class CalendarConnector:
         enc_title = urllib.parse.quote(title)
         url = f"https://calendar.google.com/calendar/render?action=TEMPLATE&text={enc_title}"
         try:
-            subprocess.Popen(["cmd", "/c", "start", url], shell=True)
+            safe_launch_uri(url)
             return {
                 "status": "SUCCESS",
                 "service": "GOOGLE_CALENDAR",
@@ -294,7 +306,7 @@ class AlarmClockConnector:
     @classmethod
     def open_clock_or_alarm(cls) -> Dict[str, Any]:
         try:
-            subprocess.Popen(["cmd", "/c", "start", "ms-clock:"], shell=True)
+            safe_launch_uri("ms-clock:")
             return {
                 "status": "SUCCESS",
                 "service": "WINDOWS_CLOCK",
@@ -306,14 +318,17 @@ class AlarmClockConnector:
 
     @classmethod
     def set_quick_chime_alarm(cls, seconds: int = 10, label: str = "Promemoria Jarvis") -> Dict[str, Any]:
-        """Emette un segnale sonoro e apre la notifica di sistema."""
+        """Emette un segnale sonoro ultra-veloce (senza overhead powershell) e apre la notifica."""
         try:
-            ps_script = f'''
-            [console]::beep(1000, 400);
-            Start-Sleep -Milliseconds 150;
-            [console]::beep(1500, 600);
-            '''
-            subprocess.Popen(["powershell", "-NoProfile", "-Command", ps_script], shell=True)
+            def _play_beeps():
+                if winsound:
+                    try:
+                        winsound.Beep(1000, 400)
+                        time.sleep(0.15)
+                        winsound.Beep(1500, 600)
+                    except Exception:
+                        pass
+            threading.Thread(target=_play_beeps, daemon=True).start()
             return {
                 "status": "SUCCESS",
                 "service": "ALARM_CHIME",
@@ -344,7 +359,7 @@ class FacebookConnector:
     def open_marketplace(cls) -> Dict[str, Any]:
         url = "https://www.facebook.com/marketplace"
         try:
-            subprocess.Popen(["cmd", "/c", "start", url], shell=True)
+            safe_launch_uri(url)
             return {
                 "status": "SUCCESS",
                 "service": "FACEBOOK",

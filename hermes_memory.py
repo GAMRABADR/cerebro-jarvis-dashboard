@@ -10,8 +10,14 @@ MEMORY_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hermes_ltm
 VAULT_MD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "HOLOGRAPHIC_MEMORY_VAULT.md")
 
 def init_memory():
-    conn = sqlite3.connect(MEMORY_DB)
+    conn = sqlite3.connect(MEMORY_DB, timeout=10.0)
     c = conn.cursor()
+    try:
+        c.execute("PRAGMA journal_mode = WAL;")
+        c.execute("PRAGMA synchronous = NORMAL;")
+        c.execute("PRAGMA busy_timeout = 10000;")
+    except Exception:
+        pass
     c.execute("""
         CREATE TABLE IF NOT EXISTS memories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
