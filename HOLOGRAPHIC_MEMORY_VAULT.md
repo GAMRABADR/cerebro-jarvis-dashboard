@@ -7,6 +7,8 @@ Questo file mantiene la memoria persistente infinita di Hermes Agent e JARVIS, s
 ## 📂 Categoria: `AI_MODELS`
 
 - **EBJ JARVIS Motore Vocale Multilingua & WhatsApp Meta Business Agent** `★★★★★`: Integrazione unificata tra Rust (:9000 wake.rs) e Python (ebj_translation_gateway.py, ebj_whatsapp_meta_agent.py). Supporto cambio lingua predefinita a voce («cambia lingua predefinita in russo/ucraino/italiano»), ascolto dinamico («traduci cosa senti») con traduzione bidirezionale istantanea. Modulo WhatsApp Meta Agent con reverse engineering dei flussi, custom name dinamico (JARVIS, EBJ, Selezione), routing multi-brand e traduzione cross-lingua automatica per messaggi e note vocali. *(Registrato: 2026-10-19 00:58:00)*
+- **EBJ JARVIS Acoustic Sentinel, Speaker Diarizer & Behavioral Profiler** `★★★★★`: Modulo avanzato di percezione acustica ambientale («Cosa senti intorno a te» con analisi energetica RMS, Zero-Crossing Rate e autocorrelazione F0 per conteggio parlanti), trascrizione/traduzione eloquente («Dimmi cosa dicono»), e profilazione psicologica DISC/Big-Five con rilevamento bluff e tattica negoziale in tempo reale («EBJ critica quello che dice»). Integrato sia in Rust (:9000 jev_cognitive_core.rs, wake.rs) che in Python (ebj_acoustic_sentinel.py, ebj_behavioral_profiler.py, ebj_translation_gateway.py). *(Registrato: 2026-10-19 01:15:00)*
+
 - **Motori Neurale Predefiniti** `★★★★★`: La modalità Auto Intelligence usa Groq Qwen 27B / GPT-OSS per sub-second e Gemini 3.7 Flash per compiti complessi. *(Registrato: 2026-08-22 13:16:58)*
 
 ## 📂 Categoria: `API_CREDENTIALS`

@@ -141,3 +141,66 @@ Esempio reale di elaborazione:
 * **Risultato:**
   * Cattura il flusso vocale con Whisper Turbo v3 (< 0.18s), rileva la lingua (russo, ucraino, arabo, ecc.) e restituisce una sintesi dialogica fluida, distinta per interlocutore, nella lingua predefinita dell'operatore.
 
+---
+
+## 7. Motore di Profilazione Psicologica, DISC & Critica Tattica («EBJ critica quello che dice»)
+
+### A. Capacità Analitica Cognitiva
+Quando Badr ordina ad EBJ:
+* *«EBJ, critica quello che dice»*
+* *«Critica cosa dice»*
+* *«Profila chi parla»*
+* *«È affidabile?»* / *«Sta bluffando?»*
+
+Il modulo `jev_cognitive_core.rs` (Rust, < 1ms) e `ebj_behavioral_profiler.py` (Python) eseguono:
+1. **Analisi Retorica & Lessicale:** Ispezione di iperboli, formule rassicuranti vuote (*«fidati di me»*, *«prezzo speciale solo per oggi»*), marcatori di urgenza artificiosa o atteggiamenti passivo-difensivi.
+2. **Classificazione DISC & Archetipo Comportamentale:**
+   * *Dominant / High D*: Focalizzato su scadenze tassative e negoziazione al ribasso.
+   * *Influencer / High I*: Cerca di sedurre con simpatia, bluffando sulle alternative disponibili.
+   * *Steady / Compliant*: Cauto, insicuro, bisognoso di garanzie formali e recensioni.
+   * *Pragmatic / Balanced*: Comunicazione trasparente, pronto a concludere se il prezzo è corretto.
+3. **Punteggio Matematico di Affidabilità e Probabilità di Bluff (0-100%):**
+   * Calcolo pesato in tempo reale per mettere Badr in posizione di massimo vantaggio negoziale.
+4. **Debolezza Identificata & Tattica Negoziale Consigliata:**
+   * Suggerisce esattamente se pretendere caparra, non concedere sconti, o proporre subito una data di inizio.
+5. **Risposta Vocale Concisa Sub-2s (Pilastro 3):**
+   * Esempio: *«Attento Badr, stimo un bluff al 65 percento con affidabilità bassa al 35 percento. Ti consiglio di pretendere accordi scritti e caparra prima di muoverti.»*
+
+---
+
+## 8. Piano Esecutivo: Ricerca Lavori Fluida & Dinamica (Autonomous Dynamic Job Hunter)
+
+Per rendere la ricerca e l'acquisizione lavori ancora più potente, reattiva e fluida, abbiamo strutturato l'architettura a **4 Livelli Sincronizzati**:
+
+```mermaid
+flowchart TD
+    A["Radar Multi-Canale H24<br/>(Subito, Marketplace, Cronoshare, B2B)"] -->|Event Stream| B["Filtro Anti-Bluff & Profiler JEV<br/>(Lead Score 0-100 & Affidabilità)"]
+    B -->|Lead Qualificato > 75| C["Fast Arithmetic Quoter & Brand Signature<br/>(PietroTraslochi / BadrExpress / Selezione)"]
+    C -->|Preventivo < 60s| D["WhatsApp Autopilot & Voice Dispatcher<br/>(Messaggio Diretto + Notifica Vocale EBJ a Badr)"]
+```
+
+### 1. Radar Multi-Piattaforma Continuo & Intelligente
+* **Scraping Stealth & Monitoraggio Webhook:** Subito.it, Facebook Marketplace, Cronoshare, Bakeca, e portali immobiliari/aziendali per Emilia-Romagna, Piemonte, Lombardia e Liguria.
+* **Filtro Semantico Immediato:** Intercetta parole chiave come *sgombero, trasloco, svuoto appartamento, trasporto mobili, pulizia cantina, lavaggio sedili, prodotti autolavaggio*.
+
+### 2. Valutazione Istantanea & Profilazione Comportamentale
+* Il testo del post o della richiesta cliente viene processato da `ebj_behavioral_profiler.py` e `lead-extractor`:
+  * Estrazione numero di telefono (anche con spazi o offuscato).
+  * Calcolo Lead Certainty Score (0-100).
+  * Profilazione psicologica (DISC, urgenza reale vs speculazione di prezzo).
+  * Se la probabilità di bluff è > 70% o il budget è insostenibile, il lead viene declassato a priorità bassa per non sprecare il tempo di Badr.
+
+### 3. Preventivazione Istantanea & Firma Automatica di Brand (Pilastro 5)
+* Calcolo matematico deterministico via `ebj_fast_quote`:
+  * Chilometraggio calcolato tramite formula di Haversine / OSRM.
+  * Volume m³, piano, presenza ascensore, facchinaggio.
+  * Generazione testo preventivo personalizzato:
+    * Se traslochi/sgomberi $\to$ firmato **BadrExpress.com** & **PietroTraslochi.com**.
+    * Se prodotti/autolavaggi $\to$ firmato **SELEZIONE — Distribuzione e Vendita Prodotti Professionali**.
+
+### 4. Flusso Vocale Fluido & Notifiche ad Alta Priorità
+* **Comandi Vocali Nuovi Intuitivi:**
+  * *«EBJ trovami i lavori migliori oggi»* $\to$ EBJ filtra i lead con score > 80 e legge a voce i 3 lavori più redditizi.
+  * *«EBJ invia preventivo al cliente di Bologna»* $\to$ Invia automaticamente la proposta WhatsApp con sconto tattico e link di conferma.
+  * *«EBJ com'è il cliente di Modena?»* $\to$ EBJ esegue il profiling e fornisce la tattica negoziale in tempo reale.
+
