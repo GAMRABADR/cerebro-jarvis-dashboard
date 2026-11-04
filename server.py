@@ -34,6 +34,13 @@ from email import encoders as email_encoders
 import requests
 _HTTP = requests.Session()
 
+# ── CIRCUIT BREAKER STATO PER PROVIDER CLOUD (Zero-Latency Failover) ─────────
+_CIRCUIT_BREAKER_STATE = {
+    "gemini_blocked_until": 0.0,
+    "groq_blocked_until": 0.0,
+    "nvidia_blocked_until": 0.0,
+}
+
 def _now_rome():
     """Ora locale Italia (la VPS gira in UTC)."""
     try:
@@ -48,14 +55,7 @@ import edge_tts
 import edge_tts.constants
 import edge_tts.communicate
 
-# ── RESILIENZA ANTI-403 EDGE-TTS ROTATION ────────────────────────────────────
-try:
-    edge_tts.constants.CHROMIUM_FULL_VERSION = "134.0.3124.68"
-    edge_tts.constants.CHROMIUM_MAJOR_VERSION = "134"
-    edge_tts.constants.SEC_MS_GEC_VERSION = "1-134.0.3124.68"
-    edge_tts.communicate.SEC_MS_GEC_VERSION = "1-134.0.3124.68"
-except Exception as _e_tts:
-    pass
+# Edge-TTS uses native resilient headers
 
 import hermes_memory
 import ebj_reflex_engine
@@ -1987,6 +1987,8 @@ def is_censored_or_refusal(txt):
 
 def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
     # Map frontend model keys to verified active Groq model IDs
+    if time.time() < _CIRCUIT_BREAKER_STATE.get("groq_blocked_until", 0):
+        return None
     candidate_groq_models = [model] if model and model != "auto" else [
         "qwen/qwen3.8-27b",
         "openai/gpt-oss-120b",
@@ -1997,18 +1999,17 @@ def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
         live_clock = _now_rome().strftime("%A %d %B %Y - %H:%M:%S (Fuso Orario: Imola/Roma)")
         mem_context = hermes_memory.get_infinite_context_for_prompt(prompt)
         sys_prompt = get_system_prompt_for_personality(persona)
-        sys_with_mem = f"{sys_prompt}\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]\n{mem_context}" if mem_context else f"{sys_prompt}\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
+        clock_line = f"\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
+        sys_with_mem = (sys_prompt + clock_line + "\n" + mem_context) if mem_context else (sys_prompt + clock_line)
         groq_key = os.environ.get("GROQ_API_KEY", "").strip() or GROQ_KEY
         if not groq_key:
             return None
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"}
-        messages = [{"role": "system", "content": sys_with_mem}]
-        hist = get_recent_conversation_history(10)
-        for h in hist:
-            if h.get("content") != prompt:
-                messages.append({"role": h["role"], "content": h["content"]})
-        messages.append({"role": "user", "content": prompt})
+        messages = [
+            {"role": "system", "content": sys_with_mem},
+            {"role": "user", "content": prompt}
+        ]
 
         for gm in candidate_groq_models:
             payload = {
@@ -2017,13 +2018,21 @@ def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
                 "temperature": 0.5,
                 "max_tokens": 1500
             }
-            r = _HTTP.post(url, headers=headers, json=payload, timeout=8)
-            if r.status_code == 200:
-                raw = r.json()["choices"][0]["message"]["content"].strip()
-                if "</think>" in raw:
-                    clean = raw.split("</think>")[-1].strip()
-                else:
-                    clean = re.sub(r'<think>.*', '', raw, flags=re.DOTALL).strip()
+            try:
+                r = _HTTP.post(url, headers=headers, json=payload, timeout=3.5)
+                if r.status_code == 200:
+                    raw = r.json()["choices"][0]["message"]["content"].strip()
+                    if "</think>" in raw:
+                        clean = raw.split("</think>")[-1].strip()
+                    else:
+                        clean = re.sub(r'<think>.*', '', raw, flags=re.DOTALL).strip()
+                    if clean:
+                        return clean
+                elif r.status_code in (401, 403):
+                    _CIRCUIT_BREAKER_STATE["groq_blocked_until"] = time.time() + 600
+                    return None
+            except Exception:
+                continue
     except Exception as e:
         print(f"[Groq Exception]: {e}")
     return None
@@ -2063,10 +2072,11 @@ def query_nvidia_nim_models(prompt, model="meta/llama-3.1-70b-instruct", persona
 
 def query_gemini_models(prompt, model=None, persona="jarvis"):
     """
-    Motore primario per risposte umane, empatiche, naturali e brillanti con Gemini Flash.
-    Prova in cascata i modelli ufficiali attivi 2026: gemini-3.5-flash-lite -> gemini-flash-lite-latest -> gemini-flash-latest.
+    Motore per risposte umane con Gemini Flash e Fast Circuit Breaker.
     """
     try:
+        if time.time() < _CIRCUIT_BREAKER_STATE.get("gemini_blocked_until", 0):
+            return None
         gemini_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or GEMINI_KEY or "").strip()
         if not gemini_key:
             return None
@@ -2080,19 +2090,11 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
             "Rivolgiti sempre a Badr con rispetto e devozione chiamandolo 'signore' o 'Badr' (trattalo come il tuo Tony Stark). "
             "Evita preamboli inutili o formule robotiche. Nel parlato rimani conciso (1-2 frasi), fluente, nitido e privo di sintassi markdown."
         )
-        sys_with_mem = f"{sys_prompt}{human_warmth_directive}\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]\n{mem_context}" if mem_context else f"{sys_prompt}{human_warmth_directive}\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
+        clock_line = f"\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
+        sys_with_mem = (sys_prompt + human_warmth_directive + clock_line + "\n" + mem_context) if mem_context else (sys_prompt + human_warmth_directive + clock_line)
         
-        hist = get_recent_conversation_history(10)
-        hist_lines = []
-        for h in hist:
-            if h.get("content") != prompt:
-                r_lbl = "Badr" if h["role"] == "user" else "JARVIS"
-                hist_lines.append(f"{r_lbl}: {h['content']}")
-        hist_block = ("\n[CONTESTO CONVERSAZIONE RECENTE]:\n" + "\n".join(hist_lines) + "\n") if hist_lines else ""
-
         candidate_models = [model] if model else [
-            "gemini-3.5-flash-lite",
-            "gemini-flash-lite-latest",
+            "gemini-2.5-flash",
             "gemini-flash-latest"
         ]
         
@@ -2101,10 +2103,10 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={gemini_key}"
                 payload = {
-                    "contents": [{"parts": [{"text": f"{sys_with_mem}\n{hist_block}\nRichiesta di Badr: {prompt}"}]}],
+                    "contents": [{"parts": [{"text": f"{sys_with_mem}\nRichiesta di Badr: {prompt}"}]}],
                     "generationConfig": {"temperature": 0.65, "maxOutputTokens": 2500}
                 }
-                r = _HTTP.post(url, json=payload, timeout=10)
+                r = _HTTP.post(url, json=payload, timeout=3)
                 if r.status_code == 200:
                     data = r.json()
                     candidates = data.get("candidates", [])
@@ -2118,6 +2120,9 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
                                 elif "<think>" in raw:
                                     raw = re.sub(r'<think>.*', '', raw, flags=re.DOTALL).strip()
                                 return raw
+                elif r.status_code in (400, 401, 403):
+                    _CIRCUIT_BREAKER_STATE["gemini_blocked_until"] = time.time() + 600
+                    return None
             except Exception:
                 continue
     except Exception as e:
@@ -2128,6 +2133,10 @@ def query_active_brain(prompt, persona="jarvis"):
     """
     Esegue la query sul cervello attualmente selezionato (gemini, groq, qwen, gpt, auto).
     """
+    # Fast path: prova subito il modello locale ultra-veloce RTX 4070
+    loc_ans = query_local_model(prompt, persona=persona)
+    if loc_ans and not is_censored_or_refusal(loc_ans):
+        return loc_ans, "Local RTX 4070 (Ollama)"
     brain = get_active_brain()
     if brain == "gemini":
         ans = query_gemini_models(prompt, model="gemini-3.5-flash-lite", persona=persona)
@@ -2188,14 +2197,14 @@ def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvi
 
 
 def query_local_model(prompt, model="auto", persona="jarvis"):
-    """Queries local LLM runner (Ollama at 11434 with MiniCPM-V / Hermes3 / Llama, Unsloth at 61517, LM Studio at 1234)"""
+    """Queries local LLM runner (Ollama at 11434 with RTX 4070 CUDA, VPS Ollama cluster, Unsloth at 61517)"""
     sys_prompt = get_system_prompt_for_personality(persona)
     mem_context = hermes_memory.get_infinite_context_for_prompt(prompt)
     sys_with_mem = f"{sys_prompt}\n{mem_context}" if mem_context else sys_prompt
 
-    # 1. Native Local Ollama on port 11434 (NVIDIA RTX 4070 CUDA GPU)
+    # 1. Native Local Ollama on port 11434 (NVIDIA RTX 4070 CUDA GPU - Sub-500ms)
     try:
-        candidate_models = ["minicpm-v:latest", "hermes3:8b", "llama3.1:8b", "qwen2.5-coder:7b"]
+        candidate_models = ["qwen2.5-coder:1.5b", "hermes3:8b", "llama3.1:8b", "qwen2.5-coder:7b", "gemma3:4b", "minicpm-v:latest"]
         if model and model not in ("auto", "unsloth", "local", "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF"):
             candidate_models.insert(0, model)
         for m_tag in candidate_models:
@@ -2209,11 +2218,11 @@ def query_local_model(prompt, model="auto", persona="jarvis"):
                     ],
                     "stream": False,
                     "options": {
-                        "temperature": 0.4,
-                        "num_predict": 400
+                        "temperature": 0.35,
+                        "num_predict": 90
                     }
                 }
-                r = requests.post(o_url, json=o_payload, timeout=25)
+                r = requests.post(o_url, json=o_payload, timeout=5)
                 if r.status_code == 200:
                     ans = r.json().get("message", {}).get("content", "").strip()
                     if ans:
@@ -2223,7 +2232,31 @@ def query_local_model(prompt, model="auto", persona="jarvis"):
     except Exception:
         pass
 
-    # 2. Fallback to OpenAI-compatible local endpoints (Unsloth Desktop, vLLM, LM Studio)
+    # 2. Fallback to VPS Ollama Cluster (92.4.233.42:11434)
+    try:
+        for vps_m in ["gemma3:1b", "hermes3:8b"]:
+            try:
+                vps_url = "http://92.4.233.42:11434/api/chat"
+                payload = {
+                    "model": vps_m,
+                    "messages": [
+                        {"role": "system", "content": sys_with_mem},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "stream": False,
+                    "options": {"temperature": 0.4, "num_predict": 300}
+                }
+                r = requests.post(vps_url, json=payload, timeout=5)
+                if r.status_code == 200:
+                    ans = r.json().get("message", {}).get("content", "").strip()
+                    if ans:
+                        return ans
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    # 3. Fallback to OpenAI-compatible local endpoints (Unsloth Desktop, vLLM, LM Studio)
     for p in [61517, 8080, 8000, 1234]:
         try:
             url = f"http://127.0.0.1:{p}/v1/chat/completions"
@@ -2234,9 +2267,9 @@ def query_local_model(prompt, model="auto", persona="jarvis"):
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.5,
-                "max_tokens": 400
+                "max_tokens": 350
             }
-            r = requests.post(url, json=payload, timeout=15)
+            r = requests.post(url, json=payload, timeout=5)
             if r.status_code == 200:
                 raw = r.json()["choices"][0]["message"]["content"].strip()
                 if raw:
@@ -2245,10 +2278,6 @@ def query_local_model(prompt, model="auto", persona="jarvis"):
             pass
 
     return None
-
-
-
-
 
 MOONSHOT_API_KEY = os.environ.get("MOONSHOT_API_KEY", "").strip()
 
