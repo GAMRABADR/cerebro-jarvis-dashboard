@@ -2497,6 +2497,25 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
     if is_ebj_wake_phrase(prompt):
         return get_jarvis_wake_ack(), "ebj-wake"
 
+    # ── DEEP IDENTITY & TARGET INTELLIGENCE FAST-PATH (< 2ms) ───────────
+    p_norm = p_lower.replace("è", "e").replace("é", "e").replace("à", "a").replace("ò", "o").replace("ù", "u").replace("ì", "i")
+    if any(k in p_norm for k in ["chi e", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi sono", "parlami di", "tarik", "badr"]):
+        try:
+            import ebj_deep_identity_intel
+            t_query = prompt
+            for pfx in ["cerca informazioni su", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi e", "parlami di"]:
+                if pfx in p_norm:
+                    t_query = prompt[p_norm.find(pfx) + len(pfx):].strip(" ?:.,!")
+                    break
+            if "tarik" in p_norm or "tariq" in p_norm:
+                t_query = "Tarik El Ouariti"
+            elif "badr" in p_norm or "chi sono" in p_norm or any(w in p_norm for w in ["su di me", "mio profilo"]):
+                t_query = "Badr El Ouariti"
+            intel_res = ebj_deep_identity_intel.investigate_target(t_query, depth=5)
+            return intel_res["spoken_ack"] + "\n\n" + intel_res["markdown_dossier"], "ebj-deep-intel:OSINT_VAULT_L5"
+        except Exception as e:
+            print(f"[Intel Dispatch Err]: {e}")
+
     # ── LOCAL CHRONICLE & NEWS FAST-PATH («Cosa è successo a Bologna?») ───
     if any(k in p_lower for k in ["cosa è successo", "cosa e successo", "cose successo", "cosa succede", "fatti di cronaca", "cronaca di", "cronaca a", "notizie di", "notizie a", "ultime notizie", "fatti del giorno", "rassegna stampa"]):
         try:
@@ -6934,6 +6953,23 @@ class JarvisHandler(BaseHTTPRequestHandler):
             return
 
         # ── JEV FULL-DUPLEX VOICE INTERACT ────────────────────────────────────
+        if self.path == '/api/intel/dossier':
+            try:
+                target = data.get("target") or data.get("query") or "Badr El Ouariti"
+                depth = int(data.get("depth", 5))
+                import ebj_deep_identity_intel
+                intel_res = ebj_deep_identity_intel.investigate_target(target, depth=depth)
+                self.send_json({
+                    "status": "SUCCESS",
+                    "target": intel_res["target"],
+                    "spoken_ack": intel_res["spoken_ack"],
+                    "markdown_dossier": intel_res["markdown_dossier"],
+                    "raw_data": intel_res.get("raw_data", {})
+                })
+            except Exception as e:
+                self.send_json({"status": "ERROR", "error": str(e)})
+            return
+
         if self.path == '/api/voice/interact':
             try:
                 user_query = data.get("query", "").strip()
@@ -6958,6 +6994,23 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     reply_text = lang_reply
                 elif is_ebj_wake_phrase(user_query):
                     reply_text = get_jarvis_wake_ack()
+                elif any(k in q_lower.replace("è", "e").replace("é", "e") for k in ["chi e", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi sono", "parlami di", "tarik", "badr"]):
+                    try:
+                        import ebj_deep_identity_intel
+                        target_query = user_query
+                        for pfx in ["cerca informazioni su", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi e", "chi è", "parlami di"]:
+                            if pfx in q_lower.replace("è", "e"):
+                                target_query = user_query[q_lower.replace("è", "e").find(pfx) + len(pfx):].strip(" ?:.,!")
+                                break
+                        if "tarik" in q_lower or "tariq" in q_lower:
+                            target_query = "Tarik El Ouariti"
+                        elif "badr" in q_lower or "chi sono" in q_lower or any(w in q_lower for w in ["su di me", "mio profilo"]):
+                            target_query = "Badr El Ouariti"
+                        intel_res = ebj_deep_identity_intel.investigate_target(target_query, depth=5)
+                        reply_text = intel_res["spoken_ack"] + "\n\n" + intel_res["markdown_dossier"]
+                        model_used = "ebj-deep-intel:OSINT_VAULT_L5"
+                    except Exception as e:
+                        print(f"[Intel Route Err]: {e}")
                 else:
                     # ── JEV DIRECT DISPATCH (Sub-5ms) ───────────────────
                     try:
@@ -8948,6 +9001,33 @@ def _patched_do_POST(self):
             self.wfile.write(_json.dumps({"status": "ERROR", "error": str(e)}).encode())
         return
 
+    # ── EBJ DEEP TARGET & OSINT INTELLIGENCE DOSSIER ──────────────────────
+    if self.path == '/api/intel/dossier':
+        try:
+            bd = _json.loads(body.decode("utf-8")) if body else {}
+            target = bd.get("target") or bd.get("query") or "Badr El Ouariti"
+            depth = int(bd.get("depth", 5))
+            import ebj_deep_identity_intel
+            intel_res = ebj_deep_identity_intel.investigate_target(target, depth=depth)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({
+                "status": "SUCCESS",
+                "target": intel_res["target"],
+                "spoken_ack": intel_res["spoken_ack"],
+                "markdown_dossier": intel_res["markdown_dossier"],
+                "raw_data": intel_res.get("raw_data", {})
+            }).encode("utf-8"))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_json.dumps({"status": "ERROR", "error": str(e)}).encode())
+        return
+
     # ── JEV FULL-DUPLEX VOICE INTERACT ────────────────────────────────────
     if self.path == '/api/voice/interact':
         try:
@@ -8987,6 +9067,23 @@ def _patched_do_POST(self):
             elif is_ebj_wake_phrase(user_query):
                 reply_text = get_jarvis_wake_ack()
                 model_used = "wake-ack"
+            elif any(k in user_query.lower().replace("è", "e").replace("é", "e") for k in ["chi e", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi sono", "parlami di", "tarik", "badr"]):
+                try:
+                    import ebj_deep_identity_intel
+                    t_q = user_query
+                    for pfx in ["cerca informazioni su", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi e", "chi è", "parlami di"]:
+                        if pfx in user_query.lower().replace("è", "e"):
+                            t_q = user_query[user_query.lower().replace("è", "e").find(pfx) + len(pfx):].strip(" ?:.,!")
+                            break
+                    if "tarik" in user_query.lower() or "tariq" in user_query.lower():
+                        t_q = "Tarik El Ouariti"
+                    elif "badr" in user_query.lower() or "chi sono" in user_query.lower() or any(w in user_query.lower() for w in ["su di me", "mio profilo"]):
+                        t_q = "Badr El Ouariti"
+                    intel_res = ebj_deep_identity_intel.investigate_target(t_q, depth=5)
+                    reply_text = intel_res["spoken_ack"] + "\n\n" + intel_res["markdown_dossier"]
+                    model_used = "ebj-deep-intel:OSINT_VAULT_L5"
+                except Exception as e:
+                    print(f"[Intel Route Err]: {e}")
             else:
                 # ── JEV DIRECT DISPATCH (Sub-5ms) ───────────────────
                 try:
