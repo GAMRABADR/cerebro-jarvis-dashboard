@@ -701,8 +701,71 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        let starkDspInitialized = false;
+        let ttsMediaSource = null;
+
+        function ensureStarkAudioDSP() {
+            if (!audioContext || starkDspInitialized) return;
+            try {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                ttsMediaSource = audioContext.createMediaElementSource(ttsAudio);
+                
+                // 1. Warm Chest Resonance (Low-shelf: +4.5dB @ 180Hz)
+                const bassFilter = audioContext.createBiquadFilter();
+                bassFilter.type = "lowshelf";
+                bassFilter.frequency.value = 180;
+                bassFilter.gain.value = 4.5;
+
+                // 2. Iron Man Harmonic Clarity (Peaking: +3.0dB @ 3600Hz)
+                const clarityFilter = audioContext.createBiquadFilter();
+                clarityFilter.type = "peaking";
+                clarityFilter.frequency.value = 3600;
+                clarityFilter.Q.value = 1.2;
+                clarityFilter.gain.value = 3.0;
+
+                // 3. Air Sheen (High-shelf: +2.0dB @ 8000Hz)
+                const airFilter = audioContext.createBiquadFilter();
+                airFilter.type = "highshelf";
+                airFilter.frequency.value = 8000;
+                airFilter.gain.value = 2.0;
+
+                // 4. Broadcast Dynamics Compressor (Studio Radio / Helmet Master)
+                const compressor = audioContext.createDynamicsCompressor();
+                compressor.threshold.value = -16;
+                compressor.knee.value = 14;
+                compressor.ratio.value = 5.0;
+                compressor.attack.value = 0.003;
+                compressor.release.value = 0.25;
+
+                // 5. Master Output Gain
+                const masterGain = audioContext.createGain();
+                masterGain.gain.value = 1.30;
+
+                // Chain: Source -> Bass -> Clarity -> Air -> Compressor -> Master -> Destination + Analyser
+                ttsMediaSource.connect(bassFilter);
+                bassFilter.connect(clarityFilter);
+                clarityFilter.connect(airFilter);
+                airFilter.connect(compressor);
+                compressor.connect(masterGain);
+                masterGain.connect(audioContext.destination);
+                if (analyser) {
+                    masterGain.connect(analyser);
+                }
+                starkDspInitialized = true;
+                console.log("[Stark Audio DSP] Activated: +4.5dB Bass @180Hz, +3.0dB Presence @3.6kHz, Broadcast Limiter 5:1");
+            } catch(e) {
+                console.warn("[Stark Audio DSP] Direct element route fallback:", e);
+            }
+        }
+
         function playBase64Audio(b64) {
             isJarvisTalking = true;
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            ensureStarkAudioDSP();
             ttsAudio.src = "data:audio/mp3;base64," + b64;
             ttsAudio.play().catch(() => {});
             ttsAudio.onended = () => {

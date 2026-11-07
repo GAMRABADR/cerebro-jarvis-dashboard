@@ -4379,15 +4379,17 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
     lang_cfg = SUPPORTED_LANGUAGES.get(active_lang, SUPPORTED_LANGUAGES["it"])
     voice_fallbacks = [lang_cfg["voice"], lang_cfg.get("alt_voice"), "it-IT-GiuseppeMultilingualNeural"]
     if active_lang == "en":
-        edge_rate = "-1%"
-        edge_pitch = "-2Hz"
-    else:
-        edge_rate = "-2%"
+        edge_rate = "+2%"
         edge_pitch = "-4Hz"
+        edge_volume = "+15%"
+    else:
+        edge_rate = "+3%"
+        edge_pitch = "-6Hz"
+        edge_volume = "+15%"
 
     for v in [vx for vx in voice_fallbacks if vx]:
         try:
-            comm = edge_tts.Communicate(clean_text, v, rate=edge_rate, pitch=edge_pitch)
+            comm = edge_tts.Communicate(clean_text, v, rate=edge_rate, pitch=edge_pitch, volume=edge_volume)
             audio_data = b""
             async for chunk in comm.stream():
                 if chunk["type"] == "audio": audio_data += chunk["data"]
