@@ -299,8 +299,29 @@ def extract_and_update_family_tree(prompt):
     return None
 
 
+try:
+    import ebj_qmd_engine
+except ImportError:
+    try:
+        from cerebro_jarvis_dashboard import ebj_qmd_engine
+    except Exception:
+        ebj_qmd_engine = None
+
 def get_master_wiki_snippet(prompt=""):
-    """Reads PROJECT_MASTER_WIKI.md and extracts relevant knowledge sections in real-time"""
+    """
+    Second Brain QMD (Query Markdown Documents) Retrieval:
+    Estrae frammenti markdown ad alta densità con Zero-Token Waste tramite FTS5 BM25.
+    """
+    if not prompt or not prompt.strip():
+        return None
+
+    if ebj_qmd_engine:
+        try:
+            qmd_ctx = ebj_qmd_engine.get_qmd_context(prompt, max_chunks=3)
+            if qmd_ctx:
+                return qmd_ctx
+        except Exception as ex:
+            print(f"[QMD Recall Warning]: {ex}")
     wiki_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "PROJECT_MASTER_WIKI.md")
     if not os.path.exists(wiki_file):
         return None

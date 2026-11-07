@@ -4578,6 +4578,15 @@ class JarvisHandler(BaseHTTPRequestHandler):
         self.end_headers()
     def do_GET(self):
         clean_path = self.path.split('?')[0].rstrip('/')
+        # ── SECOND BRAIN QMD (QUERY MARKDOWN DOCUMENTS) STATS ───────────────
+        if clean_path in ('/api/qmd/stats', '/api/qmd/status'):
+            try:
+                import ebj_qmd_engine
+                self.send_json(ebj_qmd_engine.get_qmd_stats())
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
+
         if clean_path in ('/api/brain/status', '/api/brain/current'):
             cur_b = get_active_brain()
             lbl = BRAIN_ENGINE_NAMES.get(cur_b, cur_b.upper())
@@ -6519,6 +6528,35 @@ class JarvisHandler(BaseHTTPRequestHandler):
             data = json.loads(body.decode('utf-8', errors='ignore')) if body else {}
         except Exception:
             data = {}
+
+        # ── SECOND BRAIN QMD (QUERY MARKDOWN DOCUMENTS) SEARCH & REINDEX ─────
+        if self.path in ('/api/qmd/search', '/api/qmd/search/'):
+            try:
+                import ebj_qmd_engine
+                query = data.get('query', '').strip()
+                limit = int(data.get('limit', 4))
+                results = ebj_qmd_engine.qmd_search(query, limit=limit)
+                context = ebj_qmd_engine.get_qmd_context(query, max_chunks=limit)
+                self.send_json({
+                    "status": "SUCCESS",
+                    "query": query,
+                    "count": len(results),
+                    "results": results,
+                    "context": context
+                })
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
+
+        if self.path in ('/api/qmd/reindex', '/api/qmd/reindex/'):
+            try:
+                import ebj_qmd_engine
+                force = bool(data.get('force', False))
+                stats = ebj_qmd_engine.index_all_markdown(force=force)
+                self.send_json(stats)
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)}, 500)
+            return
 
         if self.path == '/api/auth/verify':
             passcode = data.get('passcode', '').strip()
