@@ -4,6 +4,7 @@ import time
 import datetime
 import re
 import json
+import requests
 
 
 MEMORY_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hermes_ltm_memory.db")

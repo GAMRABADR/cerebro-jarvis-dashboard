@@ -100,9 +100,9 @@ def evaluate_reflex_prepass(utterance: str, history_len: int = 0) -> Dict[str, A
     elif any(k in u_lower for k in ["mail", "email", "invia", "spedisci", "telegram", "promemoria", "agenda", "calendario"]):
         lane = "desk_action"
         lane_confidence = 0.88
-    elif any(k in u_lower for k in ["note", "vault", "cerca nel database", "ricordi", "cosa abbiamo", "elenco"]):
+    elif any(k in u_lower for k in ["note", "vault", "cerca nel database", "ricordi", "cosa abbiamo", "elenco", "second brain", "wiki", "documentazione", "regol"]):
         lane = "vault_search"
-        lane_confidence = 0.90
+        lane_confidence = 0.94
     elif any(k in u_lower for k in ["ciao", "buongiorno", "buonasera", "grazie", "chi sei", "come stai"]):
         lane = "small_talk"
         lane_confidence = 0.95
@@ -296,20 +296,43 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
         details = {"event": prompt, "status": "SCHEDULED"}
         ack_text = "Registro il promemoria in agenda con notifica prioritaria, Badr."
 
-    # 5. VAULT SEARCH
+    # 5. VAULT SEARCH (QMD SECOND BRAIN INTEGRATION)
     elif intent == "VAULT_SEARCH":
         match_snippet = ""
         try:
-            if os.path.exists(MEMORY_VAULT_MD):
+            try:
+                import ebj_qmd_engine
+            except ImportError:
+                from cerebro_jarvis_dashboard import ebj_qmd_engine
+            qmd_results = ebj_qmd_engine.qmd_search(prompt, limit=3)
+            if qmd_results:
+                top = qmd_results[0]
+                clean_lines = [l.strip() for l in top["content"].splitlines() if l.strip() and not l.strip().startswith("#")]
+                first_fact = clean_lines[0][:140] if clean_lines else top["content"][:140]
+                first_fact = re.sub(r'[*_`~>|]', '', first_fact).strip()
+                ack_text = f"Ho interrogato il Second Brain QMD, Badr: in {top['file_name']}, sezione '{top['heading']}', è registrato: {first_fact}."
+                details = {
+                    "vault": "QMD_SECOND_BRAIN",
+                    "top_file": top["file_name"],
+                    "heading": top["heading"],
+                    "breadcrumb": top["breadcrumb"],
+                    "start_line": top["start_line"],
+                    "end_line": top["end_line"],
+                    "results_count": len(qmd_results)
+                }
+            elif os.path.exists(MEMORY_VAULT_MD):
                 with open(MEMORY_VAULT_MD, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                 words = [w for w in prompt.lower().split() if len(w) > 3]
                 found = [line.strip() for line in content.splitlines() if any(w in line.lower() for w in words)]
                 if found:
                     match_snippet = found[0][:60]
-            details = {"vault": "HOLOGRAPHIC_MEMORY_VAULT", "match": match_snippet}
-            ack_text = "Ho interrogato il Memory Vault neurale, Badr: riferimenti recuperati e memorizzati nel contesto attivo."
-        except Exception:
+                details = {"vault": "HOLOGRAPHIC_MEMORY_VAULT", "match": match_snippet}
+                ack_text = f"Ho interrogato il Memory Vault, Badr: recuperato il riferimento '{match_snippet}'."
+            else:
+                ack_text = "Ho verificato il Memory Vault, Badr: nessun record contrastante trovato."
+        except Exception as ex:
+            print(f"[Reflex Vault Search Error]: {ex}")
             ack_text = "Interrogo il Memory Vault neurale e recupero i record pertinenti, Badr."
 
     # 6. VAULT SAVE
@@ -569,6 +592,8 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
         matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
+    elif any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
+        matched, intent, domain, action = True, "VAULT_SEARCH", "KNOWLEDGE_VAULT", "SEARCH_QMD"
 
     # 2. LIVELLO 1: Fallback con CLM Contrastive InfoNCE Classifier se nessuna keyword ha fatto match
     if not matched:

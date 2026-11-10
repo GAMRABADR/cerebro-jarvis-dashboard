@@ -331,7 +331,9 @@ def index_all_markdown(force: bool = False) -> Dict[str, Any]:
     }
 
 def clean_query_tokens(query: str) -> List[str]:
-    words = re.findall(r'[\w\.\-]+', query.lower())
+    # Normalizza contrazioni ed elisioni (es. dell'infrastruttura -> della infrastruttura)
+    q_norm = re.sub(r"['’`]", " ", query.lower())
+    words = re.findall(r'[\w\.\-]+', q_norm)
     tokens = [w for w in words if len(w) > 1 and w not in ITALIAN_STOPWORDS]
     return tokens if tokens else words[:3]
 
@@ -344,6 +346,13 @@ def qmd_search(query: str, limit: int = 4) -> List[Dict[str, Any]]:
     """
     if not query or not query.strip():
         return []
+
+    # Auto-inizializzazione se il DB è vuoto o assente
+    if not os.path.exists(QMD_DB_PATH) or os.path.getsize(QMD_DB_PATH) < 4096:
+        try:
+            index_all_markdown()
+        except Exception:
+            pass
 
     tokens = clean_query_tokens(query)
     if not tokens:

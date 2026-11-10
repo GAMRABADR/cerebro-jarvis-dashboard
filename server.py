@@ -106,6 +106,7 @@ def _load_repo_dotenv():
 
 _load_repo_dotenv()
 
+SERVER_START_TIME = time.time()
 PORT = 8088
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
@@ -2173,6 +2174,15 @@ def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvi
         "Usa italiano naturale e conciso, senza markdown, emoji o preamboli prolissi. La risposta può avere tutti i dettagli necessari, "
         "ma evita ripetizioni. Usa SOLO i fatti forniti o verificabili: non inventare azioni, invii, email, luoghi o stati di sistema."
     )
+    if not extra_facts:
+        try:
+            import ebj_qmd_engine
+            qmd_ctx = ebj_qmd_engine.get_qmd_context(user_query, max_chunks=2)
+            if qmd_ctx:
+                extra_facts = qmd_ctx
+        except Exception:
+            pass
+
     if extra_facts:
         llm_prompt = f"{sys_instruction}\n\n[DATI DI SISTEMA EFFETTIVI]:\n{extra_facts}\n\nRichiesta di Badr: {user_query}\nRisposta parlata di JARVIS:"
     else:
@@ -4578,6 +4588,18 @@ class JarvisHandler(BaseHTTPRequestHandler):
         self.end_headers()
     def do_GET(self):
         clean_path = self.path.split('?')[0].rstrip('/')
+        # ── SYSTEM HEALTH MONITORING ─────────────────────────────────────────
+        if clean_path in ('/health', '/api/health'):
+            uptime_sec = round(time.time() - SERVER_START_TIME, 1) if 'SERVER_START_TIME' in globals() else 0
+            self.send_json({
+                "status": "ok",
+                "system": "E.B.J. JARVIS BIO-NEURAL CONNECTOME",
+                "version": "100.0-APEX-SUPREME-PRO",
+                "uptime_seconds": uptime_sec,
+                "timestamp": datetime.datetime.now().isoformat()
+            })
+            return
+
         # ── SECOND BRAIN QMD (QUERY MARKDOWN DOCUMENTS) STATS ───────────────
         if clean_path in ('/api/qmd/stats', '/api/qmd/status'):
             try:
