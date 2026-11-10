@@ -53,7 +53,29 @@ ITALIAN_STOPWORDS = {
     "il", "lo", "la", "i", "gli", "le", "un", "uno", "una", "di", "a", "da", "in", "con",
     "su", "per", "tra", "fra", "e", "ed", "o", "che", "dove", "come", "cosa", "quando",
     "perche", "chi", "abbiamo", "nostro", "nostri", "nostra", "nostre", "sono", "sei",
-    "mio", "mia", "tuo", "tua", "si", "no", "jarvis", "ebj", "dimmi", "quale", "quali", "dei", "delle"
+    "mio", "mia", "tuo", "tua", "si", "no", "jarvis", "ebj", "dimmi", "quale", "quali", "dei", "delle",
+    "del", "della", "nel", "nella", "nei", "sul", "sulla", "al", "alla", "mi", "ti", "ci", "è", "qual"
+}
+
+# Parole di comando: dicono a EBJ COSA fare, non COSA cercare. Vanno tolte dalla query.
+COMMAND_WORDS = {
+    "cerca", "cercami", "trova", "trovami", "mostra", "mostrami", "leggi", "apri", "controlla",
+    "vault", "memoria", "second", "brain", "wiki", "documentazione", "note", "nelle", "archivio",
+    "per", "favore", "parlami", "sapere", "voglio", "vorrei", "puoi", "riguardo", "info", "informazioni"
+}
+
+# Cartelle escluse: backup/snapshot (duplicati) e documentazione di terze parti.
+EXCLUDED_DIRS = {
+    ".git", "node_modules", "target", "venv", ".venv", "Build", "Binaries", "Intermediate",
+    "Saved", ".cache", "__pycache__", "cloud_storage_staging", "storage", "04_Backup_Vault_DB",
+    "NeoStackAI-3.1.59-UE5.8-Win64", "webui", "extensions", "TRELLIS", "TripoSR", "ds4",
+    "references", "vendor", "dist", "site-packages"
+}
+
+# Fonti curate dell'ecosistema EBJ: ricevono un boost di rilevanza.
+PRIORITY_FILES = {
+    "AGENTS.md", "CAPABILITIES_LEDGER.md", "HOLOGRAPHIC_MEMORY_VAULT.md", "PROJECT_MASTER_WIKI.md",
+    "WIKI.md", "PROMPTS_EBJ_SUPREME.md", "DOCUMENTAZIONE_8_AGENTI_EBJ.md", "EBJ_Ecosystem_Capability_Map.md"
 }
 
 def get_db_connection() -> sqlite3.Connection:
@@ -237,10 +259,7 @@ def discover_markdown_files() -> List[str]:
             # Scansione directory (se src è PROJECT_ROOT escludiamo cartelle pesanti non-doc)
             for root, dirs, files in os.walk(src):
                 # Esclusioni per performance
-                dirs[:] = [d for d in dirs if d not in [
-                    ".git", "node_modules", "target", "venv", ".venv", 
-                    "Build", "Binaries", "Intermediate", "Saved", ".cache"
-                ]]
+                dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS and not d.startswith("snapshot_")]
                 for f in files:
                     if f.endswith(".md"):
                         p = os.path.abspath(os.path.join(root, f))
@@ -314,8 +333,18 @@ def index_all_markdown(force: bool = False) -> Dict[str, Any]:
         total_chunks += len(chunks)
         updated_files += 1
 
+    # Pota i file eliminati o ora esclusi (evita risultati fantasma)
+    current = {os.path.relpath(p, PROJECT_ROOT).replace("\\", "/") for p in files}
+    stale = [r[0] for r in c.execute("SELECT file_path FROM qmd_files").fetchall() if r[0] not in current]
+    stale += [r[0] for r in c.execute("SELECT DISTINCT file_path FROM qmd_chunks").fetchall()
+              if r[0] not in current and r[0] not in stale]
+    for sp in stale:
+        c.execute("DELETE FROM qmd_chunks WHERE file_path = ?", (sp,))
+        c.execute("DELETE FROM qmd_files WHERE file_path = ?", (sp,))
+    removed_files = len(stale)
+
     # Ricostruisci indice FTS5 per sincronizzazione perfetta
-    if updated_files > 0 or force:
+    if updated_files > 0 or removed_files > 0 or force:
         c.execute("INSERT INTO qmd_chunks_fts(qmd_chunks_fts) VALUES('rebuild')")
         conn.commit()
 
@@ -327,15 +356,50 @@ def index_all_markdown(force: bool = False) -> Dict[str, Any]:
         "total_files_scanned": len(files),
         "updated_files": updated_files,
         "new_chunks_indexed": total_chunks,
+        "removed_files": removed_files,
         "elapsed_ms": round(elapsed_ms, 2)
     }
+
+
+_AUTO_REINDEX_STARTED = False
+
+def start_auto_reindex(interval_sec: int = 600) -> bool:
+    """
+    Avvia un thread daemon che reindicizza in modo differenziale ogni `interval_sec`.
+    Attivo di default solo su Windows (PC con il repo completo). Sulla VPS (RAM sotto
+    pressione) va abilitato esplicitamente con QMD_AUTO_REINDEX=1, perché lì PROJECT_ROOT
+    è /home/ubuntu e la scansione costerebbe troppo.
+    """
+    global _AUTO_REINDEX_STARTED
+    flag = os.environ.get("QMD_AUTO_REINDEX", "1" if sys.platform == "win32" else "0")
+    if _AUTO_REINDEX_STARTED or flag != "1":
+        return False
+    _AUTO_REINDEX_STARTED = True
+    import threading
+
+    def _loop():
+        while True:
+            try:
+                res = index_all_markdown()
+                if res.get("updated_files") or res.get("removed_files"):
+                    print(f"[QMD Auto-Reindex] +{res['updated_files']} file, -{res['removed_files']} file, {res['elapsed_ms']}ms")
+            except Exception as ex:
+                print(f"[QMD Auto-Reindex Error]: {ex}")
+            time.sleep(interval_sec)
+
+    threading.Thread(target=_loop, daemon=True, name="qmd-auto-reindex").start()
+    return True
 
 def clean_query_tokens(query: str) -> List[str]:
     # Normalizza contrazioni ed elisioni (es. dell'infrastruttura -> della infrastruttura)
     q_norm = re.sub(r"['’`]", " ", query.lower())
-    words = re.findall(r'[\w\.\-]+', q_norm)
-    tokens = [w for w in words if len(w) > 1 and w not in ITALIAN_STOPWORDS]
-    return tokens if tokens else words[:3]
+    words = [w.strip(".-") for w in re.findall(r'[\w\.\-]+', q_norm)]
+    words = [w for w in words if w]
+    tokens = [w for w in words if len(w) > 1 and w not in ITALIAN_STOPWORDS and w not in COMMAND_WORDS]
+    if tokens:
+        return tokens
+    # Se la query era fatta solo di parole di comando, ricadi sulle non-stopword
+    return [w for w in words if w not in ITALIAN_STOPWORDS][:3] or words[:3]
 
 def qmd_search(query: str, limit: int = 4) -> List[Dict[str, Any]]:
     """
@@ -383,7 +447,7 @@ def qmd_search(query: str, limit: int = 4) -> List[Dict[str, Any]]:
             WHERE qmd_chunks_fts MATCH ?
             ORDER BY bm_score ASC
             LIMIT ?
-        """, (fts_match_expr, limit * 3))
+        """, (fts_match_expr, max(limit * 8, 24)))
         raw_rows = c.fetchall()
     except Exception as e:
         raw_rows = []
@@ -431,8 +495,11 @@ def qmd_search(query: str, limit: int = 4) -> List[Dict[str, Any]]:
 
         # Bonus per query completa contenuta
         full_phrase_bonus = 5.0 if query_lower in content_low or query_lower in head_low else 0.0
+        # Copertura: quanti token DIVERSI della query compaiono (premia chi li contiene tutti)
+        coverage = sum(1 for tok in tokens if tok in content_low or tok in head_low) / max(1, len(tokens))
+        priority_bonus = 2.0 if fname in PRIORITY_FILES else 0.0
 
-        composite_score = rrf_bm * 100.0 + exact_hits + full_phrase_bonus
+        composite_score = rrf_bm * 100.0 + exact_hits + full_phrase_bonus + coverage * 6.0 + priority_bonus
 
         scored_items.append({
             "id": cid,
@@ -449,9 +516,18 @@ def qmd_search(query: str, limit: int = 4) -> List[Dict[str, Any]]:
 
     conn.close()
 
-    # Ordina per score composito decrescente
+    # Ordina per score composito decrescente ed elimina i duplicati di contenuto
     scored_items.sort(key=lambda x: x["score"], reverse=True)
-    return scored_items[:limit]
+    unique, seen_hashes = [], set()
+    for it in scored_items:
+        h = hashlib.md5(re.sub(r"\*\(Registrato:[^)]*\)\*", "", it["content"]).strip().encode("utf-8", "ignore")).hexdigest()
+        if h in seen_hashes:
+            continue
+        seen_hashes.add(h)
+        unique.append(it)
+        if len(unique) >= limit:
+            break
+    return unique
 
 def get_qmd_context(query: str, max_chunks: int = 3, max_chars: int = 4000) -> Optional[str]:
     """

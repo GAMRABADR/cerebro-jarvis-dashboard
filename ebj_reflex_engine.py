@@ -307,10 +307,24 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             qmd_results = ebj_qmd_engine.qmd_search(prompt, limit=3)
             if qmd_results:
                 top = qmd_results[0]
-                clean_lines = [l.strip() for l in top["content"].splitlines() if l.strip() and not l.strip().startswith("#")]
-                first_fact = clean_lines[0][:140] if clean_lines else top["content"][:140]
-                first_fact = re.sub(r'[*_`~>|]', '', first_fact).strip()
-                ack_text = f"Ho interrogato il Second Brain QMD, Badr: in {top['file_name']}, sezione '{top['heading']}', è registrato: {first_fact}."
+                q_tokens = ebj_qmd_engine.clean_query_tokens(prompt)
+                best_line, best_hits = "", -1
+                for raw_line in top["content"].splitlines():
+                    s = raw_line.strip()
+                    if not s or s.startswith("#") or s.startswith("```") or set(s) <= set("-|: "):
+                        continue
+                    s = re.sub(r"\*\(Registrato:[^)]*\)\*", "", s)
+                    s = re.sub(r"^[-*+]\s+|^\d+\.\s+", "", s)
+                    s = re.sub(r'[*_`~>|#★☆]', '', s)
+                    s = re.sub(r"\s+", " ", s).strip()
+                    if len(s) < 12:
+                        continue
+                    hits = sum(1 for t in q_tokens if t in s.lower())
+                    if hits > best_hits:
+                        best_line, best_hits = s, hits
+                first_fact = (best_line or top["heading"])[:220].rstrip(" .")
+                spoken_heading = re.sub(r"[^\w\s&/.,:'-]", "", top["heading"]).replace("_", " ").strip(" :")
+                ack_text = f"Ho interrogato il Second Brain, Badr: in {top['file_name']}, sezione {spoken_heading}, risulta: {first_fact}."
                 details = {
                     "vault": "QMD_SECOND_BRAIN",
                     "top_file": top["file_name"],
@@ -550,7 +564,10 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
     action = ""
 
     # 1. LIVELLO 0: Regole euristiche veloci su keyword dominanti (< 0.05ms)
-    if any(k in p_lower for k in ["posta in arrivo", "leggi email", "nuove email", "controlla la posta", "inbox"]):
+    # Una ricerca ESPLICITA nella memoria vince su qualunque parola di dominio (vps, lead, ecc.)
+    if any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
+        matched, intent, domain, action = True, "VAULT_SEARCH", "KNOWLEDGE_VAULT", "SEARCH_QMD"
+    elif any(k in p_lower for k in ["posta in arrivo", "leggi email", "nuove email", "controlla la posta", "inbox"]):
         matched, intent, domain, action = True, "EMAIL_INBOX", "EMAIL", "READ_INBOX"
     elif any(k in p_lower for k in ["invia email", "manda email", "scrivi email"]):
         matched, intent, domain, action = True, "EMAIL_COMPOSE", "EMAIL", "COMPOSE_SEND"
@@ -592,8 +609,6 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
         matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
-    elif any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
-        matched, intent, domain, action = True, "VAULT_SEARCH", "KNOWLEDGE_VAULT", "SEARCH_QMD"
 
     # 2. LIVELLO 1: Fallback con CLM Contrastive InfoNCE Classifier se nessuna keyword ha fatto match
     if not matched:

@@ -10188,6 +10188,13 @@ def _ltm_prune_scheduler():
 
 def run_server():
     ensure_rust_ai_rotator_daemon()
+    # Second Brain QMD: reindex differenziale ogni 10 min (default solo su Windows)
+    try:
+        import ebj_qmd_engine
+        if ebj_qmd_engine.start_auto_reindex(600):
+            print("[QMD] Auto-reindex attivo (ogni 10 min)")
+    except Exception as e:
+        print(f"[QMD Auto-Reindex Boot Error]: {e}")
     prune_ltm_history(30)  # Pruning all'avvio
     # Avvia scheduler pruning periodico (ogni 6h) come daemon thread
     import threading as _threading
