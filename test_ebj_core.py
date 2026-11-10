@@ -148,6 +148,41 @@ def t_reflex_spoken_clean():
     for bad in ["`", "★", "##", "**"]:
         assert bad not in ack, f"la risposta parlata contiene '{bad}' (verrebbe letto dalla voce)"
 
+def t_system_probe_real_telemetry():
+    import ebj_reflex_engine as r
+    diag = r.probe_live_system_and_vps()
+    assert diag["total_probes"] >= 5, f"attesi almeno 5 target, trovati {diag['total_probes']}"
+    assert diag["online_count"] >= 4, f"troppi servizi offline: {diag['online_count']}/{diag['total_probes']}"
+    assert diag["total_latency_ms"] < 600, f"probes troppo lente: {diag['total_latency_ms']} ms"
+
+def t_painting_and_gardening_quotes():
+    import ebj_reflex_engine as r
+    pq = r.calculate_painting_quote("preventivo pittura bianco 80 mq")
+    assert pq["floor_mq"] == 80 and pq["base_price_eur"] == 1520, f"stima pittura errata: {pq}"
+    assert "PietroTraslochi.com" in pq["brand"], f"brand mancante: {pq}"
+
+    gq = r.calculate_gardening_quote("preventivo taglio erba giardino 200 mq con potatura siepi")
+    assert gq["grass_mq"] == 200 and gq["total_eur"] == 350, f"stima giardino errata: {gq}"
+    assert "BadrExpress.com" in gq["brand"], f"brand mancante: {gq}"
+
+def t_home_services_lead_radar():
+    import ebj_reflex_engine as r
+    res = r.jev_reflex_dispatch("trova lavori di giardinaggio e pittura bianco")
+    assert res and res["intent"] == "HOME_SERVICES_LEAD_RADAR", f"intento errato: {res}"
+    leads = res["receipt"]["details"]["leads"]
+    assert len(leads) >= 10, f"troppi pochi lead: {len(leads)}"
+
+    res_bo = r.jev_reflex_dispatch("trova lavori di giardinaggio a Bologna")
+    leads_bo = res_bo["receipt"]["details"]["leads"]
+    assert len(leads_bo) >= 1 and all(l["city"] == "Bologna" for l in leads_bo), f"filtro città errato: {leads_bo}"
+
+def t_agentic_metacore_preconditions():
+    from ebj_agentic_metacore import CognitiveReflectionEngine
+    pre = CognitiveReflectionEngine.check_preconditions("verifica stato vps e calcola strategia")
+    assert pre["valid"] is True, f"precondizioni non valide: {pre}"
+    assert pre["checks"]["vps_reachable"] is True, f"VPS non raggiungibile: {pre}"
+    assert pre["checks"]["local_core_online"] is True, f"Core 8088 offline: {pre}"
+
 
 # ── 4. HTTP live ────────────────────────────────────────────────────────────
 def t_http_health():
@@ -175,6 +210,10 @@ if __name__ == "__main__":
         ("qmd: latenza < 150 ms", t_qmd_latency),
         ("reflex: instradamento", t_reflex_routing),
         ("reflex: risposta parlata pulita", t_reflex_spoken_clean),
+        ("telemetria: probe socket VPS & locale", t_system_probe_real_telemetry),
+        ("formule: pittura bianco & giardinaggio", t_painting_and_gardening_quotes),
+        ("radar: lead casa & filtro città", t_home_services_lead_radar),
+        ("metacore: agentic precondizioni & VPS", t_agentic_metacore_preconditions),
         ("http: /health", t_http_health),
         ("http: /api/qmd/search", t_http_qmd_search),
     ]:

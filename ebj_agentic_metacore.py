@@ -111,8 +111,16 @@ class CognitiveReflectionEngine:
             result = sock.connect_ex(('127.0.0.1', 8088))
             sock.close()
             checks["local_core_online"] = (result == 0)
+
+            # Verifica raggiungibilità VPS Oracle (92.4.233.42:80)
+            sock_vps = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock_vps.settimeout(0.15)
+            vps_res = sock_vps.connect_ex(('92.4.233.42', 80))
+            sock_vps.close()
+            checks["vps_reachable"] = (vps_res == 0)
         except Exception:
             checks["local_core_online"] = False
+            checks["vps_reachable"] = False
 
         duration = (time.perf_counter() - t0) * 1000.0
         return {
@@ -472,6 +480,22 @@ class AutonomousExecutionEngine:
                 intent_res = classify_intent_clm(goal)
                 top_intent = intent_res.get("top_intent", "general")
                 conf = intent_res.get("confidence", 0.0)
+
+                # Se l'intento contrastivo è eseguibile, invoca l'azione reale certificata
+                if intent_res.get("matched") and top_intent not in ("general", "UNKNOWN"):
+                    try:
+                        from ebj_reflex_engine import execute_jev_action
+                        ack, rcpt = execute_jev_action(top_intent, intent_res.get("domain", "SYSTEM"), intent_res.get("action", "EXECUTE"), goal)
+                        return {
+                            "status": "SUCCESS",
+                            "spoken_response": ack,
+                            "receipt": rcpt,
+                            "data": intent_res,
+                            "engine": "CLM_Contrastive_System_One"
+                        }
+                    except Exception:
+                        pass
+
                 return {
                     "status": "SUCCESS",
                     "spoken_response": f"Decisione contrastiva: intento {top_intent} con confidenza del {int(conf*100)} percento, Badr.",

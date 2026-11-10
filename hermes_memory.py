@@ -58,6 +58,48 @@ def init_memory():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user_identity_dossier (
+            id INTEGER PRIMARY KEY,
+            full_name TEXT,
+            alias TEXT,
+            birth_date TEXT,
+            birth_place TEXT,
+            fiscal_code TEXT,
+            residence TEXT,
+            phone TEXT,
+            email TEXT,
+            primary_roles TEXT,
+            companies TEXT,
+            active_projects TEXT,
+            personal_preferences TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS family_tree_dossier (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT UNIQUE,
+            relation_degree TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    # Seed default identity if empty
+    c.execute("SELECT COUNT(*) FROM user_identity_dossier WHERE id=1")
+    if c.fetchone()[0] == 0:
+        c.execute("""
+            INSERT OR IGNORE INTO user_identity_dossier (
+                id, full_name, alias, birth_date, birth_place, fiscal_code,
+                residence, phone, email, primary_roles, companies, active_projects, personal_preferences
+            ) VALUES (
+                1, 'Badr El Ouariti', 'Ingegner Badr / EB', '07/01/1988', 'Marocco', 'LRTBDR88A07Z330L',
+                'Via San Vitale 187/189, 40026 Imola (BO)', '+39 388 870 3508', 'badraudi@gmail.com',
+                'Fondatore BadrExpress.com & EBGStudio (AI & Software Architect, Programmatore PLC Siemens S7-1200 / CNC)',
+                'BadrExpress.com, PietroTraslochi.com, EBGStudio',
+                'EBGS Survival MMO (Steam AppID: 2886940), B2B Sgomberi Immobiliari Bologna/Imola H24, Pittura e Giardinaggio',
+                'Massima efficienza, risposte dirette, orientamento al business e zero preamboli.'
+            )
+        """)
     conn.commit()
     
     # Sync FTS
