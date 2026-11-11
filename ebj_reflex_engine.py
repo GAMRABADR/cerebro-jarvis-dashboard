@@ -737,6 +737,61 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             details = {"error": str(e)}
             ack_text = "Signore, al momento non riesco a leggere il riepilogo dell albero di memoria."
 
+    # 12e-quater. SMARTPHONE CONTROL, FACTORY TELEMETRY & LOST-MODE FINDER
+    elif intent == "PHONE_DEVICE_CONTROL":
+        p_low = prompt.lower()
+        dev_info = {}
+        try:
+            if os.path.exists(VAULT_DB):
+                c = sqlite3.connect(VAULT_DB)
+                row = c.execute("SELECT manufacturer, model, android_version, carrier, last_lat, last_lon, last_battery_pct, last_wifi_ssid, lost_mode, last_gasp_json, last_seen FROM mobile_devices_registry WHERE device_id='badr-smartphone-primary'").fetchone()
+                c.close()
+                if row:
+                    dev_info = {
+                        "manufacturer": row[0], "model": row[1], "android_version": row[2], "carrier": row[3],
+                        "lat": row[4], "lon": row[5], "battery_pct": row[6], "wifi_ssid": row[7],
+                        "lost_mode": bool(row[8]), "last_seen": row[10]
+                    }
+        except Exception:
+            pass
+
+        def _enqueue_phone(act, params=None):
+            try:
+                import requests as _rq
+                _rq.post("http://127.0.0.1:8088/api/device/android/command", json={"action": act, "params": params or {}}, timeout=0.6)
+                return True
+            except Exception:
+                return False
+
+        if any(k in p_low for k in ["squilla", "suona", "allarme", "smarrito", "perso"]):
+            _enqueue_phone("lost_mode_on", {})
+            _enqueue_phone("ring_alarm", {})
+            loc_str = f" Ultima posizione nota: {dev_info['lat']}, {dev_info['lon']}." if dev_info.get("lat") else ""
+            ack_text = f"Modalità smarrito attivata sul telefono, signore: inviato comando di suoneria al massimo volume, torcia e scatto fotocamera.{loc_str} Per tracciamento hardware anche a batteria zero apri Google Trova il mio dispositivo."
+        elif any(k in p_low for k in ["disattiva smarrito", "spegni allarme", "trovato telefono"]):
+            _enqueue_phone("lost_mode_off", {})
+            ack_text = "Modalità smarrito disattivata sul telefono, signore."
+        elif any(k in p_low for k in ["torcia", "luce telefono"]):
+            turn_on = not any(w in p_low for w in ["spegni", "off", "disattiva"])
+            _enqueue_phone("torch", {"on": turn_on})
+            ack_text = f"Comando torcia {'accesa' if turn_on else 'spenta'} accodato per il telefono, signore."
+        elif any(k in p_low for k in ["foto dal telefono", "scatta dal telefono"]):
+            _enqueue_phone("photo", {"camera": "0"})
+            ack_text = "Scatto fotocamera remoto accodato per lo smartphone, signore."
+        elif any(k in p_low for k in ["fabbrica", "modello telefono", "specifiche telefono", "batteria telefono", "stato telefono", "stato del mio telefono"]):
+            if dev_info.get("model") or dev_info.get("manufacturer"):
+                bat = f"batteria al {dev_info['battery_pct']} percento" if dev_info.get("battery_pct", -1) >= 0 else "batteria non ancora letta"
+                ack_text = f"Dati di fabbrica registrati per il tuo telefono, signore: {dev_info.get('manufacturer','')} {dev_info.get('model','')}, Android {dev_info.get('android_version','n/d')}, operatore {dev_info.get('carrier','n/d')}, {bat}."
+            else:
+                ack_text = "Nessun telefono ancora registrato in memoria di fabbrica, signore: avvia ebj-start in Termux sullo smartphone per acquisire modello e telemetria reali."
+        else:
+            _enqueue_phone("locate", {})
+            if dev_info.get("lat"):
+                ack_text = f"Ultima posizione GPS registrata per il telefono: latitudine {dev_info['lat']}, longitudine {dev_info['lon']}. Se è spento usa anche Google Trova il mio dispositivo."
+            else:
+                ack_text = "Ho inviato la richiesta di localizzazione GPS al nodo Android, signore. Non ci sono ancora coordinate precedenti salvate; verifica che Termux abbia il permesso posizione o apri Google Trova il mio dispositivo."
+        details = {"device": dev_info, "find_my_device_url": "https://www.google.com/android/find/"}
+
     # 12f. FABLE 5.2 · 3D ROBOT BODY
     elif intent == "FABLE_3D_ROBOT_BODY":
         details = {
@@ -924,6 +979,8 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
     # Una ricerca ESPLICITA nella memoria vince su qualunque parola di dominio (vps, lead, ecc.)
     if any(k in p_lower for k in ["novità di oggi", "novita di oggi", "novità sui canali", "novita sui canali", "che novità ci sono", "che novita ci sono", "albero della memoria", "albero memoria", "memory tree", "riassunto canali", "aggiorna memoria", "sincronizza memoria"]):
         matched, intent, domain, action = True, "MEMORY_TREE_BRIEFING", "KNOWLEDGE_TREE", "RUST_TREE_BRIEFING"
+    elif any(k in p_lower for k in ["dati di fabbrica", "modello telefono", "stato telefono", "stato del mio telefono", "batteria telefono", "dove si trova il telefono", "trova il mio telefono", "trova telefono", "fai squillare", "suona telefono", "modalità smarrito", "modalita smarrito", "torcia telefono", "foto dal telefono"]):
+        matched, intent, domain, action = True, "PHONE_DEVICE_CONTROL", "MOBILE_HARDWARE", "PHONE_COMMAND"
     elif "RECALL_MEMORY" in it_tags or is_recall_question(norm_prompt):
         matched, intent, domain, action = True, "CONVERSATION_MEMORY_RECALL", "MEMORY", "SHORT_TERM_RECALL"
     elif any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):

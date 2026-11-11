@@ -1,10 +1,14 @@
 // ── sw.js: E.B.J. AI Master Suite Service Worker (PWA Android & iOS) ──────────
-const CACHE_NAME = 'ebj-apex-cache-v1013';
+const CACHE_NAME = 'ebj-apex-cache-v1040';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/app.js?v=1013.0',
-  '/cyber_audio_engine.js?v=1013.0',
+  '/app.js?v=1036.0',
+  '/style.css?v=1025.0',
+  '/fable_3d_stage.js?v=5.2',
+  '/cyber_audio_engine.js?v=1025.0',
+  '/voice_companion.html',
+  '/leads_chiamata_rapida.html',
   '/manifest.json'
 ];
 

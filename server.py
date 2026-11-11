@@ -587,12 +587,194 @@ _ANDROID_DEVICE_STATE = {
     "last_seen": 0,
     "battery": {},
     "location": {},
+    "factory": {},
+    "wifi": {},
+    "cell_info": [],
+    "last_gasp": {},
+    "lost_mode": False,
+    "last_photo_url": "",
+    "maps_url": "",
+    "find_my_device_url": "https://www.google.com/android/find/",
     "notifications_count": 0,
     "pending_commands": []
 }
 
+def _init_android_registry_db():
+    try:
+        conn = sqlite3.connect(VAULT_DB, timeout=5.0)
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS mobile_devices_registry (
+                device_id TEXT PRIMARY KEY,
+                manufacturer TEXT DEFAULT '',
+                model TEXT DEFAULT '',
+                device_code TEXT DEFAULT '',
+                android_version TEXT DEFAULT '',
+                serial_or_id TEXT DEFAULT '',
+                carrier TEXT DEFAULT '',
+                factory_json TEXT DEFAULT '{}',
+                last_lat REAL DEFAULT 0.0,
+                last_lon REAL DEFAULT 0.0,
+                last_accuracy_m REAL DEFAULT 0.0,
+                last_battery_pct INTEGER DEFAULT -1,
+                last_wifi_ssid TEXT DEFAULT '',
+                last_wifi_bssid TEXT DEFAULT '',
+                last_photo_url TEXT DEFAULT '',
+                lost_mode INTEGER DEFAULT 0,
+                last_gasp_json TEXT DEFAULT '{}',
+                last_seen REAL DEFAULT 0.0
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS mobile_location_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_id TEXT NOT NULL,
+                lat REAL NOT NULL,
+                lon REAL NOT NULL,
+                accuracy_m REAL DEFAULT 0.0,
+                battery_pct INTEGER DEFAULT -1,
+                source TEXT DEFAULT 'gps',
+                recorded_at REAL NOT NULL
+            )
+        """)
+        conn.commit()
+        # Ripristina stato persistito all'avvio
+        c.execute("SELECT manufacturer, model, device_code, android_version, serial_or_id, carrier, factory_json, last_lat, last_lon, last_accuracy_m, last_battery_pct, last_wifi_ssid, last_wifi_bssid, last_photo_url, lost_mode, last_gasp_json, last_seen FROM mobile_devices_registry WHERE device_id = 'badr-smartphone-primary'")
+        row = c.fetchone()
+        conn.close()
+        if row:
+            try: f_json = _json.loads(row[6] or "{}")
+            except Exception: f_json = {}
+            try: lg_json = _json.loads(row[15] or "{}")
+            except Exception: lg_json = {}
+            lat, lon = float(row[7] or 0.0), float(row[8] or 0.0)
+            _ANDROID_DEVICE_STATE["factory"] = f_json or {
+                "manufacturer": row[0], "model": row[1], "device_code": row[2],
+                "android_version": row[3], "serial_or_id": row[4], "carrier": row[5]
+            }
+            if lat != 0.0 or lon != 0.0:
+                _ANDROID_DEVICE_STATE["location"] = {"latitude": lat, "longitude": lon, "accuracy": row[9]}
+                _ANDROID_DEVICE_STATE["maps_url"] = f"https://maps.google.com/?q={lat},{lon}"
+            if row[10] is not None and row[10] >= 0:
+                _ANDROID_DEVICE_STATE["battery"] = {"percentage": row[10]}
+            _ANDROID_DEVICE_STATE["wifi"] = {"ssid": row[11], "bssid": row[12]}
+            _ANDROID_DEVICE_STATE["last_photo_url"] = row[13] or ""
+            _ANDROID_DEVICE_STATE["lost_mode"] = bool(row[14])
+            _ANDROID_DEVICE_STATE["last_gasp"] = lg_json
+            _ANDROID_DEVICE_STATE["last_seen"] = float(row[16] or 0.0)
+    except Exception as _ae:
+        print(f"[Android Registry Init Err]: {_ae}")
+
+_init_android_registry_db()
+
+def _persist_android_telemetry(data: dict):
+    global _ANDROID_DEVICE_STATE
+    dev_id = (data.get("device_id") or "badr-smartphone-primary").strip()
+    now_ts = time.time()
+    _ANDROID_DEVICE_STATE["device_id"] = dev_id
+    _ANDROID_DEVICE_STATE["status"] = "ONLINE"
+    _ANDROID_DEVICE_STATE["last_seen"] = now_ts
+
+    if isinstance(data.get("battery"), dict):
+        _ANDROID_DEVICE_STATE["battery"] = data["battery"]
+    if isinstance(data.get("location"), dict) and data["location"]:
+        _ANDROID_DEVICE_STATE["location"] = data["location"]
+        lat = data["location"].get("latitude")
+        lon = data["location"].get("longitude")
+        if lat and lon:
+            _ANDROID_DEVICE_STATE["maps_url"] = f"https://maps.google.com/?q={lat},{lon}"
+    if isinstance(data.get("factory"), dict) and data["factory"]:
+        _ANDROID_DEVICE_STATE["factory"].update(data["factory"])
+    if isinstance(data.get("wifi"), dict):
+        _ANDROID_DEVICE_STATE["wifi"] = data["wifi"]
+    if isinstance(data.get("cell_info"), list):
+        _ANDROID_DEVICE_STATE["cell_info"] = data["cell_info"][:5]
+    if "notifications_count" in data:
+        _ANDROID_DEVICE_STATE["notifications_count"] = data["notifications_count"]
+
+    batt = _ANDROID_DEVICE_STATE.get("battery") or {}
+    pct = int(batt.get("percentage", -1)) if isinstance(batt, dict) and batt.get("percentage") is not None else -1
+    batt_status = str(batt.get("status", "")).upper()
+    loc = _ANDROID_DEVICE_STATE.get("location") or {}
+    lat = float(loc.get("latitude", 0.0) or 0.0)
+    lon = float(loc.get("longitude", 0.0) or 0.0)
+    acc = float(loc.get("accuracy", 0.0) or 0.0)
+    fac = _ANDROID_DEVICE_STATE.get("factory") or {}
+    wifi = _ANDROID_DEVICE_STATE.get("wifi") or {}
+
+    is_last_gasp = bool(data.get("last_gasp")) or (0 <= pct <= 5 and "DISCHARG" in batt_status)
+    if is_last_gasp:
+        _ANDROID_DEVICE_STATE["last_gasp"] = {
+            "triggered_at": now_ts,
+            "battery_pct": pct,
+            "latitude": lat,
+            "longitude": lon,
+            "maps_url": f"https://maps.google.com/?q={lat},{lon}" if (lat or lon) else "",
+            "wifi_ssid": wifi.get("ssid", ""),
+            "wifi_bssid": wifi.get("bssid", ""),
+            "cell_count": len(_ANDROID_DEVICE_STATE.get("cell_info") or [])
+        }
+
+    def _bg_db():
+        try:
+            conn = sqlite3.connect(VAULT_DB, timeout=5.0)
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO mobile_devices_registry (
+                    device_id, manufacturer, model, device_code, android_version, serial_or_id, carrier,
+                    factory_json, last_lat, last_lon, last_accuracy_m, last_battery_pct,
+                    last_wifi_ssid, last_wifi_bssid, last_photo_url, lost_mode, last_gasp_json, last_seen
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(device_id) DO UPDATE SET
+                    manufacturer=COALESCE(NULLIF(excluded.manufacturer,''), mobile_devices_registry.manufacturer),
+                    model=COALESCE(NULLIF(excluded.model,''), mobile_devices_registry.model),
+                    device_code=COALESCE(NULLIF(excluded.device_code,''), mobile_devices_registry.device_code),
+                    android_version=COALESCE(NULLIF(excluded.android_version,''), mobile_devices_registry.android_version),
+                    serial_or_id=COALESCE(NULLIF(excluded.serial_or_id,''), mobile_devices_registry.serial_or_id),
+                    carrier=COALESCE(NULLIF(excluded.carrier,''), mobile_devices_registry.carrier),
+                    factory_json=excluded.factory_json,
+                    last_lat=CASE WHEN excluded.last_lat != 0.0 THEN excluded.last_lat ELSE mobile_devices_registry.last_lat END,
+                    last_lon=CASE WHEN excluded.last_lon != 0.0 THEN excluded.last_lon ELSE mobile_devices_registry.last_lon END,
+                    last_accuracy_m=CASE WHEN excluded.last_lat != 0.0 THEN excluded.last_accuracy_m ELSE mobile_devices_registry.last_accuracy_m END,
+                    last_battery_pct=CASE WHEN excluded.last_battery_pct >= 0 THEN excluded.last_battery_pct ELSE mobile_devices_registry.last_battery_pct END,
+                    last_wifi_ssid=COALESCE(NULLIF(excluded.last_wifi_ssid,''), mobile_devices_registry.last_wifi_ssid),
+                    last_wifi_bssid=COALESCE(NULLIF(excluded.last_wifi_bssid,''), mobile_devices_registry.last_wifi_bssid),
+                    lost_mode=excluded.lost_mode,
+                    last_gasp_json=CASE WHEN excluded.last_gasp_json != '{}' THEN excluded.last_gasp_json ELSE mobile_devices_registry.last_gasp_json END,
+                    last_seen=excluded.last_seen
+            """, (
+                dev_id,
+                str(fac.get("manufacturer", "")),
+                str(fac.get("model", "")),
+                str(fac.get("device_code", "")),
+                str(fac.get("android_version", "")),
+                str(fac.get("serial_or_id", "")),
+                str(fac.get("carrier", "")),
+                _json.dumps(fac, ensure_ascii=False),
+                lat, lon, acc, pct,
+                str(wifi.get("ssid", "")), str(wifi.get("bssid", "")),
+                str(_ANDROID_DEVICE_STATE.get("last_photo_url", "")),
+                1 if _ANDROID_DEVICE_STATE.get("lost_mode") else 0,
+                _json.dumps(_ANDROID_DEVICE_STATE.get("last_gasp") or {}, ensure_ascii=False),
+                now_ts
+            ))
+            if lat != 0.0 or lon != 0.0:
+                c.execute(
+                    "INSERT INTO mobile_location_history (device_id, lat, lon, accuracy_m, battery_pct, source, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (dev_id, lat, lon, acc, pct, "last_gasp" if is_last_gasp else "telemetry", now_ts)
+                )
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+    threading.Thread(target=_bg_db, daemon=True).start()
+
 def _enqueue_android_command(action, params):
     global _ANDROID_DEVICE_STATE
+    if action == "lost_mode_on":
+        _ANDROID_DEVICE_STATE["lost_mode"] = True
+    elif action == "lost_mode_off":
+        _ANDROID_DEVICE_STATE["lost_mode"] = False
     cmd = {"action": action, "params": params, "id": str(time.time())}
     _ANDROID_DEVICE_STATE["pending_commands"].append(cmd)
     if len(_ANDROID_DEVICE_STATE["pending_commands"]) > 30:
@@ -4350,7 +4532,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
 def transcribe_audio_payload(audio_b64, mime_type="audio/webm"):
     try:
         raw_audio = base64.b64decode(audio_b64)
-        ext = "webm" if "webm" in mime_type else "wav"
+        ext = "ogg" if "ogg" in mime_type else ("mp3" if ("mp3" in mime_type or "mpeg" in mime_type) else ("m4a" if "m4a" in mime_type else ("webm" if "webm" in mime_type else "wav")))
         
         # 1. Primary High-Speed Whisper Large v3 Turbo on Groq LPU (Sub-300ms)
         url = "https://api.groq.com/openai/v1/audio/transcriptions"
@@ -7148,16 +7330,27 @@ class JarvisHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"status": "ERROR", "error": str(e)})
         # ── ANDROID SMARTPHONE HARDWARE NODE ENDPOINTS ───────────────────
+        if self.path == '/api/device/android/upload-photo':
+            try:
+                b64_img = (data.get("photo_base64") or "").strip()
+                if b64_img:
+                    snap_dir = os.path.join(PUBLIC_DIR, "uploads", "device_snaps")
+                    os.makedirs(snap_dir, exist_ok=True)
+                    fn = f"snap_{int(time.time())}.jpg"
+                    out_p = os.path.join(snap_dir, fn)
+                    with open(out_p, "wb") as wf:
+                        wf.write(base64.b64decode(b64_img))
+                    rel_url = f"/uploads/device_snaps/{fn}"
+                    _ANDROID_DEVICE_STATE["last_photo_url"] = rel_url
+                    self.send_json({"status": "SUCCESS", "photo_url": rel_url})
+                    return
+                self.send_json({"status": "ERROR", "error": "missing photo_base64"}, 400)
+            except Exception as _pe:
+                self.send_json({"status": "ERROR", "error": str(_pe)}, 500)
+            return
+
         if self.path == '/api/device/android/telemetry':
-            global _ANDROID_DEVICE_STATE
-            _ANDROID_DEVICE_STATE["status"] = "ONLINE"
-            _ANDROID_DEVICE_STATE["last_seen"] = time.time()
-            if "battery" in data:
-                _ANDROID_DEVICE_STATE["battery"] = data["battery"]
-            if "location" in data:
-                _ANDROID_DEVICE_STATE["location"] = data["location"]
-            if "notifications_count" in data:
-                _ANDROID_DEVICE_STATE["notifications_count"] = data["notifications_count"]
+            _persist_android_telemetry(data)
             
             # Parsing automatico notifiche WhatsApp su smartphone di Badr (+39 388 870 3508)
             raw_notifs = data.get("notifications", [])
@@ -7180,7 +7373,7 @@ class JarvisHandler(BaseHTTPRequestHandler):
 
             pending = list(_ANDROID_DEVICE_STATE["pending_commands"])
             _ANDROID_DEVICE_STATE["pending_commands"] = []
-            self.send_json({"status": "SUCCESS", "pending_commands": pending})
+            self.send_json({"status": "SUCCESS", "lost_mode": _ANDROID_DEVICE_STATE.get("lost_mode", False), "pending_commands": pending})
             return
 
         if self.path == '/api/device/android/command':

@@ -11905,3 +11905,64 @@ window.sendQuickCommand = function(cmd) {
   }
 };
 
+
+
+// ── MOBILE WAKELOCK, BLUETOOTH MEDIASESSION & PWA VOICE SHORTCUT (?action=voice) ──
+(function initMobileHardwareBridge() {
+  let _ebjWakeLock = null;
+
+  window.acquireEbjWakeLock = async function() {
+    try {
+      if ('wakeLock' in navigator && !_ebjWakeLock) {
+        _ebjWakeLock = await navigator.wakeLock.request('screen');
+        _ebjWakeLock.addEventListener('release', () => { _ebjWakeLock = null; });
+      }
+    } catch (_) {}
+  };
+
+  window.releaseEbjWakeLock = async function() {
+    try {
+      if (_ebjWakeLock) {
+        await _ebjWakeLock.release();
+        _ebjWakeLock = null;
+      }
+    } catch (_) {}
+  };
+
+  // Bluetooth Earbuds / Car Head-Unit Control via MediaSession API
+  if ('mediaSession' in navigator) {
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'E.B.J. JARVIS SUPREME',
+        artist: 'Badr El Ouariti · EBGStudio',
+        album: 'Tactical Voice Interface'
+      });
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (typeof startEbjMic === 'function') startEbjMic();
+        window.acquireEbjWakeLock && window.acquireEbjWakeLock();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (typeof stopEbjSpeech === 'function') stopEbjSpeech();
+      });
+    } catch (_) {}
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && window.isConversationalMode) {
+      window.acquireEbjWakeLock();
+    }
+  });
+
+  // PWA Home-Screen Shortcut ?action=voice
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('action') === 'voice') {
+        window.isConversationalMode = true;
+        window.acquireEbjWakeLock();
+        if (typeof unlockEbjVoice === 'function') unlockEbjVoice();
+        if (typeof startEbjMic === 'function') startEbjMic();
+      }
+    } catch (_) {}
+  });
+})();

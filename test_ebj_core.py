@@ -295,6 +295,26 @@ def t_http_turbo_and_streaming():
     first_chunk = next(x for x in lines if x.get("type") == "chunk")
     assert len(first_chunk.get("audio_base64", "")) > 500 and first_chunk.get("voice") == "it-IT-DiegoNeural", first_chunk
 
+def t_phone_control_factory_and_last_gasp():
+    import ebj_reflex_engine as r
+    res_r = r.jev_reflex_dispatch("fai squillare il telefono e attiva modalità smarrito")
+    assert res_r and res_r.get("intent") == "PHONE_DEVICE_CONTROL", res_r
+    assert "Google" in res_r.get("ack", ""), res_r
+
+    if not OFFLINE and _server_up():
+        tel = _http("POST", "/api/device/android/telemetry", {
+            "device_id": "test-phone-unit",
+            "battery": {"percentage": 4, "status": "DISCHARGING"},
+            "location": {"latitude": 44.3535, "longitude": 11.7141, "accuracy": 12.0},
+            "factory": {"manufacturer": "Samsung", "model": "Galaxy S24 Ultra", "android_version": "15", "carrier": "TIM"},
+            "wifi": {"ssid": "BadrHome", "bssid": "00:11:22:33:44:55"}
+        })
+        assert tel.get("status") == "SUCCESS", tel
+        st = _http("GET", "/api/device/android/status")
+        assert st.get("factory", {}).get("model") == "Galaxy S24 Ultra", st
+        assert st.get("last_gasp", {}).get("battery_pct") == 4, st
+        assert "maps.google.com" in st.get("maps_url", ""), st
+
 
 if __name__ == "__main__":
     for name, fn in [
@@ -320,6 +340,7 @@ if __name__ == "__main__":
         ("rust: memory tree & auto-ingest", t_rust_memory_tree_and_ingest),
         ("rust: turbo FFI & fuzzy dizionario", t_rust_turbo_ffi_fuzzy),
         ("http: /api/turbo-status & stream SSE", t_http_turbo_and_streaming),
+        ("mobile: dati fabbrica, last-gasp & control", t_phone_control_factory_and_last_gasp),
     ]:
         check(name, fn)
 

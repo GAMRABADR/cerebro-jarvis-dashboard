@@ -644,46 +644,121 @@
             } catch(e) {}
         }
 
-        // GESTIONE PARLATO UTENTE -> INVIO A EBJ BACKEND
+        // PRE-WARMED WAIT ACKS & WAKE LOCK
+        let _vcWaitAcks = [];
+        fetch('/api/tts/acks').then(r => r.ok ? r.json() : null).then(d => {
+            if (d && d.it) _vcWaitAcks = d.it;
+        }).catch(() => {});
+
+        function requestVcWakeLock() {
+            try { if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {}); } catch(_) {}
+        }
+
+        // GESTIONE PARLATO UTENTE -> /api/reflex/dispatch + /api/chat/stream + DIEGO NEURAL
         async function handleUserSpeech(text) {
-            playChime(783.99, 1046.50); // Feedback ricezione
+            requestVcWakeLock();
+            playChime(783.99, 1046.50);
             appendMessage('user', text);
-            statusText.innerText = "EBJ sta elaborando a latenza zero...";
+            statusText.innerText = "⚡ E.B.J. sta elaborando...";
             orbCore.className = 'orb-core jarvis-talking';
+            const startTime = performance.now();
 
             try {
-                const startTime = performance.now();
-                const resp = await fetch('/api/voice/interact', {
+                // 1. Fast Reflex (< 5ms)
+                try {
+                    const rfRes = await fetch('/api/reflex/dispatch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: text, device: 'mobile' }),
+                        signal: AbortSignal.timeout(1200)
+                    });
+                    if (rfRes.ok) {
+                        const rf = await rfRes.json();
+                        if (rf.auto_execute && rf.intent !== 'GENERAL_REASONING' && rf.spoken_ack) {
+                            telLatency.innerText = `⚡ ${Math.round(performance.now() - startTime)}ms`;
+                            telEngine.innerText = (rf.engine || rf.intent).toUpperCase();
+                            appendMessage('assistant', rf.spoken_ack);
+                            const ttsR = await fetch('/api/tts', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ text: rf.spoken_ack, persona: 'jarvis' })
+                            });
+                            if (ttsR.ok) {
+                                const td = await ttsR.json();
+                                if (td.audio_base64) { playBase64Audio(td.audio_base64); return; }
+                            }
+                            speakBrowser(rf.spoken_ack);
+                            return;
+                        }
+                    }
+                } catch(_) {}
+
+                // 2. Ack Dinamico "Attendi un attimo" + /api/chat/stream
+                let ackTimer = setTimeout(() => {
+                    if (_vcWaitAcks.length > 0) {
+                        const pk = _vcWaitAcks[Math.floor(Math.random() * _vcWaitAcks.length)];
+                        if (pk && pk.audio_base64) playBase64Audio(pk.audio_base64);
+                    }
+                }, 220);
+
+                const resp = await fetch('/api/chat/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: text, persona: 'EBJ_SUPREME' })
+                    body: JSON.stringify({ prompt: text, persona: 'jarvis', include_audio: true }),
+                    signal: AbortSignal.timeout(15000)
                 });
+                clearTimeout(ackTimer);
 
-                if (resp.ok) {
-                    const data = await resp.json();
-                    const elapsed = Math.round(performance.now() - startTime);
-                    telLatency.innerText = `⚡ ${elapsed}ms`;
-                    if (data.model_used) {
-                        telEngine.innerText = data.model_used.toUpperCase();
+                if (resp.ok && resp.body) {
+                    const reader = resp.body.getReader();
+                    const dec = new TextDecoder('utf-8');
+                    let buf = '';
+                    let fullReply = '';
+                    let audioQueue = [];
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        buf += dec.decode(value, { stream: true });
+                        let idx;
+                        while ((idx = buf.indexOf('\n')) !== -1) {
+                            const line = buf.slice(0, idx).trim();
+                            buf = buf.slice(idx + 1);
+                            if (!line) continue;
+                            try {
+                                const ev = JSON.parse(line);
+                                if (ev.type === 'chunk') {
+                                    fullReply = (fullReply ? fullReply + ' ' : '') + (ev.text || '');
+                                    if (ev.audio_base64) audioQueue.push(ev.audio_base64);
+                                } else if (ev.type === 'done') {
+                                    telLatency.innerText = `⚡ ${Math.round(performance.now() - startTime)}ms`;
+                                    telEngine.innerText = (ev.model_used || 'GROQ STREAM').toUpperCase();
+                                }
+                            } catch(_) {}
+                        }
                     }
-
-                    appendMessage('assistant', data.response);
-                    if (data.audio_base64) {
-                        playBase64Audio(data.audio_base64);
-                    } else {
-                        speakBrowser(data.response);
+                    if (fullReply) {
+                        appendMessage('assistant', fullReply);
+                        if (audioQueue.length > 0) {
+                            for (const b64 of audioQueue) {
+                                await new Promise((res) => {
+                                    playBase64Audio(b64);
+                                    ttsAudio.onended = () => { res(); };
+                                    setTimeout(res, 12000);
+                                });
+                            }
+                            isJarvisTalking = false;
+                            orbCore.className = 'orb-core speaking';
+                            statusText.innerText = "🛡️ In Ascolto (Dì 'Ehi EBJ' o tocca la sfera)";
+                            return;
+                        }
                     }
-                } else {
-                    const fallbackReply = `Ricevuto Ingegnere Badr! Ho preso in carico la tua richiesta.`;
-                    appendMessage('assistant', fallbackReply);
-                    speakBrowser(fallbackReply);
                 }
             } catch(e) {
                 console.error(e);
-                const errReply = `Ricevuto Ingegnere! Procedo subito.`;
-                appendMessage('assistant', errReply);
-                speakBrowser(errReply);
             }
+            const errReply = `Subito, signore. Elaborazione completata.`;
+            appendMessage('assistant', errReply);
+            speakBrowser(errReply);
         }
 
         function sendVoicePrompt(text) {
