@@ -118,6 +118,51 @@ SKILLS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "skills_va
 os.makedirs(FATTURE_DIR, exist_ok=True)
 os.makedirs(SKILLS_DIR, exist_ok=True)
 
+# ── WAL MODE & PERFORMANCE CACHES (ANTI-BOTTLENECK ENGINE) ─────────────────
+try:
+    _wconn = sqlite3.connect(VAULT_DB, timeout=2.0)
+    _wconn.execute("PRAGMA journal_mode=WAL;")
+    _wconn.execute("PRAGMA synchronous=NORMAL;")
+    _wconn.close()
+except Exception:
+    pass
+
+try:
+    from ebj_italian_lexicon import (
+        ITALIAN_WAIT_ACKS, UK_WAIT_ACKS, ITALIAN_MASTERY_DIRECTIVE,
+        normalize_italian_asr, is_recall_question
+    )
+except Exception:
+    ITALIAN_WAIT_ACKS = ["Attendi un attimo, signore, procedo subito."]
+    UK_WAIT_ACKS = ["One moment, sir. Processing immediately."]
+    ITALIAN_MASTERY_DIRECTIVE = ""
+    def normalize_italian_asr(t): return t
+    def is_recall_question(t): return False
+
+_TTS_AUDIO_CACHE = {}
+_TTS_CACHE_MAX = 300
+_PREWARMED_WAIT_ACKS = {"it": [], "uk": []}
+_PORT_PROBE_CACHE = {}  # port -> (ts, is_open)
+_OLLAMA_TAGS_CACHE = {"ts": 0.0, "models": []}
+
+def _is_local_port_open(port: int, ttl: float = 30.0) -> bool:
+    now = time.time()
+    cached = _PORT_PROBE_CACHE.get(port)
+    if cached and (now - cached[0]) < ttl:
+        return cached[1]
+    is_open = False
+    try:
+        import socket as _sock
+        s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
+        s.settimeout(0.08)
+        is_open = (s.connect_ex(("127.0.0.1", port)) == 0)
+        s.close()
+    except Exception:
+        is_open = False
+    _PORT_PROBE_CACHE[port] = (now, is_open)
+    return is_open
+
+
 # ── MULTI-BOT TELEGRAM TOKENS ───────────────────────────────────────────────
 # Load from environment variables - NEVER hardcode secrets
 TELEGRAM_BOT_TOKEN_JARVIS_MASTER = os.environ.get("TELEGRAM_BOT_TOKEN_JARVIS_MASTER", "")
@@ -1936,17 +1981,20 @@ def add_to_conversation_history(role, text):
 def get_recent_conversation_history(limit=10):
     global CONVERSATION_HISTORY
     if not CONVERSATION_HISTORY:
-        try:
-            conn = sqlite3.connect(hermes_memory.MEMORY_DB)
-            c = conn.cursor()
-            c.execute("SELECT role, content FROM infinite_chat_history ORDER BY id DESC LIMIT ?", (limit,))
-            rows = c.fetchall()
-            conn.close()
-            if rows:
-                rows.reverse()
-                CONVERSATION_HISTORY = [{"role": r[0], "content": r[1], "timestamp": datetime.datetime.now().isoformat()} for r in rows]
-        except Exception:
-            pass
+        for db_p, tbl in [(VAULT_DB, "chat_session_history"), (hermes_memory.MEMORY_DB, "infinite_chat_history")]:
+            if os.path.exists(db_p):
+                try:
+                    conn = sqlite3.connect(db_p)
+                    c = conn.cursor()
+                    c.execute(f"SELECT role, content FROM {tbl} ORDER BY id DESC LIMIT ?", (limit,))
+                    rows = c.fetchall()
+                    conn.close()
+                    if rows:
+                        rows.reverse()
+                        CONVERSATION_HISTORY = [{"role": r[0], "content": r[1], "timestamp": datetime.datetime.now().isoformat()} for r in rows]
+                        break
+                except Exception:
+                    pass
     return CONVERSATION_HISTORY[-limit:] if CONVERSATION_HISTORY else []
 
 current_eb_personality = "jarvis"
@@ -1999,7 +2047,7 @@ def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
     try:
         live_clock = _now_rome().strftime("%A %d %B %Y - %H:%M:%S (Fuso Orario: Imola/Roma)")
         mem_context = hermes_memory.get_infinite_context_for_prompt(prompt)
-        sys_prompt = get_system_prompt_for_personality(persona)
+        sys_prompt = get_system_prompt_for_personality(persona) + ITALIAN_MASTERY_DIRECTIVE
         clock_line = f"\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
         sys_with_mem = (sys_prompt + clock_line + "\n" + mem_context) if mem_context else (sys_prompt + clock_line)
         groq_key = os.environ.get("GROQ_API_KEY", "").strip() or GROQ_KEY
@@ -2007,10 +2055,12 @@ def query_groq_models(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
             return None
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"}
-        messages = [
-            {"role": "system", "content": sys_with_mem},
-            {"role": "user", "content": prompt}
-        ]
+        messages = [{"role": "system", "content": sys_with_mem}]
+        for h in get_recent_conversation_history(8):
+            c_txt = (h.get("content") or "").strip()
+            if c_txt and c_txt != prompt:
+                messages.append({"role": h.get("role", "user"), "content": c_txt})
+        messages.append({"role": "user", "content": prompt})
 
         for gm in candidate_groq_models:
             payload = {
@@ -2092,7 +2142,14 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
             "Evita preamboli inutili o formule robotiche. Nel parlato rimani conciso (1-2 frasi), fluente, nitido e privo di sintassi markdown."
         )
         clock_line = f"\n[OROLOGIO DI SISTEMA E DATA CORRENTE: {live_clock}]"
-        sys_with_mem = (sys_prompt + human_warmth_directive + clock_line + "\n" + mem_context) if mem_context else (sys_prompt + human_warmth_directive + clock_line)
+        _hist_lines = []
+        for _h in get_recent_conversation_history(6):
+            _hc = (_h.get("content") or "").strip()
+            if _hc and _hc != prompt:
+                _who = "Badr" if _h.get("role") == "user" else "JARVIS"
+                _hist_lines.append(f"{_who}: {_hc}")
+        _hist_str = ("\n[CRONOLOGIA RECENTE]:\n" + "\n".join(_hist_lines) + "\n") if _hist_lines else ""
+        sys_with_mem = (sys_prompt + human_warmth_directive + ITALIAN_MASTERY_DIRECTIVE + clock_line + _hist_str + ("\n" + mem_context if mem_context else ""))
         
         candidate_models = [model] if model else [
             "gemini-2.5-flash",
@@ -2104,7 +2161,7 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={gemini_key}"
                 payload = {
-                    "contents": [{"parts": [{"text": f"{sys_with_mem}\nRichiesta di Badr: {prompt}"}]}],
+                    "contents": [{"parts": [{"text": f"{sys_with_mem}\nRichiesta attuale di Badr: {prompt}"}]}],
                     "generationConfig": {"temperature": 0.65, "maxOutputTokens": 2500}
                 }
                 r = _HTTP.post(url, json=payload, timeout=3)
@@ -2132,20 +2189,10 @@ def query_gemini_models(prompt, model=None, persona="jarvis"):
 
 def query_active_brain(prompt, persona="jarvis"):
     """
-    Esegue la query sul cervello attualmente selezionato (gemini, groq, qwen, gpt, auto).
+    Esegue la query sul cervello attualmente selezionato (velocità sub-secondo con Groq/Gemini -> Locale).
     """
-    # Fast path: prova subito il modello locale ultra-veloce RTX 4070
-    loc_ans = query_local_model(prompt, persona=persona)
-    if loc_ans and not is_censored_or_refusal(loc_ans):
-        return loc_ans, "Local RTX 4070 (Ollama)"
     brain = get_active_brain()
-    if brain == "gemini":
-        ans = query_gemini_models(prompt, model="gemini-3.5-flash-lite", persona=persona)
-        if not ans:
-            ans = query_gemini_models(prompt, model="gemini-flash-lite-latest", persona=persona)
-        if ans and not is_censored_or_refusal(ans):
-            return ans, "Google Gemini 3.5 Flash"
-    elif brain in ("qwen", "groq"):
+    if brain in ("auto", "qwen", "groq"):
         ans = query_groq_models(prompt, model="qwen/qwen3.8-27b", persona=persona)
         if ans and not is_censored_or_refusal(ans):
             return ans, "Groq Qwen 3.8 27B"
@@ -2153,9 +2200,18 @@ def query_active_brain(prompt, persona="jarvis"):
         ans = query_groq_models(prompt, model="openai/gpt-oss-120b", persona=persona)
         if ans and not is_censored_or_refusal(ans):
             return ans, "Groq GPT OSS 120B"
+    elif brain == "gemini":
+        ans = query_gemini_models(prompt, model="gemini-2.5-flash", persona=persona)
+        if ans and not is_censored_or_refusal(ans):
+            return ans, "Google Gemini 2.5 Flash"
 
-    # Default o fallback a cascata (auto)
+    # Fallback a cascata o locale
     ans, used = query_model(prompt, chosen_model="auto", persona=persona)
+    if ans and used != "ebj-core":
+        return ans, used
+    loc_ans = query_local_model(prompt, persona=persona)
+    if loc_ans and not is_censored_or_refusal(loc_ans):
+        return loc_ans, "Local RTX 4070 (Ollama)"
     return ans, used
 
 def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvis"):
@@ -2206,65 +2262,97 @@ def generate_jarvis_spoken_response(user_query, extra_facts=None, persona="jarvi
     return unavailable, "unavailable"
 
 
+def _get_cached_ollama_models():
+    now = time.time()
+    if _OLLAMA_TAGS_CACHE["models"] and (now - _OLLAMA_TAGS_CACHE["ts"]) < 60.0:
+        return _OLLAMA_TAGS_CACHE["models"]
+    if not _is_local_port_open(11434, ttl=15.0):
+        return []
+    try:
+        r = _HTTP.get("http://127.0.0.1:11434/api/tags", timeout=0.6)
+        if r.status_code == 200:
+            names = [m["name"] for m in r.json().get("models", []) if m.get("name")]
+            _OLLAMA_TAGS_CACHE["ts"] = now
+            _OLLAMA_TAGS_CACHE["models"] = names
+            return names
+    except Exception:
+        pass
+    return []
+
 def query_local_model(prompt, model="auto", persona="jarvis"):
-    """Queries local LLM runner (Ollama at 11434 with RTX 4070 CUDA, VPS Ollama cluster, Unsloth at 61517)"""
-    sys_prompt = get_system_prompt_for_personality(persona)
+    """Queries local LLM runner (Ollama at 11434 with RTX 4070 CUDA) with fluent Italian models & multi-turn memory."""
+    sys_prompt = get_system_prompt_for_personality(persona) + ITALIAN_MASTERY_DIRECTIVE
     mem_context = hermes_memory.get_infinite_context_for_prompt(prompt)
     sys_with_mem = f"{sys_prompt}\n{mem_context}" if mem_context else sys_prompt
 
-    # 1. Native Local Ollama on port 11434 (NVIDIA RTX 4070 CUDA GPU - Sub-500ms)
-    try:
-        candidate_models = ["qwen2.5-coder:1.5b", "hermes3:8b", "llama3.1:8b", "qwen2.5-coder:7b", "gemma3:4b", "minicpm-v:latest"]
+    # Costruisci messaggi con cronologia multi-turno reale
+    messages = [{"role": "system", "content": sys_with_mem}]
+    for h in get_recent_conversation_history(8):
+        c_txt = (h.get("content") or "").strip()
+        if c_txt and c_txt != prompt:
+            messages.append({"role": h.get("role", "user"), "content": c_txt})
+    messages.append({"role": "user", "content": prompt})
+
+    # 1. Native Local Ollama on port 11434 (priorità ai modelli fluenti in italiano, zero attese su modelli assenti)
+    if _is_local_port_open(11434, ttl=15.0):
+        installed = set(_get_cached_ollama_models())
+        preferred = ["gemma4:e4b", "gemma3:4b", "hermes3:8b", "llama3.1:8b", "qwen3-vl:8b", "qwen2.5-coder:7b", "qwen2.5-coder:1.5b"]
         if model and model not in ("auto", "unsloth", "local", "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF"):
-            candidate_models.insert(0, model)
+            preferred.insert(0, model)
+        if installed:
+            candidate_models = [m for m in preferred if m in installed][:2]
+        else:
+            candidate_models = preferred[:2]
         for m_tag in candidate_models:
             try:
-                o_url = "http://127.0.0.1:11434/api/chat"
                 o_payload = {
                     "model": m_tag,
-                    "messages": [
-                        {"role": "system", "content": sys_with_mem},
-                        {"role": "user", "content": prompt}
-                    ],
+                    "messages": messages,
                     "stream": False,
                     "options": {
-                        "temperature": 0.35,
-                        "num_predict": 90
+                        "temperature": 0.4,
+                        "num_predict": 260
                     }
                 }
-                r = requests.post(o_url, json=o_payload, timeout=5)
+                r = _HTTP.post("http://127.0.0.1:11434/api/chat", json=o_payload, timeout=5)
                 if r.status_code == 200:
                     ans = r.json().get("message", {}).get("content", "").strip()
                     if ans:
                         return ans
             except Exception:
                 continue
-    except Exception:
-        pass
 
-    # 2. Fallback to VPS Ollama Cluster (92.4.233.42:11434)
-    try:
-        for vps_m in ["gemma3:1b", "hermes3:8b"]:
-            try:
-                vps_url = "http://92.4.233.42:11434/api/chat"
-                payload = {
-                    "model": vps_m,
-                    "messages": [
-                        {"role": "system", "content": sys_with_mem},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "stream": False,
-                    "options": {"temperature": 0.4, "num_predict": 300}
-                }
-                r = requests.post(vps_url, json=payload, timeout=5)
-                if r.status_code == 200:
-                    ans = r.json().get("message", {}).get("content", "").strip()
-                    if ans:
-                        return ans
-            except Exception:
-                continue
-    except Exception:
-        pass
+    # 2. Fallback to VPS Ollama Cluster (92.4.233.42:11434) con cache socket 60s
+    _vps_ollama_ok = _PORT_PROBE_CACHE.get("vps_11434", (0.0, False))
+    if time.time() - _vps_ollama_ok[0] > 60.0:
+        _ok = False
+        try:
+            import socket as _sk
+            _s = _sk.socket(_sk.AF_INET, _sk.SOCK_STREAM)
+            _s.settimeout(0.3)
+            _ok = (_s.connect_ex(("92.4.233.42", 11434)) == 0)
+            _s.close()
+        except Exception:
+            _ok = False
+        _PORT_PROBE_CACHE["vps_11434"] = (time.time(), _ok)
+    if _PORT_PROBE_CACHE["vps_11434"][1]:
+        try:
+            for vps_m in ["gemma3:1b", "hermes3:8b"]:
+                try:
+                    r = _HTTP.post("http://92.4.233.42:11434/api/chat", json={
+                        "model": vps_m,
+                        "messages": messages,
+                        "stream": False,
+                        "options": {"temperature": 0.4, "num_predict": 260}
+                    }, timeout=4)
+                    if r.status_code == 200:
+                        ans = r.json().get("message", {}).get("content", "").strip()
+                        if ans:
+                            return ans
+                except Exception:
+                    continue
+        except Exception:
+            pass
 
     # 3. Fallback to OpenAI-compatible local endpoints (Unsloth Desktop, vLLM, LM Studio)
     for p in [61517, 8080, 8000, 1234]:
@@ -2509,7 +2597,7 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
 
     # ── DEEP IDENTITY & TARGET INTELLIGENCE FAST-PATH (< 2ms) ───────────
     p_norm = p_lower.replace("è", "e").replace("é", "e").replace("à", "a").replace("ò", "o").replace("ù", "u").replace("ì", "i")
-    if any(k in p_norm for k in ["chi e", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi sono", "parlami di", "tarik", "badr"]):
+    if not is_recall_question(prompt) and any(k in p_norm for k in ["chi e", "cerca informazioni", "informazioni su", "dossier su", "profilo di", "cosa sai su", "chi sono", "parlami di", "tarik", "su badr", "badr el ouariti"]):
         try:
             import ebj_deep_identity_intel
             t_query = prompt
@@ -2599,26 +2687,24 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         except Exception as e:
             return f"Errore status agenti: {e}", "fleet-error"
 
-    # ── SHORT-TERM MULTI-TURN INSTANT RECALL FAST-PATH ───────────────
-    if any(k in p_lower for k in [
-        "cosa ti ho detto due secondi fa", "cosa ti ho detto prima", "cosa ti ho appena detto",
+    # ── SHORT-TERM MULTI-TURN INSTANT RECALL FAST-PATH (CON RETURN CORRETTO) ──
+    if is_recall_question(prompt) or any(k in p_lower for k in [
+        "cosa ti ho detto", "che ti ho detto", "cosa ho detto", "cosa ci siamo detti",
         "cosa abbiamo appena detto", "ti ricordi cosa ti ho detto", "ti ricordi l'ultima cosa",
         "ripeti cosa ho detto", "qual era la mia ultima richiesta", "cosa ho chiesto prima"
     ]):
-        hist = get_recent_conversation_history(6)
-        user_msgs = [h["content"] for h in hist if h["role"] == "user" and h["content"] != prompt]
+        hist = get_recent_conversation_history(12)
+        user_msgs = [h["content"] for h in hist if h["role"] == "user" and h["content"].strip() != prompt.strip() and not is_recall_question(h["content"])]
         if user_msgs:
             last_msg = user_msgs[-1]
-            prev_cards = ["• " + m for m in user_msgs[-3:]]
-            prev_msgs_text = chr(10).join(prev_cards)
-            res_text = (
-                "🧠 **MEMORIA CONVERSAZIONALE IMMEDIATA (Badr):**\n\n"
-                + f"Due secondi fa mi ha detto esattamente:\n👉 **\"{last_msg}\"**\n\n"
-                + f"📜 *Cronologia recente:*\n{prev_msgs_text}\n\n"
-                + "✅ *Tutti i turni rimangono attivi nel buffer neurale in RAM.*"
-            )
+            if len(user_msgs) >= 2:
+                prev_msg = user_msgs[-2]
+                res_text = f"Subito, signore: un istante fa mi hai detto esattamente, {last_msg}. E poco prima stavamo parlando di, {prev_msg}."
+            else:
+                res_text = f"Certamente, signore: l'ultima cosa che mi hai detto è stata, {last_msg}."
+            return res_text, "short-term-memory"
         else:
-            return "Badr, questo è il primo messaggio della sessione attiva.", "short-term-memory"
+            return "Signore, questa è la prima richiesta della sessione attiva in memoria.", "short-term-memory"
 
     # ── WHATSAPP BUSINESS & MESSAGING COMMANDS ────────────────────────
     if any(k in p_lower for k in [
@@ -4136,16 +4222,16 @@ def query_model(prompt, chosen_model="auto", persona="jarvis"):
         if gpt_res and not is_censored_or_refusal(gpt_res):
             return gpt_res, "Groq GPT OSS 120B"
 
-    # Se auto o se il cervello prioritario non ha risposto: cascata cloud resiliente
-    # 1. Prova Gemini 3.5 Flash Lite
-    gemini_res = query_gemini_models(prompt, model="gemini-3.5-flash-lite", persona=persona) or query_gemini_models(prompt, model="gemini-flash-lite-latest", persona=persona)
-    if gemini_res and not is_censored_or_refusal(gemini_res):
-        return gemini_res, "gemini-3.5-flash-lite"
-
-    # 2. Prova Groq Qwen 3.8 27B
+    # Se auto o se il cervello prioritario non ha risposto: cascata cloud ad altissima velocità
+    # 1. Prova Groq Qwen 3.8 27B (Latenza sub-secondo con keep-alive, zero blocchi 403)
     groq_res = query_groq_models(prompt, model="qwen/qwen3.8-27b", persona=persona)
     if groq_res and not is_censored_or_refusal(groq_res):
         return groq_res, "groq-qwen-3.8"
+
+    # 2. Prova Gemini 2.5 Flash
+    gemini_res = query_gemini_models(prompt, model="gemini-2.5-flash", persona=persona)
+    if gemini_res and not is_censored_or_refusal(gemini_res):
+        return gemini_res, "gemini-2.5-flash"
 
     # 3. Prova Groq GPT OSS 120B
     gpt_res = query_groq_models(prompt, model="openai/gpt-oss-120b", persona=persona)
@@ -4231,14 +4317,15 @@ def clean_text_for_tts(raw_text):
     text = re.sub(r'<think>[\s\S]*?</think>', '', raw_text, flags=re.DOTALL)
     text = re.sub(r'<think>[\s\S]*', '', text, flags=re.DOTALL)
 
-    # 1. Native Rust Ultra-Fast Accelerator (< 20µs on port 8096)
-    try:
-        r = requests.post("http://127.0.0.1:8096/clean_text", json={"text": text, "max_len": 420}, timeout=0.15)
-        if r.status_code == 200:
-            c = r.json().get("clean_text")
-            if c: return c
-    except Exception:
-        pass
+    # 1. Native Rust Ultra-Fast Accelerator (< 20µs on port 8096, con health-cache 30s)
+    if _is_local_port_open(8096, ttl=30.0):
+        try:
+            r = requests.post("http://127.0.0.1:8096/clean_text", json={"text": text, "max_len": 420}, timeout=0.15)
+            if r.status_code == 200:
+                c = r.json().get("clean_text")
+                if c: return c
+        except Exception:
+            pass
 
     # 2. Resilient In-Process Fallback
     text = re.sub(r'\[([^\]]+)\]\((/reports/[^)]+)\)', 'Il report PDF è pronto.', text)
@@ -4371,15 +4458,16 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
         active_lang = "es"
     elif voice_mode in ("fr", "french", "francese"):
         active_lang = "fr"
-    elif voice_mode in ("en", "jarvis_uk", "uk", "british", "english", "inglese"):
+    elif voice_mode in ("en", "jarvis_uk", "british", "english", "inglese"):
         active_lang = "en"
-    elif voice_mode in ("it", "italian", "italiano"):
-        active_lang = "it"
+    elif voice_mode in ("it", "italian", "italiano", "jarvis", "military", "architect", "friendly", "auto", ""):
+        # Mantieni SEMPRE la voce ufficiale JARVIS italiana su queste personalità
+        active_lang = active_lang if active_lang in SUPPORTED_LANGUAGES else "it"
     else:
         try:
             from ebj_rust_linguistic import analyze_linguistic_intent
             rust_ling = analyze_linguistic_intent(clean_text)
-            if rust_ling.get("confidence", 0) > 0.85:
+            if rust_ling.get("confidence", 0) > 0.90:
                 detected = rust_ling.get("detected_language")
                 if detected in SUPPORTED_LANGUAGES:
                     active_lang = detected
@@ -4389,13 +4477,18 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
     lang_cfg = SUPPORTED_LANGUAGES.get(active_lang, SUPPORTED_LANGUAGES["it"])
     voice_fallbacks = [lang_cfg["voice"], lang_cfg.get("alt_voice"), "it-IT-GiuseppeMultilingualNeural"]
     if active_lang == "en":
-        edge_rate = "+2%"
+        edge_rate = "+3%"
         edge_pitch = "-4Hz"
         edge_volume = "+15%"
     else:
-        edge_rate = "+3%"
+        edge_rate = "+4%"
         edge_pitch = "-6Hz"
         edge_volume = "+15%"
+
+    # In-Memory LRU Cache lookup (< 0.1ms)
+    cache_key = (clean_text, active_lang, edge_rate, edge_pitch)
+    if cache_key in _TTS_AUDIO_CACHE:
+        return _TTS_AUDIO_CACHE[cache_key]
 
     for v in [vx for vx in voice_fallbacks if vx]:
         try:
@@ -4404,7 +4497,12 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
             async for chunk in comm.stream():
                 if chunk["type"] == "audio": audio_data += chunk["data"]
             if audio_data and len(audio_data) > 800:
-                return base64.b64encode(audio_data).decode("utf-8"), v, "audio/mpeg"
+                b64_out = base64.b64encode(audio_data).decode("utf-8")
+                res_tuple = (b64_out, v, "audio/mpeg")
+                if len(_TTS_AUDIO_CACHE) >= _TTS_CACHE_MAX:
+                    _TTS_AUDIO_CACHE.pop(next(iter(_TTS_AUDIO_CACHE)), None)
+                _TTS_AUDIO_CACHE[cache_key] = res_tuple
+                return res_tuple
         except Exception:
             continue
 
@@ -4429,6 +4527,26 @@ async def generate_speech_audio(text, voice_mode="jarvis", prefer_engine="auto")
 
     return "", "", ""
 
+
+def _prewarm_jarvis_wait_acks():
+    try:
+        import asyncio as _aio
+        loop = _aio.new_event_loop()
+        _aio.set_event_loop(loop)
+        for phrase in ITALIAN_WAIT_ACKS:
+            b64, v, _ = loop.run_until_complete(generate_speech_audio(phrase, voice_mode="jarvis"))
+            if b64:
+                _PREWARMED_WAIT_ACKS["it"].append({"text": phrase, "audio_base64": b64, "voice": v})
+        for phrase in UK_WAIT_ACKS:
+            b64, v, _ = loop.run_until_complete(generate_speech_audio(phrase, voice_mode="jarvis_uk"))
+            if b64:
+                _PREWARMED_WAIT_ACKS["uk"].append({"text": phrase, "audio_base64": b64, "voice": v})
+        loop.close()
+        print(f"[TTS PREWARM] Ready: {len(_PREWARMED_WAIT_ACKS['it'])} IT + {len(_PREWARMED_WAIT_ACKS['uk'])} UK JARVIS acks")
+    except Exception as _pe:
+        print(f"[TTS PREWARM WARN] {_pe}")
+
+threading.Thread(target=_prewarm_jarvis_wait_acks, daemon=True).start()
 
 # ── MASTER MULTI-AGENT FLEET ORCHESTRATOR ────────────────────────────────────
 def orchestrate_fleet_command(data):
@@ -4785,6 +4903,15 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     self.send_json({"status": "error", "message": "File non trovato"}, status=404)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if clean_path == '/api/tts/acks':
+            self.send_json({
+                "status": "SUCCESS",
+                "it": _PREWARMED_WAIT_ACKS.get("it", []),
+                "uk": _PREWARMED_WAIT_ACKS.get("uk", []),
+                "voice": "it-IT-DiegoNeural"
+            })
             return
 
         if clean_path == '/api/tts':
@@ -7986,7 +8113,7 @@ class JarvisHandler(BaseHTTPRequestHandler):
 
             t0 = time.time()
             add_to_conversation_history("user", user_prompt)
-            ans, model_used = query_model(user_prompt, req_model)
+            ans, model_used = query_model(user_prompt, req_model, persona=req_persona)
 
             # The Judge: Anti-Hallucination & Receipt Protection
             judge_data = {}
@@ -7998,11 +8125,27 @@ class JarvisHandler(BaseHTTPRequestHandler):
             except Exception: pass
 
             add_to_conversation_history("assistant", ans)
-            
-            # Auto-Memorize Turn in LTM SQLite WAL & Rust Index
-            try:
-                hermes_memory.auto_memorize_turn(user_prompt, ans)
-            except Exception: pass
+
+            # Auto-Memorize Turn in LTM SQLite WAL & Rust Index in background (zero latency impact)
+            def _bg_mem(up=user_prompt, an=ans):
+                try:
+                    hermes_memory.auto_memorize_turn(up, an)
+                except Exception:
+                    pass
+            threading.Thread(target=_bg_mem, daemon=True).start()
+
+            # Single-roundtrip TTS synthesis when requested by interactive voice client
+            chat_audio_b64 = ""
+            chat_voice_used = ""
+            if data.get("include_audio"):
+                try:
+                    import asyncio as _aio
+                    _lp = _aio.new_event_loop()
+                    _aio.set_event_loop(_lp)
+                    chat_audio_b64, chat_voice_used, _ = _lp.run_until_complete(generate_speech_audio(ans, voice_mode=req_persona))
+                    _lp.close()
+                except Exception:
+                    pass
 
             pdf_b64 = None
             pdf_fn = None
@@ -8029,6 +8172,8 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 "ui_action": ui_act,
                 "reflex": reflex_data,
                 "judge": judge_data,
+                "audio_base64": chat_audio_b64,
+                "voice": chat_voice_used,
                 "error": "",
                 "secondi": round(time.time() - t0, 1)
             })
@@ -8757,35 +8902,44 @@ def _patched_do_POST(self):
         try:
             bd = _json.loads(body.decode("utf-8")) if body else {}
             query = (bd.get("query", "") or bd.get("text", "") or bd.get("prompt", "")).strip()
-            rust_data = None
-            try:
-                import requests as _rq
-                rust_res = _rq.post("http://127.0.0.1:9000/api/reflex/dispatch", json=bd, timeout=1.2)
-                if rust_res.status_code == 200:
-                    rust_data = rust_res.json()
-            except Exception:
-                rust_data = None
+            out_payload = None
 
-            # Se Rust ha matchato un intent specifico (non GENERAL_REASONING), usa Rust
-            if rust_data and rust_data.get("intent") and rust_data.get("intent") != "GENERAL_REASONING":
-                out_payload = rust_data
+            # 1. Valuta PRIMA con il motore unificato Python JEV + Lessico Italiano (< 1ms, dati reali live)
+            from ebj_reflex_engine import jev_reflex_dispatch
+            jev_res = jev_reflex_dispatch(query)
+            if jev_res and jev_res.get("matched"):
+                ack_str = jev_res.get("ack", "")
+                out_payload = {
+                    "status": "SUCCESS",
+                    "intent": jev_res.get("intent", "JEV_ACTION"),
+                    "confidence": float(jev_res.get("confidence", 0.96)),
+                    "target_action": jev_res.get("action", "execute"),
+                    "parameters": jev_res.get("receipt", {}).get("details", {}),
+                    "auto_execute": True,
+                    "spoken_ack": ack_str,
+                    "execution_latency_us": int(jev_res.get("latency_ms", 1.0) * 1000),
+                    "engine": "E.B.J. CLM-JEV Unified Reflex (< 1ms)"
+                }
+                # Registra in cronologia conversazionale senza bloccare la risposta
+                if query and ack_str and jev_res.get("intent") != "CONVERSATION_MEMORY_RECALL":
+                    def _bg_save_reflex(q=query, a=ack_str):
+                        try:
+                            add_to_conversation_history("user", q)
+                            add_to_conversation_history("assistant", a)
+                        except Exception:
+                            pass
+                    threading.Thread(target=_bg_save_reflex, daemon=True).start()
             else:
-                # Altrimenti valuta con CLM + JEV System One in Python
-                from ebj_reflex_engine import jev_reflex_dispatch
-                jev_res = jev_reflex_dispatch(query)
-                if jev_res and jev_res.get("matched"):
-                    out_payload = {
-                        "status": "SUCCESS",
-                        "intent": jev_res.get("intent", "JEV_ACTION"),
-                        "confidence": float(jev_res.get("confidence", 0.95)),
-                        "target_action": jev_res.get("action", "execute"),
-                        "parameters": jev_res.get("receipt", {}).get("details", {}),
-                        "auto_execute": True,
-                        "spoken_ack": jev_res.get("ack", ""),
-                        "execution_latency_us": int(jev_res.get("latency_ms", 1.0) * 1000),
-                        "engine": "E.B.J. CLM-JEV Unified Reflex (< 1ms)"
-                    }
-                elif rust_data:
+                # 2. Fallback a Rust :9000 solo se raggiungibile (cache 30s -> 0ms sulla VPS)
+                rust_data = None
+                if _is_local_port_open(9000, ttl=30.0):
+                    try:
+                        rust_res = _HTTP.post("http://127.0.0.1:9000/api/reflex/dispatch", json=bd, timeout=0.25)
+                        if rust_res.status_code == 200:
+                            rust_data = rust_res.json()
+                    except Exception:
+                        rust_data = None
+                if rust_data:
                     out_payload = rust_data
                 else:
                     out_payload = {

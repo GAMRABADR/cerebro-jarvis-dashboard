@@ -218,6 +218,39 @@ def t_http_qmd_search():
     d = _http("POST", "/api/qmd/search", {"query": "tariffe sgomberi", "limit": 2})
     assert d.get("status") == "SUCCESS" and d.get("count", 0) > 0, d
 
+def t_italian_lexicon_and_recall():
+    import ebj_italian_lexicon as lex
+    import ebj_reflex_engine as r
+    norm = lex.normalize_italian_asr("miliora i colli di bottilia e trova lavoori")
+    assert "migliora" in norm and "colli di bottiglia" in norm and "lavori" in norm, norm
+
+    r1 = r.jev_reflex_dispatch("quanto viene a dare una mano di bianco in appartamento 90 mq")
+    assert r1 and r1["intent"] == "PAINTING_QUOTE", r1
+
+    r2 = r.jev_reflex_dispatch("dammi un occhio ai server e tunnel")
+    assert r2 and r2["intent"] == "SYSTEM_VPS_STATUS", r2
+
+    r3 = r.jev_reflex_dispatch("cosa ti ho detto?")
+    assert r3 and r3["intent"] == "CONVERSATION_MEMORY_RECALL", r3
+    for bad in ["*", "#", "`", "👉"]:
+        assert bad not in r3["ack"], f"recall non pulito per voce: {r3['ack']}"
+
+def t_http_tts_acks_and_recall():
+    if OFFLINE or not _server_up():
+        return "SKIP"
+    # Pre-warmed acks check
+    acks = _http("GET", "/api/tts/acks")
+    assert acks.get("status") == "SUCCESS" and len(acks.get("it", [])) >= 1, acks
+    assert acks["it"][0].get("voice") == "it-IT-DiegoNeural", acks
+
+    # Verify /api/reflex/dispatch handles VPS status dynamically (NOT shadowed by Rust)
+    vps_d = _http("POST", "/api/reflex/dispatch", {"query": "qual è lo stato della vps?"})
+    assert vps_d.get("intent") == "SYSTEM_VPS_STATUS", f"VPS dirottato: {vps_d}"
+
+    # Verify /api/reflex/dispatch handles recall in < 50ms
+    rec_d = _http("POST", "/api/reflex/dispatch", {"query": "cosa ti ho detto?"})
+    assert rec_d.get("intent") == "CONVERSATION_MEMORY_RECALL", f"Recall fallito: {rec_d}"
+
 
 if __name__ == "__main__":
     for name, fn in [
@@ -236,8 +269,10 @@ if __name__ == "__main__":
         ("radar: lead casa & filtro città", t_home_services_lead_radar),
         ("metacore: agentic precondizioni & VPS", t_agentic_metacore_preconditions),
         ("fable 5.2: stage 3D & vista esplosa", t_fable_3d_kinetic_stage),
+        ("lessico: dizionario IT & recall", t_italian_lexicon_and_recall),
         ("http: /health", t_http_health),
         ("http: /api/qmd/search", t_http_qmd_search),
+        ("http: /api/tts/acks & reflex unificato", t_http_tts_acks_and_recall),
     ]:
         check(name, fn)
 

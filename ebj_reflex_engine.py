@@ -26,6 +26,14 @@ RUST_BIN_DBG = os.path.abspath(os.path.join(DIR, "..", "ebj-supreme", "rust-agen
 
 RUST_BIN = RUST_BIN_REL if os.path.exists(RUST_BIN_REL) else (RUST_BIN_DBG if os.path.exists(RUST_BIN_DBG) else None)
 
+try:
+    from ebj_italian_lexicon import normalize_italian_asr, extract_italian_semantic_tags, is_recall_question
+except Exception:
+    def normalize_italian_asr(text: str) -> str: return text
+    def extract_italian_semantic_tags(text: str): return []
+    def is_recall_question(text: str) -> bool: return False
+
+
 # ── LE LEGGI DEI RIFLESSI (SOGLIE COSTANTI JEV) ───────────────────────────────
 LANE_ACT_THRESHOLD = 0.65          # Se la corsia è certa >= 65%, esegui senza chiedere
 LANE_CLARIFY_THRESHOLD = 0.45      # Se tra 45% e 65%, chiarisci brevemente
@@ -234,7 +242,7 @@ def calculate_gardening_quote(prompt: str) -> Dict[str, Any]:
 def evaluate_reflex_prepass(utterance: str, history_len: int = 0) -> Dict[str, Any]:
     """Valuta in sub-millisecondi corsia, intenzione, completezza e livello di rischio."""
     t0 = time.perf_counter()
-    u_lower = utterance.lower().strip()
+    u_lower = normalize_italian_asr(utterance).lower().strip()
 
     rust_lead = None
     if any(k in u_lower for k in ["trasloc", "sgomber", "furgon", "cantin", "autolavagg", "detergent", "schium", "3", "tre", "preventiv", "giardin", "potatur", "pittur", "imbianc", "tintegg"]):
@@ -666,6 +674,50 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             details = {"error": str(me)}
             ack_text = "Piano agentico avviato in autonomia, Badr: modulo cognitivo in esecuzione."
 
+    # 12e-bis. CONVERSATION MEMORY RECALL ("Cosa ti ho detto?")
+    elif intent == "CONVERSATION_MEMORY_RECALL":
+        user_turns = []
+        last_ai = ""
+        try:
+            # Leggi sia da chat_session_history (VAULT_DB) che da infinite_chat_history (MEMORY_DB)
+            seen = set()
+            candidates = []
+            # Legge prima dalla sessione attiva (VAULT_DB.chat_session_history) con timestamp recenti
+            for db_file, tbl in [(VAULT_DB, "chat_session_history"), (os.path.join(DIR, "hermes_ltm_memory.db"), "infinite_chat_history")]:
+                if os.path.exists(db_file) and not candidates:
+                    try:
+                        c = sqlite3.connect(db_file)
+                        cur = c.cursor()
+                        cur.execute(f"SELECT role, content FROM {tbl} ORDER BY id DESC LIMIT 20")
+                        rows = cur.fetchall()
+                        c.close()
+                        for role, msg in reversed(rows):
+                            m_clean = (msg or "").strip()
+                            if m_clean and len(m_clean) >= 4 and m_clean not in seen and m_clean.lower() != prompt.lower().strip():
+                                seen.add(m_clean)
+                                candidates.append((role, m_clean))
+                    except Exception:
+                        pass
+            for role, m_clean in candidates:
+                if role == "user" and not is_recall_question(m_clean):
+                    user_turns.append(m_clean)
+                elif role == "assistant":
+                    last_ai = m_clean
+        except Exception:
+            pass
+
+        if user_turns:
+            last_user = user_turns[-1]
+            if len(user_turns) >= 2:
+                prev_user = user_turns[-2]
+                ack_text = f"Subito, signore: un istante fa mi hai detto esattamente, {last_user}. Subito prima stavamo parlando di, {prev_user}."
+            else:
+                ack_text = f"Certamente, signore: l'ultima cosa che mi hai detto è stata, {last_user}."
+            details = {"last_user_turns": user_turns[-4:], "last_assistant": last_ai[:200]}
+        else:
+            ack_text = "Signore, questa è la prima richiesta registrata nella sessione attiva in memoria."
+            details = {"last_user_turns": [], "session_fresh": True}
+
     # 12f. FABLE 5.2 · 3D ROBOT BODY
     elif intent == "FABLE_3D_ROBOT_BODY":
         details = {
@@ -840,7 +892,9 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
     e restituisce la risposta parlata immediata per Badr (< 20ms totali).
     """
     t0 = time.perf_counter()
-    p_lower = prompt.lower().strip()
+    norm_prompt = normalize_italian_asr(prompt)
+    p_lower = norm_prompt.lower().strip()
+    it_tags = extract_italian_semantic_tags(norm_prompt)
 
     matched = False
     intent = ""
@@ -849,7 +903,9 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
 
     # 1. LIVELLO 0: Regole euristiche veloci su keyword dominanti (< 0.05ms)
     # Una ricerca ESPLICITA nella memoria vince su qualunque parola di dominio (vps, lead, ecc.)
-    if any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
+    if "RECALL_MEMORY" in it_tags or is_recall_question(norm_prompt):
+        matched, intent, domain, action = True, "CONVERSATION_MEMORY_RECALL", "MEMORY", "SHORT_TERM_RECALL"
+    elif any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
         matched, intent, domain, action = True, "VAULT_SEARCH", "KNOWLEDGE_VAULT", "SEARCH_QMD"
     elif any(k in p_lower for k in ["posta in arrivo", "leggi email", "nuove email", "controlla la posta", "inbox"]):
         matched, intent, domain, action = True, "EMAIL_INBOX", "EMAIL", "READ_INBOX"
@@ -914,6 +970,19 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["blender", "asset 3d", "modello 3d", "genera 3d", "cassa munizioni 3d", "nanite fbx", "skill 3d"]):
         matched, intent, domain, action = True, "BLENDER_MCP_3D", "GAME_DEV_3D", "RUN_BLENDER_SKILL"
+
+    # 1B. LIVELLO 0-ESTESO: Espansione Lessicale Italiana (sinonimi e forme colloquiali)
+    if not matched and it_tags:
+        if "PAINTING" in it_tags and ("ACTION_SEARCH_HUNT" in it_tags):
+            matched, intent, domain, action = True, "HOME_SERVICES_LEAD_RADAR", "LEAD_RADAR", "HOME_SERVICES_RADAR"
+        elif "GARDENING" in it_tags and ("ACTION_SEARCH_HUNT" in it_tags):
+            matched, intent, domain, action = True, "HOME_SERVICES_LEAD_RADAR", "LEAD_RADAR", "HOME_SERVICES_RADAR"
+        elif "PAINTING" in it_tags:
+            matched, intent, domain, action = True, "PAINTING_QUOTE", "HOME_SERVICES", "PAINTING_QUOTE"
+        elif "GARDENING" in it_tags:
+            matched, intent, domain, action = True, "GARDENING_QUOTE", "HOME_SERVICES", "GARDENING_QUOTE"
+        elif "SYSTEM_STATUS" in it_tags:
+            matched, intent, domain, action = True, "SYSTEM_VPS_STATUS", "SYSTEM", "HEALTH_CHECK"
 
     # 2. LIVELLO 1: Fallback con CLM Contrastive InfoNCE Classifier se nessuna keyword ha fatto match
     if not matched:

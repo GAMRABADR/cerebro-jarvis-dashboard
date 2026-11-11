@@ -446,6 +446,63 @@ window.stopEbjSpeech = stopEbjSpeech;
 
 
 
+// ── PRE-WARMED JARVIS WAIT ACKS (0ms LATENCY, EXACT STARK VOICE) ───────
+window._ebjWaitAcks = { it: [], uk: [] };
+window._ebjActiveAckPromise = null;
+(function loadJarvisWaitAcks() {
+  fetch('/api/tts/acks').then(r => r.ok ? r.json() : null).then(d => {
+    if (d && (d.it?.length || d.uk?.length)) {
+      window._ebjWaitAcks = { it: d.it || [], uk: d.uk || [] };
+    }
+  }).catch(() => {});
+})();
+
+window.playJarvisWaitAck = function() {
+  if (!window.ebjVoiceEnabled) return null;
+  const isUk = (typeof currentPersonality !== 'undefined' && currentPersonality === 'jarvis_uk');
+  const pool = isUk && window._ebjWaitAcks.uk.length ? window._ebjWaitAcks.uk : window._ebjWaitAcks.it;
+  if (!pool || !pool.length) return null;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (!pick || !pick.audio_base64) return null;
+
+  const respEl = document.getElementById('resp-body');
+  if (respEl) respEl.textContent = pick.text;
+  const subBox = document.getElementById('jarvis-spoken-subtitle');
+  const subTxt = document.getElementById('jarvis-subtitle-text');
+  if (subTxt) subTxt.textContent = pick.text;
+  if (subBox) subBox.style.display = 'flex';
+
+  const ackEpoch = _ebjSpeechEpoch;
+  const p = (async () => {
+    try {
+      const ctx = getEbjAudioContext();
+      if (!ctx || typeof ctx.decodeAudioData !== 'function') return;
+      if (ctx.state === 'suspended') await ctx.resume();
+      const bin = atob(pick.audio_base64);
+      const buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      const audioBuffer = await new Promise((res, rej) => ctx.decodeAudioData(buf.buffer.slice(0), res, rej));
+      if (!audioBuffer || ackEpoch !== _ebjSpeechEpoch) return;
+      const src = ctx.createBufferSource();
+      src.buffer = audioBuffer;
+      const bass = ctx.createBiquadFilter();
+      bass.type = 'lowshelf'; bass.frequency.value = 200; bass.gain.value = 2.8;
+      const pres = ctx.createBiquadFilter();
+      pres.type = 'peaking'; pres.frequency.value = 2150; pres.Q.value = 2.4; pres.gain.value = 3.6;
+      src.connect(bass); bass.connect(pres); pres.connect(ctx.destination);
+      animateJarvisSpectrum(true, 0.85);
+      await new Promise((resolve) => {
+        src.onended = resolve;
+        src.start(0);
+        setTimeout(resolve, Math.min(2600, Math.max(700, (audioBuffer.duration * 1000) + 120)));
+      });
+      animateJarvisSpectrum(false);
+    } catch (_) {}
+  })();
+  window._ebjActiveAckPromise = p;
+  return p;
+};
+
 window.playSpeechAudio = async function(text, preloadedBase64 = null) {
 
   if (!window.ebjVoiceEnabled || !text) return;
@@ -876,7 +933,7 @@ window.playSpeechAudio = async function(text, preloadedBase64 = null) {
 
         const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
 
-        const itVoice = voices.find(v => v.lang.startsWith('it') && (v.name.includes('Neural') || v.name.includes('Natural') || v.name.includes('Elsa') || v.name.includes('Cosimo')));
+        const itVoice = voices.find(v => v.lang.startsWith('it') && (v.name.includes('Diego') || v.name.includes('Cosimo') || v.name.includes('Giuseppe') || (v.name.includes('Neural') && !v.name.includes('Elsa') && !v.name.includes('Isabella'))));
 
         if (itVoice) u.voice = itVoice;
 
@@ -2422,7 +2479,7 @@ async function executeCommandPipeline(prompt) {
 
       body: JSON.stringify({ query: prompt, device: isMobileDevice ? 'mobile' : 'desktop' }),
 
-      signal: AbortSignal.timeout(600)
+      signal: AbortSignal.timeout(1500)
 
     });
 
@@ -2574,6 +2631,20 @@ async function executeCommandPipeline(prompt) {
 
           return;
 
+        } else if (rf.auto_execute && rf.intent !== 'GENERAL_REASONING' && rf.spoken_ack) {
+
+          if (rf.parameters && rf.parameters.ui_action && window.handleAiUiAction) {
+
+            window.handleAiUiAction(rf.parameters.ui_action);
+
+          }
+
+          finish(rf.spoken_ack, rf.engine || rf.intent || 'JEV REFLEX');
+
+          isBusy = false;
+
+          return;
+
         }
 
       }
@@ -2598,55 +2669,25 @@ async function executeCommandPipeline(prompt) {
 
     window._lastPromptTimestamp = Date.now();
 
-    // 1. Chiamata diretta all'intelligenza vocale e operativa unificata EBJ
+    // 1. DINAMICA A 2 FASI: 'Attendi un attimo, signore' immediato (0ms) + /api/chat Single-Roundtrip con Audio Neurale
 
-    try {
+    let ackTriggered = false;
 
-      const isMobileDev = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+    const waitAckTimer = setTimeout(() => {
 
-        || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+      if (window.ebjVoiceEnabled && window.playJarvisWaitAck) {
 
-        || window.innerWidth <= 768;
+        ackTriggered = true;
 
-      const vRes = await fetch('/api/voice/interact', {
-
-        method: 'POST',
-
-        headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ query: prompt, persona: currentPersonality, device: isMobileDev ? 'mobile' : 'desktop' }),
-
-        signal: AbortSignal.timeout(9000)
-
-      });
-
-      if (vRes.ok) {
-
-        const vData = await vRes.json();
-
-        reply = vData.response || '';
-
-        const voiceInfo = [vData.model_used, vData.voice || vData.persona].filter(Boolean).join(' · ');
-
-        if (voiceInfo) modelTag = voiceInfo.toUpperCase();
-
-        if (vData.ui_action) window.handleAiUiAction(vData.ui_action);
-
-        if (vData.audio_base64 && window.ebjVoiceEnabled) {
-
-          preloadedAudio = vData.audio_base64;
-
-        }
+        window.playJarvisWaitAck();
 
       }
 
-    } catch (_) {}
+    }, 180);
 
 
 
-    // 2. Fallback su /api/chat se necessario (con timeout a 10s per evitare blocchi)
-
-    if (!reply) {
+    try {
 
       const res = await fetch('/api/chat', {
 
@@ -2654,23 +2695,57 @@ async function executeCommandPipeline(prompt) {
 
         headers: { 'Content-Type': 'application/json' },
 
-        body: JSON.stringify({ prompt, model, persona: currentPersonality }),
+        body: JSON.stringify({
 
-        signal: AbortSignal.timeout(10000)
+          prompt,
+
+          model,
+
+          persona: currentPersonality,
+
+          include_audio: !!window.ebjVoiceEnabled
+
+        }),
+
+        signal: AbortSignal.timeout(12000)
 
       });
 
+      clearTimeout(waitAckTimer);
+
       const d = await res.json();
 
-      reply = d.response || 'Comando elaborato, Badr.';
+      reply = d.response || 'Subito, signore. Comando elaborato.';
 
       modelTag = (d.model_used || 'E.B.J. AI').toUpperCase();
 
-      if (d.ui_action) window.handleAiUiAction(d.ui_action);
+      if (d.ui_action && window.handleAiUiAction) window.handleAiUiAction(d.ui_action);
 
       if (d.reflex && window.updateReflexStrip) window.updateReflexStrip(d.reflex, d.judge);
 
+      if (d.audio_base64 && window.ebjVoiceEnabled) preloadedAudio = d.audio_base64;
+
       updateAiModeBadge(d);
+
+    } catch (chatErr) {
+
+      clearTimeout(waitAckTimer);
+
+      throw chatErr;
+
+    }
+
+
+
+    // Se l'audio 'Attendi un attimo' sta ancora finendo la frase, attendi max 1.8s prima di sovrapporre la risposta reale
+
+    if (ackTriggered && window._ebjActiveAckPromise) {
+
+      try {
+
+        await Promise.race([window._ebjActiveAckPromise, new Promise(r => setTimeout(r, 1800))]);
+
+      } catch (_) {}
 
     }
 
