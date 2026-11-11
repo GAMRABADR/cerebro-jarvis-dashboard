@@ -4490,6 +4490,14 @@ def orchestrate_fleet_command(data):
 
 def detect_modular_ui_action(prompt):
     p = prompt.lower()
+    if any(w in p for w in ["chassis", "robot 3d", "corpo robotico", "stage 3d", "fable 3d", "modello 3d robot", "crea robot"]):
+        return {"action": "open_fable_3d", "mode": "robot", "title": "Fable 5.2 Robot Body 3D"}
+    if any(w in p for w in ["esplodi", "vista esplosa", "exploded view", "scomponi modello"]):
+        return {"action": "fable_explode_view", "mode": "explode", "title": "Fable 5.2 Exploded View"}
+    if any(w in p for w in ["planimetria", "blueprint 3d", "ambiente 3d", "da 2d a 3d", "piantina 3d", "piantina in 3d"]):
+        return {"action": "open_fable_3d", "mode": "floorplan", "title": "Fable 5.2 2D to 3D Architecture"}
+    if any(w in p for w in ["landscaping", "cura del verde 3d", "alberi e prato 3d", "giardino 3d", "ai landscaping"]):
+        return {"action": "fable_landscaping", "title": "Fable 5.2 AI Landscaping"}
     if any(w in p for w in ["sinaps", "sfera", "biocortex", "cortex", "nucleo"]):
         return {"action": "toggle_module", "module": "mod-synapses", "state": True, "title": "Sinapsi & Sfera Neurale 3D"}
     if any(w in p for w in ["terminal", "console", "cli", "shell"]):

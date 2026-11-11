@@ -258,6 +258,9 @@ def evaluate_reflex_prepass(utterance: str, history_len: int = 0) -> Dict[str, A
         else:
             lane = "lead_hunter"
             lane_confidence = 0.92
+    elif any(k in u_lower for k in ["chassis", "robot 3d", "corpo robotico", "esplodi vista", "vista esplosa", "exploded view", "planimetria in 3d", "da 2d a 3d", "landscaping 3d", "ambiente 3d", "fable 3d"]):
+        lane = "fable_3d_stage"
+        lane_confidence = 0.98
     elif any(k in u_lower for k in ["preventivo", "quanto costa", "costo", "prezzo", "stima", "quotazione"]):
         lane = "quote_engine"
         lane_confidence = 0.92
@@ -663,6 +666,43 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             details = {"error": str(me)}
             ack_text = "Piano agentico avviato in autonomia, Badr: modulo cognitivo in esecuzione."
 
+    # 12f. FABLE 5.2 · 3D ROBOT BODY
+    elif intent == "FABLE_3D_ROBOT_BODY":
+        details = {
+            "engine": "Fable 5.2 Kinetic Three.js",
+            "model": "EBJ Mark Robot Body Chassis",
+            "ui_action": {"action": "open_fable_3d", "mode": "robot", "title": "Fable 5.2 Robot Body 3D"}
+        }
+        ack_text = "Agli ordini, signore: attivo lo stage olografico Fable 5.2 e renderizzo il telaio meccanico Mark con reattore Arc e attuatori idraulici."
+
+    # 12g. FABLE 5.2 · EXPLODED VIEW
+    elif intent == "FABLE_3D_EXPLODED_VIEW":
+        details = {
+            "engine": "Fable 5.2 Kinetic Three.js",
+            "mode": "exploded_view",
+            "expansion_factor": 1.0,
+            "ui_action": {"action": "fable_explode_view", "mode": "explode", "title": "Fable 5.2 Exploded View"}
+        }
+        ack_text = "Subito, signore: avvio la sequenza cinematica in vista esplosa. Piastre di corazza, visore e attuatori si espandono lungo gli assi meccanici."
+
+    # 12h. FABLE 5.2 · 2D BLUEPRINT TO 3D ARCHITECTURAL ENVIRONMENT
+    elif intent == "FABLE_3D_FLOORPLAN_ENV":
+        details = {
+            "engine": "Fable 5.2 Parametric Architecture",
+            "mode": "floorplan_3d",
+            "ui_action": {"action": "open_fable_3d", "mode": "floorplan", "title": "Fable 5.2 2D to 3D Architecture"}
+        }
+        ack_text = "Procedo immediatamente, signore: estrusione planimetrica completata, trasformo le coordinate bidimensionali in un ambiente architettonico tridimensionale navigabile."
+
+    # 12i. FABLE 5.2 · AI LANDSCAPING
+    elif intent == "FABLE_3D_LANDSCAPING":
+        details = {
+            "engine": "Fable 5.2 Procedural Greenery",
+            "mode": "ai_landscaping",
+            "ui_action": {"action": "fable_landscaping", "title": "Fable 5.2 AI Landscaping"}
+        }
+        ack_text = "AI Landscaping attivato, signore: prato procedurale, alberature e siepi perimetrali di lauroceraso integrate attorno alla struttura."
+
     # 13. CAMERA VISION
     elif intent == "CAMERA_VISION":
         p_low = prompt.lower()
@@ -831,6 +871,15 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
         matched, intent, domain, action = True, "OMNI_CONNECTORS", "OMNI_CONNECTORS", "EXECUTE_CONNECTOR"
     elif any(k in p_lower for k in ["autolavaggi", "detergenti", "chimica lavaggi"]):
         matched, intent, domain, action = True, "CAR_WASH_SCOUT", "SELEZIONE_CHIMICA", "CAR_WASH_SCOUT"
+    # ── FABLE 5.2 3D KINETIC & ARCHITECTURAL STAGE (< 0.05ms) ──
+    elif any(k in p_lower for k in ["esplodi vista", "vista esplosa", "exploded view", "scomponi modello", "esploso 3d", "esplodi il modello", "esplodi"]):
+        matched, intent, domain, action = True, "FABLE_3D_EXPLODED_VIEW", "3D_HOLO_STAGE", "EXPLODED_VIEW"
+    elif any(k in p_lower for k in ["planimetria in 3d", "planimetria 3d", "da 2d a 3d", "piantina in 3d", "piantina 3d", "ambiente 3d", "blueprint 3d", "trasforma planimetria"]):
+        matched, intent, domain, action = True, "FABLE_3D_FLOORPLAN_ENV", "3D_HOLO_STAGE", "FLOORPLAN_3D"
+    elif any(k in p_lower for k in ["landscaping", "cura del verde 3d", "alberi e prato 3d", "giardino 3d", "ai landscaping", "verde 3d"]):
+        matched, intent, domain, action = True, "FABLE_3D_LANDSCAPING", "3D_HOLO_STAGE", "AI_LANDSCAPING"
+    elif any(k in p_lower for k in ["robot 3d", "chassis", "corpo robotico", "stage 3d", "fable 3d", "modello 3d robot", "crea robot", "fable 5.2"]):
+        matched, intent, domain, action = True, "FABLE_3D_ROBOT_BODY", "3D_HOLO_STAGE", "RENDER_ROBOT_BODY"
     elif any(k in p_lower for k in ["pittura", "imbiancare", "imbianchin", "tinteggiatura", "dipingere", "pareti bianche", "pittura bianca"]) and any(w in p_lower for w in ["preventivo", "quanto costa", "costo", "prezzo", "stima", "euro"]):
         matched, intent, domain, action = True, "PAINTING_QUOTE", "HOME_SERVICES", "PAINTING_QUOTE"
     elif any(k in p_lower for k in ["giardino", "giardinaggio", "potatura", "taglio erba", "prato", "siepe", "siepi", "sfalci"]) and any(w in p_lower for w in ["preventivo", "quanto costa", "costo", "prezzo", "stima", "euro"]):

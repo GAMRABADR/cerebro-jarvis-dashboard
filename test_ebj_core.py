@@ -183,6 +183,27 @@ def t_agentic_metacore_preconditions():
     assert pre["checks"]["vps_reachable"] is True, f"VPS non raggiungibile: {pre}"
     assert pre["checks"]["local_core_online"] is True, f"Core 8088 offline: {pre}"
 
+def t_fable_3d_kinetic_stage():
+    import ebj_reflex_engine as r
+    # 1. Robot Body
+    r1 = r.jev_reflex_dispatch("carica modello 3d del robot e chassis")
+    assert r1 and r1["intent"] == "FABLE_3D_ROBOT_BODY", f"r1 errato: {r1}"
+    assert "Fable 5.2" in r1["ack"], f"ack robot errato: {r1['ack']}"
+    assert r1["receipt"]["details"]["ui_action"]["action"] == "open_fable_3d", f"ui_action errata: {r1}"
+
+    # 2. Exploded View
+    r2 = r.jev_reflex_dispatch("esplodi vista del corpo robotico")
+    assert r2 and r2["intent"] == "FABLE_3D_EXPLODED_VIEW", f"r2 errato: {r2}"
+    assert "vista esplosa" in r2["ack"], f"ack explode errato: {r2['ack']}"
+
+    # 3. 2D Blueprint to 3D
+    r3 = r.jev_reflex_dispatch("trasforma planimetria in 3d")
+    assert r3 and r3["intent"] == "FABLE_3D_FLOORPLAN_ENV", f"r3 errato: {r3}"
+
+    # 4. AI Landscaping
+    r4 = r.jev_reflex_dispatch("attiva landscaping 3d con alberi e giardino")
+    assert r4 and r4["intent"] == "FABLE_3D_LANDSCAPING", f"r4 errato: {r4}"
+
 
 # ── 4. HTTP live ────────────────────────────────────────────────────────────
 def t_http_health():
@@ -214,6 +235,7 @@ if __name__ == "__main__":
         ("formule: pittura bianco & giardinaggio", t_painting_and_gardening_quotes),
         ("radar: lead casa & filtro città", t_home_services_lead_radar),
         ("metacore: agentic precondizioni & VPS", t_agentic_metacore_preconditions),
+        ("fable 5.2: stage 3D & vista esplosa", t_fable_3d_kinetic_stage),
         ("http: /health", t_http_health),
         ("http: /api/qmd/search", t_http_qmd_search),
     ]:
