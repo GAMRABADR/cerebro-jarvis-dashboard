@@ -538,7 +538,14 @@ def get_qmd_context(query: str, max_chunks: int = 3, max_chars: int = 4000) -> O
         return None
 
     results = qmd_search(query, limit=max_chunks)
-    if not results:
+    tree_ctx = ""
+    try:
+        import ebj_memory_tree
+        tree_ctx = ebj_memory_tree.get_tree_context_for_prompt(query, max_hits=2)
+    except Exception:
+        tree_ctx = ""
+
+    if not results and not tree_ctx:
         return None
 
     blocks = [
@@ -547,6 +554,8 @@ def get_qmd_context(query: str, max_chunks: int = 3, max_chars: int = 4000) -> O
         "Regola: Usa i dettagli precisi qui sotto per rispondere con autorevolezza ed esattezza.",
         "=================================================================="
     ]
+    if tree_ctx:
+        blocks.append(tree_ctx)
 
     total_len = 0
     for i, r in enumerate(results, start=1):

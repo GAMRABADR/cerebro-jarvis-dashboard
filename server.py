@@ -4905,6 +4905,20 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "error", "message": str(e)}, status=500)
             return
 
+        if clean_path == '/api/memory-tree':
+            try:
+                import ebj_memory_tree
+                brief = ebj_memory_tree.get_memory_tree_briefing()
+                root_md_path = os.path.join(ebj_memory_tree.MEMORY_TREE_DIR, "00_ROOT_INDEX.md")
+                root_md = ""
+                if os.path.exists(root_md_path):
+                    with open(root_md_path, "r", encoding="utf-8") as rf:
+                        root_md = rf.read()
+                self.send_json({"status": "SUCCESS", "briefing": brief, "root_markdown": root_md})
+            except Exception as _mte:
+                self.send_json({"status": "ERROR", "error": str(_mte)}, 500)
+            return
+
         if clean_path == '/api/tts/acks':
             self.send_json({
                 "status": "SUCCESS",
@@ -6685,6 +6699,25 @@ class JarvisHandler(BaseHTTPRequestHandler):
             data = json.loads(body.decode('utf-8', errors='ignore')) if body else {}
         except Exception:
             data = {}
+
+        # ── RUST HIERARCHICAL MEMORY TREE ENDPOINTS ───────────────────────────
+        if self.path in ('/api/memory-tree/sync', '/api/memory-tree/sync/'):
+            try:
+                import ebj_memory_tree
+                self.send_json(ebj_memory_tree.sync_memory_tree())
+            except Exception as _e:
+                self.send_json({"status": "ERROR", "error": str(_e)}, 500)
+            return
+
+        if self.path in ('/api/memory-tree/search', '/api/memory-tree/search/'):
+            try:
+                import ebj_memory_tree
+                q = str(data.get("query", "")).strip()
+                lim = int(data.get("limit", 5))
+                self.send_json(ebj_memory_tree.search_memory_tree(q, limit=lim))
+            except Exception as _e:
+                self.send_json({"status": "ERROR", "error": str(_e)}, 500)
+            return
 
         # ── SECOND BRAIN QMD (QUERY MARKDOWN DOCUMENTS) SEARCH & REINDEX ─────
         if self.path in ('/api/qmd/search', '/api/qmd/search/'):
@@ -10355,6 +10388,9 @@ def run_server():
         import ebj_qmd_engine
         if ebj_qmd_engine.start_auto_reindex(600):
             print("[QMD] Auto-reindex attivo (ogni 10 min)")
+        import ebj_memory_tree
+        ebj_memory_tree.start_memory_tree_scheduler(1200)
+        print("[MEMORY TREE RUST] Auto-ingest attivo (ogni 20 min)")
     except Exception as e:
         print(f"[QMD Auto-Reindex Boot Error]: {e}")
     prune_ltm_history(30)  # Pruning all'avvio

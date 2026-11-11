@@ -718,6 +718,25 @@ def execute_jev_action(intent: str, domain: str, action: str, prompt: str) -> Tu
             ack_text = "Signore, questa è la prima richiesta registrata nella sessione attiva in memoria."
             details = {"last_user_turns": [], "session_fresh": True}
 
+    # 12e-ter. RUST HIERARCHICAL MEMORY TREE BRIEFING
+    elif intent == "MEMORY_TREE_BRIEFING":
+        try:
+            import ebj_memory_tree
+            p_low = prompt.lower()
+            sync_info = None
+            if any(w in p_low for w in ["aggiorna", "sincronizza", "ingest"]):
+                sync_info = ebj_memory_tree.sync_memory_tree()
+            brief = ebj_memory_tree.get_memory_tree_briefing()
+            tot = brief.get("total_nodes", 0)
+            doms = brief.get("domain_count", 0)
+            hl = brief.get("highlights") or []
+            top_txt = f" In evidenza: {hl[0].get('title', '')}." if hl else ""
+            details = {"briefing": brief, "sync": sync_info}
+            ack_text = f"Albero gerarchico della memoria in Rust sincronizzato, signore: {tot} nodi distribuiti su {doms} rami tra email, lead e memoria operativa.{top_txt}"
+        except Exception as e:
+            details = {"error": str(e)}
+            ack_text = "Signore, al momento non riesco a leggere il riepilogo dell albero di memoria."
+
     # 12f. FABLE 5.2 · 3D ROBOT BODY
     elif intent == "FABLE_3D_ROBOT_BODY":
         details = {
@@ -903,7 +922,9 @@ def jev_reflex_dispatch(prompt: str) -> Optional[Dict[str, Any]]:
 
     # 1. LIVELLO 0: Regole euristiche veloci su keyword dominanti (< 0.05ms)
     # Una ricerca ESPLICITA nella memoria vince su qualunque parola di dominio (vps, lead, ecc.)
-    if "RECALL_MEMORY" in it_tags or is_recall_question(norm_prompt):
+    if any(k in p_lower for k in ["novità di oggi", "novita di oggi", "novità sui canali", "novita sui canali", "che novità ci sono", "che novita ci sono", "albero della memoria", "albero memoria", "memory tree", "riassunto canali", "aggiorna memoria", "sincronizza memoria"]):
+        matched, intent, domain, action = True, "MEMORY_TREE_BRIEFING", "KNOWLEDGE_TREE", "RUST_TREE_BRIEFING"
+    elif "RECALL_MEMORY" in it_tags or is_recall_question(norm_prompt):
         matched, intent, domain, action = True, "CONVERSATION_MEMORY_RECALL", "MEMORY", "SHORT_TERM_RECALL"
     elif any(k in p_lower for k in ["second brain", "cerca nel vault", "cerca nella memoria", "cerca nella documentazione", "cerca nella wiki", "cosa dice la wiki", "trova nelle note", "regole di sistema", "regolamento"]):
         matched, intent, domain, action = True, "VAULT_SEARCH", "KNOWLEDGE_VAULT", "SEARCH_QMD"

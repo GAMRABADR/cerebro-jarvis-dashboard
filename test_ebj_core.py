@@ -251,6 +251,23 @@ def t_http_tts_acks_and_recall():
     rec_d = _http("POST", "/api/reflex/dispatch", {"query": "cosa ti ho detto?"})
     assert rec_d.get("intent") == "CONVERSATION_MEMORY_RECALL", f"Recall fallito: {rec_d}"
 
+def t_rust_memory_tree_and_ingest():
+    import ebj_memory_tree as mt
+    import ebj_reflex_engine as r
+    res = mt.sync_memory_tree()
+    assert res.get("status") == "SUCCESS" and "rust:" in res.get("engine", ""), f"Memory Tree sync errato: {res}"
+    assert os.path.exists(os.path.join(mt.MEMORY_TREE_DIR, "00_ROOT_INDEX.md")), "00_ROOT_INDEX.md mancante"
+
+    s = mt.search_memory_tree("giardinaggio bologna", limit=3)
+    assert s.get("count", 0) >= 1 and s.get("latency_ms", 999) < 25, f"Ricerca Memory Tree errata/lenta: {s}"
+
+    d = r.jev_reflex_dispatch("che novità ci sono oggi sui canali")
+    assert d and d.get("intent") == "MEMORY_TREE_BRIEFING", f"Briefing reflex errato: {d}"
+
+    if not OFFLINE and _server_up():
+        http_tree = _http("GET", "/api/memory-tree")
+        assert http_tree.get("status") == "SUCCESS" and http_tree.get("briefing", {}).get("total_nodes", 0) > 0, http_tree
+
 
 if __name__ == "__main__":
     for name, fn in [
@@ -273,6 +290,7 @@ if __name__ == "__main__":
         ("http: /health", t_http_health),
         ("http: /api/qmd/search", t_http_qmd_search),
         ("http: /api/tts/acks & reflex unificato", t_http_tts_acks_and_recall),
+        ("rust: memory tree & auto-ingest", t_rust_memory_tree_and_ingest),
     ]:
         check(name, fn)
 
