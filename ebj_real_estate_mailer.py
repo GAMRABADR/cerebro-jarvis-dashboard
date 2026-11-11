@@ -119,9 +119,29 @@ def execute_real_estate_mailer(payload: Dict[str, Any]) -> Dict[str, Any]:
     city = payload.get("city", "Bologna")
     query = payload.get("query", "")
 
-    # Se non c'è email ma Badr ha indicato un nome o chiede un invio di prova
+    # Se non c'è email, cerca prima nel DB reale b2b_real_estate_agencies, poi fallback presets
     if not target_email:
-        # Cerca nel catalogo o usa default
+        try:
+            import sqlite3
+            from ebj_lead_sanitizer import validate_email_address
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mail_vault.db")
+            if os.path.exists(db_path):
+                conn = sqlite3.connect(db_path)
+                rows = conn.execute(
+                    "SELECT agency_name, email, city FROM b2b_real_estate_agencies WHERE email != '' ORDER BY id DESC LIMIT 30"
+                ).fetchall()
+                conn.close()
+                for r_name, r_email, r_city in rows:
+                    ok_em, _ = validate_email_address(r_email, check_dns=True)
+                    if ok_em and (not agency_name or agency_name.lower() in r_name.lower()):
+                        target_email = r_email
+                        agency_name = r_name
+                        city = r_city or city
+                        break
+        except Exception:
+            pass
+
+    if not target_email:
         matching = [a for a in DEFAULT_AGENCIES if agency_name and agency_name.lower() in a["name"].lower()]
         if matching:
             target = matching[0]
@@ -130,7 +150,7 @@ def execute_real_estate_mailer(payload: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return {
                 "status": "need_recipient",
-                "message": "Specificare l'indirizzo email dell'agenzia o scegliere dal catalogo.",
+                "message": "Specificare l'indirizzo email dell'agenzia o avviare /api/b2b/crawl-and-enrich.",
                 "available_presets": [a["name"] for a in DEFAULT_AGENCIES]
             }
 

@@ -324,6 +324,10 @@ async def handle_start(session, chat_id):
         {"text": "🔔 FAI SQUILLARE TELEFONO", "callback_data": "phone:ring"},
     ])
     city_buttons.append([
+        {"text": "🏢 IMMOBILIARI B2B (SGOMBERI)", "callback_data": "b2b:crawl_pitch"},
+        {"text": "🧹 BONIFICA NUMERI FALSI", "callback_data": "leads:audit"},
+    ])
+    city_buttons.append([
         {"text": "🌌 APRI CEREBRO JARVIS HUD", "web_app": {"url": "https://eb.badrexpress.com"}},
         {"text": "🔄 AGGIORNA RADAR", "callback_data": "refresh:radar"},
     ])
@@ -480,6 +484,38 @@ async def run_bot_poll():
                             elif cb_data == "phone:lost_off":
                                 await enqueue_phone_action(session, "lost_mode_off")
                                 await show_phone_panel(session, chat_id, msg_id, notice="Modalità smarrito disattivata.")
+                            elif cb_data == "leads:audit":
+                                await send_animated_loader(session, chat_id, msg_id, "BONIFICA AGCOM & ANTI-FAKE")
+                                try:
+                                    async with session.post(f"{JARVIS_LOCAL_URL}/api/leads/audit-clean", json={"dry_run": False}, timeout=12) as ra:
+                                        au = (await ra.json()).get("audit", {})
+                                        rem = len(au.get("verified_leads_removed") or []) + len(au.get("captured_leads_removed") or [])
+                                        txt = (
+                                            "🧹 *BONIFICA QUALITÀ SCRAPING COMPLETATA*\n\n"
+                                            f"• Numeri fittizi/800/fuori target rimossi: `{rem}`\n"
+                                            f"• Lead verificati rimasti: `{au.get('remaining_verified_leads', 0)}`\n"
+                                            f"• Agenzie immobiliari verificate: `{au.get('remaining_agencies', 0)}`"
+                                        )
+                                        await edit_msg(session, chat_id, msg_id, txt, {"inline_keyboard": [[{"text": "🔙 HOME", "callback_data": "menu:home"}]]})
+                                except Exception as ex:
+                                    await send_msg(session, chat_id, f"Errore audit: {ex}", parse_mode=None)
+                            elif cb_data == "b2b:crawl_pitch":
+                                await send_animated_loader(session, chat_id, msg_id, "SCOUT IMMOBILIARI & SGOMBERI B2B")
+                                try:
+                                    async with session.post(f"{JARVIS_LOCAL_URL}/api/b2b/crawl-and-enrich", json={"city": "Bologna", "limit": 8}, timeout=45) as rc:
+                                        cr = await rc.json()
+                                    async with session.post(f"{JARVIS_LOCAL_URL}/api/b2b/campaign-sgomberi", json={"city": "ALL", "limit": 10, "dry_run": False}, timeout=45) as rp:
+                                        pr = await rp.json()
+                                    txt = (
+                                        "🏢 *REP. IMMOBILIARI B2B — SGOMBERI PRE-ROGITO*\n\n"
+                                        f"• Nuove agenzie Bologna/Web verificate: `{cr.get('scraped_count', 0)}`\n"
+                                        f"• Con email DNS verificata pronte: `{pr.get('email_candidates_total', 0)}`\n"
+                                        f"• Proposte elaborate/inviate ora: `{pr.get('processed_count', 0)}` (SMTP ativo: `{pr.get('smtp_configured')}`)\n"
+                                        f"• Pronte WhatsApp/Form: `{len(pr.get('whatsapp_and_form_ready') or [])}`"
+                                    )
+                                    await edit_msg(session, chat_id, msg_id, txt, {"inline_keyboard": [[{"text": "🔙 HOME", "callback_data": "menu:home"}]]})
+                                except Exception as ex:
+                                    await send_msg(session, chat_id, f"Errore B2B Immobiliari: {ex}", parse_mode=None)
                             elif cb_data.startswith("city:"):
                                 city = cb_data.split(":")[1]
                                 await send_animated_loader(session, chat_id, msg_id, f"ESTRAZIONE LEAD {city.upper()}")

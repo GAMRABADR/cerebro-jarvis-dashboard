@@ -14,6 +14,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
+    load_dotenv(os.path.join(os.path.dirname(BASE_DIR), ".env"))
+except Exception:
+    pass
 VAULT_DB = os.path.join(BASE_DIR, "mail_vault.db")
 
 PHONE_BADR = "+39 388 870 3508"
@@ -21,7 +27,7 @@ PHONE_PIETRO = "+39 328 426 3554"
 SITE_BADR = "https://www.badrexpress.com"
 SITE_PIETRO = "https://www.pietrotraslochi.com"
 EMAIL_SENDER = os.environ.get("GMAIL_USER", "badraudi@gmail.com")
-EMAIL_PASS = os.environ.get("GMAIL_APP_PASSWORD", "kqvjcuzibizysoxu")
+EMAIL_PASS = os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("GMAIL_APP_PASS") or os.environ.get("SMTP_PASS") or os.environ.get("GMAIL_PASSWORD") or ""
 
 def init_b2b_tables():
     """Crea la tabella SQLite per tracciare le agenzie immobiliari partner."""
@@ -49,84 +55,108 @@ def init_b2b_tables():
 
 init_b2b_tables()
 
-# ── CENSIMENTO AGENZIE VIA OVERPASS OSM (Zero Costi, Dati Veri) ───────────────
-def scout_agencies_osm(city="Bologna", limit=20):
-    """Interroga OpenStreetMap Overpass API per trovare agenzie immobiliari reali."""
-    overpass_query = f"""
-    [out:json][timeout:20];
-    area["name"="{city}"]["boundary"="administrative"]->.a;
-    (
-      node["office"="estate_agent"](area.a);
-      way["office"="estate_agent"](area.a);
-      node["shop"="estate_agent"](area.a);
-    );
-    out center {limit};
-    """
-    url = "https://overpass-api.de/api/interpreter"
-    data = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"User-Agent": "EBJ-B2B-Scout/2.0"})
-    
-    agencies = []
-    try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            res_json = json.loads(resp.read().decode("utf-8"))
-            elements = res_json.get("elements", [])
+# ── CENSIMENTO AGENZIE LIVE (CACHE -> PAGINEGIALLE -> SITO -> OVERPASS) ───────
+def scout_agencies_osm(city="Bologna", limit=20, force_refresh=False):
+    """Interroga cache SQLite locale o esegue discovery reale (PagineGialle + siti ufficiali + Overpass OSM)."""
+    import b2b_agency_crawler as crawler
+    from ebj_lead_sanitizer import validate_italian_phone
+
+    crawler.ensure_crm_schema()
+    if not force_refresh:
+        try:
             conn = sqlite3.connect(VAULT_DB)
             c = conn.cursor()
-
-            for el in elements:
-                tags = el.get("tags", {})
-                name = tags.get("name") or tags.get("brand")
-                if not name:
-                    continue
-                
-                street = tags.get("addr:street", "")
-                housenumber = tags.get("addr:housenumber", "")
-                address = f"{street} {housenumber}".strip() if street else "Indirizzo locale"
-                phone = tags.get("phone") or tags.get("contact:phone") or tags.get("mobile") or "Su richiesta"
-                email = tags.get("email") or tags.get("contact:email") or ""
-                website = tags.get("website") or tags.get("contact:website") or ""
-
-                agency_obj = {
-                    "agency_name": name,
-                    "city": city,
-                    "address": address,
-                    "phone": phone,
-                    "email": email,
-                    "website": website,
-                    "status": "SCOUTED"
-                }
-                agencies.append(agency_obj)
-
-                # Salva nel DB con protezione anti-duplicati
-                c.execute("""
-                    INSERT INTO b2b_real_estate_agencies (agency_name, city, address, phone, email, website, status)
-                    VALUES (?, ?, ?, ?, ?, ?, 'SCOUTED')
-                    ON CONFLICT(agency_name, city) DO UPDATE SET
-                    phone=COALESCE(excluded.phone, phone),
-                    email=COALESCE(NULLIF(excluded.email,''), email),
-                    address=COALESCE(NULLIF(excluded.address,''), address)
-                """, (name, city, address, phone, email, website))
-
-            conn.commit()
+            c.execute(
+                """SELECT agency_name, city, address, phone, email, website, status, facebook_url, contact_form_url
+                   FROM b2b_real_estate_agencies WHERE LOWER(city)=LOWER(?) ORDER BY id DESC LIMIT ?""",
+                (city, limit),
+            )
+            rows = c.fetchall()
             conn.close()
-    except Exception as e:
-        print(f"[OSM Scout Err ({city})]: {e}")
-        # Se Overpass va in timeout o rate-limit, estrai da cache SQLite
-        conn = sqlite3.connect(VAULT_DB)
-        c = conn.cursor()
-        c.execute("SELECT agency_name, city, address, phone, email, website, status FROM b2b_real_estate_agencies WHERE city=? LIMIT ?", (city, limit))
-        for row in c.fetchall():
-            agencies.append({
-                "agency_name": row[0],
-                "city": row[1],
-                "address": row[2],
-                "phone": row[3],
-                "email": row[4],
-                "website": row[5],
-                "status": row[6]
-            })
-        conn.close()
+            if rows and len(rows) >= min(limit, 5):
+                return [
+                    {
+                        "agency_name": r[0], "city": r[1], "address": r[2],
+                        "phone": r[3], "email": r[4], "website": r[5],
+                        "status": r[6], "facebook_url": r[7] or "", "contact_form_url": r[8] or "",
+                    }
+                    for r in rows
+                ]
+        except Exception:
+            pass
+
+    agencies = crawler.scrape_paginegialle_agencies(city=city, limit=limit, crawl_websites=True)
+    if len(agencies) < min(limit, 5):
+        overpass_query = f"""
+        [out:json][timeout:15];
+        area["name"="{city}"]["boundary"="administrative"]->.a;
+        (
+          node["office"="estate_agent"](area.a);
+          way["office"="estate_agent"](area.a);
+          node["shop"="estate_agent"](area.a);
+        );
+        out center {limit};
+        """
+        url = "https://overpass-api.de/api/interpreter"
+        data = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers={"User-Agent": "EBJ-B2B-Scout/2.5"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                elements = json.loads(resp.read().decode("utf-8")).get("elements", [])
+                conn = sqlite3.connect(VAULT_DB)
+                c = conn.cursor()
+                for el in elements:
+                    tags = el.get("tags", {})
+                    name = tags.get("name") or tags.get("brand")
+                    if not name:
+                        continue
+                    street = tags.get("addr:street", "")
+                    housenumber = tags.get("addr:housenumber", "")
+                    address = f"{street} {housenumber}".strip() or city
+                    raw_ph = tags.get("phone") or tags.get("contact:phone") or tags.get("mobile") or ""
+                    ph_res = validate_italian_phone(raw_ph, strict_mobile_10=False)
+                    phone = ph_res["e164"] if ph_res else ""
+                    email = tags.get("email") or tags.get("contact:email") or ""
+                    website = tags.get("website") or tags.get("contact:website") or ""
+                    agency_obj = {
+                        "agency_name": name, "city": city, "address": address,
+                        "phone": phone, "email": email, "website": website,
+                        "status": "VERIFICATO_OSM", "facebook_url": "", "contact_form_url": "",
+                    }
+                    agencies.append(agency_obj)
+                    c.execute(
+                        """
+                        INSERT INTO b2b_real_estate_agencies (agency_name, city, address, phone, email, website, status)
+                        VALUES (?, ?, ?, ?, ?, ?, 'VERIFICATO_OSM')
+                        ON CONFLICT(agency_name, city) DO UPDATE SET
+                        phone=COALESCE(NULLIF(excluded.phone,''), phone),
+                        email=COALESCE(NULLIF(excluded.email,''), email),
+                        website=COALESCE(NULLIF(excluded.website,''), website)
+                        """,
+                        (name, city, address, phone, email, website),
+                    )
+                conn.commit()
+                conn.close()
+        except Exception:
+            pass
+
+    if not agencies:
+        try:
+            conn = sqlite3.connect(VAULT_DB)
+            c = conn.cursor()
+            c.execute(
+                "SELECT agency_name, city, address, phone, email, website, status, facebook_url, contact_form_url FROM b2b_real_estate_agencies WHERE LOWER(city)=LOWER(?) LIMIT ?",
+                (city, limit),
+            )
+            for row in c.fetchall():
+                agencies.append({
+                    "agency_name": row[0], "city": row[1], "address": row[2],
+                    "phone": row[3], "email": row[4], "website": row[5],
+                    "status": row[6], "facebook_url": row[7] or "", "contact_form_url": row[8] or "",
+                })
+            conn.close()
+        except Exception:
+            pass
 
     return agencies
 
@@ -334,3 +364,132 @@ def send_agency_proposal_email(agency_name, to_email, city="Bologna", contact_pe
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# ── CAMPAGNA AUTONOMA COLLABORAZIONE SGOMBERI & PORTALI IMMOBILIARI ──────────
+def run_sgomberi_collaboration_campaign(city="ALL", limit=10, dry_run=False):
+    """
+    Seleziona le agenzie immobiliari verificate con email reale (MX/DNS confermato)
+    non ancora contattate e invia la proposta di convenzione sgomberi pre-rogito & traslochi.
+    """
+    from ebj_lead_sanitizer import validate_email_address, validate_italian_phone
+    import b2b_agency_crawler as crawler
+
+    crawler.ensure_crm_schema()
+    conn = sqlite3.connect(VAULT_DB)
+    q = """SELECT id, agency_name, city, phone, email, website, facebook_url, contact_form_url, status
+           FROM b2b_real_estate_agencies
+           WHERE COALESCE(status, '') != 'PROPOSTA_INVIATA'"""
+    params = []
+    if city and city.upper() != "ALL":
+        q += " AND LOWER(city) LIKE ?"
+        params.append(f"%{city.lower()}%")
+    q += " ORDER BY id DESC"
+    rows = conn.execute(q, params).fetchall()
+    conn.close()
+
+    candidates_email = []
+    candidates_wa_only = []
+    seen_emails = set()
+    for rid, name, cty, phone, email, web, fb, cf, st in rows:
+        if "costruzioni" in (web or "").lower() or name.strip().upper() == "ICEA":
+            continue
+        ok_em, _ = validate_email_address(email, check_dns=True) if email else (False, "no_email")
+        ph_res = validate_italian_phone(phone, strict_mobile_10=False) if phone else None
+        em_low = (email or "").strip().lower()
+        if ok_em and em_low not in seen_emails:
+            seen_emails.add(em_low)
+            candidates_email.append({
+                "id": rid, "agency_name": name, "city": cty,
+                "email": em_low, "phone": ph_res["e164"] if ph_res else "",
+                "website": web or "", "contact_form_url": cf or "",
+            })
+        elif ph_res:
+            msg = f"Buongiorno {name}, siamo BadrExpress & PietroTraslochi ({cty}). Proponiamo convenzione diretta sgomberi pre-rogito 24-48h con sconto 15% ai vostri clienti e 10% di segnalazione."
+            candidates_wa_only.append({
+                "id": rid, "agency_name": name, "city": cty,
+                "phone": ph_res["e164"],
+                "whatsapp_url": f"{ph_res['wa_url']}?text={urllib.parse.quote(msg)}",
+                "contact_form_url": cf or "",
+                "facebook_url": fb or "",
+            })
+
+    sent = []
+    errors = []
+    smtp_ready = bool(EMAIL_PASS)
+    for item in candidates_email[:limit]:
+        if dry_run or not smtp_ready:
+            sent.append({**item, "dispatch": "PREVIEW_DRY_RUN" if dry_run else "SKIPPED_NO_SMTP_PASSWORD"})
+            continue
+        res = send_agency_proposal_email(item["agency_name"], item["email"], city=item["city"])
+        if res.get("success"):
+            sent.append({**item, "dispatch": "SENT_SMTP"})
+        else:
+            errors.append({**item, "error": res.get("error")})
+
+    return {
+        "status": "SUCCESS",
+        "city": city,
+        "smtp_configured": smtp_ready,
+        "dry_run": dry_run,
+        "email_candidates_total": len(candidates_email),
+        "processed_count": len(sent),
+        "sent_or_preview": sent,
+        "errors": errors,
+        "whatsapp_and_form_ready": candidates_wa_only[:limit],
+    }
+
+
+def onboard_portals_safe(portals=None, submit=False):
+    """
+    Tenta la pre-compilazione/iscrizione di BadrExpress & PietroTraslochi sui portali immobiliari/traslochi
+    con rilevamento automatico CAPTCHA (fail-closed: mai aggirare CAPTCHA).
+    """
+    import asyncio
+    from playwright.async_api import async_playwright
+    import real_estate_registrator as reg
+
+    targets = portals or ["immobiliare", "idealista", "casa", "wikicasa", "guidatraslochi", "traslochi24"]
+    portal_urls = {k: v["url"] for k, v in reg.PORTAL_PRESETS.items()}
+    try:
+        import universal_portal_registrator as upr
+        for p_item in getattr(upr, "PORTALS_CATALOG", []):
+            portal_urls.setdefault(p_item["id"], p_item["url"])
+    except Exception:
+        pass
+
+    async def _run_all():
+        out = []
+        for t in targets:
+            actual_url = portal_urls.get(t, t)
+            if not str(actual_url).startswith("http"):
+                out.append({"portal": t, "url": str(actual_url), "status": "INVALID_URL"})
+                continue
+            async with async_playwright() as p:
+                br = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
+                ctx = await br.new_context(locale="it-IT", viewport={"width": 1366, "height": 768})
+                pg = await ctx.new_page()
+                try:
+                    await pg.goto(actual_url, timeout=20000, wait_until="domcontentloaded")
+                    await reg.dismiss_cookies(pg)
+                    html_low = (await pg.content()).lower()
+                    has_captcha = any(k in html_low for k in ("g-recaptcha", "hcaptcha", "turnstile", "datadome", "captcha-delivery"))
+                    filled = await reg.auto_fill_form(pg, reg.DOSSIER)
+                    if has_captcha:
+                        out.append({"portal": t, "url": actual_url, "status": "CAPTCHA_REQUIRED", "fields_prefilled": len(filled), "note": "Portale protetto da CAPTCHA/WAF: completare verifica manuale."})
+                    else:
+                        sub_st = "READY_PREFILLED"
+                        if submit and filled:
+                            btn = pg.locator("button[type='submit'], input[type='submit']").first
+                            if await btn.count() > 0 and await btn.is_visible():
+                                await btn.click()
+                                await pg.wait_for_timeout(2500)
+                                sub_st = "SUBMITTED_AUTO"
+                        out.append({"portal": t, "url": actual_url, "status": sub_st, "fields_prefilled": len(filled)})
+                except Exception as exc:
+                    out.append({"portal": t, "url": actual_url, "status": "ERROR", "error": str(exc)[:120]})
+                finally:
+                    await br.close()
+        return out
+
+    return asyncio.run(_run_all())

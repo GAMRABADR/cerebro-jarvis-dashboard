@@ -38,11 +38,11 @@ ROOT = Path(__file__).resolve().parent
 VAULT_DB = str(ROOT / "mail_vault.db")
 
 GMAIL_USER = "badraudi@gmail.com"
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "kqvjcuzibizysoxu")
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", os.environ.get("GMAIL_APP_PASS") or os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("GMAIL_PASSWORD") or "")
 
-TELEGRAM_BOT_TOKEN_MASTER = "8720524399:AAEYrwb6EHVg7mDnbpLqLFA8KZMTXKHeYE4"
-TELEGRAM_BOT_TOKEN_MARKETPLACE = "8998049198:AAEylB3jFHytc_F1SaUeb4QvDo5ObVmVKNY"
-OWNER_CHAT_ID = "7298887137"
+TELEGRAM_BOT_TOKEN_MASTER = os.environ.get("TELEGRAM_BOT_TOKEN", os.environ.get("TELEGRAM_BOT_TOKEN_JARVIS_MASTER", ""))
+TELEGRAM_BOT_TOKEN_MARKETPLACE = os.environ.get("TELEGRAM_BOT_TOKEN_MARKETPLACE", "")
+OWNER_CHAT_ID = os.environ.get("TELEGRAM_OWNER_CHAT_ID", "7298887137")
 
 # ── 1. STATO CONNETTORI MULTI-PIATTAFORMA ────────────────────────────────────
 
@@ -247,73 +247,70 @@ def format_marketplace_payload_multistore(title: str, price: float, description:
         "telegram": telegram_payload
     }
 
-def hunt_moving_leads_simulated_live(query="trasloco bologna"):
+def hunt_moving_leads_simulated_live(query="trasloco bologna", limit=20):
     """
-    Scansiona le richieste web per traslochi e sgomberi, validando numeri reali
-    ed eliminando annunci di competitor tramite Luhn P.IVA e keywords.
+    Restituisce esclusivamente lead traslochi/sgomberi REALI, coerenti e validati AGCOM
+    dal database verificato (escludendo competitor, autolavaggi e numeri fake).
     """
-    # Esempio di lead intercettati sul territorio con verifica rigorosa
-    raw_leads = [
-        {
-            "author": "Laura B.",
-            "title": "Cerco furgone per piccolo trasloco a Bologna Mazzini",
-            "text": "Salve, cerco qualcuno con furgone per spostare 1 letto matrimoniale, 1 armadio 2 ante e 6 scatoloni da Via Mazzini al piano 2 (con ascensore) verso San Lazzaro. Mio recapito 347 1829304.",
-            "city": "Bologna",
-            "source": "SUBITO_SERP_INTERCEPT"
-        },
-        {
-            "author": "Impresa Pulizie & Traslochi Srl",
-            "title": "Offriamo servizi di trasloco e noleggio autoscala",
-            "text": "Preventivi gratuiti per aziende e privati. P.IVA 03829101209. Telefono 051 889900.",
-            "city": "Bologna",
-            "source": "COMPETITOR_AD"
-        },
-        {
-            "author": "Giuseppe V.",
-            "title": "Sgombero urgente cantina e garage Imola",
-            "text": "Devo liberare una cantina piena di scaffali, vecchia lavatrice e cartoni entro sabato a Imola. Lascio cellulare 338 5544332.",
-            "city": "Imola",
-            "source": "FACEBOOK_GROUPS_RADAR"
-        }
-    ]
+    from ebj_lead_sanitizer import validate_italian_phone, classify_lead_coherence
 
-    from autonomous_cross_lead_scout import verify_via_rust_bridge
+    conn = sqlite3.connect(VAULT_DB)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """SELECT id, client_name, phone, city, service_type, source, verified_status, post_url, notes
+           FROM verified_leads_2026
+           WHERE COALESCE(blacklist_flag, 0) = 0
+           ORDER BY id DESC LIMIT 120"""
+    ).fetchall()
+    conn.close()
 
     verified_leads = []
     competitors_killed = 0
+    invalid_phones_killed = 0
+    q_low = (query or "").lower()
+    city_filter = next((c for c in ("bologna", "imola", "modena", "ferrara", "cuneo", "torino", "milano", "roma", "firenze", "verona") if c in q_low), "")
 
-    for l in raw_leads:
-        # Check P.IVA
-        piva_match = re.search(r'\b\d{11}\b', l["text"])
-        if piva_match:
-            # Competitor scartato all'istante
+    for row in rows:
+        d = dict(row)
+        if city_filter and city_filter not in (d.get("city") or "").lower():
+            continue
+        cls = classify_lead_coherence(
+            d.get("service_type") or "",
+            f"{d.get('client_name') or ''} {d.get('notes') or ''}",
+            d.get("post_url") or "",
+            d.get("source") or "",
+            target_mode="TUTTI_COERENTI",
+        )
+        if not cls["coherent"]:
             competitors_killed += 1
             continue
-
-        # Estrai telefono
-        phone_match = re.search(r'(?:3\d{2}[\s.-]?\d{6,7}|0\d{1,3}[\s.-]?\d{5,7})', l["text"])
-        if phone_match:
-            phone_raw = phone_match.group(0)
-            v_res = verify_via_rust_bridge(phone_raw, [l["source"]], l["city"])
-            if v_res.get("is_valid"):
-                clean = v_res.get("clean_phone")
-                verified_leads.append({
-                    "author": l["author"],
-                    "service": l["title"],
-                    "city": l["city"],
-                    "clean_phone": clean,
-                    "phone_type": v_res.get("phone_type", "CELLULARE"),
-                    "confidence": v_res.get("confidence_score", 99.8),
-                    "whatsapp_url": f"https://wa.me/39{clean}?text=Salve%20{urllib.parse.quote(l['author'])}%2C%20vi%20contatto%20da%20PietroTraslochi%20%26%20BadrExpress%20in%20merito%20alla%20sua%20richiesta%20di%20{urllib.parse.quote(l['title'])}.",
-                    "source": l["source"]
-                })
+        ph_info = validate_italian_phone(d.get("phone"), strict_mobile_10=False)
+        if not ph_info:
+            invalid_phones_killed += 1
+            continue
+        clean = ph_info["digits"]
+        verified_leads.append({
+            "id": d["id"],
+            "author": d["client_name"],
+            "service": d["service_type"],
+            "city": d["city"],
+            "clean_phone": ph_info["e164"],
+            "formatted_phone": ph_info["formatted"],
+            "phone_type": ph_info["line_type"],
+            "coherence_category": cls["category"],
+            "whatsapp_url": f"https://wa.me/39{clean}?text={urllib.parse.quote('Buongiorno ' + str(d['client_name']) + ', la contatto da BadrExpress & PietroTraslochi per trasloco/sgombero a ' + str(d['city']) + '.')}",
+            "source": d.get("source") or "VAULT_VERIFIED",
+        })
+        if len(verified_leads) >= limit:
+            break
 
     return {
         "status": "SUCCESS",
-        "total_analyzed": len(raw_leads),
+        "total_analyzed": len(rows),
         "competitors_discarded": competitors_killed,
+        "invalid_phones_discarded": invalid_phones_killed,
         "genuine_verified_leads": verified_leads,
-        "count": len(verified_leads)
+        "count": len(verified_leads),
     }
 
 if __name__ == "__main__":

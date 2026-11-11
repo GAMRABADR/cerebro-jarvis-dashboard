@@ -8212,6 +8212,39 @@ class JarvisHandler(BaseHTTPRequestHandler):
             self.send_json({"status": "SUCCESS", "city": city, "captured_count": len(captured), "leads": captured})
             return
 
+        if self.path == '/api/leads/audit-clean':
+            import ebj_lead_sanitizer as sanitizer
+            dry_run = bool(data.get("dry_run", False))
+            res = sanitizer.audit_and_clean_vault_db(VAULT_DB, dry_run=dry_run)
+            self.send_json({"status": "SUCCESS", "audit": res})
+            return
+
+        if self.path == '/api/leads/scrape-live':
+            import stealth_fb_lead_pipeline as fb_pipe
+            city = data.get("city", "Bologna")
+            limit = int(data.get("limit", 8))
+            res = fb_pipe.run_live_coherent_scrape(city=city, limit=limit)
+            self.send_json(res)
+            return
+
+        if self.path == '/api/b2b/crawl-and-enrich':
+            import b2b_agency_crawler as crawler
+            city = data.get("city", "Bologna")
+            limit = int(data.get("limit", 12))
+            found = crawler.scrape_paginegialle_agencies(city=city, limit=limit, crawl_websites=True)
+            enr = crawler.enrich_existing_agencies_from_websites(limit=limit)
+            self.send_json({"status": "SUCCESS", "city": city, "scraped_count": len(found), "agencies": found, "enriched_existing": enr})
+            return
+
+        if self.path == '/api/b2b/campaign-sgomberi':
+            import b2b_immobiliare_engine as b2b
+            city = data.get("city", "ALL")
+            limit = int(data.get("limit", 10))
+            dry_run = bool(data.get("dry_run", True))
+            res = b2b.run_sgomberi_collaboration_campaign(city=city, limit=limit, dry_run=dry_run)
+            self.send_json(res)
+            return
+
         if self.path == '/api/cdp/launch':
             import chrome_cdp_controller as cdp
             url = data.get("url", "https://eb.badrexpress.com")

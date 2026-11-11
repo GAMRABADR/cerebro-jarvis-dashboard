@@ -316,6 +316,40 @@ def t_phone_control_factory_and_last_gasp():
         assert "maps.google.com" in st.get("maps_url", ""), st
 
 
+def t_lead_sanitizer_and_b2b_coherence():
+    import ebj_lead_sanitizer as san
+    import ebj_reflex_engine as r
+
+    # 1. Rifiuta sequenziali, numeri verdi 800, finti e prefissi invalidi
+    for bad in ("3489876543", "3334567890", "+39800444222", "+3990172753176", "123456789"):
+        assert san.validate_italian_phone(bad) is None, f"Doveva rifiutare {bad}"
+
+    # 2. Accetta fissi AGCOM e cellulari reali (anche parlato)
+    ok_mob = san.validate_italian_phone("tre quattro sette 812 9045")
+    assert ok_mob and ok_mob["e164"] == "+393478129045", ok_mob
+    ok_fix = san.validate_italian_phone("+39 051 510107")
+    assert ok_fix and ok_fix["is_landline"], ok_fix
+
+    # 3. Mai concatenare numeri separati da mq/prezzi
+    assert san.extract_phones_from_text("Appartamento 65 mq a Bologna, budget massimo 500 euro!") == []
+
+    # 4. Coerenza: rifiuta competitor traslochi e autolavaggi, accetta privati e agenzie immobiliari
+    c_comp = san.classify_lead_coherence("Ditta Traslochi Srl", "Siamo una ditta di traslochi P.IVA 03829101209", target_mode="TRASLOCHI_PRIVATI")
+    assert c_comp["category"] == "COMPETITOR_OFFER" and not c_comp["coherent"], c_comp
+    c_cw = san.classify_lead_coherence("Autolavaggio San Donato", "Fornitura schiuma attiva nanotech", target_mode="TUTTI_COERENTI")
+    assert c_cw["category"] == "OFF_TOPIC" and not c_cw["coherent"], c_cw
+    c_priv = san.classify_lead_coherence("Cerco trasloco", "Devo traslocare divano a Bologna sabato", target_mode="TRASLOCHI_PRIVATI")
+    assert c_priv["category"] == "CLIENT_DEMAND" and c_priv["coherent"], c_priv
+    c_imm = san.classify_lead_coherence("Agenzia Immobiliare Felsina", "Compravendita appartamenti Bologna", target_mode="IMMOBILIARI_B2B")
+    assert c_imm["category"] == "REAL_ESTATE_B2B" and c_imm["coherent"], c_imm
+
+    # 5. Reflex intent per bonifica & immobiliari
+    r1 = r.jev_reflex_dispatch("pulisci i numeri falsi dei lead")
+    assert r1 and r1.get("intent") == "LEAD_QUALITY_AUDIT", r1
+    r2 = r.jev_reflex_dispatch("cerca agenzie immobiliari per collaborazione sgomberi")
+    assert r2 and r2.get("intent") == "B2B_IMMOBILIARI_PARTNERSHIP", r2
+
+
 if __name__ == "__main__":
     for name, fn in [
         ("hermes: import requests (ponte Rust)", t_hermes_has_requests),
@@ -341,6 +375,7 @@ if __name__ == "__main__":
         ("rust: turbo FFI & fuzzy dizionario", t_rust_turbo_ffi_fuzzy),
         ("http: /api/turbo-status & stream SSE", t_http_turbo_and_streaming),
         ("mobile: dati fabbrica, last-gasp & control", t_phone_control_factory_and_last_gasp),
+        ("scraping: sanitizer AGCOM & coerenza B2B", t_lead_sanitizer_and_b2b_coherence),
     ]:
         check(name, fn)
 

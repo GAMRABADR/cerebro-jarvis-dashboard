@@ -70,61 +70,40 @@ def calculate_shannon_entropy(digits: str) -> f64 if False else float:
     return -sum((c / n) * math.log2(c / n) for c in counts.values())
 
 def verify_phone_strict_python(phone: str, city_hint="Bologna") -> dict:
-    """Verifica algoritmica locale ad alta severità (Zero Falsi Positivi)."""
-    digits = "".join(c for c in phone if c.isdigit())
-    local = digits
-    if local.startswith("0039") and len(local) >= 13:
-        local = local[4:]
-    elif local.startswith("39") and len(local) >= 11:
-        local = local[2:]
+    """Verifica algoritmica locale ad alta severità tramite ebj_lead_sanitizer (Zero Falsi Positivi)."""
+    from ebj_lead_sanitizer import validate_italian_phone
+    res = validate_italian_phone(phone, strict_mobile_10=False)
+    if not res:
+        return {"is_valid": False, "reason": "Numero fittizio, numero verde o fuori standard AGCOM", "tier": "REJECTED_MOCK"}
 
-    if len(local) < 9 or len(local) > 11:
-        return {"is_valid": False, "reason": f"Lunghezza errata ({len(local)} cifre)", "tier": "REJECTED_MOCK"}
-
-    for d in DUMMY_PATTERNS:
-        if d in local:
-            return {"is_valid": False, "reason": f"Pattern mock/fittizio rilevato: {d}", "tier": "REJECTED_MOCK"}
-
-    if len(set(local)) < 4:
-        return {"is_valid": False, "reason": "Troppe cifre ripetute (entropia bassa)", "tier": "REJECTED_MOCK"}
-
-    entropy = calculate_shannon_entropy(local)
-    if entropy < 2.0:
-        return {"is_valid": False, "reason": f"Entropia di Shannon insufficiente ({entropy:.2f})", "tier": "REJECTED_MOCK"}
-
-    if local.startswith("3") and len(local) == 10:
-        if local[:2] in VALID_MOBILE_PREFIXES:
-            return {
-                "is_valid": True,
-                "clean_phone": local,
-                "international": f"+39{local}",
-                "type": "CELLULARE",
-                "district": "Mobile Nazionale AGCOM",
-                "entropy": round(entropy, 2),
-                "confidence": 99.8,
-                "tier": "VERIFIED_GOLD"
-            }
-        else:
-            return {"is_valid": False, "reason": f"Prefisso cellulare 3{local[1]} inesistente", "tier": "REJECTED_MOCK"}
-
-    elif local.startswith("0"):
-        district = "Distretto Nazionale"
-        for code, name in CERTIFIED_LANDLINE_PREFIXES.items():
-            if local.startswith(code):
-                district = name
-                break
+    digits = res["digits"]
+    entropy = calculate_shannon_entropy(digits)
+    if res["is_mobile"]:
         return {
             "is_valid": True,
-            "clean_phone": local,
-            "international": f"+39{local}",
-            "type": "FISSO",
-            "district": district,
+            "clean_phone": digits,
+            "international": res["e164"],
+            "type": "CELLULARE",
+            "district": "Mobile Nazionale AGCOM",
             "entropy": round(entropy, 2),
-            "confidence": 99.5,
-            "tier": "VERIFIED_GOLD"
+            "confidence": 99.8,
+            "tier": "VERIFIED_GOLD",
         }
-
-    return {"is_valid": False, "reason": "Non rispetta numerazioni nazionali AGCOM", "tier": "REJECTED_MOCK"}
+    district = "Distretto Nazionale"
+    for code, name in CERTIFIED_LANDLINE_PREFIXES.items():
+        if digits.startswith(code):
+            district = name
+            break
+    return {
+        "is_valid": True,
+        "clean_phone": digits,
+        "international": res["e164"],
+        "type": "FISSO",
+        "district": district,
+        "entropy": round(entropy, 2),
+        "confidence": 99.5,
+        "tier": "VERIFIED_GOLD",
+    }
 
 def verify_via_rust_bridge(phone: str, sources=None, city="Bologna"):
     """Tenta la verifica microsecondi sul bridge Rust (:9000), con fallback a python strict."""

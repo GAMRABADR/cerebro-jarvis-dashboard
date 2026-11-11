@@ -34,52 +34,24 @@ LANDLINE_RE = re.compile(r"(?<!\d)(?:\+39[\s.\-]?)?(?:0\d{1,3}[\s.\-]?\d{5,8})(?
 BAD_ENDINGS = {"1234", "4321", "5678", "8765", "0000", "1111", "2222", "3333", "6789", "9876"}
 
 
+from ebj_lead_sanitizer import (
+    validate_italian_phone,
+    extract_phones_from_text,
+    classify_lead_coherence,
+)
+
+
 def clean_phone(raw):
-    digits = re.sub(r"[^\d+]", "", raw)
-    if digits.startswith("+39"):
-        digits = digits[3:]
-    digits = digits.lstrip("0")
-    if len(digits) == 10 and digits.startswith("3"):
-        return "+39 " + digits[:3] + " " + digits[3:6] + " " + digits[6:]
-    if len(digits) >= 8:
-        return "+39 " + digits
-    return ""
+    res = validate_italian_phone(raw, strict_mobile_10=False)
+    return res["e164"] if res else ""
 
 
 def is_valid_phone(raw):
-    cleaned = clean_phone(raw)
-    if not cleaned:
-        return False
-    digits = re.sub(r"[^\d]", "", cleaned)
-    if digits.startswith("39"):
-        digits = digits[2:]
-    if len(digits) not in (9, 10):
-        return False
-    if len(set(digits)) <= 2:
-        return False
-    if digits[-4:] in BAD_ENDINGS:
-        return False
-    return True
+    return validate_italian_phone(raw, strict_mobile_10=False) is not None
 
 
 def extract_phones(text):
-    # Rimuove esplicitamente diciture P.IVA o codici fiscali
-    clean_text = re.sub(r'(?i)p\.?\s*iva\s*[:\s]*\d+', ' ', text)
-    clean_text = re.sub(r'(?i)partita\s*iva\s*[:\s]*\d+', ' ', clean_text)
-    clean_text = re.sub(r'(?i)capitale\s*sociale\s*[:\s]*\d+', ' ', clean_text)
-    clean_text = re.sub(r'(?i)rea\s*[:\s]*\d+', ' ', clean_text)
-
-    found = []
-    # SOLO cellulari italiani personali (3xx xxx xxxx)
-    for m in MOBILE_RE.finditer(clean_text):
-        c = clean_phone(m.group())
-        if c and is_valid_phone(c):
-            d = re.sub(r'[^\d]', '', c)
-            if d.startswith("39"):
-                d = d[2:]
-            if d.startswith("3") and len(d) == 10:
-                found.append(c)
-    return list(dict.fromkeys(found))
+    return [p["e164"] for p in extract_phones_from_text(text, author_only=False, mobile_only=True)]
 
 
 def get_db():
@@ -250,24 +222,21 @@ COMPETITOR_BLACKLIST = [
     "dolcetraslocare", "emiliana sgomberi", "roadsavior", "svuotapp"
 ]
 
-def is_genuine_client_request(text):
-    t = text.lower()
-    # 1. Se contiene frasi tipiche di concorrenti, scarta categoricamente
+def is_genuine_client_request(text, title="", url=""):
+    cls = classify_lead_coherence(title or text[:80], text, url=url, target_mode="TRASLOCHI_PRIVATI")
+    if cls["coherent"]:
+        return True
+    t = (text or "").lower()
     if any(b in t for b in COMPETITOR_BLACKLIST):
         return False
-    # 2. Se contiene parole di richiesta esplicita di cliente privato, accetta
-    if any(k in t for k in CLIENT_INTENT_KEYWORDS):
-        return True
-    return False
+    return any(k in t for k in CLIENT_INTENT_KEYWORDS)
+
 
 def extract_author_phone_only(text):
-    """Estrae il numero SOLO se il testo indica che appartiene all'autore che scrive."""
-    t_low = text.lower()
-    # Indicatori che l'utente sta lasciando il SUO recapito
-    author_indicators = ["mio", "cell", "cellulare", "whatsapp", "chiamatemi", "contattatemi", "lascio", "tel", "numero"]
-    if not any(ind in t_low for ind in author_indicators):
-        return ""
-    phones = extract_phones(text)
+    """Estrae il numero italiano validato SOLO se il testo indica che appartiene all'autore che scrive."""
+    phones = [p["e164"] for p in extract_phones_from_text(text, author_only=True, mobile_only=False)]
+    return phones[0] if phones else ""
+
 def scrape_subito_live_scrapingbee(city="bologna", query="trasloco", limit=5):
     """
     Estrae annunci reali di privati da Subito.it per Bologna e provincia
@@ -285,11 +254,13 @@ def scrape_subito_live_scrapingbee(city="bologna", query="trasloco", limit=5):
 
     ads_found = []
     seen_urls = set()
+    city_slug = re.sub(r"[^a-z\-]", "", city.strip().lower().replace(" ", "-")) or "bologna"
+    excluded_cats = ("/sport/", "/auto/", "/moto/", "/nautica/", "/elettronica/", "/telefonia/", "/videogiochi/", "/abbigliamento/", "/animali/")
 
     for q_term in target_queries:
         if len(ads_found) >= limit:
             break
-        search_url = f"https://www.subito.it/annunci-emilia-romagna/vendita/usato/?q={urllib.parse.quote_plus(q_term)}&r=bologna-bo"
+        search_url = f"https://www.subito.it/annunci-emilia-romagna/vendita/arredamento-casalinghi/{city_slug}/?q={urllib.parse.quote_plus(q_term)}"
         try:
             r = requests.get(
                 "https://app.scrapingbee.com/api/v1/",
@@ -306,13 +277,15 @@ def scrape_subito_live_scrapingbee(city="bologna", query="trasloco", limit=5):
 
             soup = BeautifulSoup(r.text, "html.parser")
             links = [l.get("href") for l in soup.find_all("a", href=re.compile(r"/.*-\d+\.htm")) if l.get("href")]
-            uniq_links = [u for u in dict.fromkeys(links) if u not in seen_urls][:3]
+            uniq_links = [
+                u for u in dict.fromkeys(links)
+                if u not in seen_urls and not any(ec in u.lower() for ec in excluded_cats)
+            ][:3]
 
             for ad_url in uniq_links:
                 seen_urls.add(ad_url)
                 if len(ads_found) >= limit:
                     break
-                # Fetch dettaglio singolo annuncio
                 r_ad = requests.get(
                     "https://app.scrapingbee.com/api/v1/",
                     params={
@@ -329,28 +302,31 @@ def scrape_subito_live_scrapingbee(city="bologna", query="trasloco", limit=5):
                 s_ad = BeautifulSoup(r_ad.text, "html.parser")
                 h1 = s_ad.find("h1")
                 ad_title = h1.get_text(strip=True) if h1 else "Annuncio Subito Privato"
-                body_text = s_ad.get_text(" ")
 
-                # Estrazione telefoni presenti nel testo dell'annuncio
-                phones = extract_phones(body_text)
-                author_phone = phones[0] if phones else ""
-
-                # Estrai descrizione specifica
+                # Estrai descrizione specifica dell'autore (evita footer/banner sito)
                 desc_p = []
                 for p in s_ad.find_all("p"):
                     pt = p.get_text(strip=True)
-                    if len(pt) > 25 and not any(ign in pt.lower() for ign in ["cookie", "privacy", "copyright", "subito.it"]):
+                    if len(pt) > 25 and not any(ign in pt.lower() for ign in ["cookie", "privacy", "copyright", "subito.it", "registrati", "accedi"]):
                         desc_p.append(pt)
-                desc_text = " ".join(desc_p[:2]) if desc_p else body_text[:200]
+                desc_text = " ".join(desc_p[:3])
+                if not desc_text:
+                    continue
+
+                phones = extract_phones(desc_text)
+                author_phone = phones[0] if phones else ""
+                m_city = re.search(r"-([a-z\-]+)-\d+\.htm", ad_url.lower())
+                detected_city = m_city.group(1).replace("-", " ").title() if m_city else city.title()
 
                 ads_found.append({
                     "title": ad_title,
+                    "city": detected_city,
                     "url": ad_url,
                     "phone": author_phone,
                     "text": desc_text,
                     "source": "Subito.it Live (ScrapingBee)"
                 })
-                time.sleep(0.5)
+                time.sleep(0.4)
 
         except Exception as e:
             print(f"[ScrapingBee Subito err]: {e}")
@@ -450,7 +426,7 @@ def run(params):
             save_lead(conn, lead)
             leads_out.append(lead)
 
-    # ── LIVELLO 2: FALLBACK DUCKDUCKGO SE SERVONO ALTRI LEAD ──
+    # ── LIVELLO 2: FALLBACK RICERCA MIRATA SOLO CON FILTRO ANTI-COMPETITOR ──
     if len(leads_out) < limit:
         query_variants = get_query_variants(query, city)
         for q_variant in query_variants:
@@ -459,6 +435,8 @@ def run(params):
             ddg_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(q_variant)
             try:
                 r = requests.get(ddg_url, headers=HEADERS, timeout=8)
+                if r.status_code != 200 or "result__body" not in r.text:
+                    continue
                 soup = BeautifulSoup(r.text, "html.parser")
             except Exception:
                 continue
@@ -474,12 +452,14 @@ def run(params):
                 snippet_el = item.find("a", class_="result__snippet")
                 link_el = item.find("a", class_="result__a")
 
-                title = title_el.get_text(strip=True) if title_el else "Richiesta Privata"
+                title = title_el.get_text(strip=True) if title_el else ""
                 snippet = snippet_el.get_text(strip=True) if snippet_el else ""
                 link = link_el.get("href", "") if link_el else ""
+                if not title or not link:
+                    continue
                 full_text = title + " " + snippet
-
-                if not is_genuine_client_request(full_text):
+                cls = classify_lead_coherence(title, snippet, url=link, target_mode="TRASLOCHI_PRIVATI")
+                if not cls["coherent"]:
                     continue
                 if is_known(conn, post_url=link):
                     continue
