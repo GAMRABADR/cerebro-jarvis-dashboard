@@ -268,6 +268,33 @@ def t_rust_memory_tree_and_ingest():
         http_tree = _http("GET", "/api/memory-tree")
         assert http_tree.get("status") == "SUCCESS" and http_tree.get("briefing", {}).get("total_nodes", 0) > 0, http_tree
 
+def t_rust_turbo_ffi_fuzzy():
+    import ebj_italian_lexicon as lex
+    assert lex.is_rust_turbo_loaded() is True, "Libreria Rust FFI ebj_turbo_core non caricata"
+    fixed = lex.normalize_italian_asr("trova lavoori di potattura e imbiancattura")
+    assert "potatura" in fixed and "imbiancatura" in fixed, f"Fuzzy non riuscito: {fixed}"
+    cleaned = lex.clean_tts_fast("<think>segreto</think> **Pronto!** https://test.it", 420)
+    assert cleaned == "Pronto!", f"clean_tts_fast errato: {cleaned}"
+
+def t_http_turbo_and_streaming():
+    if OFFLINE or not _server_up():
+        return "SKIP"
+    ts = _http("GET", "/api/turbo-status")
+    assert ts.get("rust_turbo_ffi") is True and ts.get("rust_memory_tree_bin") is True, ts
+
+    req = urllib.request.Request(
+        "http://127.0.0.1:8088/api/chat/stream",
+        data=json.dumps({"prompt": "cosa ti ho detto?", "include_audio": True, "persona": "jarvis"}).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=8) as r:
+        lines = [json.loads(l) for l in r.read().decode("utf-8").splitlines() if l.strip()]
+    types = [x.get("type") for x in lines]
+    assert "chunk" in types and "done" in types, f"Stream incompleto: {types}"
+    first_chunk = next(x for x in lines if x.get("type") == "chunk")
+    assert len(first_chunk.get("audio_base64", "")) > 500 and first_chunk.get("voice") == "it-IT-DiegoNeural", first_chunk
+
 
 if __name__ == "__main__":
     for name, fn in [
@@ -291,6 +318,8 @@ if __name__ == "__main__":
         ("http: /api/qmd/search", t_http_qmd_search),
         ("http: /api/tts/acks & reflex unificato", t_http_tts_acks_and_recall),
         ("rust: memory tree & auto-ingest", t_rust_memory_tree_and_ingest),
+        ("rust: turbo FFI & fuzzy dizionario", t_rust_turbo_ffi_fuzzy),
+        ("http: /api/turbo-status & stream SSE", t_http_turbo_and_streaming),
     ]:
         check(name, fn)
 

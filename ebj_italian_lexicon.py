@@ -11,7 +11,67 @@ vocale (ASR) e generatore di espressioni eleganti in stile J.A.R.V.I.S.
 
 from __future__ import annotations
 import re
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
+
+# ── 0. IN-PROCESS RUST TURBO CORE (ctypes FFI, < 10 microsecondi, ZERO IPC) ──
+import ctypes as _ctypes
+import json as _json
+import os as _os
+import sys as _sys
+
+_TURBO_DIR = _os.path.dirname(_os.path.abspath(__file__))
+_TURBO_LIB_NAME = "ebj_turbo_core.dll" if _sys.platform == "win32" else "libebj_turbo_core.so"
+_TURBO_CANDIDATES = [
+    _os.path.abspath(_os.path.join(_TURBO_DIR, "..", "ebj-supreme", "rust-agents", "target", "release", _TURBO_LIB_NAME)),
+    _os.path.join(_TURBO_DIR, "bin", _TURBO_LIB_NAME),
+    _os.path.join(_TURBO_DIR, _TURBO_LIB_NAME),
+]
+
+_TURBO_LIB = None
+for _cand in _TURBO_CANDIDATES:
+    if _os.path.isfile(_cand):
+        try:
+            _lib = _ctypes.CDLL(_cand)
+            _lib.ebj_turbo_normalize_and_tag.argtypes = [_ctypes.c_char_p]
+            _lib.ebj_turbo_normalize_and_tag.restype = _ctypes.c_void_p
+            _lib.ebj_turbo_clean_tts.argtypes = [_ctypes.c_char_p, _ctypes.c_size_t]
+            _lib.ebj_turbo_clean_tts.restype = _ctypes.c_void_p
+            _lib.ebj_turbo_free_str.argtypes = [_ctypes.c_void_p]
+            _lib.ebj_turbo_free_str.restype = None
+            _TURBO_LIB = _lib
+            break
+        except Exception:
+            _TURBO_LIB = None
+
+def is_rust_turbo_loaded() -> bool:
+    return _TURBO_LIB is not None
+
+def clean_tts_fast(text: str, max_len: int = 420) -> Optional[str]:
+    if not _TURBO_LIB or not text:
+        return None
+    try:
+        ptr = _TURBO_LIB.ebj_turbo_clean_tts(text.encode("utf-8", errors="ignore"), max_len)
+        if ptr:
+            out = _ctypes.cast(ptr, _ctypes.c_char_p).value.decode("utf-8", errors="replace")
+            _TURBO_LIB.ebj_turbo_free_str(ptr)
+            return out
+    except Exception:
+        pass
+    return None
+
+def _rust_norm_and_tag(text: str) -> Optional[Dict[str, Any]]:
+    if not _TURBO_LIB or not text:
+        return None
+    try:
+        ptr = _TURBO_LIB.ebj_turbo_normalize_and_tag(text.encode("utf-8", errors="ignore"))
+        if ptr:
+            raw_json = _ctypes.cast(ptr, _ctypes.c_char_p).value.decode("utf-8", errors="replace")
+            _TURBO_LIB.ebj_turbo_free_str(ptr)
+            return _json.loads(raw_json)
+    except Exception:
+        pass
+    return None
+
 
 # ── 1. NORMALIZZATORE ASR & ERRORI DI BATTITURA COMUNI IN ITALIANO ───────────
 _ASR_REPLACEMENTS: List[Tuple[re.Pattern, str]] = [
@@ -136,19 +196,26 @@ ITALIAN_MASTERY_DIRECTIVE = (
 
 
 def normalize_italian_asr(text: str) -> str:
-    """Normalizza errori di trascrizione vocale e contrazioni informali italiane."""
+    """Normalizza errori di trascrizione vocale e fuzzy-correct in Rust FFI (< 10µs) con fallback Python."""
     if not text:
         return ""
+    r = _rust_norm_and_tag(text)
+    if r and r.get("normalized"):
+        return r["normalized"]
     out = text.strip()
     for pat, repl in _ASR_REPLACEMENTS:
         out = pat.sub(repl, out)
-    # Normalizza spazi multipli
     out = re.sub(r'\s+', ' ', out).strip()
     return out
 
 
 def extract_italian_semantic_tags(text: str) -> List[str]:
-    """Restituisce i tag semantici italiani riconosciuti nella frase normalizzata."""
+    """Restituisce i tag semantici italiani riconosciuti tramite Rust Aho-Corasick SIMD (< 10µs)."""
+    if not text:
+        return []
+    r = _rust_norm_and_tag(text)
+    if r and isinstance(r.get("tags"), list):
+        return r["tags"]
     norm = normalize_italian_asr(text).lower()
     tags: List[str] = []
     for tag, keywords in ITALIAN_SYNONYM_GROUPS.items():

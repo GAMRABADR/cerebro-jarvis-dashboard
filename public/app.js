@@ -2669,7 +2669,7 @@ async function executeCommandPipeline(prompt) {
 
     window._lastPromptTimestamp = Date.now();
 
-    // 1. DINAMICA A 2 FASI: 'Attendi un attimo, signore' immediato (0ms) + /api/chat Single-Roundtrip con Audio Neurale
+    // 1. STREAMING PROGRESSIVO LLM -> VOCE FRASE PER FRASE (/api/chat/stream) + ACK DINAMICO
 
     let ackTriggered = false;
 
@@ -2683,11 +2683,225 @@ async function executeCommandPipeline(prompt) {
 
       }
 
-    }, 180);
+    }, 260);
+
+
+
+    const playOneChunkAudio = async (b64, epochLock) => {
+
+      if (!b64 || !window.ebjVoiceEnabled || epochLock !== _ebjSpeechEpoch) return;
+
+      try {
+
+        const ctx = getEbjAudioContext();
+
+        if (!ctx || typeof ctx.decodeAudioData !== 'function') return;
+
+        if (ctx.state === 'suspended') await ctx.resume();
+
+        const bin = atob(b64);
+
+        const buf = new Uint8Array(bin.length);
+
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+
+        const audioBuffer = await new Promise((res, rej) => ctx.decodeAudioData(buf.buffer.slice(0), res, rej));
+
+        if (!audioBuffer || epochLock !== _ebjSpeechEpoch) return;
+
+        const src = ctx.createBufferSource();
+
+        src.buffer = audioBuffer;
+
+        _ebjActiveWebAudioSource = src;
+
+        const rumble = ctx.createBiquadFilter(); rumble.type = 'highpass'; rumble.frequency.value = 95;
+
+        const bass = ctx.createBiquadFilter(); bass.type = 'lowshelf'; bass.frequency.value = 200; bass.gain.value = 2.8;
+
+        const pres = ctx.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 2150; pres.Q.value = 2.4; pres.gain.value = 3.6;
+
+        src.connect(rumble); rumble.connect(bass); bass.connect(pres); pres.connect(ctx.destination);
+
+        _ebjIsSpeaking = true;
+
+        animateJarvisSpectrum(true, 1.0);
+
+        await new Promise((resolve) => {
+
+          src.onended = resolve;
+
+          src.start(0);
+
+          setTimeout(resolve, Math.max(800, (audioBuffer.duration * 1000) + 350));
+
+        });
+
+      } catch (_) {}
+
+    };
+
+
+
+    let streamedText = '';
+
+    let streamedAudioCount = 0;
+
+    const streamEpoch = _ebjSpeechEpoch;
+
+    let chunkQueue = Promise.resolve();
+
+    let gotStreamDone = false;
 
 
 
     try {
+
+      const sRes = await fetch('/api/chat/stream', {
+
+        method: 'POST',
+
+        headers: { 'Content-Type': 'application/json' },
+
+        body: JSON.stringify({ prompt, model, persona: currentPersonality, include_audio: !!window.ebjVoiceEnabled }),
+
+        signal: AbortSignal.timeout(15000)
+
+      });
+
+
+
+      if (sRes.ok && sRes.body && typeof sRes.body.getReader === 'function') {
+
+        const reader = sRes.body.getReader();
+
+        const dec = new TextDecoder('utf-8');
+
+        let lineBuf = '';
+
+
+
+        while (true) {
+
+          const { value, done } = await reader.read();
+
+          if (done) break;
+
+          lineBuf += dec.decode(value, { stream: true });
+
+          let nlIdx;
+
+          while ((nlIdx = lineBuf.indexOf('\n')) !== -1) {
+
+            const rawLine = lineBuf.slice(0, nlIdx).trim();
+
+            lineBuf = lineBuf.slice(nlIdx + 1);
+
+            if (!rawLine) continue;
+
+            try {
+
+              const ev = JSON.parse(rawLine);
+
+              if (ev.type === 'ui_action' && ev.ui_action && window.handleAiUiAction) {
+
+                window.handleAiUiAction(ev.ui_action);
+
+              } else if (ev.type === 'chunk') {
+
+                clearTimeout(waitAckTimer);
+
+                streamedText = (streamedText ? streamedText + ' ' : '') + (ev.text || '');
+
+                if (respEl) respEl.textContent = streamedText;
+
+                if (respTag) respTag.textContent = 'JARVIS LIVE ⚡';
+
+                if (window.setJarvisSubtitle) window.setJarvisSubtitle(streamedText, false);
+
+                const subTxt = document.getElementById('jarvis-subtitle-text');
+
+                const subBox = document.getElementById('jarvis-spoken-subtitle');
+
+                if (subTxt) subTxt.textContent = streamedText;
+
+                if (subBox) subBox.style.display = 'flex';
+
+
+
+                if (ev.audio_base64 && window.ebjVoiceEnabled) {
+
+                  streamedAudioCount++;
+
+                  const isFirst = (streamedAudioCount === 1);
+
+                  const b64Clip = ev.audio_base64;
+
+                  chunkQueue = chunkQueue.then(async () => {
+
+                    if (isFirst && ackTriggered && window._ebjActiveAckPromise) {
+
+                      await Promise.race([window._ebjActiveAckPromise, new Promise(r => setTimeout(r, 1800))]).catch(() => {});
+
+                    }
+
+                    await playOneChunkAudio(b64Clip, streamEpoch);
+
+                  });
+
+                }
+
+              } else if (ev.type === 'done') {
+
+                gotStreamDone = true;
+
+                reply = ev.full_text || streamedText;
+
+                modelTag = (ev.model_used || 'GROQ STREAM').toUpperCase();
+
+              }
+
+            } catch (_) {}
+
+          }
+
+        }
+
+      }
+
+    } catch (_) {
+
+      clearTimeout(waitAckTimer);
+
+    }
+
+
+
+    if (gotStreamDone && reply) {
+
+      if (respTag) respTag.textContent = modelTag;
+
+      addEvent('ai', String(reply).slice(0, 80) + '...');
+
+      chunkQueue.finally(() => {
+
+        if (streamEpoch === _ebjSpeechEpoch) {
+
+          _ebjIsSpeaking = false;
+
+          animateJarvisSpectrum(false);
+
+        }
+
+      });
+
+      const input = document.getElementById('prompt-input');
+
+      if (input) input.focus();
+
+    } else {
+
+      // Fallback sicuro a /api/chat classico se stream non disponibile
 
       const res = await fetch('/api/chat', {
 
@@ -2695,17 +2909,7 @@ async function executeCommandPipeline(prompt) {
 
         headers: { 'Content-Type': 'application/json' },
 
-        body: JSON.stringify({
-
-          prompt,
-
-          model,
-
-          persona: currentPersonality,
-
-          include_audio: !!window.ebjVoiceEnabled
-
-        }),
+        body: JSON.stringify({ prompt, model, persona: currentPersonality, include_audio: !!window.ebjVoiceEnabled }),
 
         signal: AbortSignal.timeout(12000)
 
@@ -2727,31 +2931,15 @@ async function executeCommandPipeline(prompt) {
 
       updateAiModeBadge(d);
 
-    } catch (chatErr) {
+      if (ackTriggered && window._ebjActiveAckPromise) {
 
-      clearTimeout(waitAckTimer);
+        await Promise.race([window._ebjActiveAckPromise, new Promise(r => setTimeout(r, 1800))]).catch(() => {});
 
-      throw chatErr;
+      }
 
-    }
-
-
-
-    // Se l'audio 'Attendi un attimo' sta ancora finendo la frase, attendi max 1.8s prima di sovrapporre la risposta reale
-
-    if (ackTriggered && window._ebjActiveAckPromise) {
-
-      try {
-
-        await Promise.race([window._ebjActiveAckPromise, new Promise(r => setTimeout(r, 1800))]);
-
-      } catch (_) {}
+      finish(reply, modelTag, preloadedAudio);
 
     }
-
-
-
-    finish(reply, modelTag, preloadedAudio);
 
     if (reply.includes('Coscienza') || reply.includes('percorsi sinaptici') || reply.includes('architettura neurale') || reply.includes('nucleo cognitivo') || modelTag.includes('BRAIN-SWITCH')) {
 

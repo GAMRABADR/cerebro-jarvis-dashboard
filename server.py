@@ -130,7 +130,7 @@ except Exception:
 try:
     from ebj_italian_lexicon import (
         ITALIAN_WAIT_ACKS, UK_WAIT_ACKS, ITALIAN_MASTERY_DIRECTIVE,
-        normalize_italian_asr, is_recall_question
+        normalize_italian_asr, is_recall_question, clean_tts_fast, is_rust_turbo_loaded
     )
 except Exception:
     ITALIAN_WAIT_ACKS = ["Attendi un attimo, signore, procedo subito."]
@@ -138,6 +138,8 @@ except Exception:
     ITALIAN_MASTERY_DIRECTIVE = ""
     def normalize_italian_asr(t): return t
     def is_recall_question(t): return False
+    def clean_tts_fast(t, max_len=420): return None
+    def is_rust_turbo_loaded(): return False
 
 _TTS_AUDIO_CACHE = {}
 _TTS_CACHE_MAX = 300
@@ -2120,6 +2122,90 @@ def query_nvidia_nim_models(prompt, model="meta/llama-3.1-70b-instruct", persona
     except Exception as e:
         print(f"[NVIDIA NIM Exception]: {e}")
     return None
+
+def stream_groq_sentences(prompt, model="qwen/qwen3.8-27b", persona="jarvis"):
+    """
+    Generatore SSE ad altissima reattività: riceve i token Groq in streaming
+    ed emette ogni singola frase appena chiude su punteggiatura (. ! ?),
+    permettendo di iniziare Edge-TTS e la voce dopo ~300-600ms invece di ~2.4s.
+    """
+    if time.time() < _CIRCUIT_BREAKER_STATE.get("groq_blocked_until", 0):
+        return
+    groq_key = os.environ.get("GROQ_API_KEY", "").strip() or GROQ_KEY
+    if not groq_key:
+        return
+
+    live_clock = _now_rome().strftime("%A %d %B %Y - %H:%M:%S (Fuso Orario: Imola/Roma)")
+    mem_context = hermes_memory.get_infinite_context_for_prompt(prompt)
+    sys_prompt = get_system_prompt_for_personality(persona) + ITALIAN_MASTERY_DIRECTIVE
+    sys_with_mem = (sys_prompt + f"\n[OROLOGIO DI SISTEMA: {live_clock}]" + ("\n" + mem_context if mem_context else ""))
+
+    messages = [{"role": "system", "content": sys_with_mem}]
+    for h in get_recent_conversation_history(8):
+        c_txt = (h.get("content") or "").strip()
+        if c_txt and c_txt != prompt:
+            messages.append({"role": h.get("role", "user"), "content": c_txt})
+    messages.append({"role": "user", "content": prompt})
+
+    try:
+        r = _HTTP.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+            json={
+                "model": model if model and model != "auto" else "qwen/qwen3.8-27b",
+                "messages": messages,
+                "temperature": 0.45,
+                "max_tokens": 900,
+                "stream": True,
+            },
+            stream=True,
+            timeout=8.0,
+        )
+        if r.status_code != 200:
+            if r.status_code == 429:
+                _CIRCUIT_BREAKER_STATE["groq_blocked_until"] = time.time() + 20
+            return
+
+        buf = ""
+        in_think = False
+        for raw_line in r.iter_lines(decode_unicode=True):
+            if not raw_line or not raw_line.startswith("data: "):
+                continue
+            payload_str = raw_line[6:].strip()
+            if payload_str == "[DONE]":
+                break
+            try:
+                ev = _json.loads(payload_str)
+                delta = ev.get("choices", [{}])[0].get("delta", {}).get("content", "")
+            except Exception:
+                continue
+            if not delta:
+                continue
+
+            buf += delta
+            if "<think>" in buf:
+                in_think = True
+            if in_think:
+                if "</think>" in buf:
+                    buf = buf.split("</think>", 1)[-1]
+                    in_think = False
+                else:
+                    continue
+
+            # Emetti appena troviamo fine frase significativa
+            m = re.search(r'^([\s\S]{16,}?[.!?](?:\s+|$))', buf)
+            if m:
+                sent = m.group(1).strip()
+                buf = buf[len(m.group(1)):]
+                if sent:
+                    yield sent
+
+        rem = buf.strip()
+        if rem and not in_think:
+            yield rem
+    except Exception:
+        return
+
 
 def query_gemini_models(prompt, model=None, persona="jarvis"):
     """
@@ -4313,7 +4399,10 @@ def transcribe_audio_payload(audio_b64, mime_type="audio/webm"):
 
 def clean_text_for_tts(raw_text):
     if not raw_text: return ""
-    # 0. Strip reasoning / think tags completely
+    # 0. In-process Rust Turbo Core FFI (< 5µs, zero regex / zero HTTP)
+    _fast = clean_tts_fast(raw_text, 420)
+    if _fast is not None:
+        return _fast
     text = re.sub(r'<think>[\s\S]*?</think>', '', raw_text, flags=re.DOTALL)
     text = re.sub(r'<think>[\s\S]*', '', text, flags=re.DOTALL)
 
@@ -4903,6 +4992,17 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     self.send_json({"status": "error", "message": "File non trovato"}, status=404)
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)}, status=500)
+            return
+
+        if clean_path == '/api/turbo-status':
+            import ebj_memory_tree as _emt
+            self.send_json({
+                "status": "SUCCESS",
+                "rust_turbo_ffi": is_rust_turbo_loaded(),
+                "rust_memory_tree_bin": bool(_emt.RUST_TREE_BIN),
+                "prewarmed_acks": len(_PREWARMED_WAIT_ACKS.get("it", [])),
+                "tts_cache_entries": len(_TTS_AUDIO_CACHE)
+            })
             return
 
         if clean_path == '/api/memory-tree':
@@ -8114,6 +8214,95 @@ class JarvisHandler(BaseHTTPRequestHandler):
                     self.send_json({"error": str(e), "status": "ERROR"})
                     return
             self.send_json({"error": "Nessun testo o lista fornita", "status": "EMPTY"})
+            return
+
+        if self.path == '/api/chat/stream':
+            user_prompt = (data.get('prompt') or '').strip()
+            req_model = data.get('model', 'auto')
+            req_persona = data.get('persona', current_eb_personality)
+            detected_p, _ = detect_and_switch_personality_from_prompt(user_prompt)
+            if detected_p:
+                req_persona = detected_p
+            want_audio = bool(data.get('include_audio', True))
+            ui_act = detect_modular_ui_action(user_prompt)
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("X-Accel-Buffering", "no")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            def _emit(obj):
+                try:
+                    self.wfile.write((_json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
+                    self.wfile.flush()
+                except Exception:
+                    pass
+
+            if ui_act:
+                _emit({"type": "ui_action", "ui_action": ui_act})
+
+            t0 = time.time()
+            add_to_conversation_history("user", user_prompt)
+
+            import asyncio as _aio
+            _lp = _aio.new_event_loop()
+            _aio.set_event_loop(_lp)
+
+            def _synth(txt):
+                if not want_audio or not txt.strip():
+                    return "", ""
+                try:
+                    b64, v_u, _ = _lp.run_until_complete(generate_speech_audio(txt, voice_mode=req_persona))
+                    return b64, v_u
+                except Exception:
+                    return "", ""
+
+            full_sentences = []
+            model_used = "groq-qwen-3.8-stream"
+            fast_ans = None
+
+            if is_recall_question(user_prompt):
+                fast_ans, model_used = query_model(user_prompt, req_model, persona=req_persona)
+            elif req_model in ("auto", "", None, "groq", "qwen", "qwen3.8"):
+                idx = 0
+                for sent in stream_groq_sentences(user_prompt, persona=req_persona):
+                    b64, v_u = _synth(sent)
+                    full_sentences.append(sent)
+                    _emit({
+                        "type": "chunk",
+                        "idx": idx,
+                        "text": sent,
+                        "audio_base64": b64,
+                        "voice": v_u
+                    })
+                    idx += 1
+
+            if not full_sentences:
+                if fast_ans is None:
+                    fast_ans, model_used = query_model(user_prompt, req_model, persona=req_persona)
+                b64, v_u = _synth(fast_ans)
+                full_sentences.append(fast_ans)
+                _emit({
+                    "type": "chunk",
+                    "idx": 0,
+                    "text": fast_ans,
+                    "audio_base64": b64,
+                    "voice": v_u
+                })
+
+            _lp.close()
+            full_text = " ".join(full_sentences).strip()
+            add_to_conversation_history("assistant", full_text)
+            threading.Thread(target=lambda up=user_prompt, an=full_text: hermes_memory.auto_memorize_turn(up, an), daemon=True).start()
+
+            _emit({
+                "type": "done",
+                "full_text": full_text,
+                "model_used": model_used,
+                "secondi": round(time.time() - t0, 2)
+            })
             return
 
         if self.path == '/api/chat':

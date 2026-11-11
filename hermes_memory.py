@@ -167,22 +167,47 @@ ITALIAN_STOPWORDS = {
 
 RUST_BRIDGE_URL = "http://127.0.0.1:9000"
 
+import threading as _threading
+import socket as _socket
+
+_HTTP_MEM = requests.Session()
+_DOSSIER_CACHE = {"ts": 0.0, "data": None}
+_RUST_9000_CACHE = {"ts": 0.0, "up": False}
+
+def _is_rust_bridge_up(ttl: float = 30.0) -> bool:
+    now = time.time()
+    if now - _RUST_9000_CACHE["ts"] < ttl:
+        return _RUST_9000_CACHE["up"]
+    up = False
+    try:
+        _s = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+        _s.settimeout(0.06)
+        up = (_s.connect_ex(("127.0.0.1", 9000)) == 0)
+        _s.close()
+    except Exception:
+        up = False
+    _RUST_9000_CACHE["ts"] = now
+    _RUST_9000_CACHE["up"] = up
+    return up
+
+
 def search_memory(query, limit=5, category=None):
     if not query or not query.strip():
         return []
     
-    # 1. Ultra-fast Rust Tokio In-Memory Retrieval (< 50 microseconds)
-    try:
-        payload = {"query": query, "limit": limit}
-        if category:
-            payload["category"] = category
-        r = requests.post(f"{RUST_BRIDGE_URL}/api/memory/search", json=payload, timeout=0.15)
-        if r.status_code == 200:
-            res_json = r.json()
-            if res_json.get("status") == "SUCCESS" and res_json.get("results"):
-                return res_json["results"]
-    except Exception:
-        pass
+    # 1. Ultra-fast Rust Tokio In-Memory Retrieval (con socket cache 30s -> 0ms su VPS)
+    if _is_rust_bridge_up(30.0):
+        try:
+            payload = {"query": query, "limit": limit}
+            if category:
+                payload["category"] = category
+            r = _HTTP_MEM.post(f"{RUST_BRIDGE_URL}/api/memory/search", json=payload, timeout=0.15)
+            if r.status_code == 200:
+                res_json = r.json()
+                if res_json.get("status") == "SUCCESS" and res_json.get("results"):
+                    return res_json["results"]
+        except Exception:
+            pass
 
     # 2. Local SQLite FTS5 fallback
     clean_words = re.findall(r'\w+', query.lower())
@@ -228,6 +253,9 @@ def search_memory(query, limit=5, category=None):
     return results[:limit]
 
 def get_user_identity_dossier():
+    now = time.time()
+    if _DOSSIER_CACHE["data"] is not None and (now - _DOSSIER_CACHE["ts"]) < 60.0:
+        return _DOSSIER_CACHE["data"]
     try:
         conn = sqlite3.connect(MEMORY_DB)
         c = conn.cursor()
@@ -238,7 +266,7 @@ def get_user_identity_dossier():
         row = c.fetchone()
         conn.close()
         if row:
-            return {
+            res_d = {
                 "full_name": row[0],
                 "alias": row[1],
                 "birth_date": row[2],
@@ -251,6 +279,9 @@ def get_user_identity_dossier():
                 "active_projects": row[9],
                 "personal_preferences": row[10]
             }
+            _DOSSIER_CACHE["ts"] = now
+            _DOSSIER_CACHE["data"] = res_d
+            return res_d
     except Exception as e:
         print(f"[Dossier Read Err]: {e}")
     return {
@@ -393,7 +424,7 @@ def get_holographic_memory_context(prompt=""):
     dossier = get_user_identity_dossier()
     
     if prompt:
-        extract_and_update_biography(prompt)
+        _threading.Thread(target=extract_and_update_biography, args=(prompt,), daemon=True).start()
 
     lines = [
         "\n==================================================================",
